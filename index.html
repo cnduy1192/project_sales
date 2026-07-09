@@ -144,7 +144,7 @@ svg{flex:none}
 .ins-sug button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);transition:.1s}
 .ins-sug button:hover{background:rgba(30,58,138,.06)}
 .ins-sug .t{font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;flex:none}
-.t-kh{background:var(--sbg-bg);color:var(--sbg)} .t-seg{background:var(--st-bg);color:var(--st)} .t-pic{background:var(--oa-bg);color:var(--oa)} .t-stage{background:var(--bas-bg);color:var(--bas)}
+.t-kh{background:var(--sbg-bg);color:var(--sbg)} .t-seg{background:var(--st-bg);color:var(--st)} .t-pic{background:var(--oa-bg);color:var(--oa)} .t-stage{background:var(--bas-bg);color:var(--bas)} .t-prod{background:var(--prog-bg);color:var(--prog)}
 .ins-head{display:flex;align-items:center;gap:12px;margin:18px 0 4px;flex-wrap:wrap}
 .ins-head h3{font-size:17px;font-weight:800}
 .ins-stats{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}
@@ -274,14 +274,14 @@ datalist{display:none}
 .mini-btn:hover{border-color:var(--primary);color:var(--primary)}
 .mini-btn.up{color:var(--sbg)} .mini-btn.down{color:var(--prog)}
 
-.lc-tip{position:fixed;z-index:650;display:none;background:rgba(255,255,255,.97);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:14px;box-shadow:var(--shadow-lift);padding:12px 14px;width:340px;pointer-events:none}
+.lc-tip{position:fixed;z-index:650;display:none;background:rgba(255,255,255,.97);backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:14px;box-shadow:var(--shadow-lift);padding:12px 14px;width:365px;pointer-events:none}
 .lc-tip .lt-head{font-size:12px;font-weight:800;margin-bottom:8px;color:var(--primary)}
 .lc-tip .lt-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-2);padding:3.5px 0;border-bottom:1px solid var(--line)}
 .lc-tip .lt-row:last-of-type{border-bottom:none}
 .lc-tip .lt-dot{width:7px;height:7px;border-radius:50%;flex:none}
 .lc-tip .lt-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text)}
 .lc-tip .lt-row b{font-variant-numeric:tabular-nums;color:var(--text)}
-.lc-tip .lt-st{font-size:9.5px;font-weight:800;letter-spacing:.04em;width:52px;text-align:right}
+.lc-tip .lt-st{font-size:9.5px;font-weight:800;letter-spacing:.03em;width:78px;text-align:right;white-space:nowrap}
 .lc-tip .lt-more{font-size:11px;color:var(--text-3);padding-top:6px;text-align:center}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(16,22,44,.95);backdrop-filter:blur(8px);color:#fff;font-weight:500;border-radius:12px;padding:12px 20px;box-shadow:0 10px 30px rgba(0,0,0,.32);display:none;z-index:300;font-size:13px;max-width:min(560px,90vw)}
 
@@ -385,7 +385,7 @@ datalist{display:none}
           <div class="ins-wrap">
             <div class="ins-search">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-              <input id="insQ" placeholder="Gõ khách hàng, phân khúc, sales hoặc giai đoạn… (vd: Bibica, DAIRY, Thu, TESTING)" oninput="insSuggest()" onfocus="insSuggest()">
+              <input id="insQ" placeholder="Gõ khách hàng, sản phẩm, phân khúc, sales hoặc giai đoạn… (vd: Bibica, NUTRIOSE, DAIRY, Thu, TESTING)" oninput="insSuggest()" onfocus="insSuggest()">
             </div>
             <div class="ins-sug glass" id="insSug"></div>
           </div>
@@ -830,7 +830,7 @@ function renderDash(){
 }
 
 /* ====== LINE CHART TOOLTIP ====== */
-const ST_SHORT={'WON':'WON','LOST':'LOST','IN PROGRESS':'PROCESS'};
+const ST_SHORT={'WON':'WON','LOST':'LOST','IN PROGRESS':'IN PROGRESS'};
 const ST_COL={'WON':'#15803D','LOST':'#BE1240','IN PROGRESS':'#C2620A'};
 function lcTip(i,ev){
   const d=LC_DATA[i]; if(!d)return;
@@ -842,7 +842,7 @@ function lcTip(i,ev){
   tip.innerHTML=`<div class="lt-head">Tháng ${d.label} · ${d.recs.length} dự án mới</div>`+items
     +(d.recs.length>6?`<div class="lt-more">+ ${d.recs.length-6} dự án khác…</div>`:'');
   tip.style.display='block';
-  tip.style.left=Math.min(ev.clientX+16, innerWidth-360)+'px';
+  tip.style.left=Math.min(ev.clientX+16, innerWidth-385)+'px';
   tip.style.top=Math.min(ev.clientY+14, innerHeight-tip.offsetHeight-14)+'px';
 }
 function hideLcTip(){document.getElementById('lcTip').style.display='none';}
@@ -854,11 +854,12 @@ function insSuggest(){
   if(!q){box.classList.remove('open');return;}
   const sug=[];
   LISTS.customers.filter(c=>c.toLowerCase().includes(q)).slice(0,5).forEach(c=>sug.push({t:'kh',label:c}));
+  LISTS.products.filter(c=>c.toLowerCase().includes(q)).slice(0,5).forEach(c=>sug.push({t:'prod',label:c}));
   LISTS.segments.filter(s=>s.toLowerCase().includes(q)).slice(0,3).forEach(s=>sug.push({t:'seg',label:s}));
   ALL_PICS.filter(p=>p.toLowerCase().includes(q)).slice(0,4).forEach(p=>sug.push({t:'pic',label:p}));
   STAGES.filter(s=>s.toLowerCase().includes(q)||stageShort(s).toLowerCase().includes(q)).slice(0,4).forEach(s=>sug.push({t:'stage',label:s}));
   box.innerHTML=sug.length?sug.map(s=>{
-    const tag=s.t==='kh'?'<span class="t t-kh">KHÁCH HÀNG</span>':s.t==='seg'?'<span class="t t-seg">SEGMENT</span>':s.t==='stage'?'<span class="t t-stage">BOP STAGE</span>':'<span class="t t-pic">SALES</span>';
+    const tag=s.t==='kh'?'<span class="t t-kh">KHÁCH HÀNG</span>':s.t==='prod'?'<span class="t t-prod">SẢN PHẨM</span>':s.t==='seg'?'<span class="t t-seg">SEGMENT</span>':s.t==='stage'?'<span class="t t-stage">BOP STAGE</span>':'<span class="t t-pic">SALES</span>';
     return `<button onclick="showInsight('${s.t}','${s.label.replace(/'/g,"\\'")}')">${tag}<b>${s.label}</b></button>`;}).join('')
     :'<button disabled style="color:var(--text-3)">Không tìm thấy kết quả</button>';
   box.classList.add('open');
@@ -873,14 +874,14 @@ function showInsight(type,key){
 }
 function renderInsight(){
   const {type,key}=INSIGHT;
-  const match = type==='kh' ? r=>r.customer===key : type==='seg' ? r=>r.segment===key : type==='stage' ? r=>r.stage===key : r=>r.pic===key;
+  const match = type==='kh' ? r=>r.customer===key : type==='prod' ? r=>r.product===key : type==='seg' ? r=>r.segment===key : type==='stage' ? r=>r.stage===key : r=>r.pic===key;
   const ps=visible().filter(match);
   const box=document.getElementById('insResult');
   if(!ps.length){box.innerHTML='<div class="ins-empty">Không có dự án nào (trong phạm vi quyền xem của bạn).</div>';return;}
   const prog=ps.filter(r=>r.status==='IN PROGRESS'),won=ps.filter(r=>r.status==='WON'),lost=ps.filter(r=>r.status==='LOST');
   const kg=ps.reduce((s,r)=>s+r.kgThis,0);
   const wr=won.length+lost.length?Math.round(100*won.length/(won.length+lost.length)):0;
-  const tag=type==='kh'?'<span class="t t-kh" style="font-size:10.5px;padding:3px 9px">KHÁCH HÀNG</span>':type==='seg'?'<span class="t t-seg" style="font-size:10.5px;padding:3px 9px">SEGMENT</span>':type==='stage'?'<span class="t t-stage" style="font-size:10.5px;padding:3px 9px">BOP STAGE</span>':'<span class="t t-pic" style="font-size:10.5px;padding:3px 9px">SALES</span>';
+  const tag=type==='kh'?'<span class="t t-kh" style="font-size:10.5px;padding:3px 9px">KHÁCH HÀNG</span>':type==='prod'?'<span class="t t-prod" style="font-size:10.5px;padding:3px 9px">SẢN PHẨM</span>':type==='seg'?'<span class="t t-seg" style="font-size:10.5px;padding:3px 9px">SEGMENT</span>':type==='stage'?'<span class="t t-stage" style="font-size:10.5px;padding:3px 9px">BOP STAGE</span>':'<span class="t t-pic" style="font-size:10.5px;padding:3px 9px">SALES</span>';
   const items=[...ps].sort((a,b)=>(a.created||'')<(b.created||'')?1:-1);
   box.innerHTML=`
     <div class="ins-head">${tag}<h3>${key}</h3></div>
