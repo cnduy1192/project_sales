@@ -285,6 +285,58 @@ datalist{display:none}
 .lc-tip .lt-more{font-size:11px;color:var(--text-3);padding-top:6px;text-align:center}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(16,22,44,.95);backdrop-filter:blur(8px);color:#fff;font-weight:500;border-radius:12px;padding:12px 20px;box-shadow:0 10px 30px rgba(0,0,0,.32);display:none;z-index:300;font-size:13px;max-width:min(560px,90vw)}
 
+
+/* ---------- AI ASSISTANT ---------- */
+.ai-fab{position:fixed;right:26px;bottom:26px;width:60px;height:60px;border-radius:50%;z-index:760;
+  background:linear-gradient(135deg,#2B4BAB,#16255F 60%,#0E7490);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 26px rgba(30,58,138,.45);transition:.2s;animation:aiFloat 3.2s ease-in-out infinite}
+.ai-fab:hover{transform:scale(1.08)}
+.ai-fab::before,.ai-fab::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid rgba(43,75,171,.55);animation:aiRing 2.6s ease-out infinite}
+.ai-fab::after{animation-delay:1.3s}
+.ai-fab .ai-spark{position:absolute;top:6px;right:8px;width:13px;height:13px;color:#7DE3F0;animation:aiSpark 2s ease-in-out infinite}
+@keyframes aiRing{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.75);opacity:0}}
+@keyframes aiFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes aiSpark{0%,100%{opacity:.4;transform:scale(.8) rotate(0deg)}50%{opacity:1;transform:scale(1.15) rotate(18deg)}}
+.ai-panel{position:fixed;right:26px;bottom:98px;width:396px;max-width:calc(100vw - 32px);height:580px;max-height:calc(100dvh - 130px);
+  z-index:750;border-radius:20px;display:none;flex-direction:column;overflow:hidden;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(30px) saturate(1.3);border:1px solid var(--glass-border);box-shadow:0 30px 80px rgba(16,22,44,.35);
+  animation:pop .2s ease-out}
+.ai-panel.open{display:flex}
+.ai-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);
+  background:linear-gradient(135deg,rgba(43,75,171,.12),rgba(14,116,144,.08))}
+.ai-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2B4BAB,#0E7490);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.ai-head b{font-size:14px;display:block}
+.ai-head small{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+.ai-status{width:7px;height:7px;border-radius:50%;background:#15803D;display:inline-block}
+.ai-status.off{background:#C2620A}
+.ai-head .x-btn{margin-left:auto}
+.ai-settings{padding:12px 16px;border-bottom:1px solid var(--line);background:rgba(30,58,138,.04);display:none}
+.ai-settings.open{display:block}
+.ai-settings label{font-size:11.5px;font-weight:700;color:var(--text-2);display:block;margin-bottom:5px}
+.ai-settings .as-row{display:flex;gap:7px}
+.ai-settings input{flex:1;border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12.5px;outline:none;background:#fff}
+.ai-settings input:focus{border-color:var(--primary)}
+.ai-settings .hint{font-size:11px;color:var(--text-3);margin-top:6px}
+.ai-msgs{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.ai-msg{display:flex;gap:9px;max-width:100%}
+.ai-msg .m-body{border-radius:4px 14px 14px 14px;padding:10px 13px;font-size:13px;line-height:1.55;color:var(--text);background:rgba(30,58,138,.06);border:1px solid rgba(30,58,138,.1);max-width:86%}
+.ai-msg.user{flex-direction:row-reverse}
+.ai-msg.user .m-body{background:linear-gradient(135deg,#2B4BAB,#16255F);color:#fff;border:none;border-radius:14px 4px 14px 14px}
+.ai-msg .m-body b{font-weight:700}
+.ai-msg .m-body ul{margin:4px 0 4px 16px}
+.ai-typing{display:inline-flex;gap:4px;padding:12px 14px}
+.ai-typing span{width:7px;height:7px;border-radius:50%;background:var(--primary);opacity:.4;animation:aiDot 1.2s infinite}
+.ai-typing span:nth-child(2){animation-delay:.2s}
+.ai-typing span:nth-child(3){animation-delay:.4s}
+@keyframes aiDot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+.ai-quick{display:flex;gap:7px;padding:0 16px 10px;flex-wrap:wrap}
+.ai-chip{border:1px solid var(--primary-border);background:var(--primary-soft);color:var(--primary);border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:600;transition:.12s}
+.ai-chip:hover{background:rgba(30,58,138,.16)}
+.ai-input{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.ai-input input{flex:1;border:1px solid var(--line);border-radius:12px;padding:10px 13px;outline:none;background:#fff;font-size:13px}
+.ai-input input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
+@media (max-width:900px){.ai-panel{right:8px;bottom:92px}}
+
 @media (max-width:900px){
   .shell{grid-template-columns:1fr}
   .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
@@ -528,6 +580,40 @@ datalist{display:none}
   <div class="pp-chips" id="ppChips"></div>
 </div>
 
+
+<!-- ============ AI ASSISTANT ============ -->
+<button class="ai-fab" id="aiFab" onclick="toggleAI()" aria-label="Trợ lý AI" style="display:none">
+  <svg class="ai-spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+    <rect x="4" y="7" width="16" height="12" rx="4"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7V4M9 4h6"/></svg>
+</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-head">
+    <span class="ai-avatar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="7" width="16" height="12" rx="4"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7V4M9 4h6"/></svg></span>
+    <div><b>FI Assistant</b><small><span class="ai-status" id="aiStatus"></span><span id="aiStatusText">Gemini qua Cloudflare</span></small></div>
+    <button class="x-btn" onclick="toggleAISettings()" aria-label="Cài đặt" title="Cài đặt gateway">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+    <button class="x-btn" onclick="toggleAI()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="ai-settings" id="aiSettings">
+    <label>Cloudflare Worker URL (API Gateway)</label>
+    <div class="as-row">
+      <input id="aiUrl" placeholder="https://fisg-ai.your-name.workers.dev">
+      <button class="btn-primary" style="padding:8px 13px;font-size:12px" onclick="saveAIUrl()">Lưu</button>
+    </div>
+    <div class="hint">Chưa có URL → chatbot chạy chế độ phân tích cục bộ trên dữ liệu pipeline. Deploy Worker theo file <b>FISG_AI_Worker.js</b> trong folder dự án.</div>
+  </div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-quick">
+    <button class="ai-chip" onclick="aiQuick('Soạn báo cáo tuần cho manager: dự án mới, thay đổi tiến độ, quá hạn, sắp đóng và đề xuất ưu tiên.')">Báo cáo tuần cho manager</button>
+    <button class="ai-chip" onclick="aiQuickFill('Tổng hợp các dự án đang ở tiến độ 30% và gợi ý bước tiếp theo để tăng khả năng thắng.')">Tổng hợp theo % tiến độ</button>
+  </div>
+  <div class="ai-input">
+    <input id="aiText" placeholder="Hỏi về pipeline, phụ gia thực phẩm, cách tăng win-rate…" onkeydown="if(event.key==='Enter')aiSend()">
+    <button class="send-btn" onclick="aiSend()" aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
 <div class="lc-tip" id="lcTip"></div>
 
 <div class="toast" id="toastEl"></div>
@@ -577,7 +663,7 @@ function loginAs(i){
   const isAdmin = me.role==='superadmin';
   document.getElementById('navAdminLabel').style.display = isAdmin?'block':'none';
   document.getElementById('navUsers').style.display = isAdmin?'flex':'none';
-  go('funnel'); buildForm(); buildUsers(); renderNotifs();
+  go('funnel'); buildForm(); buildUsers(); renderNotifs(); initAI();
 }
 
 /* ====== NAV ====== */
@@ -1072,6 +1158,110 @@ function buildUsers(){
       <div><span class="pill ${u.role==='superadmin'?'p-oa':u.role==='manager'?'p-sbg':'p-st'}">${roleVI(u.role)}</span></div>
       <div class="role-actions">${act}</div>
     </div>`}).join('');
+}
+
+
+/* ====== AI ASSISTANT (Gemini qua Cloudflare Worker gateway) ====== */
+let AI_URL = '', AI_HIST = [], AI_BUSY = false;
+try{ AI_URL = localStorage.getItem('fisg_ai_url')||''; }catch(e){}
+function initAI(){
+  document.getElementById('aiFab').style.display='flex';
+  document.getElementById('aiUrl').value=AI_URL;
+  updateAIStatus();
+  if(!document.querySelectorAll('#aiMsgs .ai-msg').length)
+    aiAppend('bot','Xin chào <b>'+me.name+'</b>! Tôi là FI Assistant — trợ lý AI về pipeline Sales Funnel và phụ gia thực phẩm Roquette (NUTRIOSE, CLEARAM, tinh bột biến tính…).\nHỏi tôi về tiến độ dự án, báo cáo tuần, hoặc cách tăng khả năng thắng.');
+}
+function updateAIStatus(){
+  const on=!!AI_URL;
+  document.getElementById('aiStatus').className='ai-status'+(on?'':' off');
+  document.getElementById('aiStatusText').textContent=on?'Gemini qua Cloudflare — đã kết nối':'Chế độ cục bộ — chưa cấu hình gateway';
+}
+function toggleAI(){document.getElementById('aiPanel').classList.toggle('open');}
+function toggleAISettings(){document.getElementById('aiSettings').classList.toggle('open');}
+function saveAIUrl(){
+  AI_URL=document.getElementById('aiUrl').value.trim().replace(/\/$/,'');
+  try{localStorage.setItem('fisg_ai_url',AI_URL);}catch(e){}
+  updateAIStatus(); toggleAISettings();
+  toast(AI_URL?'Đã lưu gateway. Chatbot dùng Gemini thật.':'Đã xoá gateway. Chatbot chạy chế độ cục bộ.');
+}
+function aiEsc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function aiMd(s){
+  return aiEsc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^[-•] (.*)$/gm,'• $1').replace(/\n/g,'<br>');
+}
+function aiAppend(role,html){
+  const box=document.getElementById('aiMsgs');
+  const d=document.createElement('div'); d.className='ai-msg'+(role==='user'?' user':'');
+  d.innerHTML=(role==='user'?'':'<span class="ai-avatar" style="width:28px;height:28px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="7" width="16" height="12" rx="4"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7V4"/></svg></span>')
+    +'<div class="m-body">'+html+'</div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+  return d;
+}
+function aiTyping(){
+  const box=document.getElementById('aiMsgs');
+  const d=document.createElement('div'); d.className='ai-msg'; d.id='aiTypingEl';
+  d.innerHTML='<span class="ai-avatar" style="width:28px;height:28px"></span><div class="m-body ai-typing"><span></span><span></span><span></span></div>';
+  box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+function aiUntype(){const e=document.getElementById('aiTypingEl');if(e)e.remove();}
+function aiQuick(t){document.getElementById('aiText').value=t;aiSend();}
+function aiQuickFill(t){const i=document.getElementById('aiText');i.value=t;i.focus();i.setSelectionRange(t.indexOf('30%'),t.indexOf('30%')+3);}
+/* -- dữ liệu realtime gửi kèm cho AI: toàn bộ pipeline -- */
+function aiContext(){
+  const rows=RECORDS;
+  const prog=rows.filter(r=>r.status==='IN PROGRESS');
+  const stats='HÔM NAY: 07/07/2026. TỔNG QUAN REALTIME: '+rows.length+' dự án ('+prog.length+' đang chạy, '
+    +rows.filter(r=>r.status==='WON').length+' thắng, '+rows.filter(r=>r.status==='LOST').length+' thua); '
+    +prog.filter(r=>grp(r)==='overdue').length+' quá hạn; tiềm năng đang chạy '
+    +prog.reduce((s,r)=>s+r.kgThis,0).toLocaleString('vi-VN')+' KG/2026.';
+  const table=rows.map(r=>[r.id,r.customer,r.product,r.application,r.segment,stageShort(r.stage),probPct(r)+'%',r.status,r.closing||'',r.kgThis,r.pic].join('|')).join('\n');
+  return stats+'\nDỮ LIỆU (id|khách hàng|sản phẩm|ứng dụng|segment|stage|%|status|ngày đóng|KG2026|PIC):\n'+table;
+}
+const AI_SYSTEM='Bạn là FI Assistant — trợ lý AI nội bộ của FI SAIGON JSC, nhà phân phối phụ gia thực phẩm Roquette tại Việt Nam (NUTRIOSE, CLEARAM, CLEARGUM, GLUCIDEX, NUTRALYS, POLYSORB, tinh bột biến tính...). Nhiệm vụ: (1) hỗ trợ nhân viên về nghiên cứu, pha chế, ứng dụng và bán phụ gia thực phẩm; (2) phân tích pipeline Sales Funnel từ dữ liệu được cung cấp — tổng hợp theo tiến độ %, trạng thái, quá hạn; (3) đề xuất bước hành động cụ thể để tăng khả năng thắng dự án (theo BOP Stage: SHARED GOAL→BUILDING→TESTING→OFFER). Luôn trả lời bằng tiếng Việt, ngắn gọn, có số liệu cụ thể từ dữ liệu, dùng **đậm** cho điểm chính và gạch đầu dòng khi liệt kê. Người đang hỏi: ';
+async function aiSend(){
+  const inp=document.getElementById('aiText'); const q=inp.value.trim();
+  if(!q||AI_BUSY)return;
+  inp.value=''; aiAppend('user',aiEsc(q)); AI_HIST.push({role:'user',text:q});
+  AI_BUSY=true; aiTyping();
+  let ans;
+  if(AI_URL){
+    try{
+      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),45000);
+      const res=await fetch(AI_URL,{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+        body:JSON.stringify({system:AI_SYSTEM+me.name+' (vai trò '+roleVI(me.role)+').\n'+aiContext(),messages:AI_HIST.slice(-10)})});
+      clearTimeout(t);
+      const j=await res.json();
+      ans=j.text||j.error||'Gateway không trả lời được. Kiểm tra Worker và Gemini API key.';
+    }catch(e){ans='Không gọi được gateway ('+e.message+'). Kiểm tra URL Worker trong Cài đặt, hoặc dùng chế độ cục bộ bằng cách xoá URL.';}
+  }else{
+    await new Promise(r=>setTimeout(r,700));
+    ans=aiLocal(q);
+  }
+  aiUntype(); AI_HIST.push({role:'model',text:ans});
+  aiAppend('bot',aiMd(ans)); AI_BUSY=false;
+}
+/* -- chế độ cục bộ: phân tích trực tiếp trên dữ liệu khi chưa có gateway -- */
+function aiLocal(q){
+  const ql=q.toLowerCase();
+  const prog=RECORDS.filter(r=>r.status==='IN PROGRESS');
+  const pm=ql.match(/(\d{1,3})\s*%/);
+  if(pm){
+    const pct=+pm[1];
+    const hits=prog.filter(r=>probPct(r)===pct).sort((a,b)=>b.kgThis-a.kgThis);
+    if(!hits.length)return 'Không có dự án đang chạy nào ở đúng tiến độ **'+pct+'%**. Các mức hiện có: '+[...new Set(prog.map(probPct))].sort((a,b)=>a-b).map(x=>x+'%').join(', ')+'.';
+    const top=hits.slice(0,8).map(r=>'- **'+r.customer+'** · '+r.product+' ('+r.application+') — '+stageShort(r.stage)+', đóng '+(r.closing?new Date(r.closing).toLocaleDateString('vi-VN'):'?')+', '+r.kgThis.toLocaleString('vi-VN')+' KG, PIC '+r.pic).join('\n');
+    return '**'+hits.length+' dự án đang ở tiến độ '+pct+'%** (tổng '+hits.reduce((s,r)=>s+r.kgThis,0).toLocaleString('vi-VN')+' KG/2026):\n'+top+(hits.length>8?'\n…và '+(hits.length-8)+' dự án khác.':'')+'\n\n**Gợi ý bước tiếp theo:**\n- Dự án ở TESTING: chốt lịch đánh giá mẫu với khách trong 2 tuần, chuẩn bị phương án giá sớm.\n- Dự án ở BUILDING: xác nhận spec kỹ thuật và gửi mẫu thử đợt mới.\n- Ưu tiên các dự án KG lớn và ngày đóng gần nhất; cập nhật % ngay trên funnel sau mỗi buổi làm việc với khách.';
+  }
+  if(ql.includes('báo cáo')||ql.includes('tuần')){
+    const over=prog.filter(r=>grp(r)==='overdue');
+    const soon=prog.filter(r=>r.closing&&(new Date(r.closing)-TODAY)/864e5>=0&&(new Date(r.closing)-TODAY)/864e5<=30);
+    const newm=RECORDS.filter(r=>r.created&&r.created.slice(0,7)==='2026-06');
+    return '**BÁO CÁO TUẦN — PIPELINE FI SAIGON (07/07/2026)**\n'
+      +'- Đang chạy: **'+prog.length+'** dự án, tiềm năng **'+prog.reduce((s,r)=>s+r.kgThis,0).toLocaleString('vi-VN')+' KG/2026**\n'
+      +'- Tạo mới tháng 6: **'+newm.length+'** dự án\n'
+      +'- Quá hạn cần xử lý: **'+over.length+'** — '+(over.slice(0,3).map(r=>r.customer+' ('+r.pic+')').join(', ')||'không có')+'\n'
+      +'- Đóng trong 30 ngày tới: **'+soon.length+'** dự án\n\n**Đề xuất ưu tiên tuần này:**\n- Review '+over.length+' dự án quá hạn: gia hạn ngày đóng hoặc đóng LOST kèm lý do.\n- Đẩy các dự án 50-75% ở SOLUTION TESTING sang OFFER: chuẩn bị báo giá.\n- Nhắc PIC cập nhật trao đổi để manager theo dõi realtime.\n\n(Chế độ cục bộ — kết nối Cloudflare Worker để nhận phân tích sâu hơn từ Gemini.)';
+  }
+  return 'Chế độ cục bộ đang bật (chưa cấu hình gateway Gemini). Tôi vẫn phân tích được dữ liệu pipeline:\n- Gõ "**tổng hợp dự án 30%**" — liệt kê theo tiến độ kèm gợi ý.\n- Gõ "**báo cáo tuần**" — tóm tắt pipeline cho manager.\n\nĐể hỏi đáp tự do về phụ gia thực phẩm và nhận gợi ý sâu hơn, bấm bánh răng và dán URL Cloudflare Worker (xem file FISG_AI_Worker.js).';
 }
 
 /* ====== TOAST ====== */
