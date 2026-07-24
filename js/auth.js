@@ -31,14 +31,26 @@
   }
 
   async function signIn() {
-    const a = init();
-    if (!a) { if (window.toast) toast("Chưa tải được MSAL (cần internet). Kiểm tra kết nối."); return; }
+    let a = init();
+    // MSAL tải async từ CDN — nếu click sớm, chờ tối đa 3s rồi thử lại
+    for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = init(); }
+    if (!a) {
+      if (window.toast) toast("Chưa tải được MSAL. Tải lại trang (F5); nếu vẫn lỗi, kiểm tra mạng/chặn CDN.");
+      return;
+    }
+    if (location.protocol === "file:") {
+      if (window.toast) toast("Đăng nhập Microsoft cần chạy qua http(s) (GitHub Pages/localhost), không mở file trực tiếp.");
+      return;
+    }
     try {
       const r = await a.loginPopup({ scopes: CFG.scopes });
       account = r.account; a.setActiveAccount(account);
       await enter(account);
     } catch (e) {
-      if (window.toast) toast("Đăng nhập lỗi: " + (e.message || e));
+      const msg = e.message || String(e);
+      if (/redirect_uri|AADSTS50011/i.test(msg))
+        toast("Redirect URI chưa khớp. Thêm '" + CFG.redirectUri + "' vào App Registration → Authentication (SPA).");
+      else if (window.toast) toast("Đăng nhập lỗi: " + msg);
     }
   }
 
