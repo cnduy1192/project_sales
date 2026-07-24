@@ -43,6 +43,18 @@
     return out;
   }
 
+  // {internal: display} của 1 list (cache) — để map khi internal name bị SharePoint mã hoá
+  const colCache = {};
+  async function columns(listName) {
+    if (colCache[listName]) return colCache[listName];
+    const sid = await getSiteId();
+    const d = await api("/sites/" + sid + "/lists/" + encodeURIComponent(listName) + "/columns?$top=200");
+    const map = {};
+    (d.value || []).forEach(c => { map[c.name] = c.displayName || ""; });
+    colCache[listName] = map;
+    return map;
+  }
+
   async function createItem(listName, fields) {
     const sid = await getSiteId();
     return api("/sites/" + sid + "/lists/" + encodeURIComponent(listName) + "/items",
@@ -54,5 +66,5 @@
       { method: "PATCH", body: JSON.stringify(fields) });
   }
 
-  window.FISG_GRAPH = { api, getSiteId, listItems, createItem, updateItem };
+  window.FISG_GRAPH = { api, getSiteId, listItems, createItem, updateItem, columns };
 })();
