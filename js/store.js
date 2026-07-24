@@ -56,6 +56,28 @@
     return String(v);
   }
 
+  // Graph thường chỉ trả "<Cột>LookupId" (ID), không kèm tên -> cần bảng tra ID→Title
+  function lookupVal(f, base, map) {
+    const direct = f[base];
+    if (direct != null && direct !== "") {
+      const s = txt(direct);
+      if (s) return s;
+    }
+    let id = f[base + "LookupId"];
+    if (id == null) return "";
+    if (!Array.isArray(id)) id = [id];
+    return id.map(x => (map && map[String(x)]) || "").filter(Boolean).join(", ");
+  }
+
+  async function idTitleMap(listName) {
+    try {
+      const items = await FISG_GRAPH.listItems(listName);
+      const m = {};
+      items.forEach(it => { m[String(it.id)] = txt((it.fields || {}).Title); });
+      return m;
+    } catch (e) { return {}; }
+  }
+
   function statusOf(status, result) {
     const st = txt(status).toLowerCase(), res = txt(result).toUpperCase();
     if (res === "WON") return "WON";
@@ -69,18 +91,38 @@
       return false;
     try {
       if (window.toast) toast("Đang tải dữ liệu từ SharePoint…");
-      const [pCols, aCols, projs, acts] = await Promise.all([
+      const [pCols, aCols, projs, acts, supMap, cusMap, prodMap, ups] = await Promise.all([
         FISG_GRAPH.columns("Projects"), FISG_GRAPH.columns("Activities"),
         FISG_GRAPH.listItems("Projects"), FISG_GRAPH.listItems("Activities"),
+        idTitleMap("Suppliers"), idTitleMap("Customers"), idTitleMap("Products"),
+        FISG_GRAPH.listItems("ProjectUpdates").catch(() => []),
       ]);
       const gp = makeGetter("Projects", pCols), ga = makeGetter("Activities", aCols);
+      // tên internal thật (đề phòng cột bị mã hoá) -> dùng cho lookupVal
+      const nameOf = (getter, f, key) => key;   // cột đang đúng tên Anh; getter dùng cho field thường
+
+      // gom ProjectUpdates theo dự án -> tab "Trao đổi"
+      const upsBy = {};
+      (ups || []).forEach(it => {
+        const f = it.fields || {};
+        const pid = String(f.ProjectLookupId || "");
+        if (!pid) return;
+        (upsBy[pid] = upsBy[pid] || []).push({
+          by: txt(f.PICName) || "—",
+          at: txt(f.UpdateDate).slice(0, 10),
+          text: txt(f.Content),
+        });
+      });
 
       const recs = projs.map((it, i) => {
         const f = it.fields || {};
-        const rel = txt(gp(f, "RelatedPeople"));
+        const title = txt(f.Title);
+        const code = (title.match(/^(P-\d+)/) || [])[1] || ("P-" + (it.id || i));
         return {
-          ncc: txt(gp(f, "Supplier")), customer: txt(gp(f, "Customer")),
-          product: txt(gp(f, "Products")), application: txt(gp(f, "Application")),
+          ncc: lookupVal(f, "Supplier", supMap),
+          customer: lookupVal(f, "Customer", cusMap),
+          product: lookupVal(f, "Products", prodMap),
+          application: txt(gp(f, "Application")),
           segment: txt(gp(f, "Segment")), group: txt(gp(f, "SegmentGroup")),
           stage: txt(gp(f, "Stage")),
           status: statusOf(gp(f, "Status"), gp(f, "Result")),
@@ -88,23 +130,30 @@
           prob: (Number(gp(f, "WinProbability")) || 0) / 100,
           kgThis: Number(gp(f, "PotentialKgThisYear")) || 0,
           kgNext: Number(gp(f, "PotentialKgNextYear")) || 0,
-          pic: txt(gp(f, "PIC")) || txt(f.PICName),
-          related: rel ? rel.split(", ").filter(Boolean) : [],
+          pic: txt(f.PICName) || txt(gp(f, "PIC")),
+          related: [],
           created: txt(gp(f, "CreationDate")).slice(0, 10),
           closing: txt(gp(f, "ClosingDate")).slice(0, 10),
-          desc: txt(f.Title), id: "P-" + (it.id || i), comments: [],
+          desc: title, id: code, spId: it.id,
+          comments: upsBy[String(it.id)] || [],
         };
       });
+      const byItemId = {};
+      recs.forEach(r => { byItemId[String(r.spId)] = r.id; });
+
       const A = acts.map((it, i) => {
         const f = it.fields || {};
         return {
-          customer: txt(ga(f, "Customer")), pic: txt(ga(f, "PIC")) || txt(f.PICName),
-          ncc: txt(ga(f, "Supplier")), product: txt(ga(f, "Product")),
+          customer: lookupVal(f, "Customer", cusMap),
+          pic: txt(f.PICName) || txt(ga(f, "PIC")),
+          ncc: lookupVal(f, "Supplier", supMap),
+          product: lookupVal(f, "Product", prodMap),
           type: txt(ga(f, "ActivityType")) || "Khác",
           date: txt(ga(f, "ActivityDate")).slice(0, 10),
           note: txt(ga(f, "Content")), next: txt(ga(f, "NextStep")),
           potential: txt(ga(f, "PotentialLevel")),
-          projectId: txt(ga(f, "RelatedProject")), id: "A-" + (it.id || i),
+          projectId: byItemId[String(f.RelatedProjectLookupId || "")] || "",
+          id: "A-" + (it.id || i),
         };
       });
 
