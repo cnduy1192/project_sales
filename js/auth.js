@@ -2,9 +2,9 @@
  * Nối vào nút .ms-btn có sẵn ở màn đăng nhập. Sau khi đăng nhập -> gọi store tải Graph. */
 (function () {
   const CFG = window.FISG_CFG;
-  let app = null, account = null;
+  let app = null, account = null, initPromise = null;
 
-  function init() {
+  function build() {
     if (app) return app;
     if (!window.msal || !CFG) return null;
     app = new msal.PublicClientApplication({
@@ -18,8 +18,18 @@
     return app;
   }
 
+  // MSAL v3 BẮT BUỘC await initialize() trước mọi API khác — bọc 1 lần duy nhất
+  async function ready() {
+    const a = build();
+    if (!a) return null;
+    if (!initPromise) initPromise = a.initialize();
+    await initPromise;
+    return a;
+  }
+  function init() { return build(); }   // giữ tương thích chỗ gọi cũ
+
   async function getToken(scopes) {
-    const a = init();
+    const a = await ready();
     if (!a || !account) throw new Error("chưa đăng nhập Microsoft");
     try {
       const r = await a.acquireTokenSilent({ scopes: scopes || CFG.scopes, account });
@@ -31,9 +41,9 @@
   }
 
   async function signIn() {
-    let a = init();
+    let a = await ready();
     // MSAL tải async từ CDN — nếu click sớm, chờ tối đa 3s rồi thử lại
-    for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = init(); }
+    for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = await ready(); }
     if (!a) {
       if (window.toast) toast("Chưa tải được MSAL. Tải lại trang (F5); nếu vẫn lỗi, kiểm tra mạng/chặn CDN.");
       return;
@@ -70,7 +80,7 @@
   }
 
   async function handleRedirect() {
-    const a = init(); if (!a) return null;
+    const a = await ready(); if (!a) return null;
     try {
       const r = await a.handleRedirectPromise();
       if (r && r.account) account = r.account;
