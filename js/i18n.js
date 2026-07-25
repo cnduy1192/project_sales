@@ -88,6 +88,11 @@
     "Vui lòng nhập lý do đóng dự án.": "Please enter the reason for closing.",
     "Chưa có URL → chatbot chạy chế độ phân tích cục bộ trên dữ liệu pipeline. Deploy Worker theo file":
       "No URL → chatbot runs local analysis mode on pipeline data. Deploy the Worker per the file",
+    // nhãn của ui-kit (menu hồ sơ, nút xoá tìm kiếm, lên đầu trang)
+    "Đăng xuất": "Sign out", "Tài khoản": "Account", "Lên đầu trang": "Back to top",
+    "Xoá nội dung tìm": "Clear search", "Lọc nhanh funnel": "Quick filter",
+    "Tìm khách hàng, sản phẩm, phân khúc, sales, giai đoạn":
+      "Search customer, product, segment, sales, stage",
     "Xin chào": "Hello", "Còn lại trong 2026": "Remaining in 2026",
     "2027 trở đi": "2027 onward", "KG tiềm năng 2026": "Potential KG 2026",
     "cần xử lý": "needs action", "ngày đóng đã qua": "closing date passed",

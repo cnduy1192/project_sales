@@ -1,0 +1,126 @@
+/* ui-kit.css — lớp giao diện bổ sung (profile menu, định danh màu NCC, dải trạng thái,
+   nút xoá nhanh ô tìm kiếm, nút lên đầu trang). Nạp SAU styles.css. */
+
+/* ---------- 1. Bỏ khối thông tin người đăng nhập ở sidebar ---------- */
+.sidebar-user { display: none !important; }
+
+/* chú thích do JS ghi lại sau khi render -> ẩn bằng CSS cho chắc */
+#segHint { display: none !important; }
+
+/* ---------- 2. Avatar + menu hồ sơ ở header ---------- */
+.profile-wrap { position: relative; display: flex; align-items: center; }
+.profile-btn {
+  display: flex; align-items: center; gap: 7px; padding: 3px 3px 3px 4px;
+  border: 1px solid transparent; border-radius: 999px; background: none; cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.profile-btn:hover { border-color: var(--line); background: var(--surface); }
+.profile-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.profile-btn .chev { color: var(--ink-3); transition: transform .18s; }
+.profile-wrap.open .profile-btn .chev { transform: rotate(180deg); }
+
+.profile-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; width: 244px; z-index: 900;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow-lg); padding: 6px; display: none;
+}
+.profile-wrap.open .profile-menu { display: block; }
+.profile-id { display: flex; gap: 10px; align-items: center; padding: 10px 10px 12px; }
+.profile-id b { font-size: 13px; display: block; line-height: 1.35; }
+.profile-id small { display: block; color: var(--ink-3); font-size: 11.5px; word-break: break-all; }
+.profile-role {
+  display: inline-block; margin-top: 5px; padding: 2px 8px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+  background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border);
+}
+.profile-menu hr { border: none; border-top: 1px solid var(--line-2); margin: 2px 0 6px; }
+.profile-act {
+  width: 100%; display: flex; align-items: center; gap: 9px; padding: 9px 10px;
+  border: none; border-radius: 8px; background: none; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--lost); text-align: left;
+}
+.profile-act:hover { background: var(--lost-bg); }
+.profile-act:focus-visible { outline: 2px solid var(--lost); outline-offset: -2px; }
+
+/* ---------- 3. Định danh màu 3 NCC (signature) ---------- */
+.ncc-tab { display: inline-flex; align-items: center; gap: 7px; position: relative; }
+.ncc-tab::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ncc, var(--ink-3)); flex: none; transition: box-shadow .15s;
+}
+.ncc-tab.on {
+  background: var(--ncc-soft, var(--surface));
+  color: var(--ncc, var(--accent));
+  box-shadow: inset 0 0 0 1px var(--ncc-border, var(--line));
+}
+.ncc-tab.on::before { box-shadow: 0 0 0 3px var(--ncc-soft, transparent); }
+
+/* rail màu NCC trên mỗi dòng dự án */
+.row { position: relative; }
+.row::before {
+  content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--row-ncc, transparent);
+}
+
+/* ---------- 4. Dải trạng thái nổi bật (Đang chạy / Đã đóng + mốc thời gian) ---------- */
+.major-head {
+  border-left: 4px solid var(--major, var(--line));
+  background: linear-gradient(90deg, var(--major-soft, var(--bg)) 0%, var(--bg) 62%);
+}
+.major-head .m-title { font-size: 13.5px; letter-spacing: .05em; color: var(--major, var(--ink)); }
+
+.sub-head { border-left: 3px solid transparent; transition: background .14s, border-color .14s; }
+.sub-head:hover { background: var(--bg); }
+.sub-head[data-sub] { border-left-color: var(--sub, transparent); }
+.sub-head .s-title { font-size: 13px; }
+
+/* đếm số dự án trong từng mốc thời gian */
+.sub-count {
+  margin-left: 8px; padding: 1.5px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: var(--sub-soft, var(--line-2)); color: var(--sub, var(--ink-2));
+  border: 1px solid var(--sub-border, transparent);
+}
+/* Quá hạn: mốc duy nhất được phép "hét" */
+.sub-head[data-sub="overdue"] {
+  background: var(--overdue-bg);
+  border-left-color: var(--overdue);
+}
+.sub-head[data-sub="overdue"] .s-title { color: var(--overdue); font-weight: 700; }
+.sub-head[data-sub="overdue"] .sub-count {
+  background: var(--overdue); color: #fff; border-color: var(--overdue);
+}
+
+/* ---------- 5. Nút xoá nhanh trong ô tìm kiếm ---------- */
+.has-clear { position: relative; }
+.clear-x {
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+  width: 20px; height: 20px; display: none; align-items: center; justify-content: center;
+  border: none; border-radius: 50%; background: var(--line-2); color: var(--ink-2);
+  cursor: pointer; padding: 0; line-height: 1;
+}
+.clear-x:hover { background: var(--ink-3); color: #fff; }
+.clear-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.has-clear.filled .clear-x { display: flex; }
+.gsearch.has-clear input, .ins-wrap.has-clear input { padding-right: 26px; }
+
+/* ---------- 6. Nút lên đầu trang ---------- */
+#toTop {
+  position: fixed; right: 22px; bottom: 22px; z-index: 800;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface); color: var(--accent);
+  box-shadow: var(--shadow-md); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transform: translateY(8px);
+  transition: opacity .2s, transform .2s, visibility .2s;
+}
+#toTop.show { opacity: 1; visibility: visible; transform: none; }
+#toTop:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+#toTop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #toTop, .profile-btn .chev, .clear-x { transition: none; }
+}
+@media (max-width: 720px) {
+  #toTop { right: 14px; bottom: 14px; }
+  .profile-menu { width: 220px; }
+}
