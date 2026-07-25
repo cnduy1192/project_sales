@@ -117,9 +117,9 @@
   }
 
   function buildProfile() {
-    const header = document.querySelector(".gheader");
     const av = document.getElementById("hAvatar");
-    if (!header || !av || document.querySelector(".profile-wrap")) return;
+    const host = (av && av.parentNode) || document.querySelector(".gheader");
+    if (!host || document.querySelector(".profile-wrap")) return;
     const me0 = (typeof me !== "undefined" && me) || {};
     const wrap = document.createElement("div");
     wrap.className = "profile-wrap";
@@ -128,10 +128,12 @@
     btn.setAttribute("aria-haspopup", "menu");
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-label", "Tài khoản");
-    av.parentNode.insertBefore(wrap, av);
-    btn.appendChild(av);                       // dùng lại avatar sẵn có
-    btn.insertAdjacentHTML("beforeend",
-      '<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>');
+    // TỰ dựng avatar riêng (không di chuyển #hAvatar để tránh hỏng layout/handler sẵn có)
+    btn.innerHTML =
+      '<span class="avatar" id="pfAv" style="width:34px;height:34px;font-size:12px"></span>' +
+      '<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+    if (av) { av.style.display = "none"; host.insertBefore(wrap, av); }
+    else host.appendChild(wrap);
     const menu = document.createElement("div");
     menu.className = "profile-menu"; menu.setAttribute("role", "menu");
     menu.innerHTML =
@@ -152,16 +154,23 @@
       menu.querySelector("#pmMail").textContent = m.email || "";
       menu.querySelector("#pmRole").textContent =
         window.roleVI ? roleVI(m.role) : (m.role || "");
-      const pa = menu.querySelector("#pmAv");
-      pa.textContent = window.initials ? initials(nm) : nm.slice(0, 2).toUpperCase();
-      pa.style.background = m.color || "#1E3A8A";
+      const ini = window.initials ? initials(nm) : nm.slice(0, 2).toUpperCase();
+      const bg = m.color || "#1E3A8A";
+      [menu.querySelector("#pmAv"), btn.querySelector("#pfAv")].forEach(pa => {
+        if (!pa) return;
+        pa.textContent = ini; pa.style.background = bg;
+      });
     };
-    btn.onclick = e => {
-      e.stopPropagation();
+    const toggle = e => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       const open = wrap.classList.toggle("open");
       btn.setAttribute("aria-expanded", open ? "true" : "false");
       if (open) fill();
     };
+    btn.addEventListener("click", toggle);
+    btn.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") toggle(e);
+    });
     menu.querySelector("#pmOut").onclick = signOut;
     document.addEventListener("click", e => {
       if (!wrap.contains(e.target)) { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); }
@@ -259,6 +268,99 @@
     if (q) q.placeholder = "Lọc nhanh funnel";
   }
 
+  /* ---------- A. Thay tên tắt PIC bằng TÊN THẬT trên O365 ----------
+   * Đối chiếu qua "User Information List" của site (chỉ cần quyền Sites.ReadWrite.All đã có),
+   * không cần thêm quyền User.Read.All. */
+  const PIC_EMAIL = {
+    "Thu": "thu.trantam@fisaigon.vn", "Tam": "tam.lethanh@fisaigon.vn",
+    "Hung": "hung.tranviet@fisaigon.vn", "Ngoc": "ngoc.phambich@fisaigon.vn",
+    "Bich Ngoc": "ngoc.phambich@fisaigon.vn", "Phi": "phi.truongba@fisaigon.vn",
+    "Phong": "phong.nguyenduc@fisaigon.vn", "Yen": "yen.nguyenhong@fisaigon.vn",
+    "Y Nang": "nang.nguyeny@fisaigon.vn", "Hai": "hai.tranngoc@fisaigon.vn",
+    "Tu": "tu.phanthanh@fisaigon.vn", "Khoa": "khoa.nguyendang@fisaigon.vn",
+  };
+  let PIC_FULL = {};        // tên tắt -> tên đầy đủ O365
+
+  async function loadRealNames() {
+    if (!(window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account())) return false;
+    let byMail = {};
+    try {
+      const sid = await FISG_GRAPH.getSiteId();
+      const d = await FISG_GRAPH.api("/sites/" + sid + "/lists/" +
+        encodeURIComponent("User Information List") +
+        "/items?$expand=fields($select=Title,EMail)&$top=500");
+      (d.value || []).forEach(it => {
+        const f = it.fields || {};
+        if (f.EMail) byMail[String(f.EMail).toLowerCase()] = f.Title;
+      });
+    } catch (e) { return false; }
+
+    PIC_FULL = {};
+    Object.keys(PIC_EMAIL).forEach(short => {
+      const full = byMail[PIC_EMAIL[short].toLowerCase()];
+      if (full && full !== short) PIC_FULL[short] = full;
+    });
+    if (!Object.keys(PIC_FULL).length) return false;
+
+    const F = n => PIC_FULL[n] || n;
+    if (typeof RECORDS !== "undefined") RECORDS.forEach(r => { r.pic = F(r.pic); });
+    if (typeof ACTIVITIES !== "undefined") ACTIVITIES.forEach(a => { a.pic = F(a.pic); });
+    if (typeof USERS !== "undefined") USERS.forEach(u => { if (u.pic) u.pic = F(u.pic); });
+    if (typeof ALL_PICS !== "undefined")
+      ALL_PICS.forEach((p, i) => { ALL_PICS[i] = F(p); });
+    if (typeof me !== "undefined" && me && me.pic) me.pic = F(me.pic);
+    return true;
+  }
+
+  /* ---------- B. Xoá người liên quan; sẵn sàng lấy từ group O365 ---------- */
+  function clearRelated() {
+    if (typeof RECORDS !== "undefined") RECORDS.forEach(r => { r.related = []; });
+    if (typeof related !== "undefined") related = [];
+    if (typeof dRelated !== "undefined") dRelated = [];
+    document.querySelectorAll("#relTags .tag").forEach(t => t.remove());
+    // danh sách chọn người liên quan: để TRỐNG cho tới khi có group O365
+    const hasGroup = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
+    if (!hasGroup && typeof ALL_PICS !== "undefined") ALL_PICS.length = 0;
+    if (window.rebuildRel) try { rebuildRel(); } catch (e) {}
+  }
+  // Khi anh Duy cấp Object ID của group O365 -> điền RELATED_GROUP_ID trong js/sp-config.js
+  async function loadGroupMembers() {
+    const gid = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
+    if (!gid || !(window.FISG_AUTH && FISG_AUTH.account())) return [];
+    try {
+      const d = await FISG_GRAPH.api("/groups/" + gid + "/members?$select=displayName,mail&$top=200");
+      return (d.value || []).map(u => u.displayName).filter(Boolean);
+    } catch (e) {
+      console.warn("[ui-kit] chưa đọc được group O365 (cần quyền GroupMember.Read.All):", e.message);
+      return [];
+    }
+  }
+  async function applyPeopleSource() {
+    const members = await loadGroupMembers();
+    if (typeof ALL_PICS === "undefined") return;
+    ALL_PICS.length = 0;
+    members.forEach(m => ALL_PICS.push(m));   // rỗng nếu chưa cấu hình group -> danh sách trống
+    if (window.rebuildRel) try { rebuildRel(); } catch (e) {}
+  }
+
+  /* ---------- C. Segment phải đủ 13 giá trị (không lấy theo Nhóm ngành) ---------- */
+  function fixSegmentField() {
+    const seg = document.getElementById("f-seg");
+    if (!seg || typeof LISTS === "undefined" || !LISTS.segments) return;
+    const keep = seg.value;
+    seg.innerHTML = LISTS.segments.map(s => `<option>${s}</option>`).join("");
+    if (keep && LISTS.segments.includes(keep)) seg.value = keep;
+    // chọn Segment -> tự set Nhóm ngành tương ứng (giữ dữ liệu nhất quán)
+    if (!seg.dataset.syncGrp) {
+      seg.dataset.syncGrp = "1";
+      seg.addEventListener("change", () => {
+        const grp = document.getElementById("f-grp");
+        const g = (typeof SEG2GROUP !== "undefined") && SEG2GROUP[seg.value];
+        if (grp && g) grp.value = g;
+      });
+    }
+  }
+
   /* ---------- gắn vào vòng đời app ---------- */
   function afterRender() { paintRows(); paintStatus(); }
   function wrap(name, fn) {
@@ -283,18 +385,27 @@
     wrap("setNcc", () => { paintTabs(); paintRows(); });
     wrap("loginAs", () => {
       safe(renameNcc); safe(paintTabs); safe(buildProfile);
-      safe(addClears); safe(stripHints); safe(afterRender);
+      safe(addClears); safe(stripHints); safe(clearRelated); safe(afterRender);
+      // đảm bảo menu hồ sơ luôn dựng được kể cả khi header render muộn
+      setTimeout(() => safe(buildProfile), 300);
     });
-    wrap("openForm", addClears);
+    wrap("buildForm", fixSegmentField);
+    wrap("onFormGroup", fixSegmentField);   // chặn việc lọc segment theo Nhóm ngành
+    wrap("openForm", () => { safe(addClears); safe(fixSegmentField); });
     wrap("openActForm", addClears);
+    wrap("openDetail", clearRelated);
     // dữ liệu SharePoint tải sau -> đổi tên + tô lại
     if (window.FISG_STORE && FISG_STORE.syncFromGraph) {
       const s = FISG_STORE.syncFromGraph;
       FISG_STORE.syncFromGraph = async function () {
         const ok = await s.apply(this, arguments);
-        renameNcc();
+        safe(renameNcc);
+        try { await loadRealNames(); } catch (e) {}     // PIC -> tên thật O365
+        safe(clearRelated);
+        try { await applyPeopleSource(); } catch (e) {} // người liên quan <- group O365
         if (window.render) render();
-        paintTabs(); afterRender();
+        if (window.renderActs) try { renderActs(); } catch (e) {}
+        safe(paintTabs); safe(afterRender); safe(buildProfile);
         return ok;
       };
     }

@@ -17,4 +17,9 @@ window.FISG_CFG = {
   // false = luôn chạy demo trên dữ liệu nhúng (tiện phát triển/giao diện).
   USE_GRAPH: true,
   ADMIN_EMAIL: "duy.chengoc@fisaigon.vn",
+
+  // Object ID của group O365 dùng cho "Người liên quan / Người tham gia".
+  // Để trống = danh sách người liên quan RỖNG. Điền GUID group vào đây khi có.
+  // Lưu ý: cần thêm quyền delegated Microsoft Graph "GroupMember.Read.All" + admin consent.
+  RELATED_GROUP_ID: "a2d4f1d9-966d-4b53-be28-ffc36bcf3996",
 };
