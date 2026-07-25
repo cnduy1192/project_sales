@@ -67,6 +67,19 @@
   // đưa tài khoản MS vào luồng đăng nhập sẵn có (tái dùng loginAs của core.js)
   async function enter(acc) {
     const email = (acc.username || "").toLowerCase();
+    // Tài khoản KHÁCH -> vào màn nhập KEY, không vào app nội bộ
+    const guests = (CFG.GUEST_EMAILS || []).map(e => String(e).toLowerCase());
+    if (guests.includes(email) && window.FISG_GUEST) {
+      let idx = USERS.findIndex(u => (u.email || "").toLowerCase() === email);
+      if (idx < 0) {
+        USERS.push({ name: acc.name || "Khách", email: acc.username, role: "guest", pic: null, color: "#6D28D9" });
+        idx = USERS.length - 1;
+      }
+      loginAs(idx);
+      if (window.FISG_STORE) await FISG_STORE.syncFromGraph();
+      await FISG_GUEST.afterLogin(email);
+      return;
+    }
     let idx = USERS.findIndex(u => (u.email || "").toLowerCase() === email);
     if (idx < 0) {
       const isAdmin = email === (CFG.ADMIN_EMAIL || "").toLowerCase();

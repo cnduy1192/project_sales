@@ -1,0 +1,206 @@
+/* share.css — Giao diện Chia sẻ (nhân viên) & Chế độ khách (chỉ xem).
+   Ngôn ngữ hình ảnh: giữ nguyên console navy của app; điểm nhấn duy nhất là KEY ID
+   — hiển thị như một con dấu: chữ số giãn cách rộng, nền navy đậm, đọc/đọc lại qua điện thoại được. */
+
+/* ================= 1. Nút Chia sẻ ================= */
+.btn-share {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--accent-border); background: var(--accent-soft); color: var(--accent);
+  font-size: 13px; font-weight: 600; transition: background .15s, border-color .15s;
+}
+.btn-share:hover { background: #E3EAF9; border-color: var(--accent); }
+.btn-share:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ================= 2. Modal chia sẻ ================= */
+.share-ov {
+  position: fixed; inset: 0; z-index: 1000; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(16, 24, 40, .45);
+}
+.share-ov.open { display: flex; }
+.share-modal {
+  width: min(620px, 100%); max-height: 88vh; overflow: auto;
+  border-radius: 14px; box-shadow: var(--shadow-lg); background: var(--surface);
+}
+.share-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--surface); z-index: 2;
+}
+.share-head h3 { font-size: 15px; font-weight: 700; }
+.share-close {
+  width: 30px; height: 30px; border: none; border-radius: 8px; background: none;
+  font-size: 20px; line-height: 1; color: var(--ink-3); cursor: pointer;
+}
+.share-close:hover { background: var(--bg); color: var(--ink); }
+.share-body { padding: 18px 20px 20px; }
+.share-loading { padding: 28px; text-align: center; color: var(--ink-3); font-size: 13px; }
+
+.share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.sh-f { display: flex; flex-direction: column; gap: 5px; }
+.sh-f > span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.sh-f select, .sh-f input {
+  width: 100%; padding: 9px 11px; font-size: 13px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink);
+}
+.sh-f select:focus, .sh-f input:focus { outline: none; border-color: var(--accent); }
+
+/* danh sách chọn dự án */
+.sh-picker { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.sh-picker-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 9px 12px; background: var(--bg); border-bottom: 1px solid var(--line); font-size: 12.5px;
+}
+.sh-picker-list { max-height: 210px; overflow: auto; }
+.sh-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+  border-bottom: 1px solid var(--line-2); cursor: pointer; font-size: 13px;
+}
+.sh-item:last-child { border-bottom: none; }
+.sh-item:hover { background: var(--bg); }
+.sh-item small { display: block; color: var(--ink-3); font-size: 11px; }
+.sh-empty { padding: 16px; text-align: center; color: var(--ink-3); font-size: 12.5px; }
+
+.sh-mini {
+  padding: 5px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink-2);
+}
+.sh-mini:hover { border-color: var(--accent); color: var(--accent); }
+.sh-mini.danger { color: var(--lost); }
+.sh-mini.danger:hover { border-color: var(--lost); background: var(--lost-bg); }
+
+.sh-key-row { display: flex; align-items: flex-end; gap: 10px; margin-top: 16px; }
+.sh-keyf { flex: 1; }
+.sh-keyf input {
+  font-size: 20px; font-weight: 700; letter-spacing: .28em; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.sh-hint { margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+.sh-hint.err { color: var(--lost); font-weight: 600; }
+
+.sh-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; }
+.sh-btn {
+  padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+}
+.sh-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sh-btn.primary:hover { background: var(--accent-hover); }
+.sh-btn.primary:disabled { opacity: .6; cursor: default; }
+.sh-btn.ghost:hover { border-color: var(--ink-3); }
+
+/* ---- màn hình kết quả: KEY như con dấu ---- */
+.sh-done { text-align: center; padding: 8px 4px 4px; }
+.sh-done-ico {
+  width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--won-bg); color: var(--won); border: 1px solid var(--won-bd);
+}
+.sh-done-t { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.sh-key {
+  margin: 14px auto 16px; padding: 18px 20px; max-width: 340px;
+  background: var(--accent); color: #fff; border-radius: 12px;
+  font-size: 34px; font-weight: 800; letter-spacing: .34em; text-indent: .34em;
+  font-variant-numeric: tabular-nums; box-shadow: var(--shadow-md);
+}
+.sh-copy-row { display: flex; gap: 9px; justify-content: center; flex-wrap: wrap; }
+.sh-done-d { margin-top: 14px; font-size: 12.5px; color: var(--ink-3); line-height: 1.65; }
+.sh-done .sh-btn.ghost { margin-top: 16px; }
+
+/* ================= 3. Bảng quản lý mã ================= */
+.share-mgr { margin-top: 18px; padding: 16px 18px; border-radius: var(--r); }
+.share-mgr h4 { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
+.sh-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.sh-table th {
+  text-align: left; padding: 8px 10px; font-size: 11px; font-weight: 700;
+  color: var(--ink-3); text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 1px solid var(--line);
+}
+.sh-table td { padding: 10px; border-bottom: 1px solid var(--line-2); }
+.sh-table tr:last-child td { border-bottom: none; }
+.sh-table td b { font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+
+/* ================= 4. Màn nhập KEY của khách ================= */
+.guest-gate {
+  position: fixed; inset: 0; z-index: 1100; display: flex;
+  align-items: center; justify-content: center; padding: 20px; background: var(--bg);
+}
+.gg-card {
+  width: min(400px, 100%); padding: 32px 30px 26px; border-radius: 16px;
+  text-align: center; box-shadow: var(--shadow-lg); background: var(--surface);
+}
+.gg-brand { display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 14px; margin-bottom: 22px; }
+.gg-logo {
+  width: 30px; height: 30px; border-radius: 8px; background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+}
+.gg-card h2 { font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+.gg-sub { margin-top: 6px; font-size: 12.5px; color: var(--ink-3); }
+.gg-key {
+  width: 100%; margin-top: 22px; padding: 15px 12px;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg);
+  font-size: 28px; font-weight: 800; text-align: center; letter-spacing: .3em; text-indent: .3em;
+  font-variant-numeric: tabular-nums; color: var(--ink); font-family: inherit;
+}
+.gg-key:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.gg-msg { min-height: 18px; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+.gg-msg.err { color: var(--lost); font-weight: 600; }
+.gg-btn {
+  width: 100%; margin-top: 14px; padding: 12px; border: none; border-radius: 10px;
+  background: var(--accent); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.gg-btn:hover { background: var(--accent-hover); }
+.gg-out {
+  margin-top: 12px; border: none; background: none; cursor: pointer;
+  font-size: 12.5px; color: var(--ink-3); text-decoration: underline;
+}
+
+/* ================= 5. Băng chế độ khách ================= */
+.guest-bar {
+  position: sticky; top: 0; z-index: 950;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 9px 18px; background: #2E1065; color: #EDE9FE; font-size: 12.5px;
+}
+.gb-tag {
+  padding: 2.5px 10px; border-radius: 999px; font-weight: 700; font-size: 11px;
+  background: rgba(255, 255, 255, .16); letter-spacing: .02em;
+}
+.gb-scope { font-weight: 600; }
+.gb-exp { color: #C4B5FD; }
+.gb-out {
+  margin-left: auto; padding: 4px 12px; border-radius: 7px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .3); background: none; color: #fff;
+  font-size: 12px; font-weight: 600;
+}
+.gb-out:hover { background: rgba(255, 255, 255, .12); }
+
+/* ================= 6. Khoá giao diện ở chế độ khách ================= */
+body.guest-mode #btnAdd, body.guest-mode #btnShare,
+body.guest-mode .close-btn, body.guest-mode .prob-btn:not(.locked),
+body.guest-mode #ai, body.guest-mode .ai-fab, body.guest-mode #aiPanel,
+body.guest-mode #notifBtn, body.guest-mode .sidebar-user,
+body.guest-mode .nav-item[data-view="acts"], body.guest-mode .nav-item[data-view="users"],
+body.guest-mode #navAdminLabel, body.guest-mode #d-cmt,
+body.guest-mode .d-actions, body.guest-mode #relTags select,
+body.guest-mode [onclick*="openActForm"], body.guest-mode [onclick*="createProjectFromAct"] {
+  display: none !important;
+}
+body.guest-mode .row { cursor: pointer; }
+body.guest-mode .prob-btn.locked { pointer-events: none; }
+
+/* ================= 7. Nút "Khách xem chia sẻ" ở màn đăng nhập ================= */
+.guest-btn {
+  width: 100%; margin-top: 10px; padding: 11px 14px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  font-size: 13.5px; font-weight: 600; color: var(--ink-2); cursor: pointer;
+}
+.guest-btn:hover { border-color: var(--accent-border); background: var(--accent-soft); color: var(--accent); }
+.guest-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .share-grid { grid-template-columns: 1fr; }
+  .sh-key { font-size: 26px; letter-spacing: .22em; text-indent: .22em; }
+  .guest-bar { font-size: 11.5px; padding: 8px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .btn-share, .sh-btn, .gg-btn { transition: none; } }

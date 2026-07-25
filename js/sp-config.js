@@ -22,4 +22,13 @@ window.FISG_CFG = {
   // Để trống = danh sách người liên quan RỖNG. Điền GUID group vào đây khi có.
   // Lưu ý: cần thêm quyền delegated Microsoft Graph "GroupMember.Read.All" + admin consent.
   RELATED_GROUP_ID: "a2d4f1d9-966d-4b53-be28-ffc36bcf3996",
+
+  // Tài khoản O365 gửi cho KHÁCH xem chia sẻ. Đăng nhập bằng email trong danh sách này
+  // sẽ vào thẳng màn nhập KEY ID và chỉ được xem. Vd: ["guest@fisaigon.vn"]
+  GUEST_EMAILS: [],
+  SHARES_LIST: "Shares",     // list lưu mã chia sẻ
+
+  // Share Gateway (Cloudflare Worker + KV) — cho phép KHÁCH xem mà KHÔNG cần đăng nhập.
+  // Deploy theo hướng dẫn trong FISG_Share_Worker.js rồi dán URL worker vào đây.
+  SHARE_WORKER_URL: "https://guest-project.cheduy1192.workers.dev/",      // vd "https://fisg-share.abc.workers.dev"
 };
