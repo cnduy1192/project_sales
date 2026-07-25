@@ -280,10 +280,31 @@
     "Tu": "tu.phanthanh@fisaigon.vn", "Khoa": "khoa.nguyendang@fisaigon.vn",
   };
   let PIC_FULL = {};        // tên tắt -> tên đầy đủ O365
+  let PEOPLE = [];          // [{name, mail}] nguồn cho ô "Người liên quan / tham gia"
+  const SCOPE_GROUP = ["GroupMember.Read.All"];
+  const SCOPE_USER = ["User.ReadBasic.All"];
 
-  async function loadRealNames() {
-    if (!(window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account())) return false;
-    let byMail = {};
+  // Gom danh bạ từ nhiều nguồn, nguồn nào chạy được thì dùng.
+  async function fetchDirectory() {
+    const out = [];         // [{name, mail}]
+    const notes = [];
+    const gid = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
+
+    // (1) Thành viên group O365 — cho cả tên đầy đủ lẫn danh sách chọn
+    if (gid) {
+      for (const path of ["/groups/" + gid + "/transitiveMembers?$select=displayName,mail,userPrincipalName&$top=200",
+                          "/groups/" + gid + "/members?$select=displayName,mail,userPrincipalName&$top=200"]) {
+        try {
+          const d = await FISG_GRAPH.api(path, null, SCOPE_GROUP);
+          (d.value || []).forEach(u => {
+            if (u.displayName) out.push({ name: u.displayName, mail: (u.mail || u.userPrincipalName || "").toLowerCase() });
+          });
+          if (out.length) break;
+        } catch (e) { notes.push("group: " + (e.message || e).slice(0, 90)); }
+      }
+    } else notes.push("chưa điền RELATED_GROUP_ID trong js/sp-config.js");
+
+    // (2) Danh bạ người dùng của site (không cần quyền thêm)
     try {
       const sid = await FISG_GRAPH.getSiteId();
       const d = await FISG_GRAPH.api("/sites/" + sid + "/lists/" +
@@ -291,17 +312,45 @@
         "/items?$expand=fields($select=Title,EMail)&$top=500");
       (d.value || []).forEach(it => {
         const f = it.fields || {};
-        if (f.EMail) byMail[String(f.EMail).toLowerCase()] = f.Title;
+        if (f.Title && f.EMail) out.push({ name: f.Title, mail: String(f.EMail).toLowerCase() });
       });
-    } catch (e) { return false; }
+    } catch (e) { notes.push("site users: " + (e.message || e).slice(0, 90)); }
+
+    // (3) Tra thẳng từng email PIC (nếu 1+2 chưa đủ)
+    const missing = Object.values(PIC_EMAIL).filter(
+      m => !out.some(u => u.mail === m.toLowerCase()));
+    if (missing.length) {
+      for (const mail of [...new Set(missing)]) {
+        try {
+          const u = await FISG_GRAPH.api("/users/" + encodeURIComponent(mail) + "?$select=displayName,mail", null, SCOPE_USER);
+          if (u && u.displayName) out.push({ name: u.displayName, mail: mail.toLowerCase() });
+        } catch (e) { notes.push("users/" + mail + ": " + (e.message || e).slice(0, 60)); break; }
+      }
+    }
+
+    // khử trùng theo email
+    const seen = {}, uniq = [];
+    out.forEach(u => { if (u.mail && !seen[u.mail]) { seen[u.mail] = 1; uniq.push(u); } });
+    return { people: uniq, notes };
+  }
+
+  async function loadRealNames() {
+    if (!(window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account())) return false;
+    const { people, notes } = await fetchDirectory();
+    PEOPLE = people;
+    if (!people.length) {
+      if (window.toast) toast("Chưa lấy được danh bạ O365. " + (notes[0] || ""));
+      console.warn("[ui-kit] danh bạ trống:", notes);
+      return false;
+    }
+    const byMail = {};
+    people.forEach(u => { byMail[u.mail] = u.name; });
 
     PIC_FULL = {};
     Object.keys(PIC_EMAIL).forEach(short => {
       const full = byMail[PIC_EMAIL[short].toLowerCase()];
       if (full && full !== short) PIC_FULL[short] = full;
     });
-    if (!Object.keys(PIC_FULL).length) return false;
-
     const F = n => PIC_FULL[n] || n;
     if (typeof RECORDS !== "undefined") RECORDS.forEach(r => { r.pic = F(r.pic); });
     if (typeof ACTIVITIES !== "undefined") ACTIVITIES.forEach(a => { a.pic = F(a.pic); });
@@ -318,30 +367,30 @@
     if (typeof related !== "undefined") related = [];
     if (typeof dRelated !== "undefined") dRelated = [];
     document.querySelectorAll("#relTags .tag").forEach(t => t.remove());
-    // danh sách chọn người liên quan: để TRỐNG cho tới khi có group O365
-    const hasGroup = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
-    if (!hasGroup && typeof ALL_PICS !== "undefined") ALL_PICS.length = 0;
+    // danh sách chọn: để TRỐNG cho tới khi lấy được danh bạ O365
+    if (!PEOPLE.length && typeof ALL_PICS !== "undefined") ALL_PICS.length = 0;
     if (window.rebuildRel) try { rebuildRel(); } catch (e) {}
   }
-  // Khi anh Duy cấp Object ID của group O365 -> điền RELATED_GROUP_ID trong js/sp-config.js
-  async function loadGroupMembers() {
-    const gid = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
-    if (!gid || !(window.FISG_AUTH && FISG_AUTH.account())) return [];
-    try {
-      const d = await FISG_GRAPH.api("/groups/" + gid + "/members?$select=displayName,mail&$top=200");
-      return (d.value || []).map(u => u.displayName).filter(Boolean);
-    } catch (e) {
-      console.warn("[ui-kit] chưa đọc được group O365 (cần quyền GroupMember.Read.All):", e.message);
-      return [];
-    }
-  }
-  async function applyPeopleSource() {
-    const members = await loadGroupMembers();
+  // Đổ danh bạ O365 (đã lấy ở fetchDirectory) vào ô chọn người liên quan/tham gia
+  function applyPeopleSource() {
     if (typeof ALL_PICS === "undefined") return;
     ALL_PICS.length = 0;
-    members.forEach(m => ALL_PICS.push(m));   // rỗng nếu chưa cấu hình group -> danh sách trống
+    PEOPLE.map(u => u.name).sort((a, b) => a.localeCompare(b, "vi"))
+      .forEach(n => ALL_PICS.push(n));
     if (window.rebuildRel) try { rebuildRel(); } catch (e) {}
+    if (window.dRenderRel && typeof curRec !== "undefined" && curRec)
+      try { dRenderRel(true); } catch (e) {}
   }
+
+  // Chẩn đoán: gõ FISG_PEOPLE() trong Console
+  window.FISG_PEOPLE = async function () {
+    const r = await fetchDirectory();
+    console.log("Số người lấy được:", r.people.length);
+    console.table(r.people.slice(0, 50));
+    console.log("Ghi chú/lỗi:", r.notes);
+    console.log("Ánh xạ PIC -> tên đầy đủ:", PIC_FULL);
+    return r;
+  };
 
   /* ---------- C. Segment phải đủ 13 giá trị (không lấy theo Nhóm ngành) ---------- */
   function fixSegmentField() {
@@ -400,9 +449,9 @@
       FISG_STORE.syncFromGraph = async function () {
         const ok = await s.apply(this, arguments);
         safe(renameNcc);
-        try { await loadRealNames(); } catch (e) {}     // PIC -> tên thật O365
         safe(clearRelated);
-        try { await applyPeopleSource(); } catch (e) {} // người liên quan <- group O365
+        try { await loadRealNames(); } catch (e) { console.warn("[ui-kit] tên O365:", e); }
+        safe(applyPeopleSource);                        // người liên quan <- danh bạ O365
         if (window.render) render();
         if (window.renderActs) try { renderActs(); } catch (e) {}
         safe(paintTabs); safe(afterRender); safe(buildProfile);

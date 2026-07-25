@@ -5,8 +5,9 @@
   const BASE = "https://graph.microsoft.com/v1.0";
   let siteId = null;
 
-  async function api(path, opts) {
-    const token = await FISG_AUTH.getToken(CFG.scopes);
+  // scopes: tuỳ chọn — dùng cho quyền bổ sung (vd GroupMember.Read.All) qua incremental consent
+  async function api(path, opts, scopes) {
+    const token = await FISG_AUTH.getToken(scopes || CFG.scopes);
     const url = path.startsWith("http") ? path : BASE + path;
     const res = await fetch(url, Object.assign({}, opts, {
       headers: Object.assign(
