@@ -40,7 +40,9 @@
   /* ---------- Dự phòng: list SharePoint (nếu có) ---------- */
   async function fetchSharesFromSP() {
     if (!live()) return [];
-    const items = await FISG_GRAPH.listItems(LIST());
+    let items = [];
+    try { items = await FISG_GRAPH.listItems(LIST()); }
+    catch (e) { return []; }        // chưa có list Shares -> coi như sổ rỗng, KHÔNG báo lỗi
     const supMap = {};
     try {
       (await FISG_GRAPH.listItems("Suppliers")).forEach(s => {
@@ -275,9 +277,15 @@
       }
       const ncc = scope === "Tất cả NCC" ? "" : $("shNcc").value;
       const expiry = $("shExp").value;
+      if (!workerUrl()) {
+        msg.innerHTML = 'Chưa cấu hình <b>SHARE_WORKER_URL</b> trong <code>js/sp-config.js</code>. ' +
+                        'Deploy Share Gateway theo <code>FISG_Share_Worker.js</code> rồi dán URL vào đó.';
+        msg.className = "sh-hint err"; return;
+      }
       $("shSave").disabled = true; msg.textContent = "Đang lưu…"; msg.className = "sh-hint";
       try {
-        const all = await fetchShares();
+        let all = [];
+        try { all = await fetchShares(); } catch (e) { all = []; }
         if (all.some(s => s.key === k && s.active)) {
           msg.textContent = "KEY này đang được dùng. Chọn mã khác."; msg.className = "sh-hint err";
           $("shSave").disabled = false; return;

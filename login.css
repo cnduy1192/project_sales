@@ -1,0 +1,118 @@
+/* login.css — Màn đăng nhập.
+   Bảng trái: chỉ tên công ty, slogan và tên sản phẩm — chữ ít, khoảng trống nhiều.
+   Bảng phải: ba lối vào; Guest là khối tím, điểm màu duy nhất trên nền trắng. */
+
+.login-shell {
+  position: fixed; inset: 0; display: grid;
+  grid-template-columns: minmax(0, 44%) minmax(0, 56%);
+  background: var(--surface);
+}
+
+/* ---------- Trái: bảng thương hiệu ---------- */
+.lg-brand {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 44px 46px; background: #0B1A3F; color: #fff;
+}
+.lg-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+  color: #94A3C4;
+}
+.lg-mark {
+  width: 30px; height: 30px; border-radius: 8px; background: #fff; color: #0B1A3F;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+  letter-spacing: 0;
+}
+.lg-slogan {
+  margin-top: 15px; padding-left: 15px; position: relative;
+  font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: -.005em; color: #C7D2E8;
+}
+.lg-slogan::before {
+  content: ""; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px;
+  border-radius: 2px; background: #3B6BE0;
+}
+.lg-title {
+  font-size: 46px; line-height: 1.03; font-weight: 800; letter-spacing: -.038em;
+}
+
+/* ---------- Phải: ba lối vào ---------- */
+.lg-pane {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 44px 8vw; max-width: 620px;
+}
+.lg-h2 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; }
+.lg-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+
+/* nút Microsoft — lối chính */
+.login-shell .ms-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 13px 16px; border-radius: 11px; cursor: pointer;
+  border: 1px solid var(--ink); background: var(--ink); color: #fff;
+  font-size: 14px; font-weight: 600; font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.login-shell .ms-btn:hover { background: #000; border-color: #000; }
+.login-shell .ms-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* nút Guest — điểm nhấn duy nhất trên nền trắng.
+   Tím = màu của chế độ khách trong app, nên nổi bật mà vẫn đúng ngôn ngữ hệ thống. */
+.login-shell .guest-btn {
+  position: relative; width: 100%; margin: 0; padding: 13px 16px 13px 18px;
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 12px;
+  border: 1px solid #DDD6FE; border-radius: 11px; background: #F5F3FF;
+  cursor: pointer; text-align: left; font-family: inherit; overflow: hidden;
+  transition: background .16s, border-color .16s, transform .16s;
+}
+.login-shell .guest-btn::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: #7C3AED;
+}
+.login-shell .guest-btn:hover {
+  background: #EDE9FE; border-color: #C4B5FD; transform: translateY(-1px);
+}
+.login-shell .guest-btn:active { transform: none; }
+.login-shell .guest-btn:focus-visible { outline: 2px solid #7C3AED; outline-offset: 2px; }
+.lg-guest-ico {
+  width: 30px; height: 30px; border-radius: 9px; background: #7C3AED; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.lg-guest-t {
+  font-size: 15px; font-weight: 700; color: #4C1D95; line-height: 1.25; letter-spacing: -.01em;
+}
+.lg-arrow { color: #7C3AED; transition: transform .16s; }
+.login-shell .guest-btn:hover .lg-arrow { transform: translateX(3px); }
+
+.lg-or {
+  display: flex; align-items: center; gap: 12px; margin: 6px 0;
+  font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .12em;
+}
+.lg-or::before, .lg-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* khối demo — yên tĩnh, không cạnh tranh với hai lối trên */
+.lg-demo { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line-2); }
+.lg-demo-h {
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+}
+.login-shell #roleRow { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.login-shell .role-btn {
+  display: flex; align-items: center; gap: 9px; padding: 9px 11px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+  text-align: left; font-family: inherit; transition: border-color .14s, background .14s;
+}
+.login-shell .role-btn:hover { border-color: var(--accent-border); background: var(--accent-soft); }
+.login-shell .role-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.login-shell .role-btn b { font-size: 12.5px; font-weight: 600; display: block; }
+.login-shell .role-btn small { font-size: 10.5px; color: var(--ink-3); display: block; }
+.login-shell .role-btn .badge-admin, .login-shell .role-btn .badge-mgr { display: none; }
+
+@media (max-width: 900px) {
+  .login-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr; overflow: auto; }
+  .lg-brand { padding: 26px 24px 28px; }
+  .lg-slogan { margin-top: 12px; font-size: 13.5px; }
+  .lg-title { font-size: 32px; margin-top: 20px; }
+  .lg-pane { padding: 30px 24px 40px; max-width: none; }
+  .login-shell #roleRow { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-shell .guest-btn, .lg-arrow { transition: none; }
+}
