@@ -1,0 +1,97 @@
+/* funnel.css — Bảng Sales Funnel.
+   Ý tưởng: trạng thái là thứ người dùng chuyển liên tục, nên nó rời khỏi nội dung và trở thành
+   hai phím điều khiển dựng đứng bên trái — luôn nhìn thấy, luôn bấm được, cuộn theo trang.
+   Nội dung bên phải chỉ hiển thị đúng một trạng thái, chia cấp: mốc thời gian → dự án. */
+
+/* ---------- bố cục: phím trái + nội dung phải ---------- */
+.fn-wrap { display: grid; grid-template-columns: 156px minmax(0, 1fr); gap: 18px; align-items: start; }
+.fn-rail { position: sticky; top: 14px; display: flex; flex-direction: column; gap: 9px; }
+
+.fn-key {
+  position: relative; width: 100%; padding: 14px 14px 13px; cursor: pointer; overflow: hidden;
+  display: flex; flex-direction: column; gap: 3px; text-align: left; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  transition: border-color .16s, background .16s, transform .16s, box-shadow .16s;
+}
+.fn-key::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--key, var(--line)); opacity: .35; transition: opacity .16s, width .16s;
+}
+.fn-key:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--key); }
+.fn-key:focus-visible { outline: 2px solid var(--key); outline-offset: 2px; }
+.fn-key.on {
+  background: var(--key-soft); border-color: var(--key-bd); box-shadow: var(--shadow);
+}
+.fn-key.on::before { opacity: 1; width: 4px; }
+
+.fn-key-label {
+  font-size: 12.5px; font-weight: 700; letter-spacing: .01em; color: var(--ink-2);
+}
+.fn-key.on .fn-key-label { color: var(--key); }
+.fn-key-num {
+  font-size: 25px; font-weight: 800; line-height: 1.05; letter-spacing: -.03em;
+  color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.fn-key.on .fn-key-num { color: var(--key); }
+.fn-key-sub { font-size: 11px; color: var(--ink-3); }
+
+/* ---------- hiệu ứng hover cho thẻ & dòng ---------- */
+#groups .major { transition: box-shadow .18s; }
+#groups .sub-head { transition: background .14s, border-color .14s; }
+#groups .row {
+  transition: background .15s, transform .15s, box-shadow .15s;
+}
+#groups .row:hover {
+  background: var(--bg); transform: translateX(3px);
+  box-shadow: -3px 0 0 0 var(--row-ncc, var(--line)), var(--shadow);
+  z-index: 1; position: relative;
+}
+#groups .row:focus-within { background: var(--bg); }
+
+/* ---------- thanh trượt % ---------- */
+.pb-wrap { display: flex; align-items: center; gap: 10px; }
+.pb-range {
+  flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 999px;
+  background: var(--line); outline: none; cursor: pointer; margin: 0;
+}
+.pb-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--accent); border: 2px solid #fff; box-shadow: var(--shadow-md); cursor: pointer;
+  transition: transform .12s;
+}
+.pb-range::-webkit-slider-thumb:hover { transform: scale(1.14); }
+.pb-range::-moz-range-thumb {
+  width: 17px; height: 17px; border: 2px solid #fff; border-radius: 50%;
+  background: var(--accent); box-shadow: var(--shadow-md); cursor: pointer;
+}
+.pb-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.pb-val {
+  min-width: 46px; text-align: right; font-size: 13.5px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--accent);
+}
+.pb-hidden { display: none !important; }
+
+/* thanh trượt trong popover % ở funnel */
+.prob-pop .pb-wrap { min-width: 210px; padding: 4px 2px 2px; }
+
+/* ---------- thanh công cụ: tiêu đề trái · Chia sẻ · Thêm dự án ngoài cùng phải ---------- */
+#view-funnel .topbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#view-funnel .topbar h2 { margin-right: auto; }
+#view-funnel .topbar .btn-share { order: 1; }
+#view-funnel .topbar > div { order: 2; }        /* nhóm chứa "Thêm dự án" */
+
+/* ---------- mục Xuất Excel trong menu hồ sơ ---------- */
+.profile-act.neutral { color: var(--ink-2); }
+.profile-act.neutral:hover { background: var(--bg); }
+
+@media (max-width: 900px) {
+  .fn-wrap { grid-template-columns: 1fr; gap: 12px; }
+  .fn-rail { position: static; flex-direction: row; gap: 8px; }
+  .fn-key { flex: 1; padding: 10px 12px; }
+  .fn-key-num { font-size: 20px; }
+  #groups .row:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fn-key, #groups .row, .pb-range::-webkit-slider-thumb { transition: none; }
+  .fn-key:hover, #groups .row:hover { transform: none; }
+}
