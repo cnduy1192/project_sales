@@ -3,37 +3,55 @@
    hai phím điều khiển dựng đứng bên trái — luôn nhìn thấy, luôn bấm được, cuộn theo trang.
    Nội dung bên phải chỉ hiển thị đúng một trạng thái, chia cấp: mốc thời gian → dự án. */
 
-/* ---------- bố cục: phím trái + nội dung phải ---------- */
-.fn-wrap { display: grid; grid-template-columns: 156px minmax(0, 1fr); gap: 18px; align-items: start; }
-.fn-rail { position: sticky; top: 14px; display: flex; flex-direction: column; gap: 9px; }
+/* ---------- bố cục: phím dọc bám mép trái + nội dung phải ---------- */
+.fn-wrap { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 14px; align-items: start; }
+.fn-rail { position: sticky; top: 14px; display: flex; flex-direction: column; gap: 8px; }
 
+/* phím dạng "edge control": mép trái phẳng như dính vào cạnh màn hình, mép phải bo tròn */
 .fn-key {
-  position: relative; width: 100%; padding: 14px 14px 13px; cursor: pointer; overflow: hidden;
-  display: flex; flex-direction: column; gap: 3px; text-align: left; font-family: inherit;
-  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
-  transition: border-color .16s, background .16s, transform .16s, box-shadow .16s;
+  position: relative; width: 100%; min-height: 116px; padding: 13px 4px 12px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  font-family: inherit; overflow: hidden;
+  border: 1px solid var(--line); border-left: none;
+  border-radius: 3px 16px 16px 3px;
+  background: var(--surface); color: var(--ink-3);
+  transition: transform .2s cubic-bezier(.3,.8,.4,1), box-shadow .2s, border-color .2s, background .2s;
 }
+/* dải màu ở mép trái — phần "gắn vào cạnh" */
 .fn-key::before {
   content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--key, var(--line)); opacity: .35; transition: opacity .16s, width .16s;
+  background: var(--key); opacity: .3; transition: opacity .2s, width .2s;
 }
-.fn-key:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); border-color: var(--key); }
+/* vệt sáng mềm toả từ mép trái khi được chọn */
+.fn-key::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 60%;
+  background: linear-gradient(90deg, var(--key-glow), transparent);
+  opacity: 0; transition: opacity .25s; pointer-events: none;
+}
+.fn-key:hover { transform: translateX(2px); box-shadow: var(--shadow-md); border-color: var(--key-bd); }
+.fn-key:hover::before { opacity: .6; }
 .fn-key:focus-visible { outline: 2px solid var(--key); outline-offset: 2px; }
-.fn-key.on {
-  background: var(--key-soft); border-color: var(--key-bd); box-shadow: var(--shadow);
-}
-.fn-key.on::before { opacity: 1; width: 4px; }
 
-.fn-key-label {
-  font-size: 12.5px; font-weight: 700; letter-spacing: .01em; color: var(--ink-2);
+.fn-key.on {
+  background: var(--key-soft); border-color: var(--key-bd); color: var(--key);
+  box-shadow: 0 2px 14px -4px var(--key-glow), var(--shadow);
 }
-.fn-key.on .fn-key-label { color: var(--key); }
+.fn-key.on::before { opacity: 1; width: 5px; }
+.fn-key.on::after { opacity: 1; }
+
 .fn-key-num {
-  font-size: 25px; font-weight: 800; line-height: 1.05; letter-spacing: -.03em;
-  color: var(--ink); font-variant-numeric: tabular-nums;
+  position: relative; font-size: 22px; font-weight: 800; line-height: 1;
+  letter-spacing: -.03em; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  transition: color .2s;
 }
 .fn-key.on .fn-key-num { color: var(--key); }
-.fn-key-sub { font-size: 11px; color: var(--ink-3); }
+.fn-key-label {
+  position: relative; width: 100%; padding: 0 2px;
+  font-size: 9px; font-weight: 700; line-height: 1.3;
+  letter-spacing: .03em; text-transform: uppercase; text-align: center; color: inherit;
+  overflow-wrap: break-word; hyphens: none;
+}
+.fn-key-sub { display: none; }        /* bỏ chú thích để phím gọn nhất có thể */
 
 /* ---------- hiệu ứng hover cho thẻ & dòng ---------- */
 #groups .major { transition: box-shadow .18s; }
@@ -87,8 +105,12 @@
 @media (max-width: 900px) {
   .fn-wrap { grid-template-columns: 1fr; gap: 12px; }
   .fn-rail { position: static; flex-direction: row; gap: 8px; }
-  .fn-key { flex: 1; padding: 10px 12px; }
-  .fn-key-num { font-size: 20px; }
+  .fn-key {
+    flex: 1; min-height: 0; padding: 10px 12px; flex-direction: row; gap: 9px;
+    border-left: 1px solid var(--line); border-radius: 12px;
+  }
+  .fn-key-num { font-size: 19px; }
+  .fn-key-label { font-size: 10px; letter-spacing: .05em; }
   #groups .row:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {

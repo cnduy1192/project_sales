@@ -120,6 +120,8 @@
     "Nhập lý do": "Enter reason", "Không có kết quả": "No results",
     // từ vựng cố định (trạng thái / nhóm chuẩn)
     "Đang chạy": "In Progress", "Thắng": "Won", "Thua": "Lost",
+    "Đã đóng": "Closed", "ĐÃ ĐÓNG": "CLOSED", "Đóng": "Closed",
+    "thắng · thua": "won · lost", "theo mốc thời gian": "by due date",
     "Tiếp cận": "Approach", "Thử mẫu": "Sampling", "Đàm phán": "Negotiation", "Hoãn": "On hold",
     "ĐANG CHẠY": "IN PROGRESS", "THẮNG": "WON", "THUA": "LOST",
   };

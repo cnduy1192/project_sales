@@ -7,9 +7,9 @@
 
   const KEYS = [
     { id: "run",    label: "Đang chạy", match: /ĐANG CHẠY|IN PROGRESS/i,
-      color: "#1E3A8A", soft: "#EEF2FB", bd: "#C9D5F0", sub: "theo mốc thời gian" },
-    { id: "closed", label: "Đã đóng",   match: /ĐÃ ĐÓNG|CLOSED/i,
-      color: "#565668", soft: "#F1F1F5", bd: "#D8D8E2", sub: "thắng · thua" },
+      color: "#1E3A8A", soft: "#EEF2FB", bd: "#C9D5F0", glow: "rgba(30,58,138,.20)" },
+    { id: "closed", label: "Closed",    match: /ĐÃ ĐÓNG|CLOSED/i,
+      color: "#565668", soft: "#F2F2F6", bd: "#D8D8E2", glow: "rgba(86,86,104,.18)" },
   ];
   let active = "run";
   try { active = localStorage.getItem("fisg_funnel_key") || "run"; } catch (e) {}
@@ -79,10 +79,11 @@
     rail.setAttribute("aria-label", "Trạng thái dự án");
     rail.innerHTML = KEYS.map(k =>
       '<button type="button" class="fn-key" role="tab" data-key="' + k.id + '" ' +
-        'aria-selected="false" style="--key:' + k.color + ';--key-soft:' + k.soft + ';--key-bd:' + k.bd + '">' +
-        '<span class="fn-key-label">' + k.label + '</span>' +
+        'aria-selected="false" title="' + k.label + '" ' +
+        'style="--key:' + k.color + ';--key-soft:' + k.soft + ';--key-bd:' + k.bd +
+        ';--key-glow:' + k.glow + '">' +
         '<span class="fn-key-num" data-num="' + k.id + '">—</span>' +
-        '<span class="fn-key-sub">' + k.sub + '</span>' +
+        '<span class="fn-key-label">' + k.label + '</span>' +
       '</button>').join("");
 
     groups.parentNode.insertBefore(wrap, groups);
