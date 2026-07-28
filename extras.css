@@ -1,0 +1,179 @@
+/* extras.css — Thêm nhà cung cấp · Chi tiết khách hàng · Tỷ trọng Segment */
+
+/* ---------- khung modal dùng chung ---------- */
+.x-ov {
+  position: fixed; inset: 0; z-index: 1000; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(16, 24, 40, .45);
+}
+.x-ov.open { display: flex; }
+.x-modal {
+  width: min(600px, 100%); max-height: 88vh; overflow: auto;
+  border-radius: 14px; background: var(--surface); box-shadow: var(--shadow-lg);
+}
+.x-modal.wide { width: min(840px, 100%); }
+.x-head {
+  position: sticky; top: 0; z-index: 2; background: var(--surface);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 16px 20px; border-bottom: 1px solid var(--line);
+}
+.x-head h3 { font-size: 15.5px; font-weight: 700; letter-spacing: -.01em; }
+.x-close {
+  width: 30px; height: 30px; flex: none; border: none; border-radius: 8px; background: none;
+  font-size: 20px; line-height: 1; color: var(--ink-3); cursor: pointer;
+}
+.x-close:hover { background: var(--bg); color: var(--ink); }
+.x-body { padding: 18px 20px 20px; }
+.x-sec-h {
+  margin: 20px 0 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.x-body > .x-sec-h:first-child { margin-top: 0; }
+.x-f { display: flex; flex-direction: column; gap: 5px; }
+.x-f > span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.x-f input {
+  width: 100%; padding: 10px 12px; font-size: 13.5px; font-family: inherit;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink);
+}
+.x-f input:focus { outline: none; border-color: var(--accent); }
+.x-msg { margin-top: 12px; font-size: 12px; color: var(--ink-3); line-height: 1.55; }
+.x-msg.err { color: var(--lost); font-weight: 600; }
+.x-empty { padding: 16px; text-align: center; font-size: 12.5px; color: var(--ink-3); }
+/* ---------- cặp nút hành động ----------
+   Chuẩn: cao 44px (vùng chạm), một CTA chính duy nhất, phản hồi nhấn bằng scale
+   (không đổi kích thước bố cục), chuyển động 180ms, viền focus rõ cho bàn phím. */
+.x-actions {
+  display: flex; justify-content: flex-end; gap: 10px;
+  margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-2);
+}
+.x-btn {
+  position: relative; min-height: 44px; min-width: 104px; padding: 0 20px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: inherit; font-size: 13.5px; font-weight: 600; letter-spacing: -.005em;
+  border-radius: 11px; cursor: pointer; white-space: nowrap;
+  transition: background .18s ease-out, border-color .18s ease-out,
+              box-shadow .18s ease-out, transform .12s ease-out, color .18s ease-out;
+}
+.x-btn:active { transform: scale(.975); }
+.x-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.x-btn:disabled { opacity: .5; cursor: default; pointer-events: none; }
+
+/* phụ — lối thoát, phải thấy rõ nhưng không tranh với hành động chính */
+.x-btn.ghost {
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+.x-btn.ghost:hover { background: var(--bg); border-color: var(--ink-3); color: var(--ink); }
+
+/* chính — CTA duy nhất của bảng */
+.x-btn.primary {
+  background: var(--accent); color: #fff; border: 1px solid var(--accent);
+  box-shadow: 0 1px 2px rgba(16,24,40,.10), 0 6px 14px -8px rgba(30,58,138,.55);
+}
+.x-btn.primary:hover {
+  background: var(--accent-hover); border-color: var(--accent-hover);
+  box-shadow: 0 2px 4px rgba(16,24,40,.12), 0 10px 20px -8px rgba(30,58,138,.60);
+}
+.x-btn.primary:active { box-shadow: 0 1px 2px rgba(16,24,40,.14); }
+
+/* ---------- 1. nút + và thẻ mô hình pipeline ---------- */
+.ncc-add {
+  width: 28px; height: 28px; flex: none; margin-left: 6px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px dashed var(--line); border-radius: 8px; background: none; color: var(--ink-3);
+  transition: border-color .15s, color .15s, background .15s;
+}
+.ncc-add:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); border-style: solid; }
+.ncc-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ncc-tpls { display: grid; gap: 10px; }
+.ncc-tpl {
+  position: relative; display: block; width: 100%; padding: 13px 14px 13px 16px; cursor: pointer;
+  text-align: left; font-family: inherit; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface);
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.ncc-tpl::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--tc); opacity: .3; transition: opacity .15s;
+}
+.ncc-tpl:hover { border-color: var(--tc); box-shadow: var(--shadow-md); }
+.ncc-tpl.on { border-color: var(--tc); background: var(--bg); box-shadow: var(--shadow); }
+.ncc-tpl.on::before { opacity: 1; }
+.ncc-tpl:focus-visible { outline: 2px solid var(--tc); outline-offset: 2px; }
+.tpl-head { display: flex; align-items: baseline; gap: 9px; margin-bottom: 9px; }
+.tpl-head b { font-size: 13.5px; color: var(--ink); }
+.tpl-head small { font-size: 11px; color: var(--ink-3); }
+.tpl-stages { display: flex; flex-wrap: wrap; gap: 6px; }
+.tpl-stage {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 5px;
+  border-radius: 999px; background: var(--bg); border: 1px solid var(--line-2);
+  font-size: 10.5px; font-weight: 600; color: var(--ink-2);
+}
+.tpl-stage i {
+  width: 14px; height: 14px; border-radius: 50%; background: var(--tc); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 8.5px; font-style: normal;
+}
+
+/* ---------- 2. chi tiết khách hàng ---------- */
+.act-clickable .act-row { cursor: pointer; transition: background .14s; }
+.act-clickable .act-row:hover { background: var(--bg); }
+
+.cust-chips { display: inline-flex; gap: 6px; margin-left: 10px; vertical-align: middle; }
+.cust-chip {
+  padding: 2px 9px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+  color: #fff; background: var(--c);
+}
+.cust-kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
+.cust-kpi {
+  padding: 11px 12px; border-radius: 11px; background: var(--bg); border: 1px solid var(--line-2);
+}
+.cust-kpi b {
+  display: block; font-size: 19px; font-weight: 800; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.cust-kpi span { font-size: 10.5px; color: var(--ink-3); }
+.cust-kpi.run b { color: var(--prog); }
+.cust-kpi.won b { color: var(--won); }
+.cust-kpi.lost b { color: var(--lost); }
+
+.cust-tbl { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+.cust-tbl table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.cust-tbl th {
+  text-align: left; padding: 9px 11px; background: var(--bg); border-bottom: 1px solid var(--line);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3);
+}
+.cust-tbl td { padding: 9px 11px; border-bottom: 1px solid var(--line-2); }
+.cust-tbl tbody tr { cursor: pointer; transition: background .14s; }
+.cust-tbl tbody tr:hover { background: var(--accent-soft); }
+.cust-tbl tbody tr:last-child td { border-bottom: none; }
+.st { padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
+.st-run { background: var(--prog-bg); color: var(--prog); }
+.st-won { background: var(--won-bg); color: var(--won); }
+.st-lost { background: var(--lost-bg); color: var(--lost); }
+
+.cust-tl { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+.cust-tl li { display: grid; grid-template-columns: 82px 1fr; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--line-2); }
+.cust-tl li:last-child { border-bottom: none; }
+.tl-d { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.tl-b { font-size: 12.5px; color: var(--ink-2); }
+.tl-b b { color: var(--ink); }
+.tl-note { display: block; margin-top: 3px; color: var(--ink-2); }
+.tl-next { display: block; margin-top: 2px; font-size: 11.5px; color: var(--accent); }
+
+/* ---------- 3. biểu đồ segment ---------- */
+#segShareBox { min-height: 190px; }
+
+@media (max-width: 720px) {
+  .cust-kpis { grid-template-columns: repeat(2, 1fr); }
+  .cust-tl li { grid-template-columns: 1fr; gap: 3px; }
+  .cust-tbl { overflow-x: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ncc-tpl, .ncc-add, .cust-tbl tbody tr, .act-clickable .act-row, .x-btn { transition: none; }
+  .x-btn:active { transform: none; }
+}
+@media (max-width: 480px) {
+  .x-actions { flex-direction: column-reverse; }
+  .x-btn { width: 100%; }
+}
