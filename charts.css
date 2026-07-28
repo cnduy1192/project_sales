@@ -1,7 +1,27 @@
 /* charts.css — Biểu đồ Dashboard.
    Plus Jakarta Sans giúp số liệu gọn, có nhịp và dễ quét nhanh. */
 
-.card canvas { font-family: 'Plus Jakarta Sans', sans-serif; }
+.card canvas { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+/* KHÔNG ép width/height cho canvas: Chart.js tự gán kích thước px theo khung chứa.
+   Ép 100% !important sẽ đè lên inline style của Chart.js -> canvas mất kích thước, vẽ ra trắng. */
+.donut-box canvas, .line-box canvas, .vol-box canvas { display: block; max-width: 100%; }
+.donut-box { isolation: isolate; }
+/* Tâm donut là nơi DUY NHẤT hiển thị chi tiết (đã bỏ tooltip):
+   rê chuột vào một phần -> tâm đổi sang số và nhãn của phần đó. */
+.donut-center {
+  position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none; text-align: center;
+  padding: 0 12px; transition: transform .18s ease-out;
+}
+.donut-box:hover .donut-center { transform: scale(1.06); }
+.donut-center b {
+  font: 700 21px/1 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+}
+.donut-center span {
+  margin-top: 4px; color: var(--ink-3); font-size: 10px; font-weight: 600;
+  line-height: 1.25; max-width: 100%; overflow-wrap: break-word;
+}
 
 /* Dashboard cards behave like quiet instrument panels: elevation only appears on intent. */
 #view-dash .card {
@@ -56,6 +76,6 @@
   .vol-switch { justify-self: start; margin: -2px 0 2px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vol-tab, #view-dash .card { transition: none; }
+  .vol-tab, #view-dash .card, .donut-center { transition: none; }
   #view-dash .card:hover { transform: none; }
 }

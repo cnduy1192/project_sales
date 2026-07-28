@@ -4,14 +4,28 @@ const CHARTS={};
 if(window.Chart){Chart.defaults.font.family="'Plus Jakarta Sans',system-ui,sans-serif";Chart.defaults.color='#697082';}
 /* Always destroy the previous canvas instance before a dashboard panel is redrawn. */
 function dc(id){
-  if(!CHARTS[id])return;
-  CHARTS[id].destroy();
+  const chart=CHARTS[id];
+  if(!chart)return;
   delete CHARTS[id];
+  try{chart.destroy();}catch(e){console.warn('[charts] destroy '+id,e);}
 }
-function rc(id,chart){CHARTS[id]=chart;return chart;}
+function rc(id,chart){
+  CHARTS[id]=chart;
+  /* A supplier switch changes the grid width synchronously; resize after layout settles. */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(CHARTS[id]!==chart)return;
+    try{chart.resize();chart.update('none');}catch(e){console.warn('[charts] resize '+id,e);}
+  }));
+  return chart;
+}
 window.dc=dc;window.rc=rc;
 function mkCanvas(elId, boxClass){
   const host=document.getElementById(elId);
+  const oldCanvas=host&&host.querySelector('canvas');
+  if(oldCanvas&&window.Chart&&Chart.getChart){
+    const oldChart=Chart.getChart(oldCanvas);
+    if(oldChart)try{oldChart.destroy();}catch(e){console.warn('[charts] orphan destroy '+elId,e);}
+  }
   host.className=boxClass; host.innerHTML='<canvas></canvas>';
   return host.querySelector('canvas');
 }
@@ -26,6 +40,10 @@ function chartEmpty(elId,boxClass,message){
   host.className=boxClass;
   host.innerHTML='<div class="ins-empty">'+message+'</div>';
 }
+function chartError(elId,boxClass,error){
+  console.error('[charts] render '+elId,error);
+  chartEmpty(elId,boxClass,'Không thể hiển thị biểu đồ. Vui lòng thử lại.');
+}
 function donut(elId, legId, items, cb){
   if(!window.Chart){chartFallback(elId,legId);return;}
   if(!items.some(i=>i.value>0)){
@@ -34,33 +52,31 @@ function donut(elId, legId, items, cb){
     return;
   }
   const total=items.reduce((s,i)=>s+i.value,0)||1;
-  dc(elId);
-  const cv=mkCanvas(elId,'donut-box');
-  CHARTS[elId]=new Chart(cv,{type:'doughnut',
-    data:{labels:items.map(i=>i.label),datasets:[{data:items.map(i=>i.value),backgroundColor:items.map(i=>i.color),borderWidth:2,borderColor:'#fff',hoverOffset:12,hoverBorderWidth:3}]},
-    options:{cutout:'72%',responsive:true,maintainAspectRatio:false,
-      animation:{animateRotate:true,animateScale:true,duration:640,easing:'easeOutQuart'},
-      interaction:{mode:'nearest',intersect:true},
-      transitions:{active:{animation:{duration:220,easing:'easeOutQuart'},animations:{offset:{duration:220,easing:'easeOutQuart'},borderWidth:{duration:220,easing:'easeOutQuart'}}}},
-      plugins:{legend:{display:false},tooltip:{animation:{duration:180,easing:'easeOutQuart'},padding:12,cornerRadius:10,displayColors:true,callbacks:{title:c=>c[0].label,label:c=>' '+c.parsed+' dự án',afterLabel:c=>' '+Math.round(100*c.parsed/total)+'% tổng pipeline'}}},
-      onClick:(e,els)=>{if(cb&&els.length)window[cb](items[els[0].index].label);}},
-    plugins:[{id:'ct',afterEvent(ch,args){const t=args.event&&args.event.type;if(t==='mousemove'||t==='mouseout'||t==='click')args.changed=true;},afterDraw(ch){const {ctx,chartArea:a}=ch;if(!a)return;ctx.save();ctx.textAlign='center';
-      const active=ch.getActiveElements()[0],idx=active&&active.index,selected=idx===undefined?null:items[idx];
-      const value=selected?selected.value:total,label=selected?selected.label:'dự án';
-      ctx.font="700 21px 'Plus Jakarta Sans'";ctx.fillStyle=selected?selected.color:'#16181D';ctx.fillText(value,(a.left+a.right)/2,(a.top+a.bottom)/2+2);
-      ctx.font="600 10px 'Plus Jakarta Sans'";ctx.fillStyle='#697082';ctx.fillText(label,(a.left+a.right)/2,(a.top+a.bottom)/2+17);ctx.restore();}}]
-  });
+  try{
+    dc(elId);
+    const cv=mkCanvas(elId,'donut-box'),host=cv.parentElement;
+    const center=document.createElement('div');center.className='donut-center';host.appendChild(center);
+    const setCenter=i=>{const item=items[i],value=document.createElement('b'),label=document.createElement('span');value.style.color=item?item.color:'#16181D';value.textContent=item?item.value:total;label.textContent=item?item.label:'dự án';center.replaceChildren(value,label);};
+    setCenter();
+    rc(elId,new Chart(cv,{type:'doughnut',
+      data:{labels:items.map(i=>i.label),datasets:[{data:items.map(i=>i.value),backgroundColor:items.map(i=>i.color),borderWidth:2,borderColor:'#fff',hoverOffset:10,hoverBorderWidth:3}]},
+      options:{cutout:'72%',responsive:true,maintainAspectRatio:false,animation:{animateRotate:true,animateScale:true,duration:500,easing:'easeOutQuart'},interaction:{mode:'nearest',intersect:true},
+        plugins:{legend:{display:false},tooltip:{animation:{duration:180,easing:'easeOutQuart'},padding:12,cornerRadius:10,displayColors:true,callbacks:{title:c=>c[0].label,label:c=>' '+c.parsed+' dự án',afterLabel:c=>' '+Math.round(100*c.parsed/total)+'% tổng pipeline'}}},
+        onHover:(e,els)=>{const i=els.length?els[0].index:undefined;setCenter(i);cv.style.cursor=els.length?'pointer':'default';},
+        onClick:(e,els)=>{if(cb&&els.length)window[cb](items[els[0].index].label);}}}));
+  }catch(e){chartError(elId,'donut-box',e);}
   document.getElementById(legId).innerHTML=items.map(i=>
     `<div class="li" ${cb?`onclick="${cb}('${i.label.replace(/'/g,"\'")}')"`:''}><span class="sw" style="background:${i.color}"></span>${i.label}<b>${i.value}</b><small>${Math.round(100*i.value/total)}%</small></div>`).join('');
 }
 function lineChart(elId, labels, values){
   if(!window.Chart){chartFallback(elId);return;}
   if(!labels.length){chartEmpty(elId,'line-box','Chưa có dự án được tạo theo bộ lọc này.');return;}
+  try{
   dc(elId);
   const cv=mkCanvas(elId,'line-box');
   const g=cv.getContext('2d').createLinearGradient(0,0,0,230);
   g.addColorStop(0,'rgba(30,58,138,.16)');g.addColorStop(1,'rgba(30,58,138,0)');
-  CHARTS[elId]=new Chart(cv,{type:'line',
+  rc(elId,new Chart(cv,{type:'line',
     data:{labels,datasets:[{data:values,borderColor:'#1E3A8A',borderWidth:2,tension:.35,fill:true,backgroundColor:g,
       pointRadius:3,pointHoverRadius:5.5,pointBackgroundColor:'#fff',pointBorderColor:'#1E3A8A',pointBorderWidth:2,pointHitRadius:14}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},
@@ -75,13 +91,14 @@ function lineChart(elId, labels, values){
         const rect=c.chart.canvas.getBoundingClientRect();
         lcTipAt(dp.dataIndex, rect.left+t.caretX, rect.top+t.caretY);
       }}}}
-  });
+  }));
   cv.onmouseleave=hideLcTip;
+  }catch(e){chartError(elId,'line-box',e);}
 }
 /* ====== DASHBOARD ====== */
 function statusClick(label){
-  const map={'Đang chạy':'IN PROGRESS','Thắng':'WON','Thua':'LOST'};
-  setF(map[label]||'ALL'); go('funnel');
+  /* Keep the dashboard stable: chart clicks must not navigate away and unmount every chart. */
+  if(window.toast) toast(label + ': xem chi tiết qua tooltip hoặc tra cứu trong Dashboard.');
 }
 function segClick(label){showInsight('seg', label);}
 function picClick(label){showInsight('pic', label);}

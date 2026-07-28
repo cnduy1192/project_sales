@@ -1,11 +1,11 @@
-/* js/charts.js — Lớp biểu đồ cho Dashboard (Chart.js 4.5.1), nạp CUỐI.
+/* js/charts.js — Lớp biểu đồ cho Dashboard (Chart.js 4.4.0), nạp CUỐI.
  * 1) Bộ theme dùng chung: chữ Plus Jakarta Sans, số dạng tabular, tooltip và lưới tiết chế
  * 2) Biểu đồ mới: sản lượng (KG) theo từng mặt hàng trong Sales Funnel
  */
 (function () {
   "use strict";
 
-  const FONT = "'Plus Jakarta Sans',sans-serif";
+  const FONT = "'Plus Jakarta Sans','Inter',system-ui,-apple-system,sans-serif";
   const INK = "#4C5364", INK3 = "#697082", LINE = "#EEF0F4";
   const NCC_COLOR = { Roquette: "#1E3A8A", IFF: "#0D9488", Kimica: "#7C3AED" };
   const EXTRA = ["#B45309", "#0B4F9E", "#DB2777", "#059669"];
@@ -21,19 +21,15 @@
     D.font.weight = 500;
     D.color = INK3;
     D.borderColor = LINE;
-    D.animation = { duration: 620, easing: "easeOutQuart" };
+    // gán từng thuộc tính, KHÔNG thay cả object animation của Chart.js
+    if (D.animation) { D.animation.duration = 620; D.animation.easing = "easeOutQuart"; }
     D.animations = D.animations || {};
     D.datasets = D.datasets || {};
 
     D.plugins = D.plugins || {};
-    Object.assign(D.plugins.tooltip, {
-      backgroundColor: "rgba(16,24,40,.94)",
-      titleFont: { family: FONT, size: 12, weight: 700 },
-      bodyFont: { family: FONT, size: 12, weight: 500 },
-      padding: 11, cornerRadius: 10, boxPadding: 5,
-      displayColors: true, usePointStyle: true, borderWidth: 0,
-      caretSize: 6, caretPadding: 8,
-    });
+    // BỎ tooltip: donut đã hiển thị thông tin ngay ở TÂM khi rê chuột, tooltip chỉ lặp lại
+    // và che mất phần tâm. Biểu đồ cột hiển thị số ngay đầu thanh.
+    if (D.plugins.tooltip) D.plugins.tooltip.enabled = false;
     if (D.plugins.legend) D.plugins.legend.labels = Object.assign(
       D.plugins.legend.labels || {}, { font: { family: FONT, size: 11.5 }, usePointStyle: true, boxWidth: 8, padding: 14 });
 
@@ -107,8 +103,28 @@
     cv.style.visibility = "visible";
     if (state) state.classList.remove("show");
 
+    try {
     const nccList = [...new Set(top.map(t => t.ncc))];
+    const valueLabels = {
+      id: "fisgValueLabels",
+      afterDatasetsDraw(c) {
+        const meta = c.getDatasetMeta(0);
+        if (!meta || !meta.data) return;
+        const ctx = c.ctx;
+        ctx.save();
+        ctx.font = '600 10.5px ' + FONT;
+        ctx.fillStyle = INK3;
+        ctx.textBaseline = "middle";
+        meta.data.forEach((bar, i) => {
+          const v = c.data.datasets[0].data[i];
+          if (v == null) return;
+          ctx.fillText(fmtN(v), bar.x + 8, bar.y);
+        });
+        ctx.restore();
+      },
+    };
     const chart = new Chart(cv, {
+      plugins: [valueLabels],
       type: "bar",
       data: {
         labels: top.map(t => t.product.length > 26 ? t.product.slice(0, 25) + "…" : t.product),
@@ -125,17 +141,8 @@
         responsive: true, maintainAspectRatio: false,
         animation: { duration: 650, easing: "easeOutQuart" },
         interaction: { mode: "nearest", axis: "y", intersect: false },
-        layout: { padding: { right: 14 } },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              title: c => top[c[0].dataIndex].product,
-              label: c => "  " + fmtN(c.parsed.x) + " KG",
-              afterLabel: c => "  " + top[c.dataIndex].ncc + " · " + top[c.dataIndex].n + " dự án",
-            },
-          },
-        },
+        layout: { padding: { right: 64 } },   // chừa chỗ cho số in ở đầu thanh
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
         scales: {
           x: {
             beginAtZero: true,
@@ -156,16 +163,39 @@
       },
     });
     if (window.rc) window.rc("volume", chart);
+    } catch (e) {
+      console.error("[charts] render volume", e);
+      cv.style.visibility = "hidden";
+      if (state) { state.textContent = "Không thể hiển thị biểu đồ khối lượng. Vui lòng thử lại."; state.classList.add("show"); }
+    }
   }
 
   /* ---------- gắn vào vòng đời ---------- */
   function wrap(name, fn) {
     const o = window[name];
     if (typeof o !== "function") return;
-    window[name] = function () { const r = o.apply(this, arguments); try { fn(); } catch (e) {} return r; };
+    window[name] = function () {
+      let r;
+      try { r = o.apply(this, arguments); } catch (e) { console.error("[charts] dashboard update", e); }
+      try { fn(); } catch (e) { console.error("[charts] extension update", e); }
+      return r;
+    };
   }
+  // Chart.js vẽ chữ lên canvas: nếu font web chưa tải xong thì tooltip rơi về font hệ thống.
+  function repaintWhenFontReady() {
+    if (!document.fonts || !document.fonts.ready) return;
+    document.fonts.ready.then(() => {
+      applyTheme();
+      if (!window.Chart || !Chart.instances) return;
+      Object.keys(Chart.instances).forEach(k => {
+        try { Chart.instances[k].update("none"); } catch (e) {}
+      });
+    }).catch(() => {});
+  }
+
   function boot() {
     if (!applyTheme()) setTimeout(applyTheme, 400);       // Chart.js tải từ CDN
+    repaintWhenFontReady();
     wrap("renderDash", () => {
       const on = document.querySelector("#volSwitch .vol-tab.on");
       render(on ? on.dataset.y : "kgThis");
