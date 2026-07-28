@@ -5,7 +5,7 @@
 (function () {
   "use strict";
 
-  const FONT = "'Plus Jakarta Sans','Inter',system-ui,sans-serif";
+  const FONT = "'Plus Jakarta Sans',sans-serif";
   const INK = "#4C5364", INK3 = "#697082", LINE = "#EEF0F4";
   const NCC_COLOR = { Roquette: "#1E3A8A", IFF: "#0D9488", Kimica: "#7C3AED" };
   const EXTRA = ["#B45309", "#0B4F9E", "#DB2777", "#059669"];
@@ -48,7 +48,6 @@
   }
 
   /* ---------- 2. Sản lượng theo mặt hàng ---------- */
-  let volChart = null;
   function ensureCard() {
     const grid = document.querySelector("#view-dash .dash-grid");
     if (!grid || document.getElementById("volBox")) return;
@@ -60,7 +59,8 @@
         '<button type="button" class="vol-tab on" data-y="kgThis">KG 2026</button>' +
         '<button type="button" class="vol-tab" data-y="kgNext">KG 2027</button>' +
       "</div>" +
-      '<div class="vol-box"><canvas id="volBox" height="300"></canvas></div>';
+      '<div class="vol-box"><canvas id="volBox" height="300"></canvas>' +
+        '<div class="vol-state" id="volState" role="status"></div></div>';
     grid.appendChild(card);
     card.querySelectorAll(".vol-tab").forEach(b => {
       b.onclick = () => {
@@ -75,7 +75,8 @@
     const cv = document.getElementById("volBox");
     if (!cv || !window.Chart) return;
     field = field || "kgThis";
-    const data = (typeof visible === "function" ? visible() : (window.RECORDS || [])) || [];
+    const data = ((typeof visible === "function" ? visible() : (window.RECORDS || [])) || [])
+      .filter(r => r.status === "IN PROGRESS" || r.status === "WON");
 
     // gộp KG theo mặt hàng, giữ NCC chiếm ưu thế để tô màu
     const by = {};
@@ -93,14 +94,21 @@
 
     const sub = document.getElementById("volSub");
     if (sub) sub.textContent = top.length
-      ? "12 mặt hàng cao nhất · tổng " + fmtN(top.reduce((s, x) => s + x.kg, 0)) + " KG"
-      : "";
+      ? "Dự án đang chạy + thắng · tổng " + fmtN(top.reduce((s, x) => s + x.kg, 0)) + " KG"
+      : "Chưa có khối lượng từ dự án đang chạy hoặc thắng";
 
-    if (volChart) { volChart.destroy(); volChart = null; }
-    if (!top.length) return;
+    if (window.dc) window.dc("volume");
+    const state = document.getElementById("volState");
+    if (!top.length) {
+      cv.style.visibility = "hidden";
+      if (state) { state.textContent = "NCC này chưa có khối lượng từ dự án đang chạy hoặc đã thắng."; state.classList.add("show"); }
+      return;
+    }
+    cv.style.visibility = "visible";
+    if (state) state.classList.remove("show");
 
     const nccList = [...new Set(top.map(t => t.ncc))];
-    volChart = new Chart(cv, {
+    const chart = new Chart(cv, {
       type: "bar",
       data: {
         labels: top.map(t => t.product.length > 26 ? t.product.slice(0, 25) + "…" : t.product),
@@ -115,6 +123,8 @@
       options: {
         indexAxis: "y",
         responsive: true, maintainAspectRatio: false,
+        animation: { duration: 650, easing: "easeOutQuart" },
+        interaction: { mode: "nearest", axis: "y", intersect: false },
         layout: { padding: { right: 14 } },
         plugins: {
           legend: { display: false },
@@ -145,6 +155,7 @@
         },
       },
     });
+    if (window.rc) window.rc("volume", chart);
   }
 
   /* ---------- gắn vào vòng đời ---------- */

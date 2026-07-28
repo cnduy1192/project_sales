@@ -15,28 +15,25 @@
   font-family: inherit; text-align: left;
   border: 1px solid var(--line); border-right: none;
   border-radius: 12px 0 0 12px;
-  background: var(--bg); color: var(--ink-3);
+  /* The colour rail lives inside the tab, so its height and rounded cap always match the button. */
+  background: linear-gradient(90deg, var(--key-bd) 0 3px, var(--bg) 3px); color: var(--ink-3);
   box-shadow: inset -6px 0 8px -8px rgba(16,24,40,.16);     /* bóng nhẹ: tab nằm sau bảng */
   transition: background .18s, color .18s, border-color .18s, transform .18s, box-shadow .18s;
 }
-/* gáy màu ở mép ngoài — phần nhận diện của tab */
+/* The rail is painted by the background, avoiding a pseudo-element that can drift outside the tab. */
 .fn-key::before {
-  content: ""; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px;
-  border-radius: 12px 0 0 12px; background: var(--key); opacity: .35;
-  transition: opacity .18s, width .18s;
+  content: none;
 }
-.fn-key:hover { background: var(--surface); color: var(--ink-2); transform: translateX(-2px); }
-.fn-key:hover::before { opacity: .7; }
+.fn-key:hover { background: linear-gradient(90deg, var(--key) 0 3px, var(--surface) 3px); color: var(--ink-2); transform: translateX(-2px); }
 .fn-key:focus-visible { outline: 2px solid var(--key); outline-offset: 2px; z-index: 4; }
 
 /* tab đang mở: cùng nền với bảng, ăn sang 1px để liền mạch */
 .fn-key.on {
-  background: var(--surface); color: var(--key);
+  background: linear-gradient(90deg, var(--key) 0 4px, var(--surface) 4px); color: var(--key);
   border-color: var(--line); margin-right: -1px; padding-right: 9px;
   box-shadow: -3px 0 10px -6px rgba(16,24,40,.18);
   z-index: 3;
 }
-.fn-key.on::before { opacity: 1; width: 4px; }
 
 .fn-key-num {
   font-size: 21px; font-weight: 800; line-height: 1; letter-spacing: -.03em;
@@ -106,10 +103,10 @@
     border: 1px solid var(--line); border-bottom: none; border-radius: 12px 12px 0 0;
     box-shadow: inset 0 -6px 8px -8px rgba(16,24,40,.16);
   }
-  .fn-key::before { left: -1px; right: -1px; top: -1px; bottom: auto; width: auto; height: 3px; border-radius: 12px 12px 0 0; }
-  .fn-key:hover { transform: translateY(-2px); }
+  .fn-key { background: linear-gradient(180deg, var(--key-bd) 0 3px, var(--bg) 3px); }
+  .fn-key:hover { background: linear-gradient(180deg, var(--key) 0 3px, var(--surface) 3px); transform: translateY(-2px); }
   .fn-key.on { margin: 0 0 -1px; padding-bottom: 10px; box-shadow: 0 -3px 10px -6px rgba(16,24,40,.18); }
-  .fn-key.on::before { height: 4px; width: auto; }
+  .fn-key.on { background: linear-gradient(180deg, var(--key) 0 4px, var(--surface) 4px); }
   .fn-key-num { font-size: 19px; }
   .fn-key-label { font-size: 10px; letter-spacing: .05em; }
   #groups .row:hover { transform: none; }
