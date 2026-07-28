@@ -1,0 +1,39 @@
+/* charts.css — Biểu đồ Dashboard.
+   Chữ trong biểu đồ dùng Plus Jakarta Sans (hình học, số dễ đọc) tách khỏi Inter của giao diện,
+   nên vùng dữ liệu tự tách lớp mà không cần thêm khung hay màu nền. */
+
+.card canvas { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+
+/* ---------- card sản lượng theo mặt hàng ---------- */
+.vol-card { position: relative; }
+.vol-card h4 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.vol-card h4 small {
+  font-size: 11.5px; font-weight: 500; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.vol-box { position: relative; height: 320px; margin-top: 6px; }
+
+/* chuyển năm — segmented control nhỏ, đặt góc phải card */
+.vol-switch {
+  position: absolute; top: 14px; right: 16px;
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 9px;
+}
+.vol-tab {
+  min-height: 28px; padding: 0 11px; border: none; border-radius: 7px; cursor: pointer;
+  background: none; color: var(--ink-3); font-family: inherit;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .01em;
+  font-variant-numeric: tabular-nums;
+  transition: background .16s ease-out, color .16s ease-out, box-shadow .16s ease-out;
+}
+.vol-tab:hover { color: var(--ink-2); }
+.vol-tab.on { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
+.vol-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+@media (max-width: 720px) {
+  .vol-box { height: 300px; }
+  .vol-switch { position: static; margin: 8px 0 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vol-tab { transition: none; }
+}

@@ -87,7 +87,7 @@
       '<p class="x-msg" id="nccMsg" role="alert" aria-live="polite"></p>' +
       '<div class="x-actions">' +
         '<button type="button" class="x-btn ghost" id="nccCancel">Huỷ</button>' +
-        '<button type="button" class="x-btn primary" id="nccSave">Thêm nhà cung cấp</button>' +
+        '<button type="button" class="x-btn primary" id="nccSave">Thêm</button>' +
       '</div>';
 
     let picked = existing[0] || "";
