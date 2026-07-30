@@ -14,6 +14,15 @@
   --primary:#1E3A8A; --primary-border:#C9D5F0; --primary-soft:#EEF2FB;
   --text:#16181D; --text-2:#4C5364; --text-3:#697082;
   --glass-border:#E4E6EC;
+  /* Marine blue on pearl white — sidebar identity, echoed by the timeline trunk */
+  --marine:#01426A; --marine-deep:#012A46; --marine-2:#0A5C8F; --marine-3:#2E7DAE;
+  --marine-ink:#0B2436; --marine-mute:#4A5F70; --marine-label:#2E6389;
+  --marine-soft:rgba(1,66,106,.06); --marine-line:rgba(1,66,106,.14);
+  --marine-glow:rgba(1,66,106,.26);
+  --pearl:#F1F5F8; --pearl-2:#FAFCFE; --pearl-3:#E2EAF1;
+  --font-display:'Outfit','Plus Jakarta Sans',system-ui,sans-serif;
+  --side-w:236px; --side-w-min:76px;
+  --x-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -25,6 +34,11 @@ svg{flex:none}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
 .glass{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+
+/* Geometric display face carries headings, nav and figures; Inter stays for prose. */
+.logo,.nav-item,.nav-label,.sidebar-user b,.topbar h2,.card h4,.kpi .k-value,
+.ins-head h3,.tly-year,.seg-cell .sc-n,.ls-opt,.modal-head h3,.login-card h1{
+  font-family:var(--font-display)}
 
 /* ---------- LOGIN ---------- */
 #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
@@ -47,17 +61,111 @@ svg{flex:none}
 
 /* ---------- SHELL ---------- */
 #app{display:none;min-height:100dvh}
-.shell{display:grid;grid-template-columns:224px 1fr;min-height:100dvh}
-.sidebar{padding:16px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100dvh;background:var(--surface);border-right:1px solid var(--line)}
-.sidebar .logo{padding:4px 8px 14px}
-.nav-label{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 5px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8.5px 10px;border-radius:7px;color:var(--ink-2);font-weight:500;width:100%;text-align:left;transition:background .12s,color .12s;font-size:13.5px}
-.nav-item:hover{background:var(--bg);color:var(--ink)}
-.nav-item.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.nav-item.active svg{stroke:var(--accent)}
-.sidebar-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:11px 8px;border-top:1px solid var(--line)}
-.sidebar-user b{font-size:13px;display:block}
-.sidebar-user small{color:var(--ink-3);font-size:11.5px}
+.shell{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:100dvh;
+  transition:grid-template-columns .34s cubic-bezier(.4,0,.2,1)}
+.shell.side-min{grid-template-columns:var(--side-w-min) 1fr}
+
+/* ---------- SIDEBAR: pearl white field, marine blue rail ---------- */
+.sidebar{position:sticky;top:0;height:100dvh;min-width:0;
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px;
+  color:var(--marine-ink);background:var(--pearl);border-right:1px solid var(--marine-line)}
+/* marine bloom drifting up from the base */
+.sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(78% 32% at 18% 104%,rgba(1,66,106,.20),transparent 72%),
+    radial-gradient(56% 24% at 96% 60%,rgba(46,125,174,.14),transparent 74%),
+    linear-gradient(175deg,var(--pearl-2) 0%,var(--pearl) 44%,#E7EEF5 100%);
+  background-size:150% 150%,150% 150%,100% 100%;
+  background-position:26% 100%,100% 50%,0 0;
+  background-repeat:no-repeat,no-repeat,no-repeat;
+  animation:marineDrift 26s ease-in-out infinite alternate}
+@keyframes marineDrift{
+  from{background-position:18% 100%,104% 56%,0 0}
+  to{background-position:64% 74%,80% 34%,0 0}}
+.sidebar>*{position:relative;z-index:1}
+
+.side-head{display:flex;align-items:center;gap:8px;padding:2px 2px 18px;min-height:44px}
+.sidebar .logo{font-size:15.5px;color:var(--marine-ink);min-width:0;flex:1;letter-spacing:-.015em}
+/* two offset squares, straight from the reference swatch */
+.sidebar .logo-mark{position:relative;border-radius:9px;color:#fff;
+  background:linear-gradient(140deg,var(--marine-2),var(--marine) 52%,var(--marine-deep));
+  box-shadow:0 6px 16px rgba(1,66,106,.26)}
+.sidebar .logo-mark::after{content:'';position:absolute;left:5px;top:5px;right:-5px;bottom:-5px;
+  border:1px solid var(--marine-line);border-radius:9px;z-index:-1}
+.logo-t{white-space:nowrap;overflow:hidden;transition:opacity .2s ease,transform .28s cubic-bezier(.4,0,.2,1)}
+.side-toggle{width:28px;height:28px;flex:none;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  color:var(--marine-mute);background:rgba(255,255,255,.72);border:1px solid var(--marine-line);
+  transition:color .18s,background .18s,border-color .18s,transform .3s cubic-bezier(.4,0,.2,1)}
+.side-toggle:hover{color:#fff;background:var(--marine);border-color:var(--marine)}
+.side-toggle:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+
+/* the rail: one marine hairline the nav hangs off */
+.side-nav{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;
+  /* keeps the selected pill clear of the sidebar edge */
+  padding-right:10px}
+.side-nav::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1.5px;border-radius:2px;
+  background:linear-gradient(180deg,transparent,var(--marine-line) 12%,rgba(1,66,106,.26) 55%,transparent)}
+.nav-label{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--marine-label);padding:16px 10px 7px 18px;white-space:nowrap;overflow:hidden}
+.nav-item{position:relative;display:flex;align-items:center;gap:11px;padding:9.5px 12px 9.5px 18px;border-radius:10px;
+  color:var(--marine-mute);font-weight:500;width:100%;text-align:left;font-size:13.5px;min-width:0;
+  background-color:transparent;
+  transition:background-color .18s ease,color .18s ease,box-shadow .18s ease}
+.nav-item svg{flex:none;transition:stroke .18s,transform .24s cubic-bezier(.34,1.3,.5,1)}
+.nav-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity .18s ease,transform .28s cubic-bezier(.4,0,.2,1)}
+/* the node clipping onto the rail */
+.nav-item::before{content:'';position:absolute;left:1.5px;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;
+  background:var(--pearl);border:1.5px solid rgba(1,66,106,.32);
+  transition:border-color .2s,background .2s,box-shadow .24s,transform .24s cubic-bezier(.34,1.3,.5,1)}
+.nav-item:hover{background-color:rgba(255,255,255,.86);color:var(--marine-ink);
+  box-shadow:0 2px 10px rgba(1,66,106,.11)}
+.nav-item:hover::before{border-color:var(--marine);background:#fff}
+.nav-item:hover svg{transform:translateX(1px)}
+.nav-item:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
+
+/* selected: marine gradient pill with one sheen sweep */
+.nav-item.active{color:#fff;font-weight:600;
+  background-image:
+    linear-gradient(102deg,transparent 24%,rgba(255,255,255,.26) 44%,transparent 64%),
+    linear-gradient(118deg,var(--marine-deep),var(--marine) 48%,var(--marine-2));
+  background-size:230% 100%,100% 100%;
+  background-position:132% 0,0 0;
+  box-shadow:0 6px 18px rgba(1,66,106,.26);
+  animation:pillSweep .68s cubic-bezier(.4,0,.2,1) both}
+@keyframes pillSweep{from{background-position:-46% 0,0 0}to{background-position:132% 0,0 0}}
+.nav-item.active svg{stroke:#fff}
+/* solid white dot — no ring, so nothing can mismatch the pill behind it */
+.nav-item.active::before{background:#fff;border-color:#fff;box-shadow:none;transform:scale(1)}
+
+.sidebar-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:11px 10px;min-width:0;border-radius:12px;
+  background:rgba(255,255,255,.72);border:1px solid var(--marine-line)}
+.sidebar-user>span:last-child{min-width:0;overflow:hidden;white-space:nowrap;
+  transition:opacity .18s ease,transform .28s cubic-bezier(.4,0,.2,1)}
+.sidebar-user b{font-family:var(--font-display);font-size:13px;display:block;color:var(--marine-ink);
+  overflow:hidden;text-overflow:ellipsis}
+.sidebar-user small{color:#5A6E80;font-size:11.5px}
+
+/* ---------- COLLAPSED STATE ---------- */
+.side-min .sidebar{padding-left:14px;padding-right:14px;align-items:center}
+.side-min .side-head{flex-direction:column;gap:12px;padding-bottom:14px;min-height:0}
+.side-min .sidebar .logo{flex:none;justify-content:center;gap:0}
+.side-min .logo-t,.side-min .nav-t,.side-min .sidebar-user>span:last-child{
+  opacity:0;transform:translateX(-6px);width:0;pointer-events:none}
+.side-min .side-toggle{transform:rotate(180deg)}
+.side-min .side-nav{width:100%;padding-right:0}
+.side-min .nav-label{height:15px;padding:12px 0 4px;opacity:0}
+.side-min .nav-item{justify-content:center;padding:11px 0;gap:0}
+.side-min .nav-item::before{left:50%;margin-left:-4px;top:auto;bottom:3px;margin-top:0}
+.side-min .side-nav::before{left:50%;margin-left:-.75px}
+.side-min .sidebar-user{justify-content:center}
+/* label becomes a floating pill on hover */
+.side-min .nav-item:hover .nav-t,.side-min .nav-item:focus-visible .nav-t{
+  opacity:1;width:auto;transform:none;pointer-events:none;
+  position:absolute;left:calc(100% + 12px);top:50%;margin-top:-15px;z-index:90;
+  padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:#fff;
+  background:linear-gradient(135deg,var(--marine),var(--marine-deep));border:1px solid rgba(255,255,255,.14);
+  box-shadow:0 10px 26px rgba(11,36,54,.30)}
 .main{padding:18px 26px 60px;min-width:0}
 
 /* ---------- GLOBAL HEADER ---------- */
@@ -123,6 +231,8 @@ svg{flex:none}
 .legend .li .sw{width:9px;height:9px;border-radius:2.5px;flex:none}
 .legend .li b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink)}
 .legend .li small{color:var(--ink-3);font-variant-numeric:tabular-nums;width:40px;text-align:right}
+/* 13 segments make a long legend — keep the card height stable */
+#legSeg{max-height:172px;overflow:auto;padding-right:2px}
 .hbar{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .12s}
 .hbar:hover{background:var(--accent-soft)}
 .hbar .hb-label{width:150px;font-size:12.5px;font-weight:500;color:var(--ink-2);flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -140,24 +250,99 @@ svg{flex:none}
 .ins-sug button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 13px;border-bottom:1px solid var(--line-2);transition:background .1s;font-size:13px}
 .ins-sug button:last-child{border-bottom:none}
 .ins-sug button:hover{background:var(--accent-soft)}
-.ins-sug .t{font-size:9.5px;font-weight:700;border-radius:4px;padding:2px 6px;flex:none;letter-spacing:.03em}
+.t{font-size:9.5px;font-weight:700;border-radius:4px;padding:2px 6px;flex:none;letter-spacing:.03em}
 .t-kh{background:var(--sbg-bg);color:var(--sbg)} .t-seg{background:var(--st-bg);color:var(--st)}
 .t-pic{background:var(--oa-bg);color:var(--oa)} .t-stage{background:var(--bas-bg);color:var(--bas)}
-.t-prod{background:var(--prog-bg);color:var(--prog)}
+.t-prod{background:var(--prog-bg);color:var(--prog)} .t-grp{background:var(--lost-bg);color:var(--lost)}
 .ins-head{display:flex;align-items:center;gap:10px;margin:16px 0 4px;flex-wrap:wrap}
 .ins-head h3{font-size:16px;font-weight:700}
+.ins-reset{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  color:var(--ink-3);border:1px solid var(--line);border-radius:20px;padding:4px 12px;transition:color .14s,border-color .14s,background .14s}
+.ins-reset::before{content:'';width:11px;height:11px;flex:none;
+  background:currentColor;-webkit-mask:var(--x-mask) center/11px no-repeat;mask:var(--x-mask) center/11px no-repeat}
+.ins-reset:hover{color:var(--lost);border-color:var(--lost-bd);background:var(--lost-bg)}
 .ins-stats{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0 4px}
 .ins-stat{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px 12px;font-size:12.5px;color:var(--ink-2)}
 .ins-stat b{color:var(--ink);font-variant-numeric:tabular-nums}
-.tl{position:relative;margin-top:12px;padding-left:24px;max-height:400px;overflow:auto}
-.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line)}
-.tl-item{position:relative;padding:0 6px 16px 8px;cursor:pointer;border-radius:8px;transition:background .12s}
-.tl-item:hover{background:var(--accent-soft)}
-.tl-item::before{content:'';position:absolute;left:-21px;top:5px;width:10px;height:10px;border-radius:50%;background:#fff;border:2.5px solid var(--tc,#1E3A8A)}
-.tl-date{font-size:10.5px;font-weight:600;color:var(--ink-3);letter-spacing:.03em}
+.ins-empty{color:var(--ink-3);padding:24px 6px;text-align:center;font-size:13px}
+
+/* ---------- TIMELINE TREE (trunk = years, branches = projects) ---------- */
+/* One rail axis drives every mark: trunk, year knot, point and branch tick all
+   derive their x from --rail, so nothing can drift out of centre. */
+.tlt{--gut:30px;--rail:9px;--dot:12px;--knot:12px;--axis:17px;--kaxis:15px;--stroke:2px;
+  /* Mark sizes are even and the axes are whole pixels, so every edge lands on a
+     device pixel — half-pixel boxes anti-alias unevenly and read as off-centre. */
+  position:relative;margin-top:14px;max-height:440px;overflow:auto;
+  /* overflow clips at the padding box: the year knot's halo is a rotated 20px square,
+     reaching 14.2px left of the rail, so the gutter must clear it. */
+  padding:2px 2px 2px 10px}
+/* Trunk is drawn per year block, so it stays unbroken however far the list scrolls.
+   Blocks butt together and each carries its slice of the global fade. */
+.tly{position:relative;padding-left:var(--gut)}
+.tly::before{content:'';position:absolute;left:calc(var(--rail) - 1px);top:0;bottom:0;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--f0,rgba(1,66,106,.5)),var(--f1,rgba(1,66,106,.1)))}
+/* the trunk begins at the first knot's centre, not above it */
+.tly:first-child::before{top:var(--kaxis)}
+.tly:last-child::before{bottom:14px}
+.tly-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding:6px 0 8px;position:relative}
+/* the year knot sits on the trunk */
+/* Marks are opaque and centred on the rail, so the trunk is cut cleanly at their
+   outline — it never draws across a shape — and resumes from the opposite edge. */
+.tly-head::before{content:'';position:absolute;
+  top:calc(var(--kaxis) - var(--knot) / 2);
+  left:calc(var(--rail) - var(--gut) - var(--knot) / 2);width:var(--knot);height:var(--knot);border-radius:4px;
+  background:var(--surface);border:var(--stroke) solid var(--fknot,var(--marine));transform:rotate(45deg);z-index:1}
+.tly.now .tly-head::before{border-color:var(--marine);box-shadow:0 0 0 4px rgba(1,66,106,.18)}
+.tly.na .tly-head::before{border-color:var(--line);border-style:dashed;transform:none;border-radius:50%}
+.tly-year{font-family:var(--font-display);font-size:19px;font-weight:800;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tly.na .tly-year{font-size:13px;font-weight:700;color:var(--ink-3)}
+.tly-count{font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);
+  border-radius:20px;padding:2px 9px}
+.tly-meta{font-size:11.5px;color:var(--ink-3)}
+.tly-body{display:flex;flex-direction:column;gap:3px;padding-bottom:14px}
+.tl-item{position:relative;display:block;width:100%;text-align:left;padding:7px 10px 9px 16px;
+  cursor:pointer;border-radius:9px;transition:background .14s,box-shadow .14s}
+/* The branch leaves from the point's right edge, on the point's own centre line, and
+   runs to the row — collinear with the centre, touching the outline, crossing nothing. */
+.tl-item::before{content:'';position:absolute;height:2px;border-radius:0 2px 2px 0;
+  left:calc(var(--rail) - var(--gut) + var(--dot) / 2);
+  width:calc(var(--gut) - var(--rail) - var(--dot) / 2);
+  top:calc(var(--axis) - 1px);
+  background:var(--tline,rgba(1,66,106,.28))}
+.tl-item::after{content:'';position:absolute;border-radius:50%;
+  left:calc(var(--rail) - var(--gut) - var(--dot) / 2);top:calc(var(--axis) - var(--dot) / 2);
+  width:var(--dot);height:var(--dot);
+  background:var(--surface);border:var(--stroke) solid var(--tc,#1E3A8A);z-index:1;
+  transition:background-color .16s ease,box-shadow .16s ease}
+.tl-item:hover{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent-border)}
+.tl-item:hover::after{background:var(--tc,#1E3A8A);box-shadow:0 0 0 3px var(--accent-soft)}
+.tl-item:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tl-date{font-size:10.5px;font-weight:600;color:var(--ink-3);letter-spacing:.03em;font-variant-numeric:tabular-nums}
 .tl-title{font-weight:600;font-size:13.5px;margin:2px 0 3px}
 .tl-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink-3)}
-.ins-empty{color:var(--ink-3);padding:24px 6px;text-align:center;font-size:13px}
+.tl-note{font-size:12px;color:var(--text-3);margin-top:3px}
+
+/* ---------- LANGUAGE SWITCH ---------- */
+.lang-switch{position:relative;display:flex;align-items:center;gap:0;flex:none;
+  height:34px;padding:3px 3px 3px 9px;border-radius:20px;
+  background:var(--bg);border:1px solid var(--line);transition:border-color .16s,box-shadow .16s}
+.lang-switch:hover{border-color:var(--accent-border)}
+.lang-switch:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.ls-globe{color:var(--ink-3);margin-right:5px;flex:none}
+.ls-thumb{position:absolute;top:3px;left:28px;width:38px;height:26px;border-radius:16px;
+  background:linear-gradient(140deg,var(--marine-2),var(--marine));
+  box-shadow:0 2px 8px rgba(35,33,44,.32);
+  transition:transform .28s cubic-bezier(.34,1.32,.5,1)}
+.lang-switch.is-vi .ls-thumb{transform:translateX(38px)}
+.ls-opt{position:relative;z-index:1;width:38px;height:26px;border-radius:16px;
+  font-size:11.5px;font-weight:800;letter-spacing:.04em;color:var(--ink-3);
+  transition:color .2s ease}
+.ls-opt:hover{color:var(--ink)}
+.ls-opt[aria-pressed="true"]{color:#fff}
+.ls-opt[aria-pressed="true"]:hover{color:#CFE4F3}
+.ls-opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.ls-thumb{transition:none}}
 
 /* ---------- NCC TABS ---------- */
 .ncc-tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px}
@@ -386,9 +571,18 @@ datalist{display:none}
 .ai-input input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 
 @media (max-width:900px){
-  .shell{grid-template-columns:1fr}
-  .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center}
-  .sidebar-user{margin:0;border:none;margin-left:auto}
+  .shell,.shell.side-min{grid-template-columns:1fr}
+  .sidebar,.side-min .sidebar{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;
+    padding:12px 14px;border-right:none;border-bottom:1px solid var(--marine-line)}
+  .side-head,.side-min .side-head{flex-direction:row;padding:0 12px 0 0;min-height:0}
+  .side-toggle,.side-min .side-toggle{display:none}
+  .side-nav,.side-min .side-nav{flex-direction:row;flex-wrap:wrap;flex:1;width:auto;gap:4px;padding-right:0}
+  .side-nav::before,.side-min .side-nav::before{display:none}
+  .nav-item,.side-min .nav-item{width:auto;padding:8px 12px;justify-content:flex-start;gap:9px}
+  .nav-item::before,.side-min .nav-item::before{display:none}
+  .side-min .logo-t,.side-min .nav-t,.side-min .sidebar-user>span:last-child{opacity:1;width:auto;transform:none;
+    position:static;background:none;border:none;box-shadow:none;padding:0;font-size:13.5px}
+  .sidebar-user,.side-min .sidebar-user{margin:0;border:none;margin-left:auto;padding:0}
   .nav-label{display:none}
   .thead{display:none}
   .row{grid-template-columns:1fr 1fr;gap:8px}

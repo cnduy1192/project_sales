@@ -94,14 +94,16 @@
 .has-clear { position: relative; }
 .clear-x {
   position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
-  width: 20px; height: 20px; display: none; align-items: center; justify-content: center;
+  width: 22px; height: 22px; display: none; align-items: center; justify-content: center;
   border: none; border-radius: 50%; background: var(--line-2); color: var(--ink-2);
   cursor: pointer; padding: 0; line-height: 1;
+  transition: background .14s, color .14s;
 }
-.clear-x:hover { background: var(--ink-3); color: #fff; }
+.clear-x:hover { background: var(--lost); color: #fff; }
 .clear-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .has-clear.filled .clear-x { display: flex; }
-.gsearch.has-clear input, .ins-wrap.has-clear input { padding-right: 26px; }
+.gsearch.has-clear input, .ins-wrap.has-clear input { padding-right: 28px; }
+.ins-wrap .clear-x { right: 11px; }
 
 /* ---------- 6. Nút lên đầu trang ---------- */
 #toTop {

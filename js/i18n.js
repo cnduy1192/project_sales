@@ -1,11 +1,12 @@
-/* js/i18n.js — Song ngữ VI/EN ở tầng hiển thị (classic script, scope toàn cục).
- * VI là ngôn ngữ nguồn trong code; khi bật EN thì dịch DOM theo từ điển + luật regex.
+/* js/i18n.js — Song ngữ EN/VI ở tầng hiển thị (classic script, scope toàn cục).
+ * VI là ngôn ngữ nguồn trong code; EN là ngôn ngữ hiển thị mặc định — mỗi lần tải
+ * trang đều bắt đầu ở EN, người dùng có thể gạt sang VI trong phiên làm việc.
  * Loại trừ #aiMsgs (báo cáo tuần & output chatbot là NỘI DUNG, giữ tiếng Việt).
- * Nút chuyển VN|EN tự chèn vào header; lựa chọn lưu localStorage.
  */
 (function () {
-  let LANG = 'vi';
-  try { LANG = localStorage.getItem('fisg_lang') || 'vi'; } catch (e) {}
+  /* EN is the primary display language: no stored preference is read at boot. */
+  let LANG = 'en';
+  try { localStorage.removeItem('fisg_lang'); } catch (e) {}
 
   // ---- từ điển VI -> EN (chrome tĩnh + nhãn động + từ vựng cố định) ----
   const DICT = {
@@ -119,6 +120,19 @@
     "Không có dự án đang chạy nào ở đúng tiến độ": "No in-progress projects on track",
     "Nhập lý do": "Enter reason", "Không có kết quả": "No results",
     // từ vựng cố định (trạng thái / nhóm chuẩn)
+    // donut phân khúc / timeline dạng cây / sidebar
+    "Tỷ trọng phân khúc": "Segment share",
+    "click một lát để xem lịch sử dự án": "click a slice to see project history",
+    "click một lát để mở segment bên trong": "click a slice to open the segments inside",
+    "NHÓM NGÀNH": "SEGMENT GROUP", "Chưa có ngày đóng": "No closing date",
+    "Xoá tra cứu": "Clear lookup",
+    "Thu gọn thanh điều hướng": "Collapse navigation",
+    "Mở rộng thanh điều hướng": "Expand navigation",
+    "Ngôn ngữ hiển thị": "Display language",
+    "Chưa có dữ liệu theo bộ lọc này.": "No data for this filter.",
+    "Chưa có dự án được tạo theo bộ lọc này.": "No projects created under this filter.",
+    "Không thể hiển thị biểu đồ. Vui lòng thử lại.": "Chart unavailable. Please try again.",
+    "Không có dự án nào (trong phạm vi quyền xem của bạn).": "No projects within your access scope.",
     "Đang chạy": "In Progress", "Thắng": "Won", "Thua": "Lost",
     "Đã đóng": "Closed", "ĐÃ ĐÓNG": "CLOSED", "Đóng": "Closed",
     "thắng · thua": "won · lost", "theo mốc thời gian": "by due date",
@@ -128,6 +142,7 @@
 
   // ---- luật regex cho chuỗi có nội suy số (áp khi không khớp nguyên câu) ----
   const RULES = [
+    [/(\d+)\s*đang chạy/g, "$1 in progress"], [/(\d+)\s*thắng/g, "$1 won"], [/(\d+)\s*thua/g, "$1 lost"],
     [/dự án mới/g, "new projects"], [/dự án khác/g, "more projects"],
     [/(\d+)\s*dự án/g, "$1 projects"], [/dự án/g, "project"],
     [/Tháng /g, "Month "], [/% thắng/g, "% win"], [/% dự án/g, "project %"],
@@ -163,9 +178,9 @@
       }
     }
     // placeholder / title attributes
-    root.querySelectorAll && root.querySelectorAll('[placeholder],[title]').forEach(el => {
+    root.querySelectorAll && root.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
       if (el.closest(EXCLUDE)) return;
-      ['placeholder', 'title'].forEach(attr => {
+      ['placeholder', 'title', 'aria-label'].forEach(attr => {
         const v = el.getAttribute(attr); if (!v) return;
         const en = translateStr(v.trim());
         if (en !== v.trim()) { if (el['__vi_' + attr] === undefined) el['__vi_' + attr] = v; el.setAttribute(attr, en); }
@@ -178,8 +193,8 @@
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodes = []; let n; while ((n = w.nextNode())) nodes.push(n);
     for (const node of nodes) if (node.__vi !== undefined) { node.nodeValue = node.__vi; node.__vi = undefined; }
-    document.querySelectorAll('[placeholder],[title]').forEach(el => {
-      ['placeholder', 'title'].forEach(attr => {
+    document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(el => {
+      ['placeholder', 'title', 'aria-label'].forEach(attr => {
         if (el['__vi_' + attr] !== undefined) { el.setAttribute(attr, el['__vi_' + attr]); el['__vi_' + attr] = undefined; }
       });
     });
@@ -204,29 +219,51 @@
   function connect() { if (observer) observer.observe(document.body, { childList: true, subtree: true, characterData: false }); }
 
   function setLang(l) {
-    LANG = l; try { localStorage.setItem('fisg_lang', l); } catch (e) {}
-    document.documentElement.lang = (l === 'en' ? 'en' : 'vi');
-    if (l === 'en') { translateTree(document.body); startObserver(); }
+    LANG = (l === 'vi' ? 'vi' : 'en');
+    document.documentElement.lang = LANG;
+    if (LANG === 'en') { translateTree(document.body); startObserver(); }
     else { if (observer) { observer.disconnect(); observer = null; } restoreVI(); }
-    const btn = document.getElementById('langToggle');
-    if (btn) btn.textContent = (l === 'en' ? 'EN' : 'VN');
+    syncSwitch();
   }
   window.setLang = setLang;
   window.t = translateStr;   // tiện dùng trong view sau này nếu cần
 
+  function syncSwitch() {
+    const sw = document.getElementById('langSwitch');
+    if (!sw) return;
+    sw.classList.toggle('is-vi', LANG === 'vi');
+    sw.querySelectorAll('.ls-opt').forEach(b => {
+      const on = b.dataset.l === LANG;
+      b.setAttribute('aria-pressed', String(on));
+      b.tabIndex = on ? -1 : 0;
+    });
+  }
+
+  /* Segmented switch: both languages stay visible, the thumb marks the active one. */
   function injectToggle() {
     const header = document.querySelector('.gheader') || document.body;
-    if (document.getElementById('langToggle')) return;
-    const btn = document.createElement('button');
-    btn.id = 'langToggle'; btn.type = 'button';
-    btn.title = 'Chuyển ngôn ngữ / Switch language';
-    btn.style.cssText = 'margin-left:10px;padding:5px 10px;border:1px solid var(--line,#E4E6EC);border-radius:8px;background:var(--surface,#fff);font-weight:700;cursor:pointer;font-size:12px;color:var(--ink,#16181D)';
-    btn.textContent = (LANG === 'en' ? 'EN' : 'VN');
-    btn.onclick = () => setLang(LANG === 'en' ? 'vi' : 'en');
-    header.appendChild(btn);
+    if (document.getElementById('langSwitch')) return;
+    const sw = document.createElement('div');
+    sw.id = 'langSwitch'; sw.className = 'lang-switch';
+    sw.setAttribute('role', 'group');
+    sw.setAttribute('aria-label', 'Ngôn ngữ hiển thị');
+    sw.innerHTML =
+      '<svg class="ls-globe" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">' +
+      '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 3 2.6 15 0 18M12 3c-2.6 3-2.6 15 0 18"/></svg>' +
+      '<span class="ls-thumb" aria-hidden="true"></span>' +
+      '<button class="ls-opt" type="button" data-l="en">EN</button>' +
+      '<button class="ls-opt" type="button" data-l="vi">VI</button>';
+    sw.querySelectorAll('.ls-opt').forEach(b => {
+      b.addEventListener('click', () => setLang(b.dataset.l));
+    });
+    const bell = header.querySelector('.icon-btn');
+    const anchor = bell && bell.parentElement && bell.parentElement.parentElement === header ? bell.parentElement : null;
+    if (anchor) header.insertBefore(sw, anchor); else header.appendChild(sw);
+    syncSwitch();
   }
 
   function boot() {
+    document.documentElement.lang = LANG;
     injectToggle();
     if (LANG === 'en') { translateTree(document.body); startObserver(); }
   }

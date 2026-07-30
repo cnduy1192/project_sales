@@ -31,6 +31,31 @@ function go(v){
   if(v==='funnel')render(); if(v==='dash')renderDash(); if(v==='acts')renderActs();
 }
 
+/* ====== SIDEBAR EXPAND / COLLAPSE ====== */
+function toggleSidebar(force){
+  const shell=document.querySelector('.shell'); if(!shell)return;
+  const min = typeof force==='boolean' ? force : !shell.classList.contains('side-min');
+  shell.classList.toggle('side-min',min);
+  const btn=document.getElementById('sideToggle');
+  if(btn){
+    btn.setAttribute('aria-expanded',String(!min));
+    btn.setAttribute('aria-label',min?'Mở rộng thanh điều hướng':'Thu gọn thanh điều hướng');
+  }
+  try{localStorage.setItem('fisg_side',min?'min':'full');}catch(e){}
+  /* Chart.js canvases must re-measure once the grid column finishes animating. */
+  setTimeout(()=>{
+    if(typeof CHARTS==='undefined')return;
+    Object.keys(CHARTS).forEach(k=>{try{CHARTS[k].resize();}catch(e){}});
+  },400);
+}
+window.toggleSidebar=toggleSidebar;
+(function(){
+  let saved=null; try{saved=localStorage.getItem('fisg_side');}catch(e){}
+  if(saved!=='min')return;
+  const apply=()=>toggleSidebar(true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply); else apply();
+})();
+
 /* ====== VISIBILITY ====== */
 function inScope(r){return !nccFilter || r.ncc===nccFilter;}
 function visible(){
@@ -44,6 +69,7 @@ function visibleActs(){
   return base.filter(a=>a.pic===me.pic);
 }
 function setNcc(n){nccFilter=n;stageFilter=null;segDrill=null;
+  if(typeof donutSegDrill!=='undefined')donutSegDrill=null;
   document.querySelectorAll('.ncc-tab').forEach(t=>t.classList.toggle('on',t.dataset.ncc===n));
   render();renderDash();renderActs();}
 function canEdit(r){return me.role==='superadmin' || (me.pic && (r.pic===me.pic || r.related.includes(me.pic)));}

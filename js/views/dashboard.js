@@ -1,7 +1,7 @@
 /* js/views/dashboard.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
 /* ====== CHART.JS HELPERS ====== */
 const CHARTS={};
-if(window.Chart){Chart.defaults.font.family="'Plus Jakarta Sans',system-ui,sans-serif";Chart.defaults.color='#697082';}
+if(window.Chart){Chart.defaults.font.family="'Outfit','Plus Jakarta Sans',system-ui,sans-serif";Chart.defaults.color='#697082';}
 /* Always destroy the previous canvas instance before a dashboard panel is redrawn. */
 function dc(id){
   const chart=CHARTS[id];
@@ -102,6 +102,31 @@ function statusClick(label){
 }
 function segClick(label){showInsight('seg', label);}
 function picClick(label){showInsight('pic', label);}
+/* ====== SEGMENT SHARE DONUT (drill: 3 nhóm ngành -> 13 segment) ====== */
+var donutSegDrill=null;
+function segDonutClick(label){
+  if(!donutSegDrill&&SEG_TREE[label]){donutSegDrill=label;showInsight('grp',label);return;}
+  showInsight('seg',label);
+}
+function segDonutBack(){donutSegDrill=null;renderDash();}
+function renderSegDonut(rows){
+  const head=document.getElementById('donutDrillHead'), hint=document.getElementById('segDonutHint');
+  let items;
+  if(!donutSegDrill){
+    head.innerHTML='<b>3 nhóm ngành</b><span style="margin-left:auto">click một lát để mở segment bên trong</span>';
+    if(hint)hint.textContent='';
+    items=SEG_GROUPS.map(g=>({label:g,value:rows.filter(r=>r.group===g).length,color:GROUP_COLORS[g]}));
+  }else{
+    const g=donutSegDrill;
+    head.innerHTML=`<button onclick="segDonutBack()">← 3 nhóm ngành</button><span>/</span><b>${g}</b>
+      <span style="margin-left:auto">click segment để xem lịch sử dự án</span>`;
+    if(hint)hint.textContent='';
+    items=SEG_TREE[g].map((sg,i)=>({label:sg,value:rows.filter(r=>r.segment===sg).length,color:SEG_COLORS[i%SEG_COLORS.length]}))
+      .filter(i=>i.value>0);
+    if(!items.length)items=SEG_TREE[g].map((sg,i)=>({label:sg,value:0,color:SEG_COLORS[i%SEG_COLORS.length]}));
+  }
+  donut('donutSeg','legSeg',items,'segDonutClick');
+}
 function renderDash(){
   const rows=visible();
   const prog=rows.filter(r=>r.status==='IN PROGRESS'), won=rows.filter(r=>r.status==='WON'), lost=rows.filter(r=>r.status==='LOST');
@@ -119,6 +144,7 @@ function renderDash(){
     {label:'Thắng',value:won.length,color:'#15803D'},
     {label:'Thua',value:lost.length,color:'#BE1240'}],'statusClick');
   renderSegGrid(rows);
+  renderSegDonut(rows);
   const mAgg={};
   rows.forEach(r=>{if(r.created){const k=r.created.slice(0,7);mAgg[k]=(mAgg[k]||0)+1}});
   const keys=Object.keys(mAgg).sort();
@@ -217,54 +243,99 @@ function insSuggest(){
   const sug=[];
   LISTS.customers.filter(c=>c.toLowerCase().includes(q)).slice(0,5).forEach(c=>sug.push({t:'kh',label:c}));
   LISTS.products.filter(c=>c.toLowerCase().includes(q)).slice(0,5).forEach(c=>sug.push({t:'prod',label:c}));
+  SEG_GROUPS.filter(g=>g.toLowerCase().includes(q)).slice(0,3).forEach(g=>sug.push({t:'grp',label:g}));
   LISTS.segments.filter(s=>s.toLowerCase().includes(q)).slice(0,4).forEach(s=>sug.push({t:'seg',label:s}));
   ALL_PICS.filter(p=>p.toLowerCase().includes(q)).slice(0,4).forEach(p=>sug.push({t:'pic',label:p}));
   activeStages().filter(s=>s.toLowerCase().includes(q)||stageShort(s).toLowerCase().includes(q)).slice(0,4).forEach(s=>sug.push({t:'stage',label:s}));
   box.innerHTML=sug.length?sug.map(s=>{
-    const tag=s.t==='kh'?'<span class="t t-kh">KHÁCH HÀNG</span>':s.t==='prod'?'<span class="t t-prod">SẢN PHẨM</span>':s.t==='seg'?'<span class="t t-seg">SEGMENT</span>':s.t==='stage'?'<span class="t t-stage">BOP STAGE</span>':'<span class="t t-pic">SALES</span>';
-    return `<button onclick="showInsight('${s.t}','${s.label.replace(/'/g,"\\'")}')">${tag}<b>${s.label}</b></button>`;}).join('')
+    return `<button onclick="showInsight('${s.t}','${s.label.replace(/'/g,"\\'")}')">${INS_TAG[s.t]||''}<b>${s.label}</b></button>`;}).join('')
     :'<button disabled style="color:var(--text-3)">Không tìm thấy kết quả</button>';
   box.classList.add('open');
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.ins-wrap'))document.getElementById('insSug').classList.remove('open');});
+const INS_TAG={kh:'<span class="t t-kh">KHÁCH HÀNG</span>',prod:'<span class="t t-prod">SẢN PHẨM</span>',
+  grp:'<span class="t t-grp">NHÓM NGÀNH</span>',seg:'<span class="t t-seg">SEGMENT</span>',
+  stage:'<span class="t t-stage">BOP STAGE</span>',pic:'<span class="t t-pic">SALES</span>'};
+const INS_MATCH={kh:(k)=>r=>r.customer===k,prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
+  seg:(k)=>r=>r.segment===k,stage:(k)=>r=>r.stage===k,pic:(k)=>r=>r.pic===k};
 function showInsight(type,key){
   INSIGHT={type,key};
-  document.getElementById('insQ').value=key;
+  const input=document.getElementById('insQ');
+  input.value=key;
+  const wrap=document.querySelector('.ins-wrap'); if(wrap)wrap.classList.add('filled');
   document.getElementById('insSug').classList.remove('open');
   go('dash'); renderInsight();
   document.getElementById('insResult').scrollIntoView({behavior:'smooth',block:'center'});
 }
+/* Clearing the search must also drop the timeline it produced. */
+function clearInsight(){
+  INSIGHT=null;
+  const input=document.getElementById('insQ');
+  if(input)input.value='';
+  const wrap=document.querySelector('.ins-wrap'); if(wrap)wrap.classList.remove('filled');
+  const sug=document.getElementById('insSug'); if(sug){sug.classList.remove('open');sug.innerHTML='';}
+  const box=document.getElementById('insResult');
+  if(box)box.innerHTML='<div class="ins-empty">Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.</div>';
+}
+window.clearInsight=clearInsight;
+const D_VI=d=>d?new Date(d).toLocaleDateString('vi-VN'):'—';
+const TL_FADE_TOP=.62, TL_FADE_END=.10;
+/* Timeline groups projects under the year their closing date falls in, newest year first. */
+function insYear(r){return r.closing?String(new Date(r.closing).getFullYear()):null;}
 function renderInsight(){
   const {type,key}=INSIGHT;
-  const match = type==='kh' ? r=>r.customer===key : type==='prod' ? r=>r.product===key : type==='seg' ? r=>r.segment===key : type==='stage' ? r=>r.stage===key : r=>r.pic===key;
-  const ps=visible().filter(match);
+  const mk=INS_MATCH[type]||INS_MATCH.pic;
+  const ps=visible().filter(mk(key));
   const box=document.getElementById('insResult');
   if(!ps.length){box.innerHTML='<div class="ins-empty">Không có dự án nào (trong phạm vi quyền xem của bạn).</div>';return;}
   const prog=ps.filter(r=>r.status==='IN PROGRESS'),won=ps.filter(r=>r.status==='WON'),lost=ps.filter(r=>r.status==='LOST');
   const kg=ps.reduce((s,r)=>s+r.kgThis,0);
   const wr=won.length+lost.length?Math.round(100*won.length/(won.length+lost.length)):0;
-  const tag=type==='kh'?'<span class="t t-kh" style="font-size:10.5px;padding:3px 9px">KHÁCH HÀNG</span>':type==='prod'?'<span class="t t-prod" style="font-size:10.5px;padding:3px 9px">SẢN PHẨM</span>':type==='seg'?'<span class="t t-seg" style="font-size:10.5px;padding:3px 9px">SEGMENT</span>':type==='stage'?'<span class="t t-stage" style="font-size:10.5px;padding:3px 9px">BOP STAGE</span>':'<span class="t t-pic" style="font-size:10.5px;padding:3px 9px">SALES</span>';
-  const items=[...ps].sort((a,b)=>(a.created||'')<(b.created||'')?1:-1);
+  const tag=(INS_TAG[type]||'').replace('class="t','style="font-size:10.5px;padding:3px 9px" class="t');
+  const buckets={};
+  ps.forEach(r=>{const y=insYear(r)||'—';(buckets[y]=buckets[y]||[]).push(r);});
+  const years=Object.keys(buckets).filter(y=>y!=='—').sort((a,b)=>b-a);
+  if(buckets['—'])years.push('—');
+  const thisYear=String(TODAY.getFullYear());
+  /* The trunk fades from the newest project down to the last one, so depth reads as age. */
+  const steps=Math.max(1,ps.length-1);
+  const fade=i=>'rgba(1,66,106,'+(TL_FADE_TOP-(TL_FADE_TOP-TL_FADE_END)*(Math.min(i,steps)/steps)).toFixed(3)+')';
+  let seen=0;
+  const branches=years.map(y=>{
+    const rs=buckets[y].sort((a,b)=>(a.closing||'')<(b.closing||'')?1:-1);
+    const yw=rs.filter(r=>r.status==='WON').length, yl=rs.filter(r=>r.status==='LOST').length;
+    const yp=rs.filter(r=>r.status==='IN PROGRESS').length;
+    const meta=[yp?yp+' đang chạy':'',yw?yw+' thắng':'',yl?yl+' thua':''].filter(Boolean).join(' · ');
+    const start=seen, end=seen+rs.length;
+    const knot='rgba(1,66,106,'+Math.max(.4,TL_FADE_TOP-(TL_FADE_TOP-TL_FADE_END)*(start/steps)+.2).toFixed(3)+')';
+    seen=end;
+    return `<div class="tly${y===thisYear?' now':''}${y==='—'?' na':''}"
+      style="--f0:${fade(start)};--f1:${fade(end)};--fknot:${knot}">
+      <div class="tly-head"><span class="tly-year">${y==='—'?'Chưa có ngày đóng':y}</span>
+        <span class="tly-count">${rs.length} dự án</span>
+        ${meta?`<span class="tly-meta">${meta}</span>`:''}</div>
+      <div class="tly-body">${rs.map((r,k)=>{
+        const tc=r.status==='WON'?'var(--won)':r.status==='LOST'?'var(--lost)':grp(r)==='overdue'?'var(--overdue)':'var(--accent)';
+        const last=r.comments.length?r.comments[r.comments.length-1].text:(r.desc||'');
+        return `<button class="tl-item" style="--tc:${tc};--tline:${fade(start+k)}" onclick="openDetail('${r.id}')">
+          <div class="tl-date">${D_VI(r.created)} → ${D_VI(r.closing)}</div>
+          <div class="tl-title">${r.customer} · ${r.product} <span style="color:var(--text-3);font-weight:500">(${r.application})</span></div>
+          <div class="tl-meta">
+            <span class="pill ${stageCls(r.stage)}" style="font-size:10.5px;padding:2px 8px">${stageShort(r.stage)}</span>
+            <span class="pill ${STATUS_CLS[r.status]||''}" style="font-size:10.5px;padding:2px 8px">${STATUS_VI[r.status]}</span>
+            <span class="pill" style="font-size:10.5px;padding:2px 8px;background:rgba(20,26,46,.06);color:var(--text-2)">${probPct(r)}%</span>
+            <span>${fmt(r.kgThis)} KG · PIC: ${r.pic||'—'}</span>
+          </div>
+          ${last?`<div class="tl-note">“${last.slice(0,90)}${last.length>90?'…':''}”</div>`:''}
+        </button>`;}).join('')}</div></div>`;}).join('');
   box.innerHTML=`
-    <div class="ins-head">${tag}<h3>${key}</h3></div>
+    <div class="ins-head">${tag}<h3>${key}</h3>
+      <button class="ins-reset" onclick="clearInsight()">Xoá tra cứu</button></div>
     <div class="ins-stats">
       <span class="ins-stat">Tổng: <b>${ps.length}</b> dự án</span>
       <span class="ins-stat">Đang chạy: <b>${prog.length}</b></span>
       <span class="ins-stat">Thắng: <b>${won.length}</b> · Thua: <b>${lost.length}</b> (<b>${wr}%</b> win)</span>
       <span class="ins-stat">Tiềm năng: <b>${fmt(kg)}</b> KG/năm</span>
     </div>
-    <div class="tl">${items.map(r=>{
-      const tc=r.status==='WON'?'var(--won)':r.status==='LOST'?'var(--lost)':grp(r)==='overdue'?'var(--overdue)':'#1E3A8A';
-      const last=r.comments.length?r.comments[r.comments.length-1].text:(r.desc||'');
-      return `<div class="tl-item" style="--tc:${tc}" onclick="openDetail('${r.id}')">
-        <div class="tl-date">${r.created?new Date(r.created).toLocaleDateString('vi-VN'):'—'} → ${r.closing?new Date(r.closing).toLocaleDateString('vi-VN'):'—'}</div>
-        <div class="tl-title">${r.customer} · ${r.product} <span style="color:var(--text-3);font-weight:500">(${r.application})</span></div>
-        <div class="tl-meta">
-          <span class="pill ${stageCls(r.stage)}" style="font-size:10.5px;padding:2px 8px">${stageShort(r.stage)}</span>
-          <span class="pill ${STATUS_CLS[r.status]||''}" style="font-size:10.5px;padding:2px 8px">${STATUS_VI[r.status]}</span>
-          <span class="pill" style="font-size:10.5px;padding:2px 8px;background:rgba(20,26,46,.06);color:var(--text-2)">${probPct(r)}%</span>
-          <span>${fmt(r.kgThis)} KG · PIC: ${r.pic||'—'}</span>
-        </div>
-        ${last?`<div style="font-size:12px;color:var(--text-3);margin-top:3px">“${last.slice(0,90)}${last.length>90?'…':''}”</div>`:''}
-      </div>`;}).join('')}</div>`;
+    <div class="tlt">${branches}</div>`;
 }
