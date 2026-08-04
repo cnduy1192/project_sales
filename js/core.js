@@ -29,7 +29,8 @@ function loginAs(i){
 /* Tab NCC dựng lại được: lúc đăng nhập danh mục còn rỗng, dữ liệu SharePoint về sau. */
 function rebuildNccTabs(){
   const box=document.getElementById('nccTabs'); if(!box)return;
-  box.innerHTML=NCCS.map(n=>
+  box.innerHTML=`<button class="ncc-tab ncc-tab-all${isAllNcc()?' on':''}" data-ncc="${ALL_NCC}" onclick="setNcc('${ALL_NCC}')" title="Xem dự án và hoạt động của mọi nhà cung cấp">${ALL_NCC_LABEL}</button>`
+    +NCCS.map(n=>
     `<button class="ncc-tab${n===nccFilter?' on':''}" data-ncc="${n.replace(/"/g,'&quot;')}" onclick="setNcc('${n.replace(/'/g,"\\'")}')">${n}</button>`).join('');
 }
 window.rebuildNccTabs=rebuildNccTabs;
@@ -73,13 +74,13 @@ window.toggleSidebar=toggleSidebar;
 })();
 
 /* ====== VISIBILITY ====== */
-function inScope(r){return !nccFilter || r.ncc===nccFilter;}
+function inScope(r){return !nccFilter || isAllNcc() || r.ncc===nccFilter;}
 function visible(){
   return scopeRecords(RECORDS.filter(inScope), me);
 }
 function visibleActs(){
   const other = (typeof OTHER_NCC !== 'undefined') ? OTHER_NCC : 'Khác';
-  const base=ACTIVITIES.filter(a=>!nccFilter||a.ncc===nccFilter||a.ncc===other);
+  const base=ACTIVITIES.filter(a=>!nccFilter||isAllNcc()||a.ncc===nccFilter||a.ncc===other);
   return scopeActs(base, me, scopeRecords(RECORDS, me));
 }
 function setNcc(n){nccFilter=n;stageFilter=null;segDrill=null;

@@ -204,7 +204,9 @@
 
     const key = await genKey();
     const nccs = (typeof NCCS !== "undefined" ? NCCS : []).slice();
-    const cur = (typeof nccFilter !== "undefined" && nccFilter) || nccs[0] || "";
+    /* Link chia sẻ luôn theo một NCC cụ thể — "Tất cả" không phải phạm vi hợp lệ. */
+    const cur = (typeof formNcc === "function" && formNcc())
+      || (typeof nccFilter !== "undefined" && nccFilter) || nccs[0] || "";
     const exp = new Date(); exp.setDate(exp.getDate() + 30);
 
     body.innerHTML =

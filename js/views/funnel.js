@@ -34,7 +34,7 @@ function renderSpine(rs){
   box.classList.toggle('filtered',!!stageFilter);
   document.getElementById('spineClear').classList.toggle('show',!!stageFilter);
   document.getElementById('spineFlow').innerHTML=stages.map((s,i)=>{
-    const n=rs.filter(r=>r.stage===s).length;
+    const n=rs.filter(r=>atStage(r,s)).length;
     return `<button class="spine-step${stageFilter===s?' on':''}" onclick="stageFilter=stageFilter==='${s.replace(/'/g,"\\'")}'?null:'${s.replace(/'/g,"\\'")}';render()"
       aria-pressed="${stageFilter===s}" title="${s}: ${n} dự án">
       <div class="spine-chev" style="--sc:${SPINE_PALETTE[i%SPINE_PALETTE.length]}">
@@ -46,7 +46,7 @@ function render(){
   const q=(document.getElementById('q').value||'').toLowerCase();
   const rows=visible().filter(r=> filter==='ALL'||r.status===filter)
     .filter(r=> !q || (r.customer+r.product+r.application+(r.pic||'')).toLowerCase().includes(q))
-    .filter(r=> !stageFilter || r.stage===stageFilter);
+    .filter(r=> atStage(r,stageFilter));
   renderSpine(visible().filter(r=>r.status==='IN PROGRESS'));
   const box=document.getElementById('groups'); box.innerHTML='';
   MAJORS.forEach(M=>{

@@ -40,15 +40,21 @@
   /* ---------- 3. Bảng màu định danh NCC ---------- */
   const NCC_COLOR = { "Roquette": "#1E3A8A", "IFF": "#0D9488", "Kimica": "#7C3AED" };
   const FALLBACK = ["#B45309", "#0B4F9E", "#DB2777"];
-  function colorOf(ncc, i) { return NCC_COLOR[ncc] || FALLBACK[(i || 0) % FALLBACK.length]; }
+  const ALL_TAB = typeof ALL_NCC !== "undefined" ? ALL_NCC : "*";
+  function colorOf(ncc, i) {
+    if (ncc === ALL_TAB) return "#334155";        // xám mực: không thuộc NCC nào
+    return NCC_COLOR[ncc] || FALLBACK[(i || 0) % FALLBACK.length];
+  }
   function tint(hex, a) {
     const n = parseInt(hex.slice(1), 16);
     return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`;
   }
 
   function paintTabs() {
-    document.querySelectorAll(".ncc-tab").forEach((t, i) => {
-      const c = colorOf(t.dataset.ncc, i);
+    let k = 0;                                     // tab "Tất cả" không chiếm màu dự phòng
+    document.querySelectorAll(".ncc-tab").forEach(t => {
+      const isAll = t.dataset.ncc === ALL_TAB;
+      const c = colorOf(t.dataset.ncc, isAll ? 0 : k++);
       t.style.setProperty("--ncc", c);
       t.style.setProperty("--ncc-soft", tint(c, .10));
       t.style.setProperty("--ncc-border", tint(c, .35));

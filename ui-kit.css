@@ -55,6 +55,14 @@
 }
 .ncc-tab.on::before { box-shadow: 0 0 0 3px var(--ncc-soft, transparent); }
 
+/* Tab "Tất cả": chấm ba màu của ba NCC gộp lại, để mắt hiểu ngay đây không phải
+   một nhà cung cấp thứ tư mà là chế độ gộp. */
+.ncc-tab-all::before {
+  background: conic-gradient(#1E3A8A 0 33.3%, #0D9488 0 66.6%, #7C3AED 0);
+}
+.ncc-tab-all { font-weight: 650; }
+.ncc-tabs { flex-wrap: wrap; }
+
 /* rail màu NCC trên mỗi dòng dự án */
 .row { position: relative; }
 .row::before {

@@ -167,9 +167,9 @@ function renderDash(){
   const sb=document.getElementById('stageBars'); sb.innerHTML='';
   const colors=s=>SPINE_PALETTE[activeStages().indexOf(s)%SPINE_PALETTE.length];
   const stages=activeStages();
-  const max=Math.max(...stages.map(s=>prog.filter(r=>r.stage===s).length),1);
+  const max=Math.max(...stages.map(s=>prog.filter(r=>atStage(r,s)).length),1);
   stages.forEach(s=>{
-    const n=prog.filter(r=>r.stage===s).length;
+    const n=prog.filter(r=>atStage(r,s)).length;
     sb.innerHTML+=`<div class="hbar" style="cursor:default"><div class="hb-label">${s}</div><div class="hb-track"><div class="hb-fill" style="width:${Math.max(8,100*n/max)}%;background:${colors(s)}">${n}</div></div></div>`;
   });
   const agg={}; prog.forEach(r=>agg[r.product]=(agg[r.product]||0)+r.kgThis);
@@ -259,7 +259,10 @@ const INS_TAG={kh:'<span class="t t-kh">KHÁCH HÀNG</span>',prod:'<span class="
 /* Tên khách hàng trong dữ liệu có cả 'Bibica' lẫn 'BIBICA'. So khớp nguyên văn
    sẽ bỏ sót nửa lịch sử, nên khoá khách hàng đi qua custKey(). */
 const INS_MATCH={kh:(k)=>r=>custKey(r.customer)===custKey(k),prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
-  seg:(k)=>r=>r.segment===k,stage:(k)=>r=>r.stage===k,pic:(k)=>r=>r.pic===k};
+  seg:(k)=>r=>r.segment===k,
+  /* Ở chế độ Tất cả, ô tra cứu gợi ý NHÓM giai đoạn chứ không phải tên giai đoạn
+     của riêng một NCC — so bằng tên gốc sẽ luôn ra 0 dự án. */
+  stage:(k)=>r=>atStage(r,k),pic:(k)=>r=>r.pic===k};
 function showInsight(type,key){
   INSIGHT={type,key};
   const input=document.getElementById('insQ');

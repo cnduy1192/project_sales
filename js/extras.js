@@ -62,7 +62,13 @@
     const box = document.getElementById("nccTabs");
     if (!box || typeof LISTS === "undefined") return;
     dedupeNccs();
-    box.innerHTML = LISTS.nccs.map(n =>
+    const all = typeof ALL_NCC !== "undefined" ? ALL_NCC : "*";
+    const cur = typeof nccFilter !== "undefined" ? nccFilter : "";
+    box.innerHTML =
+      '<button class="ncc-tab ncc-tab-all' + (cur === all ? " on" : "") +
+      '" data-ncc="' + all + '" onclick="setNcc(\'' + all + '\')"' +
+      ' title="Xem dự án và hoạt động của mọi nhà cung cấp">Tất cả</button>' +
+      LISTS.nccs.map(n =>
       '<button class="ncc-tab' + (n === (typeof nccFilter !== "undefined" ? nccFilter : "") ? " on" : "") +
       '" data-ncc="' + esc(n) + '" onclick="setNcc(\'' + esc(n).replace(/'/g, "\\'") + '\')">' + esc(n) + '</button>').join("");
     addSupplierButton();

@@ -6,10 +6,12 @@ function probOptions(sel,val){
 function buildForm(){
   const dl=(id,arr)=>document.getElementById(id).innerHTML=arr.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');
   dl('dl-cust',LISTS.customers); dl('dl-prod',LISTS.products); dl('dl-app',LISTS.applications);
-  document.getElementById('f-ncc').innerHTML=NCCS.map(n=>`<option${n===nccFilter?' selected':''}>${n}</option>`).join('');
+  /* Form ghi dữ liệu nên không có "Tất cả": lấy NCC đang xem, hoặc NCC đầu. */
+  const fn=formNcc();
+  document.getElementById('f-ncc').innerHTML=NCCS.map(n=>`<option${n===fn?' selected':''}>${n}</option>`).join('');
   document.getElementById('f-grp').innerHTML=SEG_GROUPS.map(g=>`<option>${g}</option>`).join('');
   onFormGroup();
-  document.getElementById('f-stage').innerHTML=activeStages().map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('f-stage').innerHTML=(PIPELINES[fn]||[]).map(s=>`<option>${s}</option>`).join('');
   rebuildRel(); syncProb();
   document.getElementById('f-created').value=isoOf(TODAY);
 }

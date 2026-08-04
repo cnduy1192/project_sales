@@ -171,6 +171,43 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     E("nccFilter='Roquette'");
   });
 
+  // ---- tab "Tất cả" ----
+  step('tab Tất cả gộp mọi NCC, kể cả hoạt động Khác',()=>{
+    E(`loginAs(${ix('duy@f.vn')}); go('funnel')`);
+    const tabs=[...d.querySelectorAll('.ncc-tab')].map(t=>t.dataset.ncc);
+    if(tabs[0]!==E('ALL_NCC'))throw new Error('tab Tất cả không đứng đầu: '+tabs.join(','));
+    if(tabs.filter(t=>t===E('ALL_NCC')).length!==1)throw new Error('tab Tất cả bị nhân đôi');
+    E(`ACTIVITIES.push({id:'AL-8',customer:'B',pic:'Tam',ncc:'IFF',product:'',type:'Call',date:'2026-07-25',note:'việc IFF',next:'—',potential:'Hot',projectId:null});
+       RECORDS.push({id:'P-5',ncc:'IFF',customer:'E',product:'Q',application:'u',segment:'DAIRY',group:'SWEET',stage:'TESTING',status:'IN PROGRESS',prob:.4,kgThis:7,kgNext:0,pic:'Tam',rnd:'',related:[],created:'2026-07-05',closing:'2026-09-05',desc:'',comments:[],updates:[]});
+       setNcc(ALL_NCC)`);
+    if(!E('isAllNcc()'))throw new Error('không vào được chế độ Tất cả');
+    const v=E('visible().map(function(r){return r.ncc}).join(",")');
+    if(!/Roquette/.test(v)||!/IFF/.test(v))throw new Error('vẫn lọc theo một NCC: '+v);
+    const av=E('visibleActs().map(function(a){return a.ncc}).join(",")');
+    if(!/IFF/.test(av)||!/Khác/.test(av))throw new Error('hoạt động chưa gộp: '+av);
+  });
+  step('trục giai đoạn ở chế độ Tất cả dùng nhóm giai đoạn',()=>{
+    const st=JSON.parse(E('JSON.stringify(activeStages())'));
+    if(st.indexOf('Thử mẫu')<0)throw new Error('không phải nhóm giai đoạn: '+st.join(','));
+    if(st.indexOf('SOLUTION TESTING')>=0)throw new Error('còn tên giai đoạn riêng của Roquette');
+    /* Roquette "SOLUTION TESTING" và IFF "TESTING" phải rơi cùng một cột. */
+    if(!E("atStage(RECORDS.find(function(r){return r.id==='P-1'}),'Thử mẫu')"))throw new Error('Roquette lệch cột');
+    if(!E("atStage(RECORDS.find(function(r){return r.id==='P-5'}),'Thử mẫu')"))throw new Error('IFF lệch cột');
+    E('render(); renderDash()');
+    const n=[...d.querySelectorAll('#spineFlow .spine-step')].length;
+    if(n!==st.length)throw new Error('trục vẽ '+n+' cột, cấu hình '+st.length);
+  });
+  step('form vẫn buộc chọn một NCC cụ thể khi đang xem Tất cả',()=>{
+    if(E('NCCS.indexOf(formNcc())')<0)throw new Error('formNcc trả về: '+E('formNcc()'));
+    E('buildForm()');
+    const ncc=d.getElementById('f-ncc');
+    if([...ncc.options].some(o=>o.value===E('ALL_NCC')))throw new Error('form có tuỳ chọn Tất cả');
+    if(!d.getElementById('f-stage').options.length)throw new Error('ô giai đoạn rỗng');
+    const st=[...d.getElementById('f-stage').options].map(o=>o.value);
+    if(st.indexOf('Thử mẫu')>=0)throw new Error('form nhận nhóm giai đoạn thay vì giai đoạn thật');
+    E("setNcc(NCCS[0])");
+  });
+
   // ---- cột Hoạt động gần nhất ----
   step('Hoạt động gần nhất phân biệt chưa có / đã đặt lịch / im lặng lâu',()=>{
     const q=s=>JSON.parse(E('JSON.stringify(ckQuiet('+(s?"'"+s+"'":'null')+'))'));

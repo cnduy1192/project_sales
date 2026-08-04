@@ -37,7 +37,7 @@ function openActForm(prefill, origin){
   NAV.enter(origin); NAV.renderBack('a-back');
   document.getElementById('a-title').textContent = p.title || 'Ghi hoạt động khách hàng';
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
-  const ncc = p.ncc || nccFilter;
+  const ncc = p.ncc || formNcc();
   /* "Khác" cho hoạt động chưa gắn nhà cung cấp nào — hội thảo chung, khách mới
      chưa rõ sẽ chào hàng của ai. Trước đây bắt buộc phải chọn một trong ba NCC. */
   const nccOpts = NCCS.concat(NCCS.indexOf(OTHER_NCC) < 0 ? [OTHER_NCC] : []);

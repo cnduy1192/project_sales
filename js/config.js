@@ -38,15 +38,44 @@ function rebuildDerived(){
   SEG_GROUPS = Object.keys(SEG_TREE);
   Object.keys(SEG2GROUP).forEach(k => delete SEG2GROUP[k]);
   SEG_GROUPS.forEach(g => (SEG_TREE[g]||[]).forEach(s => SEG2GROUP[s] = g));
-  /* NCC đang lọc phải nằm trong danh sách thật, nếu không mọi bảng đều trống. */
-  if(NCCS.length && NCCS.indexOf(nccFilter) < 0){
+  /* NCC đang lọc phải nằm trong danh sách thật, nếu không mọi bảng đều trống.
+     Trừ chế độ "Tất cả" — đó là trạng thái BỎ lọc, không phải một NCC. */
+  if(NCCS.length && nccFilter !== ALL_NCC && NCCS.indexOf(nccFilter) < 0){
     const same = NCCS.filter(n => n.toLowerCase() === String(nccFilter||'').trim().toLowerCase())[0];
     nccFilter = same || NCCS[0];
   }
   return { groups: SEG_GROUPS.length, nccs: NCCS.length };
 }
 window.rebuildDerived = rebuildDerived;
-function activeStages(){return (nccFilter && PIPELINES[nccFilter]) || PIPELINES[NCCS[0]] || [];}
+/* "Tất cả" KHÔNG phải một nhà cung cấp — nó là trạng thái bỏ lọc. Dùng mã riêng
+   '*' thay vì chuỗi rỗng để phân biệt với nccFilter='' lúc trang mới nạp (lúc đó
+   rebuildDerived còn phải tự chọn NCC đầu tiên). */
+const ALL_NCC = '*';
+const ALL_NCC_LABEL = 'Tất cả';
+function isAllNcc(){ return nccFilter === ALL_NCC; }
+/* Mọi FORM đều phải ghi một NCC cụ thể — không ai lưu được dự án "Tất cả". */
+function formNcc(){ return (!nccFilter || isAllNcc()) ? (NCCS[0] || '') : nccFilter; }
+
+/* Ở chế độ Tất cả, trục giai đoạn chuyển sang NHÓM giai đoạn: Roquette gọi
+   "SOLUTION TESTING" còn IFF gọi "TESTING", xếp cạnh nhau thành hai cột rời thì
+   không so sánh được. Nhóm giai đoạn sinh ra đúng để làm việc này. */
+function stageGroups(){
+  const out = [], seen = {};
+  NCCS.forEach(n => (PIPELINES[n]||[]).forEach(s => {
+    const g = STAGE_GROUP[s] || s;
+    if(!seen[g]){ seen[g] = 1; out.push(g); }
+  }));
+  return out;
+}
+function activeStages(){
+  if(isAllNcc()) return stageGroups();
+  return (nccFilter && PIPELINES[nccFilter]) || PIPELINES[NCCS[0]] || [];
+}
+/* So một dự án với một ô trên trục giai đoạn — theo nhóm khi đang xem Tất cả. */
+function atStage(r, s){
+  if(!s) return true;
+  return isAllNcc() ? (STAGE_GROUP[r.stage] || r.stage) === s : r.stage === s;
+}
 const STAGE_GROUP = LISTS.groupOf;
 const STAGE_PROB = LISTS.probOf;
 const PROB_OPTS = [10,25,50,75,90,100];
