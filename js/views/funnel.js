@@ -41,7 +41,7 @@ function renderSpine(rs){
         <div class="spine-num">${n}</div><div class="spine-lbl">${stageShort(s)}</div>
       </div></button>`;}).join('');
 }
-const THEAD=`<div class="thead"><div>Khách hàng</div><div>Ứng dụng</div><div>Sản phẩm</div><div>Giai đoạn</div><div>% dự án</div><div style="text-align:right">Tiềm năng</div><div>PIC</div><div></div></div>`;
+const THEAD=`<div class="thead"><div>Khách hàng</div><div>Ứng dụng</div><div>Sản phẩm</div><div>Giai đoạn</div><div>Tiến độ dự án</div><div style="text-align:right">Tiềm năng</div><div>PIC</div><div></div></div>`;
 function render(){
   const q=(document.getElementById('q').value||'').toLowerCase();
   const rows=visible().filter(r=> filter==='ALL'||r.status===filter)
@@ -97,7 +97,7 @@ function setProb(p){
   const old=probPct(r);
   r.prob=p/100;
   document.getElementById('probPop').classList.remove('open');
-  if(old!==p){notify(r,`đã cập nhật % dự án <b>${r.customer} · ${r.product}</b>: ${old}% → ${p}%`);toast(`% dự án ${r.customer} · ${r.product}: ${old}% → ${p}%. Đã thông báo người liên quan.`);}
+  if(old!==p){notify(r,`đã cập nhật Tiến độ dự án <b>${r.customer} · ${r.product}</b>: ${old}% → ${p}%`);toast(`Tiến độ dự án ${r.customer} · ${r.product}: ${old}% → ${p}%. Đã thông báo người liên quan.`);}
   render();
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.prob-pop')&&!e.target.closest('.prob-btn'))document.getElementById('probPop').classList.remove('open');});

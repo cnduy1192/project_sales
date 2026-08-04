@@ -36,9 +36,9 @@
     "Nhân viên": "Staff", "Vai trò": "Role", "Thao tác": "Actions",
     // form dự án
     "Thêm dự án mới": "Add new project", "Khách hàng": "Customer",
-    "Sản phẩm Roquette": "Roquette Product", "Ứng dụng của khách hàng": "Customer application",
+    "Sản phẩm": "Product", "Ứng dụng của khách hàng": "Customer application",
     "Nhà cung cấp": "Supplier", "Nhóm ngành": "Segment group",
-    "Giai đoạn (BOP Stage)": "Stage (BOP Stage)", "% dự án": "Project %",
+    "Giai đoạn (BOP Stage)": "Stage (BOP Stage)", "Tiến độ dự án": "Project progress",
     "Loại cơ hội": "Opportunity type", "Ngày tạo": "Creation date",
     "Ngày đóng dự kiến": "Expected closing date",
     "Tiềm năng năm nay (KG)": "Potential this year (KG)",
@@ -148,7 +148,7 @@
     [/(\d+)\s*đang chạy/g, "$1 in progress"], [/(\d+)\s*thắng/g, "$1 won"], [/(\d+)\s*thua/g, "$1 lost"],
     [/dự án mới/g, "new projects"], [/dự án khác/g, "more projects"],
     [/(\d+)\s*dự án/g, "$1 projects"], [/dự án/g, "project"],
-    [/Tháng /g, "Month "], [/% thắng/g, "% win"], [/% dự án/g, "project %"],
+    [/Tháng /g, "Month "], [/% thắng/g, "% win"], [/Tiến độ dự án/g, "project progress"],
     [/nhóm ngành/g, "segment groups"], [/tiềm năng/g, "potential"],
     [/đóng/g, "closed"], [/thắng/g, "win"],
   ];

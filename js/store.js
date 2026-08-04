@@ -65,6 +65,18 @@
     return String(v);
   }
 
+  /* Cột "Người liên quan" có thể là Person nhiều giá trị (mảng object), mảng
+     chuỗi, hay ô text ngăn cách bằng dấu phẩy/chấm phẩy. Nhận cả ba. */
+  function nameList(v) {
+    if (v == null || v === "") return [];
+    const arr = Array.isArray(v) ? v : String(txt(v)).split(/[,;|]/);
+    const seen = {}, out = [];
+    arr.map(x => txt(x).trim()).forEach(n => {
+      if (n && !seen[n.toLowerCase()]) { seen[n.toLowerCase()] = 1; out.push(n); }
+    });
+    return out;
+  }
+
   // Graph thường chỉ trả "<Cột>LookupId" (ID), không kèm tên -> cần bảng tra ID→Title
   function lookupVal(f, base, map) {
     const direct = f[base];
@@ -397,6 +409,57 @@
     return { changed: changed, map: map };
   }
 
+  /* ---------- DỌN BẢN GHI MẪU ----------
+     Dữ liệu mẫu từng được nạp lên list Activities lúc thử nghiệm. App không còn
+     nhúng dữ liệu nào, nên muốn bỏ chúng phải xoá trên SharePoint.
+     Liệt kê trước, xoá sau — và chỉ xoá đúng id bạn chỉ định. */
+  const SEED_NOTES = [
+    "Trao đổi qua Zalo về mẫu đang thử",
+    "Giới thiệu sản phẩm mới tại seminar ngành",
+    "Khách tham dự hội thảo ứng dụng",
+    "Gọi xác nhận nhu cầu sản lượng năm nay",
+    "Khách quan tâm giải pháp thay thế CMC",
+    "Gửi mẫu 200g tuần sau",
+  ];
+  function findSeedActivities() {
+    const hits = ACTIVITIES.filter(a =>
+      SEED_NOTES.some(n => String(a.note || "").trim() === n));
+    console.log("=== Hoạt động trùng nội dung dữ liệu mẫu: " + hits.length + " ===");
+    hits.forEach(a => console.log("  " + a.id + "  " + normDate(a.date) + "  "
+      + (a.pic || "—") + "  ·  " + (a.customer || "—") + "  ·  " + a.note));
+    if (!hits.length) console.log("  (không có)");
+    else console.log("Xoá tất cả: FISG_STORE.deleteSeedActivities()");
+    return hits;
+  }
+
+  /* Xoá thật trên SharePoint. Chỉ superadmin, và phải xác nhận. */
+  async function deleteSeedActivities(list) {
+    const hits = list || findSeedActivities();
+    if (!hits.length) return 0;
+    if (typeof me !== "undefined" && me && !cap(me.role).admin) {
+      console.warn("[store] chỉ Super Admin mới xoá được.");
+      return 0;
+    }
+    if (typeof confirm === "function"
+        && !confirm("Xoá vĩnh viễn " + hits.length + " hoạt động khỏi list Activities trên SharePoint?\n\n"
+                    + "Không hoàn tác được."))
+      return 0;
+    let n = 0;
+    for (const a of hits) {
+      if (!a.spId) continue;
+      try {
+        await FISG_GRAPH.deleteItem("Activities", a.spId);
+        const i = ACTIVITIES.indexOf(a); if (i >= 0) ACTIVITIES.splice(i, 1);
+        n++;
+      } catch (e) { console.warn("[store] không xoá được " + a.id + ":", e.message || e); }
+    }
+    if (typeof invalidateCockpit === "function") invalidateCockpit();
+    if (window.renderActs) try { renderActs(); } catch (e) {}
+    if (window.renderCockpit) try { renderCockpit(); } catch (e) {}
+    if (window.toast) toast("Đã xoá " + n + " hoạt động khỏi SharePoint.");
+    return n;
+  }
+
   /* ---------- DÒ KHÁCH HÀNG TRÙNG TÊN ----------
      Không tự gộp — chỉ liệt kê để dọn trên SharePoint. Bỏ hậu tố pháp nhân,
      bỏ dấu tiếng Việt, rồi gom các tên rút về cùng một gốc. */
@@ -474,7 +537,9 @@
           /* Cột "R&D phụ trách" đã có sẵn trên SharePoint nhưng chưa bao giờ
              được đọc. Vai trò R&D giới hạn phạm vi theo cột này. */
           rnd: txt(f.RnDOwnerName) || txt(gp(f, "RnDOwner")),
-          related: [],
+          /* Trước đây luôn để rỗng, nên "người liên quan" không bao giờ tồn tại —
+             mà quyền xem của Sales lại dựa vào đúng cột này. */
+          related: nameList(f.RelatedPeople != null ? f.RelatedPeople : gp(f, "RelatedPeople")),
           created: txt(gp(f, "CreationDate")).slice(0, 10),
           closing: txt(gp(f, "ClosingDate")).slice(0, 10),
           desc: title, id: code, spId: it.id,
@@ -496,7 +561,7 @@
           note: txt(ga(f, "Content")), next: txt(ga(f, "NextStep")),
           potential: txt(ga(f, "PotentialLevel")),
           projectId: byItemId[String(f.RelatedProjectLookupId || "")] || "",
-          id: "A-" + (it.id || i),
+          id: "A-" + (it.id || i), spId: it.id,
         };
       });
 
@@ -567,5 +632,6 @@
                         findDuplicateCustomers, buildLists,
                         saveUser, deleteUser, lookupUser, canWriteUsers,
                         applyPicAliases, picAliasMap,
+                        findSeedActivities, deleteSeedActivities,
                         usersListName: USERS_LIST };
 })();

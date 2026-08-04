@@ -78,7 +78,8 @@ function visible(){
   return scopeRecords(RECORDS.filter(inScope), me);
 }
 function visibleActs(){
-  const base=ACTIVITIES.filter(a=>!nccFilter||a.ncc===nccFilter);
+  const other = (typeof OTHER_NCC !== 'undefined') ? OTHER_NCC : 'Khác';
+  const base=ACTIVITIES.filter(a=>!nccFilter||a.ncc===nccFilter||a.ncc===other);
   return scopeActs(base, me, scopeRecords(RECORDS, me));
 }
 function setNcc(n){nccFilter=n;stageFilter=null;segDrill=null;

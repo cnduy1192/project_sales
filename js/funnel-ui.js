@@ -27,7 +27,7 @@
     const data = rows();
     if (!data.length) { if (window.toast) toast("Không có dự án nào để xuất."); return; }
     const head = ["Mã dự án", "Nhà cung cấp", "Khách hàng", "Sản phẩm", "Ứng dụng", "Nhóm ngành",
-      "Segment", "Giai đoạn", "Trạng thái", "% dự án", "KG năm nay", "KG năm sau",
+      "Segment", "Giai đoạn", "Trạng thái", "Tiến độ dự án", "KG năm nay", "KG năm sau",
       "Sale phụ trách", "Ngày tạo", "Ngày đóng dự kiến"];
     const body = data.map(r => [r.id, r.ncc, r.customer, r.product, r.application, r.group,
       r.segment, r.stage, r.status, Math.round((r.prob || 0) * 100),
@@ -161,7 +161,7 @@
     const cur = parseInt(sel.value, 10) || 10;
     wrap.innerHTML =
       '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" ' +
-        'aria-label="% dự án">' +
+        'aria-label="Tiến độ dự án">' +
       '<span class="pb-val">' + cur + '%</span>';
     sel.parentNode.insertBefore(wrap, sel);
     sel.classList.add("pb-hidden");
@@ -197,7 +197,7 @@
     const cur = parseInt((chips.querySelector(".pp-chip.on") || {}).textContent, 10) || 50;
     const w = document.createElement("div");
     w.className = "pb-wrap";
-    w.innerHTML = '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" aria-label="% dự án">' +
+    w.innerHTML = '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" aria-label="Tiến độ dự án">' +
                   '<span class="pb-val">' + cur + '%</span>';
     chips.style.display = "none";
     chips.parentNode.appendChild(w);

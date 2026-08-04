@@ -1,7 +1,11 @@
 /* js/views/activities.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
 /* ====== ACTIVITIES ↔ PROJECTS (2 chiều) ====== */
 function setAF(f){actFilter=f;document.querySelectorAll('.chip[data-af]').forEach(c=>c.classList.toggle('on',c.dataset.af===f));renderActs();}
-function actsOfProject(id){return ACTIVITIES.filter(a=>a.projectId===id);}
+/* Hoạt động của một dự án — vẫn phải qua bộ lọc quyền: sales không được đọc
+   ghi chú của sales khác trên dự án mình không liên quan. */
+function actsOfProject(id){
+  return scopeActs(ACTIVITIES.filter(a=>a.projectId===id), me, scopeRecords(RECORDS, me));
+}
 function renderActs(){
   const box=document.getElementById('actRows'); if(!box)return;
   let rows=visibleActs();
@@ -34,7 +38,10 @@ function openActForm(prefill, origin){
   document.getElementById('a-title').textContent = p.title || 'Ghi hoạt động khách hàng';
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
   const ncc = p.ncc || nccFilter;
-  document.getElementById('a-ncc').innerHTML=NCCS.map(n=>`<option${n===ncc?' selected':''}>${n}</option>`).join('');
+  /* "Khác" cho hoạt động chưa gắn nhà cung cấp nào — hội thảo chung, khách mới
+     chưa rõ sẽ chào hàng của ai. Trước đây bắt buộc phải chọn một trong ba NCC. */
+  const nccOpts = NCCS.concat(NCCS.indexOf(OTHER_NCC) < 0 ? [OTHER_NCC] : []);
+  document.getElementById('a-ncc').innerHTML=nccOpts.map(n=>`<option${n===ncc?' selected':''}>${n}</option>`).join('');
   document.getElementById('a-date').value = p.date || isoOf(TODAY);
   document.getElementById('a-cust').value = p.customer || '';
   document.getElementById('a-note').value = p.note || '';

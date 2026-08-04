@@ -12,7 +12,7 @@ var NAV = (function(){
   var stack = [];
 
   var VIEW_LABEL = {
-    cockpit: 'Tổng quan điều hành',
+    cockpit: 'Tổng quan',
     funnel:  'Sales Funnel',
     acts:    'Hoạt động khách hàng',
     dash:    'Dashboard',

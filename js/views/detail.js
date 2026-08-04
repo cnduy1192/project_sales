@@ -160,7 +160,7 @@ function postComment(){
 function saveDetail(){
   const changes=[];
   const ns=document.getElementById('d-stage').value; if(ns!==curRec.stage){changes.push('giai đoạn → '+stageShort(ns));curRec.stage=ns;}
-  const np=+document.getElementById('d-prob').value; if(np!==probPct(curRec)){changes.push('% dự án → '+np+'%');curRec.prob=np/100;}
+  const np=+document.getElementById('d-prob').value; if(np!==probPct(curRec)){changes.push('Tiến độ dự án → '+np+'%');curRec.prob=np/100;}
   const nc=document.getElementById('d-closing').value; if(nc!==curRec.closing){changes.push('ngày đóng → '+new Date(nc).toLocaleDateString('vi-VN'));curRec.closing=nc;}
   const k1=+document.getElementById('d-kg1').value||0; if(k1!==curRec.kgThis){changes.push('KG năm nay → '+fmt(k1));curRec.kgThis=k1;}
   const k2=+document.getElementById('d-kg2').value||0; if(k2!==curRec.kgNext){changes.push('KG năm sau → '+fmt(k2));curRec.kgNext=k2;}

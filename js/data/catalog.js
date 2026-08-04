@@ -76,6 +76,11 @@ var CATALOG = {
 /* ---------- DANH MỤC ĐANG DÙNG ----------
    Khởi tạo từ CATALOG. store.js bổ sung phần suy từ dữ liệu thật (khách hàng,
    sản phẩm, ứng dụng, sales) và ghi đè pipeline nếu đọc được list Pipelines. */
+/* Nhà cung cấp "Khác": hoạt động không gắn với NCC nào — hội thảo chung, khách
+   mới chưa rõ sẽ chào hàng của ai. Không phải một NCC thật, nên KHÔNG nằm trong
+   CATALOG.nccs (không tạo tab, không có pipeline riêng). */
+var OTHER_NCC = 'Khác';
+
 var LISTS = {
   nccs:      CATALOG.nccs.slice(),
   pipelines: JSON.parse(JSON.stringify(CATALOG.pipelines)),

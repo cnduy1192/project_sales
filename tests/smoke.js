@@ -128,6 +128,76 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!/việc hôm nay/.test(done.textContent))throw new Error('chưa sang Đã làm');
   });
 
+  // ---- phạm vi của Sales: không nhìn sang việc của người khác ----
+  step('Sales không thấy dự án của sales khác, trừ khi là người liên quan',()=>{
+    E(`RECORDS.push({id:'P-4',ncc:'Roquette',customer:'D',product:'W',application:'u',segment:'MEAT',group:'SAVOURY',stage:'SOLUTION TESTING',status:'IN PROGRESS',prob:.3,kgThis:5,kgNext:0,pic:'Tam',rnd:'',related:['Phạm Bích Ngọc'],created:'2026-07-04',closing:'2026-09-04',desc:'',comments:[],updates:[]});
+       loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    const v=E('visible().map(function(r){return r.id}).sort().join(",")');
+    if(/P-3/.test(v))throw new Error('nhìn thấy dự án của Tâm: '+v);
+    if(!/P-4/.test(v))throw new Error('không thấy dự án mình là người liên quan: '+v);
+  });
+  step('Sales không thấy hoạt động của sales khác',()=>{
+    E(`ACTIVITIES.push(
+       {id:'A-9',customer:'C',pic:'Tam',ncc:'Roquette',product:'',type:'Call',date:'2026-07-22',note:'việc của Tâm',next:'—',potential:'Hot',projectId:'P-3'},
+       {id:'A-10',customer:'D',pic:'Tam',ncc:'Roquette',product:'',type:'Call',date:'2026-07-23',note:'việc trên dự án chung',next:'—',potential:'Hot',projectId:'P-4'});`);
+    const ids=E('visibleActs().map(function(a){return a.id}).join(",")');
+    if(/A-9/.test(ids))throw new Error('đọc được hoạt động của Tâm: '+ids);
+    if(!/A-10/.test(ids))throw new Error('mất hoạt động trên dự án mình liên quan: '+ids);
+    /* mở dự án của người khác bằng tay cũng không lộ ghi chú */
+    if(E("actsOfProject('P-3').length"))throw new Error('actsOfProject để lọt dữ liệu');
+    if(E("actsOfProject('P-4').length")!==1)throw new Error('actsOfProject chặn nhầm dự án chung');
+  });
+  step('Manager vẫn thấy toàn bộ',()=>{
+    E(`loginAs(${ix('duy@f.vn')})`);
+    const v=E('visible().map(function(r){return r.id}).sort().join(",")');
+    if(!/P-3/.test(v))throw new Error('admin bị chặn: '+v);
+  });
+
+  // ---- NCC "Khác" ----
+  step('form hoạt động có tuỳ chọn Khác và không tạo tab NCC mới',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome(); go('acts'); openActForm()`);
+    const opts=[...d.getElementById('a-ncc').options].map(o=>o.textContent);
+    if(opts.indexOf('Khác')<0)throw new Error('thiếu Khác: '+opts.join(','));
+    if(E('NCCS.indexOf("Khác")')>=0)throw new Error('Khác lọt vào danh sách NCC');
+    if([...d.querySelectorAll('.ncc-tab')].some(t=>t.textContent==='Khác'))throw new Error('Khác tạo tab riêng');
+    E('closeActForm()');
+  });
+  step('hoạt động NCC Khác hiện ở mọi tab, không biến mất sau khi tạo',()=>{
+    E(`ACTIVITIES.unshift({id:'AL-9',customer:'A',pic:'Phạm Bích Ngọc',ncc:'Khác',product:'',type:'Seminar',date:'${E('todayISO()')}',note:'hội thảo chung',next:'—',potential:'Warm',projectId:null});`);
+    ['Roquette','IFF','Kimica-Navido'].forEach(n=>{
+      E(`nccFilter='${n}'`);
+      if(!E('visibleActs().some(function(a){return a.id==="AL-9"})'))throw new Error('mất ở tab '+n);
+    });
+    E("nccFilter='Roquette'");
+  });
+
+  // ---- cột Hoạt động gần nhất ----
+  step('Hoạt động gần nhất phân biệt chưa có / đã đặt lịch / im lặng lâu',()=>{
+    const q=s=>JSON.parse(E('JSON.stringify(ckQuiet('+(s?"'"+s+"'":'null')+'))'));
+    const none=q(null);
+    if(none.pct!==0||!/Chưa có/.test(none.text))throw new Error('chưa có: '+JSON.stringify(none));
+    const fut=q('2026-12-31');
+    if(fut.pct!==0||!/lịch/.test(fut.text))throw new Error('tương lai vẫn vẽ vạch: '+JSON.stringify(fut));
+    if(/-/.test(fut.text))throw new Error('còn hiện số ngày âm: '+fut.text);
+    const old=q('2026-01-01'), mid=q(E('isoOf(new Date(TODAY.getTime()-5*864e5))'));
+    if(old.pct<=mid.pct)throw new Error('vạch không dài theo số ngày im lặng');
+    if(old.color===mid.color)throw new Error('màu không đổi theo mức im lặng');
+    if(!none.title||!fut.title)throw new Error('thiếu chú giải khi rê chuột');
+  });
+  step('nhãn đã đổi tên đúng',()=>{
+    const nav=d.querySelector('.side-nav').textContent;
+    if(/Tổng quan điều hành/.test(nav))throw new Error('còn "Tổng quan điều hành"');
+    if(!/Tổng quan/.test(nav))throw new Error('mất mục Tổng quan');
+    const html=d.body.innerHTML;
+    if(/% dự án/.test(html))throw new Error('còn nhãn "% dự án"');
+    if(/Sản phẩm Roquette/.test(html))throw new Error('còn nhãn "Sản phẩm Roquette"');
+    if(!/Tiến độ dự án/.test(html))throw new Error('thiếu nhãn "Tiến độ dự án"');
+    E(`loginAs(${ix('duy@f.vn')}); go('cockpit')`);
+    const ck=d.getElementById('view-cockpit').textContent;
+    if(/Chạm gần nhất/.test(ck))throw new Error('còn "Chạm gần nhất"');
+    if(!/Hoạt động gần nhất/.test(ck))throw new Error('thiếu "Hoạt động gần nhất"');
+  });
+
   // ================= HỒI QUY =================
   step('cấu hình quy trình ba NCC còn nguyên',()=>{
     const p=JSON.parse(E('JSON.stringify(LISTS.pipelines)'));
@@ -160,6 +230,14 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!d.querySelectorAll('.ck-sig').length)throw new Error('Cockpit trống');
     ['funnel','acts','dash','reports','users'].forEach(v=>E(`go('${v}')`));
     if(!d.getElementById('userRows').textContent.trim())throw new Error('bảng người dùng trống');
+  });
+  step('mở rồi lưu chi tiết không làm mất Người liên quan',()=>{
+    E("go('funnel'); render(); openDetail('P-4')");
+    if(E("JSON.stringify(dRelated)")!==E("JSON.stringify(RECORDS.find(function(r){return r.id==='P-4'}).related)"))
+      throw new Error('ô chọn bị dọn ngay sau khi mở: '+E('JSON.stringify(dRelated)'));
+    E('closeDetail()');
+    if(!E("RECORDS.find(function(r){return r.id==='P-4'}).related.length"))
+      throw new Error('dữ liệu bị xoá');
   });
   step('chip đường về của modal vẫn đúng',()=>{
     E("go('acts'); openDetail('P-1')");

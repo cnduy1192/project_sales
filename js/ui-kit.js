@@ -363,11 +363,14 @@
     return true;
   }
 
-  /* ---------- B. Xoá người liên quan; sẵn sàng lấy từ group O365 ---------- */
+  /* ---------- B. Ô chọn người liên quan; danh sách lấy từ group O365 ---------- */
+  /* Chỉ dọn Ô CHỌN của form THÊM DỰ ÁN, KHÔNG đụng dữ liệu. Bản cũ xoá
+     r.related của mọi dự án mỗi lần render và xoá dRelated NGAY SAU openDetail
+     — hồi còn dữ liệu demo thì vô hại, nhưng nay cột "Người liên quan" là thật:
+     nó là căn cứ để Sales được xem dự án của đồng nghiệp, và lưu dự án sau khi
+     mở chi tiết sẽ ghi đè bằng mảng rỗng. */
   function clearRelated() {
-    if (typeof RECORDS !== "undefined") RECORDS.forEach(r => { r.related = []; });
     if (typeof related !== "undefined") related = [];
-    if (typeof dRelated !== "undefined") dRelated = [];
     document.querySelectorAll("#relTags .tag").forEach(t => t.remove());
     // danh sách chọn: để TRỐNG cho tới khi lấy được danh bạ O365
     if (!PEOPLE.length && typeof ALL_PICS !== "undefined") ALL_PICS.length = 0;

@@ -204,7 +204,7 @@ const CK_COLS = [
   { id:'nccs',      label:'NCC',             cls:'hide-md' },
   { id:'openCount', label:'Đang chạy',       cls:'num' },
   { id:'kgThis',    label:'KG tiềm năng',    cls:'num hide-sm' },
-  { id:'lastTouch', label:'Chạm gần nhất' }
+  { id:'lastTouch', label:'Hoạt động gần nhất' }
 ];
 
 function ckSortValue(p, by){
@@ -251,11 +251,28 @@ function ckSetOf(set, labelFn){
     : ckEsc(arr.slice(0,2).join(', ')) + ' <span class="ck-more">+' + (arr.length-2) + '</span>';
 }
 
+/* Thanh im lặng: độ dài = đã bao lâu chưa ai chạm vào khách này (0–60 ngày),
+   màu = mức đáng lo. Ba trường hợp trước đây bị gộp sai thành "đỏ, đầy vạch":
+     · chưa có hoạt động nào  → không có dữ liệu, không phải "rất tệ"
+     · hoạt động ở TƯƠNG LAI  → đã đặt lịch, là chuyện tốt; trước hiện "-136 ngày trước"
+     · đã lâu không chạm      → mới thật sự đáng lo */
+function ckQuiet(lastTouch){
+  if(!lastTouch) return { text:'Chưa có', pct:0, color:'var(--line)', title:'Chưa ghi nhận hoạt động nào' };
+  const d = daysSince(lastTouch);
+  if(d < 0) return { text:'Đã lên lịch ' + ckVN(lastTouch), pct:0, color:'var(--marine-2)',
+                     title:'Hoạt động gần nhất nằm ở tương lai — đã đặt lịch' };
+  if(d === 0) return { text:'Hôm nay', pct:0, color:'var(--marine-2)', title:'Vừa chạm hôm nay' };
+  return {
+    text: d + ' ngày trước',
+    pct: Math.min(Math.round(d / 60 * 100), 100),
+    color: d > SILENT_DAYS ? 'var(--overdue)' : d > 14 ? 'var(--prog)' : 'var(--marine-2)',
+    title: 'Lần chạm gần nhất: ' + ckVN(lastTouch)
+  };
+}
+
 function ckCustRow(p, sig){
-  const d = daysSince(p.lastTouch);
-  const quiet = d === Infinity ? '—' : d === 0 ? 'Hôm nay' : d + ' ngày trước';
-  const pct = d === Infinity ? 100 : Math.min(Math.round(d / 60 * 100), 100);
-  const qc = d > SILENT_DAYS ? 'var(--overdue)' : d > 14 ? 'var(--prog)' : 'var(--marine-2)';
+  const q = ckQuiet(p.lastTouch);
+  const quiet = q.text, pct = q.pct, qc = q.color;
   const flag = sig.overdueCust.has(p.key) ? ' <span class="ck-badge warn">quá hạn</span>' : '';
   return `<button class="ck-row ck-grid" data-n="${ckEsc(p.label.toLowerCase())}" onclick="openCustomer('${ckAttr(p.key)}')">
     <div class="ck-row-n">${ckEsc(p.label)}${flag}<span class="sub">${p.projects.length} dự án · ${p.wonCount} thắng · ${p.lostCount} thua</span></div>
@@ -264,7 +281,7 @@ function ckCustRow(p, sig){
     <div class="cell hide-md">${ckSetOf(p.nccs)}</div>
     <div class="num">${p.openCount}</div>
     <div class="num hide-sm">${fmt(p.kgThis)}</div>
-    <div class="ck-quiet">
+    <div class="ck-quiet" title="${ckEsc(q.title)}">
       <span class="ck-quiet-t">${quiet}</span>
       <span class="ck-quiet-b" style="--qc:${qc}"><i style="width:${pct}%"></i></span>
     </div>

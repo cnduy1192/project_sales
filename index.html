@@ -51,7 +51,7 @@
       <div class="nav-label" id="navCockpitLabel">Điều hành</div>
       <button class="nav-item" data-view="cockpit" onclick="go('cockpit')" id="navCockpit">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 4-6 5 4"/><path d="M3 21h18"/><circle cx="8" cy="11" r="1.3"/><circle cx="12" cy="14" r="1.3"/><circle cx="16" cy="8" r="1.3"/></svg>
-        <span class="nav-t">Tổng quan điều hành</span></button>
+        <span class="nav-t">Tổng quan</span></button>
       <button class="nav-item" data-view="welcome" onclick="openWelcome()" id="navWelcome">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="12" cy="14.5" r="1.6"/></svg>
         <span class="nav-t">Kế hoạch tuần</span></button>
@@ -101,7 +101,7 @@
     <!-- COCKPIT VIEW — tổng quan điều hành cho Manager / Super Admin -->
     <section id="view-cockpit" style="display:none">
       <div class="topbar ck-top">
-        <h2>Tổng quan điều hành</h2>
+        <h2>Tổng quan</h2>
         <div class="ck-period" id="ckPeriod" role="group" aria-label="Chọn cửa sổ thời gian"></div>
       </div>
       <div class="ck-range" id="ckRange"></div>
@@ -242,7 +242,7 @@
     <div class="modal-body">
       <div class="field"><label>Khách hàng <span class="req">*</span></label>
         <input list="dl-cust" id="f-cust" placeholder="Nhập tên khách hàng…"><datalist id="dl-cust"></datalist></div>
-      <div class="field"><label>Sản phẩm Roquette <span class="req">*</span></label>
+      <div class="field"><label>Sản phẩm <span class="req">*</span></label>
         <input list="dl-prod" id="f-prod" placeholder="Nhập tên sản phẩm…"><datalist id="dl-prod"></datalist></div>
       <div class="field"><label>Ứng dụng của khách hàng <span class="req">*</span></label>
         <input list="dl-app" id="f-app" placeholder="Nhập ứng dụng…"><datalist id="dl-app"></datalist></div>
@@ -250,7 +250,7 @@
       <div class="field"><label>Nhóm ngành <span class="req">*</span></label><select id="f-grp" onchange="onFormGroup()"></select></div>
       <div class="field"><label>Segment <span class="req">*</span></label><select id="f-seg"></select></div>
       <div class="field"><label>Giai đoạn (BOP Stage) <span class="req">*</span></label><select id="f-stage" onchange="syncProb()"></select></div>
-      <div class="field"><label>% dự án</label><select id="f-prob"></select></div>
+      <div class="field"><label>Tiến độ dự án</label><select id="f-prob"></select></div>
       <div class="field"><label>Loại cơ hội</label><select id="f-type"><option>NEW BUSINESS</option><option>GAIN MARKET SHARE</option><option>DEFEND MARKET SHARE</option></select></div>
       <div class="field"><label>Ngày tạo <span class="req">*</span></label><input type="date" id="f-created"></div>
       <div class="field"><label>Ngày đóng dự kiến <span class="req">*</span></label><input type="date" id="f-closing"></div>
@@ -287,7 +287,7 @@
           <div class="field"><label>Sản phẩm</label><input id="d-prod" disabled></div>
           <div class="field"><label>Ứng dụng</label><input id="d-app" disabled></div>
           <div class="field"><label>Giai đoạn</label><select id="d-stage" onchange="dSyncProb()"></select></div>
-          <div class="field"><label>% dự án</label><select id="d-prob"></select></div>
+          <div class="field"><label>Tiến độ dự án</label><select id="d-prob"></select></div>
           <div class="field"><label>Ngày đóng dự kiến</label><input type="date" id="d-closing"></div>
           <div class="field"><label>Loại cơ hội</label><input id="d-type" disabled></div>
           <div class="field"><label>KG năm nay</label><input type="number" min="0" id="d-kg1"></div>
@@ -468,7 +468,7 @@
 
 <!-- % quick-edit popover -->
 <div class="prob-pop glass" id="probPop">
-  <div class="pp-title">% dự án</div>
+  <div class="pp-title">Tiến độ dự án</div>
   <div class="pp-chips" id="ppChips"></div>
 </div>
 

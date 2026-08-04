@@ -171,6 +171,35 @@ Lưu ý về cùng khách khác Segment: một khách hàng **được phép** c
 
 App vẫn tự gộp phần hoa/thường và khoảng trắng thừa (`Bibica` = `BIBICA` = `bibica `). Chỉ khác biệt về từ ngữ mới cần bạn xử lý.
 
+## 3b. Xoá dữ liệu mẫu còn sót trong list Activities
+
+Trong code **không còn** dữ liệu demo nào. Nhưng một số hoạt động mẫu đã từng
+được nạp lên list `Activities` lúc thử nghiệm, nên chúng vẫn hiện trên Tổng quan
+như sự kiện thật (seminar, Zalo… đầu tháng 8/2026).
+
+Mở Console sau khi đăng nhập:
+
+```js
+FISG_STORE.findSeedActivities()      // liệt kê, KHÔNG xoá gì
+FISG_STORE.deleteSeedActivities()    // xoá thật, có hộp xác nhận, chỉ Super Admin
+```
+
+Hàm dò theo **nội dung ghi chú** trùng đúng chuỗi dữ liệu mẫu cũ, nên hoạt động
+thật của bạn không bị đụng tới. Cứ chạy hàm đầu tiên trước, đọc danh sách, thấy
+đúng ba dòng đó thì mới chạy hàm thứ hai. Muốn chắc chắn hơn thì xoá tay trong
+list `Activities` trên SharePoint — hàm in kèm id để bạn tra.
+
+## 3c. Cột "Người liên quan" quyết định ai xem được dự án
+
+Sales **chỉ thấy dự án của chính mình**. Muốn một sales xem được dự án của đồng
+nghiệp, thêm tên họ vào cột `Người liên quan` (`RelatedPeople`) của dự án đó —
+họ sẽ thấy cả dự án lẫn toàn bộ hoạt động gắn với nó. Manager, Director và Super
+Admin luôn thấy tất cả.
+
+Cột này nhận cả ba dạng: Person nhiều giá trị, nhiều dòng text, hay một ô text
+ngăn cách bằng dấu phẩy/chấm phẩy. Tên phải khớp với `Tên PIC` hoặc `Tên đầy đủ`
+trong list `Users` (không phân biệt hoa thường và dấu tiếng Việt).
+
 ## 4. Chẩn đoán khi có trục trặc
 
 Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là im lặng, đúng như mong đợi. Số liệu và cảnh báo đi vào Console (F12):
@@ -183,6 +212,7 @@ Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là i
 | `myCap()` | Năng lực của vai trò bạn đang đăng nhập |
 | `FISG_STORE.canWriteUsers()` | App có ghi được lên list Users không |
 | `FISG_STORE.findDuplicateCustomers()` | Nhóm khách hàng nghi trùng tên |
+| `FISG_STORE.findSeedActivities()` | Hoạt động trùng nội dung dữ liệu mẫu cũ |
 | `LISTS` | Toàn bộ danh mục app đang dùng |
 | `USERS` | Danh sách người dùng đọc được từ list Users |
 | `RECORDS.length`, `ACTIVITIES.length` | Số bản ghi đã tải |
