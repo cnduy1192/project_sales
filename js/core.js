@@ -4,7 +4,7 @@
    và phân quyền đọc từ list Users trên SharePoint. */
 const roleRow = document.getElementById('roleRow');
 function initials(n){return String(n||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-function roleVI(r){return r==='superadmin'?'Super Admin':r==='manager'?'Manager':'Sales'}
+function roleVI(r){return roleLabel(r);}
 function loginAs(i){
   me=USERS[i];
   document.getElementById('login').style.display='none';
@@ -12,18 +12,18 @@ function loginAs(i){
   document.getElementById('sideUser').innerHTML=`<span class="avatar" style="background:${me.color}">${initials(me.name)}</span><span><b>${me.name}</b><small>${roleVI(me.role)}</small></span>`;
   document.getElementById('hiName').innerHTML=`Xin chào, ${me.name}<small>${roleVI(me.role)} · FI SAIGON JSC</small>`;
   const av=document.getElementById('hAvatar'); av.textContent=initials(me.name); av.style.background=me.color;
-  const isAdmin = me.role==='superadmin';
-  document.getElementById('navAdminLabel').style.display = isAdmin?'block':'none';
-  document.getElementById('navUsers').style.display = isAdmin?'flex':'none';
-  /* Tổng quan điều hành là góc nhìn toàn đội — sales không có việc gì ở đó. */
-  const isLead = me.role==='manager' || isAdmin;
-  document.getElementById('navCockpitLabel').style.display = isLead?'block':'none';
-  document.getElementById('navCockpit').style.display = isLead?'flex':'none';
+  /* Mọi thứ hỏi bảng năng lực, không so tên vai trò — xem js/lib/roles.js. */
+  const c = myCap();
+  document.getElementById('navAdminLabel').style.display = c.admin?'block':'none';
+  document.getElementById('navUsers').style.display = c.admin?'flex':'none';
+  document.getElementById('navCockpitLabel').style.display = c.cockpit?'block':'none';
+  document.getElementById('navCockpit').style.display = c.cockpit?'flex':'none';
+  document.getElementById('navWelcome').style.display = c.weekly?'flex':'none';
   rebuildNccTabs();
   /* Tổng quan tuần là góc nhìn của một sales; manager/admin mở tay được ở chế độ chỉ đọc. */
   LS.reset(); LS.mergeActs(); NAV.clear();
-  go(isLead?'cockpit':'funnel'); buildForm(); buildUsers(); renderNotifs();
-  if(me.role==='sales') wcMaybeAutoOpen();
+  go(c.cockpit?'cockpit':'funnel'); buildForm(); buildUsers(); renderNotifs();
+  if(c.weekly) wcMaybeAutoOpen();
 }
 
 /* Tab NCC dựng lại được: lúc đăng nhập danh mục còn rỗng, dữ liệu SharePoint về sau. */
@@ -75,21 +75,18 @@ window.toggleSidebar=toggleSidebar;
 /* ====== VISIBILITY ====== */
 function inScope(r){return !nccFilter || r.ncc===nccFilter;}
 function visible(){
-  const base=RECORDS.filter(inScope);
-  if(me.role!=='sales') return base;
-  return base.filter(r=> r.pic===me.pic || r.related.includes(me.pic));
+  return scopeRecords(RECORDS.filter(inScope), me);
 }
 function visibleActs(){
   const base=ACTIVITIES.filter(a=>!nccFilter||a.ncc===nccFilter);
-  if(me.role!=='sales') return base;
-  return base.filter(a=>a.pic===me.pic);
+  return scopeActs(base, me, scopeRecords(RECORDS, me));
 }
 function setNcc(n){nccFilter=n;stageFilter=null;segDrill=null;
   if(typeof donutSegDrill!=='undefined')donutSegDrill=null;
   document.querySelectorAll('.ncc-tab').forEach(t=>t.classList.toggle('on',t.dataset.ncc===n));
   render();renderDash();renderActs();}
-function canEdit(r){return me.role==='superadmin' || (me.pic && (r.pic===me.pic || r.related.includes(me.pic)));}
-function canClose(r){return r.status==='IN PROGRESS' && (me.role==='superadmin' || me.role==='manager' || (me.pic && r.pic===me.pic));}
+function canEdit(r){ return capEdit(r, me); }
+function canClose(r){ return capClose(r, me); }
 
 /* ====== TIMELINE SUB-GROUPS (theo Closing Date) ====== */
 function grp(r){

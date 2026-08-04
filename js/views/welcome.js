@@ -21,7 +21,7 @@ function wcModeMeta(id){ return WC_MODES.filter(function(m){ return m.id === id;
 const WC_DAY_ABBR = ['CN','T2','T3','T4','T5','T6','T7'];
 
 function wcMode(){ return wcModeOverride || dayMode(todayISO()); }
-function wcCanAct(){ return !!(me && me.pic); }
+function wcCanAct(){ return !!(me && me.pic && myCap().edit); }
 
 /* ====== MỞ / ĐÓNG ====== */
 function openWelcome(){
@@ -54,7 +54,7 @@ window.welcomeRefresh = welcomeRefresh;
 /* Mỗi ngày một lần cho mỗi người. Mục sidebar mở lại không ghi cờ. */
 function wcSeenKey(){ return 'fisg_wc_seen_' + ((me && me.email) || 'anon'); }
 function wcMaybeAutoOpen(){
-  if(!me || me.role !== 'sales') return;
+  if(!me || !myCap().weekly) return;
   let seen = null;
   try{ seen = localStorage.getItem(wcSeenKey()); }catch(e){}
   if(seen === todayISO()) return;

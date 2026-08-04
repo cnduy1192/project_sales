@@ -6,7 +6,7 @@ let rpDraft = null;      // bản nháp chưa gửi
 let rpFilterPic = '';
 const RP_COLORS = ['#01426A','#0E7490','#B45309','#6D28D9','#0D9488','#DB2777','#157F3C'];
 
-function rpIsLead(){ return me && (me.role === 'manager' || me.role === 'superadmin'); }
+function rpIsLead(){ return !!(me && cap(me.role).scope === 'all'); }
 
 /* ====== ĐIỀU PHỐI ====== */
 function renderReports(){

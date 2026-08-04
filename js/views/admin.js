@@ -3,12 +3,12 @@
    đi thẳng lên list Users trên SharePoint. Không ghi được thì phải nói ra chứ
    không âm thầm sửa trong bộ nhớ rồi mất khi tải lại. */
 
-const ROLES = [
-  { id:'sales',      label:'Sales',       hint:'Chỉ thấy dự án và hoạt động của mình' },
-  { id:'manager',    label:'Manager',     hint:'Thấy toàn đội, không sửa được phân quyền' },
-  { id:'superadmin', label:'Super Admin', hint:'Toàn quyền, gồm cả màn hình này' }
-];
-const ROLE_COLOR = { sales:'#0D9488', manager:'#0E7490', superadmin:'#1E3A8A' };
+/* Danh sách vai trò lấy thẳng từ bảng năng lực — thêm vai trò chỉ sửa roles.js. */
+const ROLES = ROLE_ORDER.map(function(id){
+  return { id:id, label:ROLE_DEF[id].label, hint:ROLE_DEF[id].hint };
+});
+const ROLE_COLOR = { sales:'#0D9488', rnd:'#B45309', manager:'#0E7490',
+                     director:'#6D28D9', superadmin:'#1E3A8A' };
 
 let admBusy = false;
 function admEsc(s){ return ckEsc(s); }
@@ -23,7 +23,7 @@ function admListName(){
 function buildUsers(){
   const tools = document.getElementById('admTools');
   if(tools){
-    tools.innerHTML = (me && me.role === 'superadmin')
+    tools.innerHTML = myCap().admin
       ? `<button class="btn-primary" onclick="openUserForm()">
            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
            Thêm người dùng</button>`
@@ -46,13 +46,13 @@ function buildUsers(){
     box.innerHTML = `<div class="ck-empty">
       <b>Chưa có người dùng nào</b>
       <p>Thêm người đầu tiên để phân quyền cho đội.</p>
-      ${me && me.role === 'superadmin' ? '<button class="ck-chip" onclick="openUserForm()">Thêm người dùng</button>' : ''}
+      ${myCap().admin ? '<button class="ck-chip" onclick="openUserForm()">Thêm người dùng</button>' : ''}
     </div>`;
     return;
   }
 
-  const canEdit = me && me.role === 'superadmin';
-  const order = { superadmin:0, manager:1, sales:2 };
+  const canEdit = myCap().admin;
+  const order = {}; ROLE_ORDER.slice().reverse().forEach(function(id,i){ order[id]=i; });
   const list = USERS.slice().sort((a,b) =>
     ((order[a.role]===undefined?9:order[a.role]) - (order[b.role]===undefined?9:order[b.role]))
     || String(a.name||'').localeCompare(String(b.name||''),'vi'));
@@ -64,7 +64,7 @@ function buildUsers(){
       <div class="adm-who">
         <span class="avatar" style="background:${ROLE_COLOR[u.role]||'#8A90A4'}">${admEsc(initials(u.name||u.email))}</span>
         <span class="adm-nm">${admEsc(u.name || '—')}${self ? '<span class="adm-self">bạn</span>' : ''}
-          <small>${u.pic ? 'PIC: ' + admEsc(u.pic) : 'PIC lấy theo tên O365 khi đăng nhập'}</small></span>
+          <small>${admPicLine(u)}</small></span>
       </div>
       <div class="adm-mail">${admEsc(u.email)}</div>
       <div>${canEdit
@@ -72,7 +72,7 @@ function buildUsers(){
              onchange="setRole(${idx}, this.value)">
              ${ROLES.map(r => `<option value="${r.id}"${r.id===u.role?' selected':''}>${r.label}</option>`).join('')}
            </select>`
-        : `<span class="pill ${u.role==='superadmin'?'p-oa':u.role==='manager'?'p-sbg':'p-st'}">${roleVI(u.role)}</span>`}</div>
+        : `<span class="pill ${u.role==='superadmin'||u.role==='director'?'p-oa':u.role==='manager'?'p-sbg':'p-st'}">${roleVI(u.role)}</span>`}</div>
       <div class="adm-act">${canEdit ? `
         <button class="wc-btn" onclick="openUserForm(${idx})">Sửa</button>
         ${self ? '' : `<button class="wc-btn danger" onclick="removeUser(${idx})">Xoá</button>`}` : '—'}</div>
@@ -81,12 +81,21 @@ function buildUsers(){
 }
 window.buildUsers = buildUsers;
 
+/* Dòng phụ dưới tên: nói rõ đang đổi tên nào thành tên nào. */
+function admPicLine(u){
+  if(u.picRaw && u.fullName && picKey(u.picRaw) !== picKey(u.fullName))
+    return 'Dữ liệu ghi "' + admEsc(u.picRaw) + '" → hiển thị "' + admEsc(u.fullName) + '"';
+  if(u.picRaw) return 'PIC: ' + admEsc(u.picRaw);
+  if(u.fullName) return 'PIC: ' + admEsc(u.fullName) + ' (theo tên O365)';
+  return 'PIC lấy theo tên O365 khi đăng nhập';
+}
+
 /* ====== ĐỔI VAI TRÒ NGAY TRÊN BẢNG ====== */
 async function setRole(idx, role){
   const u = USERS[idx]; if(!u || admBusy) return;
   const self = me && (u.email||'').toLowerCase() === (me.email||'').toLowerCase();
   /* Tự hạ quyền chính mình là đường một chiều: mất luôn màn hình này. */
-  if(self && role !== 'superadmin'
+  if(self && !cap(role).admin
      && !confirm('Bạn đang tự hạ quyền của mình xuống ' + roleVI(role)
                  + '. Sau khi lưu bạn sẽ không vào được màn hình phân quyền nữa. Tiếp tục?')){
     buildUsers(); return;
@@ -150,8 +159,8 @@ function openUserForm(idx){
   const mail = document.getElementById('u-mail');
   mail.value = u ? (u.email || '') : '';
   mail.disabled = !!u;                 // email là khoá đối chiếu, không sửa
-  document.getElementById('u-name').value = u ? (u.name || '') : '';
-  document.getElementById('u-pic').value  = u ? (u.pic || '') : '';
+  document.getElementById('u-name').value = u ? (u.fullName || u.name || '') : '';
+  document.getElementById('u-pic').value  = u ? (u.picRaw || '') : '';
   document.getElementById('u-role').innerHTML =
     ROLES.map(r => `<option value="${r.id}"${u && u.role===r.id?' selected':''}>${r.label}</option>`).join('');
   admRoleHint();
@@ -188,14 +197,13 @@ async function lookupUserEmail(){
     return;
   }
   document.getElementById('u-name').value = p.name;
-  if(!document.getElementById('u-pic').value) document.getElementById('u-pic').value = p.name;
   const m = (typeof picMatchReport === 'function') ? picMatchReport(p.name) : { ok:true };
   box.innerHTML = `<span class="u-ok">Tìm thấy <b>${admEsc(p.name)}</b>${p.title ? ' · ' + admEsc(p.title) : ''}.</span>`
     + (m.ok
-        ? '<span class="u-ok">Tên này khớp cột PIC trong dữ liệu.</span>'
+        ? '<span class="u-ok">Tên này khớp cột PIC trong dữ liệu — để trống ô PIC bên dưới.</span>'
         : `<span class="u-warn">Chưa có dự án nào ghi PIC là "${admEsc(p.name)}"${
-            m.near && m.near.length ? '. Gần nhất: ' + admEsc(m.near.join(', ')) : ''
-          }. Sửa ô PIC bên dưới nếu cần.</span>`);
+            m.near && m.near.length ? '. Gần nhất: <b>' + admEsc(m.near.join(', ')) + '</b>' : ''
+          }. Điền tên như nó nằm trong dữ liệu vào ô PIC bên dưới — app sẽ tự đổi sang tên đầy đủ khi hiển thị.</span>`);
 }
 window.lookupUserEmail = lookupUserEmail;
 
@@ -210,17 +218,21 @@ async function saveUserForm(){
 
   const role = g('u-role');
   let u = admEditIdx >= 0 ? USERS[admEditIdx] : null;
-  const before = u ? { name:u.name, pic:u.pic, role:u.role } : null;
+  const before = u ? { name:u.name, pic:u.pic, picRaw:u.picRaw, fullName:u.fullName, role:u.role } : null;
   const isNew = !u;
+  const full = g('u-name'), picRaw = g('u-pic');
   if(isNew){
-    u = { email: mail, name: g('u-name') || mail, pic: g('u-pic') || null,
+    u = { email: mail, name: full || mail, fullName: full || null,
+          picRaw: picRaw || null, pic: picRaw || full || null,
           role: role, color: ROLE_COLOR[role] || '#0D9488' };
     USERS.push(u);
   } else {
-    u.name = g('u-name') || u.email;
-    u.pic  = g('u-pic') || null;
-    u.role = role;
-    u.color = ROLE_COLOR[role] || u.color;
+    u.fullName = full || null;
+    u.picRaw   = picRaw || null;
+    u.name     = full || u.email;
+    u.pic      = picRaw || full || null;
+    u.role     = role;
+    u.color    = ROLE_COLOR[role] || u.color;
   }
 
   const ok = await admPersist(u, (isNew ? 'Đã thêm ' : 'Đã cập nhật ') + (u.name || u.email) + '.',

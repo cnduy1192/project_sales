@@ -34,6 +34,10 @@ function _buildLabels(){
   };
   _labels = { cust: pick(tallyC), pic: pick(tallyP) };
 }
+/* Sau khi đổi tên PIC, nhãn hiển thị phải dựng lại — nhưng _labels là biến cục
+   bộ của file này nên phải mở một cửa cho store.js gọi vào. */
+function resetPicLabels(){ _labels = null; }
+window.resetPicLabels = resetPicLabels;
 function custLabel(k){ if(!_labels) _buildLabels(); const key=custKey(k); return _labels.cust[key] || key; }
 function picLabel(k){ if(!_labels) _buildLabels(); const key=picKey(k); return _labels.pic[key] || key; }
 
@@ -73,15 +77,10 @@ function closeStamp(r){
 /* ====== PHẠM VI THEO QUYỀN ======
    Khác visible(): cố ý KHÔNG lọc theo nccFilter — cockpit gộp cả ba NCC. */
 function cockpitScope(){
-  const mine = (typeof me !== 'undefined' && me && me.role === 'sales') ? picKey(me.pic) : null;
-  if(!mine) return { records: RECORDS.slice(), acts: ACTIVITIES.slice() };
-  const owns = r => picKey(r.pic) === mine || (r.related||[]).some(p => picKey(p) === mine);
-  const records = RECORDS.filter(owns);
-  const ids = new Set(records.map(r => r.id));
-  return {
-    records,
-    acts: ACTIVITIES.filter(a => picKey(a.pic) === mine || (a.projectId && ids.has(a.projectId)))
-  };
+  if(typeof scopeRecords !== 'function')
+    return { records: RECORDS.slice(), acts: ACTIVITIES.slice() };
+  const records = scopeRecords(RECORDS, typeof me !== 'undefined' ? me : null);
+  return { records, acts: scopeActs(ACTIVITIES, typeof me !== 'undefined' ? me : null, records) };
 }
 
 /* ====== DÒNG SỰ KIỆN ====== */
@@ -261,7 +260,7 @@ function cockpitAssert(){
   /* Sales thấy khách hàng qua hai đường: dự án họ phụ trách/tham gia, hoặc hoạt
      động chính họ ghi. Cả hai đều hợp lệ. */
   let scoped = true;
-  if(typeof me !== 'undefined' && me && me.role === 'sales'){
+  if(typeof me !== 'undefined' && me && cap(me.role).scope === 'own-pic'){
     const mine = picKey(me.pic);
     const own = ACTIVITIES.filter(a => picKey(a.pic) === mine).map(a => custKey(a.customer));
     const viaAct = new Set(own);

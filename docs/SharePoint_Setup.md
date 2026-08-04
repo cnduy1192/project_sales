@@ -20,8 +20,9 @@ Site: `fisaigonvn.sharepoint.com/sites/SalesProjectTracker` → **New → List**
 |---|---|---|---|
 | `Title` | Single line of text | có | Email đăng nhập M365. Ví dụ `thu@fisaigon.vn` |
 | `Email` | Single line of text | không | Dùng khi không muốn để email ở cột Title |
-| `Role` | Choice | có | Ba giá trị: `sales`, `manager`, `superadmin` |
-| `PICName` | Single line of text | **không** | Đường lui, xem bên dưới. Để trống là bình thường |
+| `Role` | Choice | có | `sales` · `rnd` · `manager` · `director` · `superadmin` |
+| `PICName` | Single line of text | **không** | Tên tắt như nó nằm trong dữ liệu. Xem 1.1c |
+| `FullName` | Single line of text | **không** | Tên đầy đủ O365. App tự điền, không phải gõ |
 
 Chỉ cần tạo **một dòng duy nhất** cho tài khoản quản trị của bạn:
 
@@ -45,6 +46,37 @@ Bấm **Lưu lên SharePoint** là dòng mới xuất hiện trong list `Users`.
 Ghi hỏng (mất mạng, thiếu quyền) thì app **hoàn tác lại trên màn hình** và báo lý do, chứ không để bạn tưởng đã lưu.
 
 Hai điều app cố tình chặn: không xoá được chính mình, và tự hạ quyền mình xuống dưới superadmin thì phải xác nhận — vì cả hai đều làm bạn mất luôn màn hình này.
+
+### 1.1c Đổi tên PIC tắt thành tên đầy đủ
+
+Dữ liệu cũ ghi tên tắt: cột PIC của dự án là `Bich Ngoc`, trong khi O365 gọi người đó là `Phạm Bích Ngọc`. App **đổi khi hiển thị**, không sửa dữ liệu trên SharePoint.
+
+Khai một lần trong màn Người dùng & phân quyền:
+
+| Ô | Điền gì |
+|---|---|
+| Tên đầy đủ (O365) | Tự điền khi bấm Tra O365 |
+| Tên PIC như trong dữ liệu | `Bich Ngoc` — chỉ điền khi dữ liệu ghi tên tắt |
+
+Từ đó mọi màn hình — funnel, hoạt động, Cockpit, báo cáo — đều hiện `Phạm Bích Ngọc`. Bảng người dùng ghi rõ *Dữ liệu ghi "Bich Ngoc" → hiển thị "Phạm Bích Ngọc"* để bạn nhìn ra ai đang được đổi tên.
+
+Nếu dữ liệu đã ghi đúng tên đầy đủ thì **để trống ô PIC** — Tra O365 cũng cố tình không tự điền ô này.
+
+### 1.1d Năm vai trò
+
+| Vai trò | Phạm vi dữ liệu | Sửa | Đóng dự án | Cockpit | Tổng quan tuần | Phân quyền |
+|---|---|---|---|---|---|---|
+| Sales | dự án mình là PIC | ✓ | ✓ | — | ✓ | — |
+| R&D | dự án mình phụ trách R&D | ✓ | — | — | ✓ | — |
+| Manager | toàn đội | ✓ | ✓ | ✓ | — | — |
+| Director | toàn đội | — | — | ✓ | — | — |
+| Super Admin | toàn đội | ✓ | ✓ | ✓ | — | ✓ |
+
+**R&D bám cột `RnDOwner`** ("R&D phụ trách") trong list Projects — cột này đã có sẵn nhưng trước đây app không đọc. Không có giá trị trong đó thì người R&D không thấy dự án nào.
+
+**Director đọc được cả đội nhưng không nhập liệu**: không nút Lưu, không đóng dự án. Vẫn nhận báo cáo tuần của sales.
+
+Vai trò ghi sai chính tả trong list sẽ rơi vào mặc định chặt nhất — không thấy gì, không sửa gì — thay vì âm thầm được cấp quyền xem toàn công ty.
 
 ### PIC lấy từ đâu
 
@@ -143,6 +175,8 @@ Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là i
 |---|---|
 | `FISG_STORE.debug()` | Tên cột thật của list Projects và một bản ghi mẫu |
 | `picMatchReport(me.pic)` | Tên O365 của bạn có khớp cột PIC trong dữ liệu không |
+| `FISG_STORE.picAliasMap()` | Bảng đổi tên tắt → tên đầy đủ đang áp dụng |
+| `myCap()` | Năng lực của vai trò bạn đang đăng nhập |
 | `FISG_STORE.canWriteUsers()` | App có ghi được lên list Users không |
 | `FISG_STORE.findDuplicateCustomers()` | Nhóm khách hàng nghi trùng tên |
 | `LISTS` | Toàn bộ danh mục app đang dùng |

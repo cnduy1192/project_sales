@@ -348,19 +348,18 @@
     const byMail = {};
     people.forEach(u => { byMail[u.mail] = u.name; });
 
+    /* Chỉ dựng bảng bổ sung rồi giao cho store — đổi tên PIC là việc của MỘT
+       nơi duy nhất (js/store.js), nếu không hai chỗ cùng sửa sẽ lệch nhau. */
     PIC_FULL = {};
     const PIC_EMAIL = picEmailMap();
     Object.keys(PIC_EMAIL).forEach(short => {
       const full = byMail[PIC_EMAIL[short].toLowerCase()];
       if (full && full !== short) PIC_FULL[short] = full;
     });
-    const F = n => PIC_FULL[n] || n;
-    if (typeof RECORDS !== "undefined") RECORDS.forEach(r => { r.pic = F(r.pic); });
-    if (typeof ACTIVITIES !== "undefined") ACTIVITIES.forEach(a => { a.pic = F(a.pic); });
-    if (typeof USERS !== "undefined") USERS.forEach(u => { if (u.pic) u.pic = F(u.pic); });
-    if (typeof ALL_PICS !== "undefined")
-      ALL_PICS.forEach((p, i) => { ALL_PICS[i] = F(p); });
-    if (typeof me !== "undefined" && me && me.pic) me.pic = F(me.pic);
+    if (window.FISG_STORE && FISG_STORE.applyPicAliases) {
+      const r = FISG_STORE.applyPicAliases(PIC_FULL);
+      if (r.changed && window.render) { try { render(); renderActs(); } catch (e) {} }
+    }
     return true;
   }
 

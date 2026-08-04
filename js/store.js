@@ -29,7 +29,7 @@
       StageGroup: "Nhóm giai đoạn", WinProbability: "Xác suất thắng %",
     },
     // Users: phân quyền. Title = email đăng nhập.
-    Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò" },
+    Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ" },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -192,7 +192,12 @@
      Nguồn sự thật là list Users trên SharePoint. Nếu list chưa tồn tại, KHÔNG
      khoá cửa: quay về quy tắc cũ (ADMIN_EMAIL = superadmin, còn lại manager) và
      báo rõ để người quản trị tạo list. */
-  const ROLE_COLOR = { superadmin: "#1E3A8A", manager: "#0E7490", sales: "#0D9488", guest: "#6D28D9" };
+  const ROLE_COLOR = { superadmin: "#1E3A8A", director: "#6D28D9", manager: "#0E7490",
+                       rnd: "#B45309", sales: "#0D9488", guest: "#6D28D9" };
+  function isKnownRoleSafe(r) {
+    return (typeof isKnownRole === "function") ? isKnownRole(r)
+      : ["sales", "rnd", "manager", "director", "superadmin"].indexOf(r) >= 0;
+  }
   let usersLoaded = false, usersWritable = false, userCols = null;
   const USERS_LIST = () => (CFG && CFG.USERS_LIST) || "Users";
 
@@ -221,12 +226,19 @@
         const f = it.fields || {};
         const email = (txt(g(f, "Email")) || txt(f.Title)).toLowerCase();
         const role = (txt(g(f, "Role")) || "sales").toLowerCase();
+        const picRaw = txt(g(f, "PICName")) || null;
+        const full = txt(g(f, "FullName")) || null;
         return {
           spId: it.id,
           email: email,
-          name: txt(g(f, "PICName")) || email,
-          pic: txt(g(f, "PICName")) || null,
-          role: ["sales", "manager", "superadmin"].indexOf(role) >= 0 ? role : "sales",
+          /* picRaw = đúng giá trị PICName đang lưu trên SharePoint. pic = giá trị
+             ĐANG DÙNG, sẽ bị applyPicAliases đổi sang tên đầy đủ. Tách hai thứ ra
+             để lúc ghi lại không đè mất bảng ánh xạ. */
+          picRaw: picRaw,
+          fullName: full,
+          name: full || picRaw || email,
+          pic: picRaw || full || null,
+          role: isKnownRoleSafe(role) ? role : "sales",
           color: ROLE_COLOR[role] || "#0D9488",
         };
       }).filter(u => u.email);
@@ -255,6 +267,13 @@
     if (u) {
       if (full) u.name = full;              // tên hiển thị luôn lấy từ O365
       if (!u.pic && full) u.pic = full;     // không khai PICName → dùng tên O365
+      /* Lần đầu người này đăng nhập: lưu lại tên O365 để bảng ánh xạ dùng được
+         cho cả những người chưa bao giờ đăng nhập. Ghi hỏng thì bỏ qua. */
+      if (full && !u.fullName) {
+        u.fullName = full;
+        if (canWriteUsers()) saveUser(u).catch(e =>
+          console.warn("[store] không lưu được FullName:", e.message || e));
+      }
       if (window.buildUsers) buildUsers();
       return { user: u, fromList: ok, index: USERS.indexOf(u) };
     }
@@ -262,6 +281,7 @@
     /* Chưa có list Users — dùng quy tắc dự phòng để không khoá cửa. */
     const isAdmin = mail === String((CFG && CFG.ADMIN_EMAIL) || "").toLowerCase();
     u = { name: full || email, email: email, pic: full || null,
+          picRaw: null, fullName: full || null,
           role: isAdmin ? "superadmin" : "manager", color: isAdmin ? "#1E3A8A" : "#0E7490" };
     USERS.push(u);
     if (window.buildUsers) buildUsers();
@@ -294,10 +314,14 @@
   function userFields(u) {
     const f = {};
     f.Title = u.email;
-    const fe = userField("Email"), fp = userField("PICName"), fr = userField("Role");
+    const fe = userField("Email"), fp = userField("PICName"),
+          fr = userField("Role"), fn = userField("FullName");
     if (fe !== "Title") f[fe] = u.email;
-    f[fp] = u.pic || "";
+    /* Ghi picRaw, KHÔNG ghi u.pic — u.pic đã bị đổi sang tên đầy đủ, ghi nó lên
+       sẽ xoá mất chính bảng ánh xạ đang dùng. */
+    f[fp] = u.picRaw || "";
     f[fr] = u.role;
+    f[fn] = u.fullName || "";
     return f;
   }
 
@@ -325,6 +349,46 @@
   async function lookupUser(email) {
     if (!(window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account())) return null;
     return FISG_GRAPH.lookupPerson(email);
+  }
+
+  /* ---------- ĐỔI TÊN PIC THEO LIST USERS ----------
+     Dữ liệu cũ ghi tên tắt ("Bich Ngoc"); list Users biết tên đầy đủ tương ứng
+     ("Phạm Bích Ngọc"). Thay khi hiển thị, KHÔNG ghi ngược lên SharePoint.
+
+     Chạy được nhiều lần mà không hỏng: sau lượt đầu, khoá tên tắt không còn
+     khớp gì nữa. Nhờ vậy ui-kit.js lấy được danh bạ O365 muộn hơn vẫn gọi lại
+     được để lấp nốt những tên còn thiếu. */
+  function picAliasMap(extra) {
+    const m = {};
+    USERS.forEach(u => {
+      const from = u.picRaw, to = u.fullName;
+      if (from && to && picKey(from) !== picKey(to)) m[picKey(from)] = to;
+    });
+    if (extra) Object.keys(extra).forEach(k => {
+      if (extra[k] && picKey(k) !== picKey(extra[k])) m[picKey(k)] = extra[k];
+    });
+    return m;
+  }
+
+  function applyPicAliases(extra) {
+    const map = picAliasMap(extra);
+    const n = Object.keys(map).length;
+    if (!n) return { changed: 0, map: map };
+    const F = v => (v && map[picKey(v)]) || v;
+    let changed = 0;
+    const bump = (obj, key) => {
+      const next = F(obj[key]);
+      if (next !== obj[key]) { obj[key] = next; changed++; }
+    };
+    RECORDS.forEach(r => { bump(r, "pic"); bump(r, "rnd"); });
+    ACTIVITIES.forEach(a => { bump(a, "pic"); });
+    USERS.forEach(u => { if (u.pic) bump(u, "pic"); });
+    if (typeof me !== "undefined" && me && me.pic) bump(me, "pic");
+    if (changed) {
+      if (typeof resetPicLabels === "function") resetPicLabels();
+      if (typeof invalidateCockpit === "function") invalidateCockpit();
+    }
+    return { changed: changed, map: map };
   }
 
   /* ---------- DÒ KHÁCH HÀNG TRÙNG TÊN ----------
@@ -401,6 +465,9 @@
           kgThis: Number(gp(f, "PotentialKgThisYear")) || 0,
           kgNext: Number(gp(f, "PotentialKgNextYear")) || 0,
           pic: txt(f.PICName) || txt(gp(f, "PIC")),
+          /* Cột "R&D phụ trách" đã có sẵn trên SharePoint nhưng chưa bao giờ
+             được đọc. Vai trò R&D giới hạn phạm vi theo cột này. */
+          rnd: txt(f.RnDOwnerName) || txt(gp(f, "RnDOwner")),
           related: [],
           created: txt(gp(f, "CreationDate")).slice(0, 10),
           closing: txt(gp(f, "ClosingDate")).slice(0, 10),
@@ -434,6 +501,12 @@
 
       RECORDS.length = 0; recs.forEach(r => RECORDS.push(r));
       ACTIVITIES.length = 0; A.forEach(a => ACTIVITIES.push(a));
+
+      /* Đổi tên PIC TRƯỚC khi dựng danh mục — nếu không, LISTS.pics và Cockpit
+         giữ tên tắt trong khi bảng dự án đã hiện tên đầy đủ, hai chỗ lệch nhau. */
+      const alias = applyPicAliases();
+      if (alias.changed)
+        console.info("[store] đổi " + alias.changed + " tên PIC theo list Users:", alias.map);
 
       // Danh mục (NCC, segment, pipeline, sales…) cũng dựng từ dữ liệu thật.
       const meta = await buildLists(RECORDS, ACTIVITIES);
@@ -487,5 +560,6 @@
   window.FISG_STORE = { syncFromGraph, debug, loadUsers, profileFor, picMatchReport,
                         findDuplicateCustomers, buildLists,
                         saveUser, deleteUser, lookupUser, canWriteUsers,
+                        applyPicAliases, picAliasMap,
                         usersListName: USERS_LIST };
 })();

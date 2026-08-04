@@ -16,7 +16,8 @@ function notifyPlain(action,to){
   renderNotifs();
 }
 function managerNames(){
-  return USERS.filter(u=>u.role==='manager'||u.role==='superadmin').map(u=>u.pic||u.name);
+  /* Ai nhìn được toàn đội thì nhận báo cáo tuần — gồm cả Director. */
+  return USERS.filter(u=>cap(u.role).scope==='all').map(u=>u.pic||u.name);
 }
 function renderNotifs(){
   const dot=document.getElementById('bellDot');

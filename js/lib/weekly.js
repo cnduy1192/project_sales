@@ -38,11 +38,22 @@ function dayStampVI(iso){
   return dayLabelVI(d) + ', ngày ' + d.slice(8,10) + '/' + d.slice(5,7) + '/' + d.slice(0,4);
 }
 
-/* ====== PHẠM VI CỦA MỘT SALES ====== */
-function myScope(pic){
+/* ====== PHẠM VI CỦA MỘT NGƯỜI ======
+   Tuần luôn là góc nhìn CÁ NHÂN, kể cả với người có quyền xem toàn đội — nên
+   phạm vi 'all' thu về 'own-pic'. R&D bám cột "R&D phụ trách" thay vì cột PIC. */
+function scopeKindFor(pic){
+  var K = picKey(pic);
+  var u = (typeof USERS !== 'undefined' ? USERS : []).filter(function(x){
+    return picKey(x.pic) === K; })[0];
+  var k = (u && typeof cap === 'function') ? cap(u.role).scope : 'own-pic';
+  return k === 'own-rnd' ? 'own-rnd' : 'own-pic';
+}
+function myScope(pic, kind){
   var K = picKey(pic);
   if(!K) return { key:'', records:[], acts:[] };
+  kind = kind || scopeKindFor(pic);
   var records = RECORDS.filter(function(r){
+    if(kind === 'own-rnd') return picKey(r.rnd) === K;
     return picKey(r.pic) === K || (r.related||[]).some(function(x){ return picKey(x) === K; });
   });
   var ids = {}; records.forEach(function(r){ ids[r.id] = 1; });

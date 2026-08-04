@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="extras.css?v=5">
 <link rel="stylesheet" href="charts.css?v=5">
 <link rel="stylesheet" href="cockpit.css?v=1">
-<link rel="stylesheet" href="welcome.css?v=1">
+<link rel="stylesheet" href="welcome.css?v=2">
 </head>
 <body>
 
@@ -414,13 +414,15 @@
         <div class="u-found" id="u-found"></div>
       </div>
       <div class="field">
-        <label for="u-name">Tên hiển thị</label>
+        <label for="u-name">Tên đầy đủ (O365)</label>
         <input id="u-name" placeholder="Tự điền sau khi tra O365">
+        <div class="u-hint">Tên này sẽ hiện khắp phần mềm.</div>
       </div>
       <div class="field">
-        <label for="u-pic">Tên PIC trong dữ liệu</label>
-        <input id="u-pic" placeholder="Để trống = dùng tên O365 khi đăng nhập">
-        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi khác tên O365.</div>
+        <label for="u-pic">Tên PIC như trong dữ liệu</label>
+        <input id="u-pic" placeholder="Để trống nếu dữ liệu đã ghi đúng tên đầy đủ">
+        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi tên tắt, ví dụ <b>Bich Ngoc</b>.
+          App sẽ thay tên tắt đó bằng tên đầy đủ ở mọi màn hình.</div>
       </div>
       <div class="field">
         <label for="u-role">Vai trò <span class="req">*</span></label>
@@ -476,9 +478,10 @@
 
 <script src="js/sp-config.js?v=5"></script>
 <script src="js/data/catalog.js?v=1"></script>
-<script src="js/config.js?v=5"></script>
+<script src="js/config.js?v=10"></script>
 <script src="js/lib/navstack.js?v=1"></script>
 <script src="js/lib/insights.js?v=1"></script>
+<script src="js/lib/roles.js?v=1"></script>
 <script src="js/lib/localstore.js?v=1"></script>
 <script src="js/lib/weekly.js?v=1"></script>
 <script src="js/core.js?v=5"></script>
@@ -501,7 +504,7 @@
 <script src="js/guest.js?v=5"></script>
 <script src="js/login-ui.js?v=5"></script>
 <script src="js/funnel-ui.js?v=5"></script>
-<script src="js/extras.js?v=5"></script>
+<script src="js/extras.js?v=10"></script>
 <script src="js/charts.js?v=5"></script>
 </body>
 </html>
