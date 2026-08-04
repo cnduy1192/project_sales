@@ -13,12 +13,36 @@ let SEG_GROUPS = [];
 const SEG2GROUP = {};
 const NCCS = LISTS.nccs;
 
+/* Danh sách NCC có thể lặp: SharePoint trả trùng tên, hoặc người dùng đã thêm thủ
+ * công một NCC khác hoa/thường hay dư khoảng trắng. NCCS trỏ thẳng vào LISTS.nccs
+ * nên phải sửa TẠI CHỖ, không gán lại mảng mới. */
+function dedupeNccs(){
+  if(!Array.isArray(LISTS.nccs)) return 0;
+  const seen = new Set(), clean = [];
+  LISTS.nccs.forEach(n => {
+    const name = String(n == null ? '' : n).trim(), k = name.toLowerCase();
+    if(!name || seen.has(k)) return;
+    seen.add(k); clean.push(name);
+  });
+  const removed = LISTS.nccs.length - clean.length;
+  if(removed || clean.some((n,i) => n !== LISTS.nccs[i])){
+    LISTS.nccs.length = 0;
+    clean.forEach(n => LISTS.nccs.push(n));
+  }
+  return removed;
+}
+window.dedupeNccs = dedupeNccs;
+
 function rebuildDerived(){
+  dedupeNccs();
   SEG_GROUPS = Object.keys(SEG_TREE);
   Object.keys(SEG2GROUP).forEach(k => delete SEG2GROUP[k]);
   SEG_GROUPS.forEach(g => (SEG_TREE[g]||[]).forEach(s => SEG2GROUP[s] = g));
   /* NCC đang lọc phải nằm trong danh sách thật, nếu không mọi bảng đều trống. */
-  if(NCCS.length && NCCS.indexOf(nccFilter) < 0) nccFilter = NCCS[0];
+  if(NCCS.length && NCCS.indexOf(nccFilter) < 0){
+    const same = NCCS.filter(n => n.toLowerCase() === String(nccFilter||'').trim().toLowerCase())[0];
+    nccFilter = same || NCCS[0];
+  }
   return { groups: SEG_GROUPS.length, nccs: NCCS.length };
 }
 window.rebuildDerived = rebuildDerived;

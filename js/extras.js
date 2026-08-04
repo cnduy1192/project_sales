@@ -18,9 +18,35 @@
   const loadCustom = () => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } };
   const saveCustom = a => { try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch (e) {} };
 
-  function applySupplier(name, stages, probs, groups) {
+  const normNcc = n => String(n == null ? "" : n).trim();
+  const keyNcc = n => normNcc(n).toLowerCase();
+
+  /* NCCS aliases LISTS.nccs, so the array is repaired in place — never reassigned —
+     and duplicates are matched case-insensitively after trimming. A supplier stored
+     in localStorage under a differently-cased name used to slip past includes(). */
+  function dedupeNccs() {
+    if (typeof LISTS === "undefined" || !Array.isArray(LISTS.nccs)) return;
+    /* config.js owns the in-place repair of the list; extras only cleans its own store */
+    if (window.dedupeNccs) window.dedupeNccs();
+    /* drop the stored entries that caused it, so the duplicate cannot come back */
+    const custom = loadCustom(), kept = new Set(), keep = [];
+    custom.forEach(x => {
+      const k = keyNcc(x && x.name);
+      if (!k || kept.has(k)) return;
+      kept.add(k); keep.push(x);
+    });
+    if (keep.length !== custom.length) saveCustom(keep);
+    if (typeof nccFilter !== "undefined" && nccFilter && !LISTS.nccs.includes(nccFilter)) {
+      const match = LISTS.nccs.filter(n => keyNcc(n) === keyNcc(nccFilter))[0];
+      if (match && window.setNcc) setNcc(match);
+    }
+  }
+
+  function applySupplier(rawName, stages, probs, groups) {
     if (typeof LISTS === "undefined") return;
-    if (!LISTS.nccs.includes(name)) LISTS.nccs.push(name);
+    const name = normNcc(rawName);
+    if (!name) return;
+    if (!LISTS.nccs.some(n => keyNcc(n) === keyNcc(name))) LISTS.nccs.push(name);
     LISTS.pipelines[name] = stages.slice();
     stages.forEach(s => {
       if (groups && groups[s] && !LISTS.groupOf[s]) LISTS.groupOf[s] = groups[s];
@@ -35,6 +61,7 @@
   function rebuildTabs() {
     const box = document.getElementById("nccTabs");
     if (!box || typeof LISTS === "undefined") return;
+    dedupeNccs();
     box.innerHTML = LISTS.nccs.map(n =>
       '<button class="ncc-tab' + (n === (typeof nccFilter !== "undefined" ? nccFilter : "") ? " on" : "") +
       '" data-ncc="' + esc(n) + '" onclick="setNcc(\'' + esc(n).replace(/'/g, "\\'") + '\')">' + esc(n) + '</button>').join("");
@@ -240,6 +267,7 @@
 
   function boot() {
     safe(restoreCustom);
+    safe(dedupeNccs);
     wrap("loginAs", () => setTimeout(() => {
       safe(rebuildTabs); safe(addSupplierButton); safe(wireActivityClicks);
     }, 90));
@@ -250,5 +278,5 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 
-  window.FISG_EXTRAS = { openSupplierModal, customerModal, renderSegShare, applySupplier };
+  window.FISG_EXTRAS = { openSupplierModal, customerModal, renderSegShare, applySupplier, dedupeNccs };
 })();
