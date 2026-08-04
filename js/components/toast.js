@@ -5,3 +5,4 @@ function toast(m){const t=document.getElementById('toastEl');t.textContent=m;t.s
 document.getElementById('ov').addEventListener('click',e=>{if(e.target.id==='ov')closeForm();});
 document.getElementById('dov').addEventListener('click',e=>{if(e.target.id==='dov')closeDetail();});
 document.getElementById('cov').addEventListener('click',e=>{if(e.target.id==='cov')closeCloseModal();});
+document.getElementById('uov').addEventListener('click',e=>{if(e.target.id==='uov')closeUserForm();});

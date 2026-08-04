@@ -23,14 +23,28 @@ Site: `fisaigonvn.sharepoint.com/sites/SalesProjectTracker` → **New → List**
 | `Role` | Choice | có | Ba giá trị: `sales`, `manager`, `superadmin` |
 | `PICName` | Single line of text | **không** | Đường lui, xem bên dưới. Để trống là bình thường |
 
-Ví dụ nội dung — phần lớn dòng chỉ cần hai cột:
+Chỉ cần tạo **một dòng duy nhất** cho tài khoản quản trị của bạn:
 
-| Title | Role | PICName |
-|---|---|---|
-| duy.chengoc@fisaigon.vn | superadmin | |
-| manager@fisaigon.vn | manager | |
-| thu@fisaigon.vn | sales | |
-| ngoc.phambich@fisaigon.vn | sales | Bich Ngoc |
+| Title | Role |
+|---|---|
+| duy.chengoc@fisaigon.vn | superadmin |
+
+Những người còn lại thêm thẳng trong app — xem mục 1.1b. Không phải gõ tay trên SharePoint nữa.
+
+### 1.1b Thêm người dùng ngay trong app
+
+Đăng nhập bằng tài khoản superadmin → **Người dùng & phân quyền** → **Thêm người dùng**.
+
+Nhập email rồi bấm **Tra O365**. App lấy tên hiển thị từ Microsoft 365, điền sẵn vào ô PIC, và **đối chiếu ngay** với cột PIC trong dữ liệu dự án:
+
+- *"Tên này khớp cột PIC trong dữ liệu"* → xong, không phải làm gì thêm.
+- *"Chưa có dự án nào ghi PIC là …"* kèm vài tên gần đúng → sửa ô PIC cho khớp.
+
+Bấm **Lưu lên SharePoint** là dòng mới xuất hiện trong list `Users`. Đổi vai trò ngay trên bảng, hoặc xoá người bằng nút Xoá — mọi thay đổi đi thẳng lên SharePoint.
+
+Ghi hỏng (mất mạng, thiếu quyền) thì app **hoàn tác lại trên màn hình** và báo lý do, chứ không để bạn tưởng đã lưu.
+
+Hai điều app cố tình chặn: không xoá được chính mình, và tự hạ quyền mình xuống dưới superadmin thì phải xác nhận — vì cả hai đều làm bạn mất luôn màn hình này.
 
 ### PIC lấy từ đâu
 
@@ -44,7 +58,7 @@ App tự kiểm tra sau mỗi lần tải: nếu tên O365 của bạn không kh
 picMatchReport(me.pic)
 ```
 
-Nếu chưa kịp tạo list, app **không khoá cửa**: `ADMIN_EMAIL` trong `sp-config.js` vào với quyền superadmin, người khác vào với quyền manager, kèm cảnh báo trên màn hình.
+Nếu chưa kịp tạo list, app **không khoá cửa**: `ADMIN_EMAIL` trong `sp-config.js` vào với quyền superadmin, người khác vào với quyền manager. Màn hình Người dùng & phân quyền sẽ báo rằng thay đổi chỉ nằm trong phiên hiện tại.
 
 ### 1.2 List `Pipelines` — tuỳ chọn
 
@@ -123,12 +137,13 @@ App vẫn tự gộp phần hoa/thường và khoảng trắng thừa (`Bibica` 
 
 ## 4. Chẩn đoán khi có trục trặc
 
-Trong Console sau khi đăng nhập:
+Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là im lặng, đúng như mong đợi. Số liệu và cảnh báo đi vào Console (F12):
 
 | Lệnh | Cho biết |
 |---|---|
 | `FISG_STORE.debug()` | Tên cột thật của list Projects và một bản ghi mẫu |
 | `picMatchReport(me.pic)` | Tên O365 của bạn có khớp cột PIC trong dữ liệu không |
+| `FISG_STORE.canWriteUsers()` | App có ghi được lên list Users không |
 | `FISG_STORE.findDuplicateCustomers()` | Nhóm khách hàng nghi trùng tên |
 | `LISTS` | Toàn bộ danh mục app đang dùng |
 | `USERS` | Danh sách người dùng đọc được từ list Users |

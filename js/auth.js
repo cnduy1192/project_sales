@@ -89,10 +89,6 @@
             + "Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.");
       return;
     }
-    if (!p.fromList) {
-      toast("Chưa đọc được list Users — tạm cấp quyền " + p.user.role
-            + ". Tạo list Users trên SharePoint để phân quyền đúng.");
-    }
     loginAs(p.index);
     await FISG_STORE.syncFromGraph();   // đổ dữ liệu thật vào toàn bộ màn hình
   }

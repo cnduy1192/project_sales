@@ -193,7 +193,21 @@
      khoá cửa: quay về quy tắc cũ (ADMIN_EMAIL = superadmin, còn lại manager) và
      báo rõ để người quản trị tạo list. */
   const ROLE_COLOR = { superadmin: "#1E3A8A", manager: "#0E7490", sales: "#0D9488", guest: "#6D28D9" };
-  let usersLoaded = false;
+  let usersLoaded = false, usersWritable = false, userCols = null;
+  const USERS_LIST = () => (CFG && CFG.USERS_LIST) || "Users";
+
+  /* Tên cột THẬT để ghi. SharePoint hay mã hoá internal name của cột tiếng Việt,
+     nên phải dò ngược từ displayName giống lúc đọc. */
+  function userField(logical) {
+    if (!userCols) return logical;
+    if (userCols[logical] !== undefined) return logical;
+    const label = (LABELS.Users || {})[logical];
+    const hit = Object.keys(userCols).filter(k => userCols[k] === label || userCols[k] === logical)[0];
+    return hit || logical;
+  }
+  function canWriteUsers() {
+    return !!(usersWritable && window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account());
+  }
 
   async function loadUsers() {
     if (usersLoaded) return true;
@@ -208,6 +222,7 @@
         const email = (txt(g(f, "Email")) || txt(f.Title)).toLowerCase();
         const role = (txt(g(f, "Role")) || "sales").toLowerCase();
         return {
+          spId: it.id,
           email: email,
           name: txt(g(f, "PICName")) || email,
           pic: txt(g(f, "PICName")) || null,
@@ -217,7 +232,7 @@
       }).filter(u => u.email);
       if (!rows.length) throw new Error("list " + listName + " rỗng");
       USERS.length = 0; rows.forEach(u => USERS.push(u));
-      usersLoaded = true;
+      usersLoaded = true; usersWritable = true; userCols = cols;
       if (window.buildUsers) buildUsers();
       return true;
     } catch (e) {
@@ -273,6 +288,45 @@
   }
   window.picMatchReport = picMatchReport;
 
+  /* ---------- GHI NGƯỢC LIST USERS ----------
+     Màn "Người dùng & phân quyền" là nơi duy nhất người quản trị chạm vào phân
+     quyền; mọi thay đổi ở đó phải đi thẳng lên SharePoint, không dừng ở bộ nhớ. */
+  function userFields(u) {
+    const f = {};
+    f.Title = u.email;
+    const fe = userField("Email"), fp = userField("PICName"), fr = userField("Role");
+    if (fe !== "Title") f[fe] = u.email;
+    f[fp] = u.pic || "";
+    f[fr] = u.role;
+    return f;
+  }
+
+  async function saveUser(u) {
+    if (!canWriteUsers()) throw new Error("chưa đọc được list " + USERS_LIST() + " nên không ghi được");
+    const fields = userFields(u);
+    if (u.spId) {
+      await FISG_GRAPH.updateItem(USERS_LIST(), u.spId, fields);
+    } else {
+      const created = await FISG_GRAPH.createItem(USERS_LIST(), fields);
+      if (created && created.id) u.spId = created.id;
+    }
+    return u;
+  }
+
+  async function deleteUser(u) {
+    if (!canWriteUsers()) throw new Error("chưa đọc được list " + USERS_LIST() + " nên không xoá được");
+    if (u.spId) await FISG_GRAPH.deleteItem(USERS_LIST(), u.spId);
+    const i = USERS.indexOf(u);
+    if (i >= 0) USERS.splice(i, 1);
+  }
+
+  /* Tra tên hiển thị O365 từ email — đây chính là giá trị PIC mà cột Person
+     trong list Projects trả về, nên điền sẵn vào PICName là khớp luôn. */
+  async function lookupUser(email) {
+    if (!(window.FISG_GRAPH && window.FISG_AUTH && FISG_AUTH.account())) return null;
+    return FISG_GRAPH.lookupPerson(email);
+  }
+
   /* ---------- DÒ KHÁCH HÀNG TRÙNG TÊN ----------
      Không tự gộp — chỉ liệt kê để dọn trên SharePoint. Bỏ hậu tố pháp nhân,
      bỏ dấu tiếng Việt, rồi gom các tên rút về cùng một gốc. */
@@ -306,7 +360,7 @@
     if (!(CFG && CFG.USE_GRAPH && window.FISG_AUTH && FISG_AUTH.account() && window.FISG_GRAPH))
       return false;
     try {
-      if (window.toast) toast("Đang tải dữ liệu từ SharePoint…");
+      /* Không báo tiến trình: đồng bộ là việc của máy, người dùng không cần biết. */
       const [pCols, aCols, projs, acts, supMap, cusMap, prodMap, ups] = await Promise.all([
         FISG_GRAPH.columns("Projects"), FISG_GRAPH.columns("Activities"),
         FISG_GRAPH.listItems("Projects"), FISG_GRAPH.listItems("Activities"),
@@ -398,26 +452,19 @@
       if (window.welcomeRefresh) welcomeRefresh();
       if (window.buildForm) buildForm();
 
-      /* Đối chiếu tên O365 với cột PIC trong dữ liệu — báo ngay nếu lệch. */
+      /* Tải xong thì im lặng. Các cảnh báo dưới đây chỉ ra Console — chúng dành
+         cho người đi sửa cấu hình, không phải cho sales đang làm việc. */
       if (typeof me !== "undefined" && me && me.pic) {
         const m = picMatchReport(me.pic);
-        if (!m.ok && window.toast) {
-          setTimeout(() => toast(
-            'Tên O365 của bạn ("' + me.pic + '") không khớp giá trị PIC nào trong dữ liệu'
-            + (m.near && m.near.length ? '. Gần nhất: ' + m.near.join(', ') : '')
-            + '. Điền cột PICName trong list Users để chỉ đúng tên trong dữ liệu.'), 3200);
-          console.warn("[store] PIC không khớp:", me.pic, "| các PIC có trong dữ liệu:", m.all);
-        }
+        if (!m.ok)
+          console.warn("[store] tên O365 \"" + me.pic + "\" không khớp PIC nào trong dữ liệu."
+            + (m.near && m.near.length ? " Gần nhất: " + m.near.join(", ") + "." : "")
+            + " Sửa PICName ở màn Người dùng & phân quyền.");
       }
-
       const blank = RECORDS.filter(r => !r.ncc).length;
-      if (window.toast)
-        toast("Đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length + " hoạt động · "
-              + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng."
-              + (blank ? " (" + blank + " dự án thiếu NCC)" : "")
-              + (meta.unknownStages && meta.unknownStages.length
-                   ? " Có giai đoạn chưa khai trong cấu hình: " + meta.unknownStages.join(", ") + "."
-                   : ""));
+      if (blank) console.warn("[store] " + blank + " dự án thiếu NCC.");
+      console.info("[store] đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length
+        + " hoạt động · " + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng.");
       return true;
     } catch (e) {
       if (window.toast) toast("Không tải được dữ liệu SharePoint: " + (e.message || e));
@@ -438,5 +485,7 @@
   }
 
   window.FISG_STORE = { syncFromGraph, debug, loadUsers, profileFor, picMatchReport,
-                        findDuplicateCustomers, buildLists };
+                        findDuplicateCustomers, buildLists,
+                        saveUser, deleteUser, lookupUser, canWriteUsers,
+                        usersListName: USERS_LIST };
 })();

@@ -215,9 +215,15 @@
 
     <!-- USERS VIEW -->
     <section id="view-users" style="display:none">
-      <div class="topbar"><h2>Người dùng &amp; phân quyền</h2></div>
-      <div class="major glass">
-        <div class="thead" style="grid-template-columns:2fr 2fr 1fr 1.2fr;padding-left:18px"><div>Nhân viên</div><div>Email O365</div><div>Vai trò</div><div>Thao tác</div></div>
+      <div class="topbar">
+        <h2>Người dùng &amp; phân quyền</h2>
+        <div id="admTools"></div>
+      </div>
+      <div id="admNote"></div>
+      <div class="ck-panel glass">
+        <div class="adm-head adm-row">
+          <div>Nhân viên</div><div>Email Microsoft 365</div><div>Vai trò</div><div>Thao tác</div>
+        </div>
         <div id="userRows"></div>
       </div>
     </section>
@@ -386,6 +392,48 @@
       Xem toàn bộ lịch sử dự án</button>
   </div>
 </aside>
+
+<!-- ============ USER FORM (thêm / sửa phân quyền) ============ -->
+<div class="overlay" id="uov">
+  <div class="modal narrow">
+    <div class="modal-head">
+      <div>
+        <button class="mh-back" id="u-back" onclick="closeUserForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3 id="u-title">Thêm người dùng</h3>
+      </div>
+      <button class="x-btn" onclick="closeUserForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div style="padding:20px 24px;display:flex;flex-direction:column;gap:15px">
+      <div class="field">
+        <label for="u-mail">Email Microsoft 365 <span class="req">*</span></label>
+        <div class="u-mailrow">
+          <input id="u-mail" type="email" placeholder="ten.ho@fisaigon.vn" autocomplete="off"
+                 onkeydown="if(event.key==='Enter'){event.preventDefault();lookupUserEmail()}">
+          <button class="wc-btn" onclick="lookupUserEmail()">Tra O365</button>
+        </div>
+        <div class="u-found" id="u-found"></div>
+      </div>
+      <div class="field">
+        <label for="u-name">Tên hiển thị</label>
+        <input id="u-name" placeholder="Tự điền sau khi tra O365">
+      </div>
+      <div class="field">
+        <label for="u-pic">Tên PIC trong dữ liệu</label>
+        <input id="u-pic" placeholder="Để trống = dùng tên O365 khi đăng nhập">
+        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi khác tên O365.</div>
+      </div>
+      <div class="field">
+        <label for="u-role">Vai trò <span class="req">*</span></label>
+        <select id="u-role" onchange="admRoleHint()"></select>
+        <div class="u-hint" id="u-roleHint"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeUserForm()">Huỷ</button>
+      <button class="btn-primary" onclick="saveUserForm()">Lưu lên SharePoint</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============ WELCOME (chào tuần cho sales) ============ -->
 <div class="wc-bd" id="wcBd" onclick="closeWelcome()"></div>

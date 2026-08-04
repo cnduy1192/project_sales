@@ -67,5 +67,27 @@
       { method: "PATCH", body: JSON.stringify(fields) });
   }
 
-  window.FISG_GRAPH = { api, getSiteId, listItems, createItem, updateItem, columns };
+  async function deleteItem(listName, itemId) {
+    const sid = await getSiteId();
+    return api("/sites/" + sid + "/lists/" + encodeURIComponent(listName) + "/items/" + itemId,
+      { method: "DELETE" });
+  }
+
+  /* Tra một người trên thư mục O365 theo email. Cần quyền User.ReadBasic.All —
+     xin thêm bằng incremental consent, không nhét vào scope đăng nhập ban đầu. */
+  async function lookupPerson(email) {
+    const mail = String(email || "").trim();
+    if (!mail) return null;
+    try {
+      const u = await api("/users/" + encodeURIComponent(mail)
+        + "?$select=displayName,mail,userPrincipalName,jobTitle", null, ["User.ReadBasic.All"]);
+      return u && u.displayName
+        ? { name: u.displayName, mail: (u.mail || u.userPrincipalName || mail).toLowerCase(),
+            title: u.jobTitle || "" }
+        : null;
+    } catch (e) { return null; }
+  }
+
+  window.FISG_GRAPH = { api, getSiteId, listItems, createItem, updateItem, deleteItem,
+                        columns, lookupPerson };
 })();

@@ -200,3 +200,39 @@
   .wc-acts{grid-row:auto;grid-column:1;justify-content:flex-start;margin-top:6px}
   .rp-charts{grid-template-columns:1fr}
 }
+
+/* ---------- NGƯỜI DÙNG & PHÂN QUYỀN ---------- */
+.adm-row{
+  display:grid;grid-template-columns:2.2fr 2fr 1.1fr 1.3fr;gap:14px;align-items:center;
+  padding:12px 18px;border-bottom:1px solid var(--line-2)}
+.adm-head{
+  background:var(--pearl-2);font-size:10.5px;font-weight:700;letter-spacing:.055em;
+  text-transform:uppercase;color:var(--text-3);padding:10px 18px}
+.adm-row:not(.adm-head):hover{background:var(--pearl-2)}
+.adm-who{display:flex;align-items:center;gap:10px;min-width:0}
+.adm-nm{font-size:13px;font-weight:700;color:var(--marine-ink);min-width:0}
+.adm-nm small{display:block;font-size:11px;font-weight:500;color:var(--text-3);margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-self{
+  margin-left:7px;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;
+  background:var(--marine-soft);color:var(--marine);vertical-align:1px}
+.adm-mail{font-size:12.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-act{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.wc-btn.danger{border-color:var(--lost-bd);color:var(--lost);background:var(--lost-bg)}
+.wc-btn.danger:hover{background:var(--lost);border-color:var(--lost);color:#fff}
+
+.u-mailrow{display:flex;gap:8px}
+.u-mailrow input{flex:1;min-width:0}
+.u-hint{font-size:11.5px;color:var(--text-3);margin-top:5px;line-height:1.45}
+.u-found{display:flex;flex-direction:column;gap:4px;margin-top:7px;font-size:11.5px;line-height:1.45}
+.u-found:empty{display:none}
+.u-ok{color:var(--won)}
+.u-warn{color:var(--prog)}
+.u-wait{color:var(--text-3)}
+
+@media (max-width:820px){
+  .adm-row{grid-template-columns:1.6fr 1fr;gap:8px}
+  .adm-row>*:nth-child(2){display:none}
+  .adm-head{display:none}
+  .adm-act{grid-column:1/-1;justify-content:flex-start}
+}
