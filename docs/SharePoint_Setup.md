@@ -2,7 +2,9 @@
 
 Ngày: 04/08/2026
 
-Dữ liệu demo đã bị gỡ bỏ. `js/data/demo-data.js` (493 KB) đã xoá, thay bằng `js/data/schema.js` chỉ chứa bộ khung rỗng. Bốn tài khoản demo trong `config.js` cũng đã bỏ.
+Dữ liệu demo đã bị gỡ bỏ. `js/data/demo-data.js` (493 KB) đã xoá; bốn tài khoản demo trong `config.js` cũng đã bỏ.
+
+Thay vào đó là `js/data/catalog.js`, chỉ giữ phần **cấu hình nghiệp vụ**: quy trình bán hàng của từng nhà cung cấp, nhóm giai đoạn, % mặc định, cây phân khúc thị trường. Đây không phải dữ liệu demo — chúng mô tả cách FI Saigon làm việc, hiếm khi đổi, và không nên phụ thuộc vào việc có tồn tại list nào trên SharePoint hay không.
 
 Từ giờ **không đăng nhập Microsoft 365 thì không có dữ liệu nào**. Đây là hành vi đúng, không phải lỗi.
 
@@ -44,9 +46,19 @@ picMatchReport(me.pic)
 
 Nếu chưa kịp tạo list, app **không khoá cửa**: `ADMIN_EMAIL` trong `sp-config.js` vào với quyền superadmin, người khác vào với quyền manager, kèm cảnh báo trên màn hình.
 
-### 1.2 Kiểm tra list `Pipelines` — nên có
+### 1.2 List `Pipelines` — tuỳ chọn
 
-Quyết định thứ tự các giai đoạn BOP, nhóm giai đoạn, và % mặc định. App đọc theo tên cột:
+**Không bắt buộc.** Quy trình bán hàng ba nhà cung cấp đã nằm sẵn trong `js/data/catalog.js`:
+
+| NCC | Giai đoạn |
+|---|---|
+| Roquette | SHARED BUSINESS GOAL → BUILDING A SOLUTION → SOLUTION TESTING → OFFER & AGREEMENT |
+| IFF | LEAD → SAMPLE SENT → TESTING → TEST PASSED → QUOTED / PO |
+| Kimica | LEAD → SAMPLE SENT → TESTING → TEST PASSED → QUOTED / PO → POSTPONED |
+
+Kèm nhóm giai đoạn (Tiếp cận · Thử mẫu · Đàm phán · Hoãn) và % mặc định của từng giai đoạn.
+
+Tạo list `Pipelines` chỉ khi muốn **sửa quy trình mà không phải sửa code**. Khi list tồn tại và đọc được, nó thay thế toàn bộ bảng trên. App đọc theo tên cột:
 
 | Cột | Kiểu | Dùng để |
 |---|---|---|
@@ -56,7 +68,7 @@ Quyết định thứ tự các giai đoạn BOP, nhóm giai đoạn, và % mặ
 | `StageGroup` | Choice | `Tiếp cận` · `Thử mẫu` · `Đàm phán` · `Hoãn` |
 | `WinProbability` | Number | % mặc định khi chọn giai đoạn này |
 
-Không có list này thì app vẫn chạy: nó lấy các giai đoạn đang thực sự xuất hiện trong dữ liệu, **theo thứ tự gặp lần đầu**. Thứ tự đó gần như chắc chắn không đúng quy trình, và cột "nhóm giai đoạn" ở Cockpit sẽ trống. Màn hình sẽ báo "Chưa đọc được list Pipelines".
+Dù có list hay không, giai đoạn nào xuất hiện trong dữ liệu mà cả hai nguồn đều chưa khai sẽ **được thêm vào cuối** danh sách của NCC đó, kèm cảnh báo trên màn hình — để không dự án nào biến mất khỏi funnel chỉ vì thiếu khai báo.
 
 ### 1.3 Các list còn lại
 
@@ -68,11 +80,13 @@ Trước đây nhà cung cấp, segment, khách hàng, sản phẩm, danh sách 
 
 | Danh mục | Nguồn |
 |---|---|
-| Nhà cung cấp (tab NCC) | Các giá trị `Supplier` khác nhau trong Projects |
-| Nhóm ngành → Segment | Cặp `SegmentGroup` / `Segment` trong Projects |
 | Khách hàng, sản phẩm, ứng dụng | Projects + Activities |
 | Sales (ô người liên quan) | Cột PIC trong Projects + Activities |
-| Giai đoạn, nhóm, % mặc định | List Pipelines, xem 1.2 |
+| Nhà cung cấp (tab NCC) | `js/data/catalog.js`, cộng thêm NCC mới thấy trong Projects |
+| Nhóm ngành → Segment | `js/data/catalog.js`, cộng thêm segment mới thấy trong Projects |
+| Giai đoạn, nhóm, % mặc định | `js/data/catalog.js`, hoặc list Pipelines nếu có — xem 1.2 |
+
+Bốn danh mục cuối là **cấu hình**, không phải dữ liệu: chúng mô tả cách công ty làm việc, nằm trong `js/data/catalog.js` và luôn có mặt kể cả khi chưa đăng nhập. Dữ liệu thật chỉ **bổ sung** cái mới, không xoá cái đã khai.
 
 Hệ quả: **thêm một NCC mới trên SharePoint là app tự có tab mới**, không cần sửa code.
 
@@ -126,7 +140,7 @@ Nếu tên cột trên SharePoint khác với tên app đang tìm, chạy `FISG_
 
 Tôi không kết nối được vào SharePoint của bạn, nên:
 
-- Tên cột của list `Pipelines` ở mục 1.2 là **suy đoán**. Nếu khác, app sẽ chạy ở chế độ dự phòng và báo trên màn hình.
+- Tên cột của list `Pipelines` ở mục 1.2 là **suy đoán**. Nếu khác, app dùng quy trình trong `js/data/catalog.js` — vẫn đúng, chỉ là không sửa được từ SharePoint.
 - Toàn bộ kiểm thử chạy trên dữ liệu giả lập đúng hình dạng mà `store.js` đang map, không phải dữ liệu thật của bạn.
 
 Lần đầu chạy thật, nhiều khả năng phải chỉnh lại vài tên cột. Đó là việc năm phút, không phải làm lại.

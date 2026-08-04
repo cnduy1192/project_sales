@@ -38,3 +38,9 @@ let me=null, filter='ALL', related=[], collapsed={'sub-closed-lost':true}, NOTIF
    để mọi phép so sánh ngày đều ổn định suốt phiên làm việc. */
 const TODAY = (function(){ var d = new Date(); d.setHours(0,0,0,0); return d; })();
 
+/* Tính ngay khi nạp xong file, đừng đợi tới lúc tải SharePoint — nếu không thì ô
+   "Nhóm ngành" trong form rỗng dù cây segment đã có sẵn trong cấu hình.
+   Phải đặt CUỐI FILE: rebuildDerived() đọc nccFilter, mà nccFilter khai bằng let
+   ở trên — gọi sớm hơn sẽ rơi vào vùng chết và làm hỏng cả file. */
+rebuildDerived();
+

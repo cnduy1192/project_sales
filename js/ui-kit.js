@@ -35,6 +35,8 @@
     } catch (e) {}
   }
 
+  window.FISG_RENAME_NCC = renameNcc;
+
   /* ---------- 3. Bảng màu định danh NCC ---------- */
   const NCC_COLOR = { "Roquette": "#1E3A8A", "IFF": "#0D9488", "Kimica": "#7C3AED" };
   const FALLBACK = ["#B45309", "#0B4F9E", "#DB2777"];

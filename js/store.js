@@ -130,26 +130,36 @@
   }
 
   async function buildLists(recs, acts) {
-    replaceInPlace(LISTS.nccs, uniqSorted(recs.map(r => r.ncc)));
+    /* Về cấu hình gốc trước, rồi mới chồng dữ liệu thật lên — nếu không, tải
+       hai lần sẽ nhân đôi các mục bổ sung. */
+    if (window.resetCatalog) resetCatalog();
+    /* NCC: giữ danh sách cấu hình, thêm nhà cung cấp mới thấy trong dữ liệu. */
+    uniqSorted(recs.map(r => r.ncc)).forEach(n => {
+      if (LISTS.nccs.indexOf(n) < 0) LISTS.nccs.push(n);
+    });
     replaceInPlace(LISTS.customers, uniqSorted(recs.map(r => r.customer).concat(acts.map(a => a.customer))));
     replaceInPlace(LISTS.products, uniqSorted(recs.map(r => r.product).concat(acts.map(a => a.product))));
     replaceInPlace(LISTS.applications, uniqSorted(recs.map(r => r.application)));
     replaceInPlace(LISTS.pics, uniqSorted(recs.map(r => r.pic).concat(acts.map(a => a.pic))));
     replaceInPlace(LISTS.segments, uniqSorted(recs.map(r => r.segment)));
 
-    clearObj(LISTS.segTree);
+    /* Nhóm ngành và segment: cấu hình là nền, dữ liệu thật chỉ BỔ SUNG cái mới. */
     recs.forEach(r => {
       const grp = String(r.group || "").trim() || "Khác";
       const seg = String(r.segment || "").trim();
       if (!seg) return;
       (LISTS.segTree[grp] = LISTS.segTree[grp] || []);
       if (LISTS.segTree[grp].indexOf(seg) < 0) LISTS.segTree[grp].push(seg);
+      if (LISTS.segments.indexOf(seg) < 0) LISTS.segments.push(seg);
     });
     Object.keys(LISTS.segTree).forEach(k => LISTS.segTree[k].sort((a, b) => a.localeCompare(b, "vi")));
 
-    clearObj(LISTS.pipelines); clearObj(LISTS.groupOf); clearObj(LISTS.probOf);
+    /* Quy trình bán hàng: list Pipelines (nếu có) THAY THẾ cấu hình; không có
+       thì giữ nguyên cấu hình trong js/data/catalog.js. Cả hai trường hợp đều
+       thêm nốt giai đoạn lạ xuất hiện trong dữ liệu, để không dự án nào biến mất. */
     const pipe = await loadPipelines();
     if (pipe && pipe.length) {
+      clearObj(LISTS.pipelines);
       const byNcc = {};
       pipe.forEach(p => { (byNcc[p.ncc] = byNcc[p.ncc] || []).push(p); });
       Object.keys(byNcc).forEach(n => {
@@ -160,18 +170,22 @@
         if (p.group) LISTS.groupOf[p.stage] = p.group;
         if (!isNaN(p.prob)) LISTS.probOf[p.stage] = p.prob;
       });
-    } else {
-      /* Không có list Pipelines thì vẫn phải có gì đó để lọc: lấy các giai đoạn
-         thật đang xuất hiện, theo thứ tự gặp lần đầu. Thứ tự có thể không đúng
-         quy trình — tạo list Pipelines để sửa. */
-      recs.forEach(r => {
-        if (!r.ncc || !r.stage) return;
-        const arr = (LISTS.pipelines[r.ncc] = LISTS.pipelines[r.ncc] || []);
-        if (arr.indexOf(r.stage) < 0) arr.push(r.stage);
-      });
     }
+    const unknown = [];
+    recs.forEach(r => {
+      if (!r.ncc || !r.stage) return;
+      const arr = (LISTS.pipelines[r.ncc] = LISTS.pipelines[r.ncc] || []);
+      if (arr.indexOf(r.stage) < 0) { arr.push(r.stage); unknown.push(r.ncc + " · " + r.stage); }
+    });
+    if (unknown.length)
+      console.warn("[store] giai đoạn có trong dữ liệu nhưng không có trong cấu hình:",
+                   [...new Set(unknown)]);
+
+    /* resetCatalog() trả LISTS về tên gốc "Kimica-Navido"; đổi lại ngay tại đây
+       thay vì trông chờ hook chạy sau syncFromGraph. */
+    if (window.FISG_RENAME_NCC) FISG_RENAME_NCC();
     if (window.rebuildDerived) rebuildDerived();
-    return { pipelineFromList: !!(pipe && pipe.length) };
+    return { pipelineFromList: !!(pipe && pipe.length), unknownStages: [...new Set(unknown)] };
   }
 
   /* ---------- NGƯỜI DÙNG & PHÂN QUYỀN ----------
@@ -401,7 +415,9 @@
         toast("Đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length + " hoạt động · "
               + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng."
               + (blank ? " (" + blank + " dự án thiếu NCC)" : "")
-              + (meta.pipelineFromList ? "" : " Chưa đọc được list Pipelines — thứ tự giai đoạn có thể sai."));
+              + (meta.unknownStages && meta.unknownStages.length
+                   ? " Có giai đoạn chưa khai trong cấu hình: " + meta.unknownStages.join(", ") + "."
+                   : ""));
       return true;
     } catch (e) {
       if (window.toast) toast("Không tải được dữ liệu SharePoint: " + (e.message || e));
