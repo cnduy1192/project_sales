@@ -28,6 +28,10 @@
       Supplier: "NCC", Stage: "Giai đoạn", StageOrder: "Thứ tự",
       StageGroup: "Nhóm giai đoạn", WinProbability: "Xác suất thắng %",
     },
+    // ProjectUpdates: nhật ký thay đổi của từng dự án -> tab "Trao đổi".
+    ProjectUpdates: {
+      Project: "Dự án", PICName: "Người cập nhật", UpdateDate: "Ngày cập nhật", Content: "Nội dung",
+    },
     // Users: phân quyền. Title = email đăng nhập.
     Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ" },
   };
@@ -48,13 +52,17 @@
       resolved[key] = a;
       return a;
     }
-    return function get(f, key) {
+    function get(f, key) {
       const a = actual(key);
       if (!a) return undefined;
       let v = f[a];
       if (v === undefined) v = f[a + "LookupId"];
       return v;
-    };
+    }
+    /* Ghi thì cần TÊN CỘT THẬT, không phải giá trị: SharePoint mã hoá tên cột
+       tiếng Việt thành kiểu OData__x004e_CC, đoán bừa là ghi trượt im lặng. */
+    get.internal = actual;
+    return get;
   }
 
   function txt(v) {
@@ -489,6 +497,261 @@
     return dups;
   }
 
+  /* ==================== GHI LÊN SHAREPOINT ====================
+     Cho tới bản này app chỉ ĐỌC: mọi hoạt động sales nhập chỉ nằm trong
+     localStorage của chính trình duyệt đó, nên manager không bao giờ thấy; dự án
+     tạo/sửa trong app thì mất hẳn khi tải lại trang. Khối dưới đây là đường ghi.
+
+     Ba nguyên tắc:
+       1. Không đoán tên cột. Dùng đúng bộ dò tên như phía đọc (get.internal).
+          Cột không tồn tại thì BỎ QUA field đó và cảnh báo, không ném lỗi —
+          thiếu một cột phụ không đáng làm hỏng cả thao tác lưu.
+       2. Ghi hỏng thì nói thẳng. Không nuốt lỗi, không giả vờ đã lưu.
+       3. Việc nhập vẫn còn trong localStorage cho tới khi lên được SharePoint,
+          và tự thử lại ở lần đồng bộ sau. */
+
+  const _schema = {};
+  async function schemaOf(list) {
+    if (_schema[list]) return _schema[list];
+    const cols = await FISG_GRAPH.columns(list);
+    const get = makeGetter(list, cols);
+    get.cols = cols;
+    _schema[list] = get;
+    return get;
+  }
+
+  /* Bảng tra Tên → id của các list danh mục (Customers, Products, Suppliers). */
+  const _lk = {};
+  function lkKey(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
+  async function lookupTable(list) {
+    if (_lk[list]) return _lk[list];
+    const items = await FISG_GRAPH.listItems(list);
+    const m = {};
+    items.forEach(it => {
+      const t = lkKey(txt((it.fields || {}).Title));
+      if (t && !m[t]) m[t] = it.id;
+    });
+    _lk[list] = m;
+    return m;
+  }
+  /* create=true: khách hàng / nguyên liệu mới sales gõ tay thì tạo luôn dòng
+     danh mục. Nhà cung cấp thì KHÔNG — danh sách NCC là cố định, và "Khác"
+     không phải một NCC nên không được sinh ra dòng rác. */
+  async function lookupId(list, title, create) {
+    const name = String(title == null ? "" : title).trim();
+    if (!name) return null;
+    const m = await lookupTable(list);
+    const k = lkKey(name);
+    if (m[k]) return m[k];
+    if (!create) return null;
+    const it = await FISG_GRAPH.createItem(list, { Title: name });
+    m[k] = it.id;
+    return it.id;
+  }
+
+  /* Đặt một field vào payload theo TÊN CỘT THẬT. Trả về false nếu list không có
+     cột đó — người gọi quyết định có cảnh báo hay không. */
+  function put(out, get, key, value, opts) {
+    const name = get.internal(key);
+    if (!name) return false;
+    out[(opts && opts.lookup) ? name + "LookupId" : name] = value;
+    return true;
+  }
+  /* Tên người phụ trách. Phía đọc lấy f.PICName trước rồi mới tới cột PIC, nên
+     phía ghi cũng phải theo thứ tự đó — và chỉ ghi khi cột THẬT SỰ tồn tại:
+     Graph từ chối nguyên request nếu payload có một field lạ, nghĩa là ghi bừa
+     một cột không có sẽ làm hỏng cả thao tác lưu chứ không chỉ mất một ô. */
+  function putPic(f, get, value) {
+    if (!value) return true;
+    if (get.cols && get.cols.PICName) { f.PICName = value; return true; }
+    if (put(f, get, "PIC", value)) return true;
+    console.warn("[store] không có cột nào để ghi tên người phụ trách "
+      + "(cần cột text tên PICName, hoặc cột \"Sale phụ trách\" dạng text).");
+    return false;
+  }
+
+  function warnMissing(list, keys) {
+    if (keys.length)
+      console.warn("[store] list " + list + " không có cột: " + keys.join(", ")
+        + " — đã bỏ qua khi ghi. Kiểm tra docs/SharePoint_Setup.md.");
+  }
+  /* SharePoint nhận ISO đầy đủ; ngày trần "2026-08-04" cũng được nhưng một số
+     tenant trả về lệch múi giờ, nên gắn giữa trưa UTC cho chắc. */
+  function spDate(iso) {
+    const d = String(iso || "").slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d + "T12:00:00Z" : null;
+  }
+
+  function canWrite() {
+    return !!(CFG && CFG.USE_GRAPH && window.FISG_AUTH && FISG_AUTH.account() && window.FISG_GRAPH);
+  }
+
+  /* ---------- HOẠT ĐỘNG ---------- */
+  async function createActivity(a) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const get = await schemaOf("Activities");
+    const miss = [], f = {};
+    const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
+
+    const other = typeof OTHER_NCC !== "undefined" ? OTHER_NCC : "Khác";
+    const [cusId, prodId, supId, projSpId] = await Promise.all([
+      lookupId("Customers", a.customer, true),
+      a.product ? lookupId("Products", a.product, true) : null,
+      a.ncc && a.ncc !== other ? lookupId("Suppliers", a.ncc, false) : null,
+      Promise.resolve(spIdOfProject(a.projectId)),
+    ]);
+    if (a.ncc && a.ncc !== other && !supId)
+      console.warn("[store] không tìm thấy NCC \"" + a.ncc + "\" trong list Suppliers.");
+
+    f.Title = (a.customer || "Hoạt động") + " · " + (a.type || "") ;
+    if (cusId) set("Customer", cusId, { lookup: true });
+    if (prodId) set("Product", prodId, { lookup: true });
+    if (supId) set("Supplier", supId, { lookup: true });
+    if (projSpId) set("RelatedProject", projSpId, { lookup: true });
+    putPic(f, get, a.pic);
+    set("ActivityType", a.type);
+    set("ActivityDate", spDate(a.date));
+    set("Content", a.note);
+    set("NextStep", a.next);
+    set("PotentialLevel", a.potential);
+    warnMissing("Activities", miss);
+
+    const it = await FISG_GRAPH.createItem("Activities", f);
+    return it.id;
+  }
+  /* Gắn một hoạt động đã có vào dự án (hoặc sửa vài field lẻ). patch dùng khoá
+     logic như phía đọc, vd {RelatedProject: 42}. */
+  async function updateActivity(spId, patch) {
+    if (!canWrite() || !spId) return false;
+    const get = await schemaOf("Activities");
+    const miss = [], f = {};
+    Object.keys(patch).forEach(k => {
+      if (patch[k] === undefined) return;
+      const lookup = k === "RelatedProject" || k === "Customer" || k === "Supplier" || k === "Product";
+      if (!put(f, get, k, patch[k], { lookup })) miss.push(k);
+    });
+    warnMissing("Activities", miss);
+    if (!Object.keys(f).length) return false;
+    await FISG_GRAPH.updateItem("Activities", spId, f);
+    return true;
+  }
+
+  function spIdOfProject(projectId) {
+    if (!projectId) return null;
+    const r = RECORDS.find(x => x.id === projectId);
+    return r && r.spId ? r.spId : null;
+  }
+
+  /* ---------- DỰ ÁN ---------- */
+  async function createProject(r) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const get = await schemaOf("Projects");
+    const miss = [], f = {};
+    const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
+
+    const [cusId, prodId, supId] = await Promise.all([
+      lookupId("Customers", r.customer, true),
+      lookupId("Products", r.product, true),
+      lookupId("Suppliers", r.ncc, false),
+    ]);
+    f.Title = r.desc || (r.customer + " · " + r.product);
+    if (cusId) set("Customer", cusId, { lookup: true });
+    if (prodId) set("Products", prodId, { lookup: true });
+    if (supId) set("Supplier", supId, { lookup: true });
+    set("Application", r.application);
+    set("Segment", r.segment);
+    set("SegmentGroup", r.group);
+    set("Stage", r.stage);
+    set("Status", r.status === "IN PROGRESS" ? "Open" : "Closed");
+    set("WinProbability", Math.round((r.prob || 0) * 100));
+    set("PotentialKgThisYear", r.kgThis || 0);
+    set("PotentialKgNextYear", r.kgNext || 0);
+    putPic(f, get, r.pic);
+    set("CreationDate", spDate(r.created));
+    set("ClosingDate", spDate(r.closing));
+    warnMissing("Projects", miss);
+
+    /* "Người liên quan" có thể là cột Person — ghi chuỗi vào đó sẽ bị từ chối.
+       Thử kèm, hỏng thì ghi lại không có nó rồi báo, chứ không mất cả dự án. */
+    const rel = (r.related || []).join("; ");
+    if (rel && get.internal("RelatedPeople")) {
+      try {
+        const f2 = Object.assign({}, f);
+        f2[get.internal("RelatedPeople")] = rel;
+        const it = await FISG_GRAPH.createItem("Projects", f2);
+        return it.id;
+      } catch (e) {
+        console.warn("[store] không ghi được \"Người liên quan\" (có thể là cột Person, "
+          + "app chỉ ghi được cột text nhiều dòng). Dự án vẫn được tạo, thiếu cột này.", e.message || e);
+      }
+    }
+    const it = await FISG_GRAPH.createItem("Projects", f);
+    return it.id;
+  }
+
+  /* patch: các khoá logic đã đổi, vd {Stage:'TESTING', WinProbability:60}. */
+  async function updateProject(spId, patch) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!spId) throw new Error("dự án này chưa có trên SharePoint");
+    const get = await schemaOf("Projects");
+    const miss = [], f = {};
+    Object.keys(patch).forEach(k => {
+      if (patch[k] === undefined) return;
+      if (!put(f, get, k, patch[k])) miss.push(k);
+    });
+    warnMissing("Projects", miss);
+    if (!Object.keys(f).length) return false;
+    await FISG_GRAPH.updateItem("Projects", spId, f);
+    return true;
+  }
+
+  /* ---------- NHẬT KÝ CẬP NHẬT ---------- */
+  async function addProjectUpdate(projSpId, text, by, iso) {
+    if (!canWrite() || !projSpId || !text) return false;
+    try {
+      const get = await schemaOf("ProjectUpdates");
+      const f = { Title: String(text).slice(0, 250) };
+      const miss = [];
+      if (!put(f, get, "Project", projSpId, { lookup: true })) miss.push("Project");
+      putPic(f, get, by);
+      if (!put(f, get, "UpdateDate", spDate(iso || todayISO()))) miss.push("UpdateDate");
+      if (!put(f, get, "Content", text)) miss.push("Content");
+      warnMissing("ProjectUpdates", miss);
+      await FISG_GRAPH.createItem("ProjectUpdates", f);
+      return true;
+    } catch (e) {
+      /* Nhật ký hỏng không được kéo theo thao tác chính — dự án đã lưu rồi. */
+      console.warn("[store] không ghi được ProjectUpdates:", e.message || e);
+      return false;
+    }
+  }
+
+  /* ---------- THỬ LẠI VIỆC CÒN KẸT ----------
+     Chạy sau mỗi lần đồng bộ. Hoạt động nhập lúc mất mạng, hoặc lúc cột còn sai,
+     sẽ tự lên SharePoint ở lần đăng nhập sau mà không cần ai nhớ. */
+  async function pushPendingActs() {
+    if (!canWrite() || !window.LS || !LS.pendingActs) return 0;
+    const list = LS.pendingActs();
+    if (!list.length) return 0;
+    let n = 0;
+    for (const a of list) {
+      try {
+        const spId = await createActivity(a);
+        LS.markSent(a.id, spId);
+        const live = ACTIVITIES.find(x => x.id === a.id);
+        if (live) { live.spId = spId; live.id = "A-" + spId; }
+        LS.dropAct(a.id, "A-" + spId);
+        n++;
+      } catch (e) {
+        console.warn("[store] hoạt động " + a.id + " vẫn chưa lên được SharePoint: "
+          + (e.message || e));
+        break;   // hỏng một cái thường là hỏng cả chùm; đừng nã thêm request
+      }
+    }
+    if (n) console.info("[store] đã đẩy " + n + " hoạt động còn kẹt lên SharePoint.");
+    return n;
+  }
+
   async function syncFromGraph() {
     if (!(CFG && CFG.USE_GRAPH && window.FISG_AUTH && FISG_AUTH.account() && window.FISG_GRAPH))
       return false;
@@ -584,6 +847,9 @@
 
       // Việc sales tự nhập lúc offline phải được nối lại sau khi thay mảng.
       if (window.LS && LS.mergeActs) LS.mergeActs();
+      /* …rồi thử đẩy nốt lên SharePoint. Không await: người dùng không phải đợi
+         việc dọn dẹp, và hỏng thì cũng chỉ ghi Console. */
+      pushPendingActs().catch(e => console.warn("[store] pushPendingActs", e));
       if (typeof invalidateCockpit === "function") invalidateCockpit();
 
       document.querySelectorAll(".ncc-tab").forEach(t =>
@@ -633,5 +899,7 @@
                         saveUser, deleteUser, lookupUser, canWriteUsers,
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
+                        createActivity, updateActivity, createProject, updateProject, addProjectUpdate,
+                        pushPendingActs, canWrite,
                         usersListName: USERS_LIST };
 })();

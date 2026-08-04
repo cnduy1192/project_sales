@@ -52,7 +52,9 @@ function saveForm(){
   if(!LISTS.customers.includes(g('f-cust'))){LISTS.customers.push(g('f-cust'));synced.push('SF_Customers');}
   if(!LISTS.products.includes(g('f-prod'))){LISTS.products.push(g('f-prod'));synced.push('SF_Products');}
   if(!LISTS.applications.includes(g('f-app'))){LISTS.applications.push(g('f-app'));synced.push('SF_Applications');}
-  const rec={id:'P-'+String(RECORDS.length+1).padStart(4,'0'),ncc:g('f-ncc'),group:g('f-grp'),
+  /* Id cũ sinh theo RECORDS.length nên đụng ngay id có sẵn. Tiền tố PL- đánh dấu
+     "chưa có trên SharePoint"; đẩy lên xong sẽ đổi thành P-<id thật>. */
+  const rec={id:'PL-'+Date.now().toString(36).toUpperCase(),ncc:g('f-ncc'),group:g('f-grp'),
     segment:g('f-seg'),application:g('f-app'),product:g('f-prod'),customer:g('f-cust'),
     created:g('f-created'),closing:g('f-closing'),stage:g('f-stage'),status:'IN PROGRESS',boptype:g('f-type'),
     prob:(+g('f-prob')||10)/100,kgThis:+g('f-kg1')||0,kgNext:+g('f-kg2')||0,desc:g('f-desc'),
@@ -66,7 +68,36 @@ function saveForm(){
   related=[]; document.querySelectorAll('#relTags .tag').forEach(t=>t.remove());
   buildForm(); closeForm(); render(); cockpitRefresh();
   notify(rec,`đã tạo dự án mới <b>${rec.customer} · ${rec.product}</b>`);
-  toast('Đã lưu '+rec.id+(synced.length?' — giá trị mới được sync 2 chiều lên '+synced.join(', '):'')+'. Thông báo gửi qua Email & Teams.');
+  toast('Đã tạo dự án cho '+rec.customer+' — đang lưu lên SharePoint…');
+  pushProject(rec);
+}
+/* Đẩy dự án mới lên SharePoint. Trước bản này dự án tạo trong app chỉ nằm trong
+   bộ nhớ trình duyệt: tải lại trang là mất, và không ai khác nhìn thấy. */
+function pushProject(rec){
+  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
+    toast('Chưa đăng nhập Microsoft 365 — dự án này chỉ nằm trên máy bạn và sẽ mất khi tải lại trang.');
+    return;
+  }
+  FISG_STORE.createProject(rec).then(spId=>{
+    const oldId=rec.id;
+    rec.spId=spId; rec.id='P-'+spId;
+    /* Hoạt động vừa gắn vào dự án phải trỏ theo id mới — cả trên màn hình lẫn
+       trên SharePoint, nếu không lần tải sau nó lại rời khỏi dự án. */
+    ACTIVITIES.forEach(a=>{
+      if(a.projectId!==oldId) return;
+      a.projectId=rec.id;
+      if(a.spId) FISG_STORE.updateActivity(a.spId, {RelatedProject: spId})
+        .catch(e=>console.warn('[detail] không gắn được hoạt động '+a.id+' vào dự án:', e.message||e));
+    });
+    if(rec.desc) FISG_STORE.addProjectUpdate(spId, rec.desc, rec.pic, rec.created);
+    if(typeof invalidateCockpit==='function') invalidateCockpit();
+    render(); cockpitRefresh(); if(window.renderActs) renderActs();
+    toast('Đã lưu '+rec.id+' lên SharePoint.');
+  }).catch(e=>{
+    console.error('[detail] không tạo được dự án trên SharePoint:', e);
+    toast('KHÔNG lưu được lên SharePoint: '+(e.message||e)+'. Dự án chỉ đang nằm trên màn hình, '
+      +'tải lại trang là mất — hãy chụp lại thông tin trước khi rời đi.');
+  });
 }
 
 /* ====== DETAIL MODAL ====== */
@@ -157,6 +188,8 @@ function postComment(){
   const inp=document.getElementById('d-cmt'); const v=inp.value.trim(); if(!v)return;
   curRec.comments.push({by:me.pic||me.name,at:nowStr(),text:v});
   inp.value=''; dRenderComments();
+  if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && curRec.spId)
+    FISG_STORE.addProjectUpdate(curRec.spId, v, (me&&(me.pic||me.name))||'', isoOf(TODAY));
   notify(curRec,`đã trao đổi trong <b>${curRec.customer} · ${curRec.product}</b>: “${v.slice(0,60)}${v.length>60?'…':''}”`);
 }
 function saveDetail(){
@@ -174,9 +207,29 @@ function saveDetail(){
   if(changes.length){
     notify(curRec,`đã cập nhật <b>${curRec.customer} · ${curRec.product}</b>: ${changes.join(' · ')}`);
     toast('Đã lưu. Thông báo gửi qua Email & Microsoft Teams đến: '+recipientsOf(curRec).join(', ')+'.');
+    pushProjectPatch(curRec, {
+      Stage: ns, WinProbability: np, ClosingDate: nc ? nc + 'T12:00:00Z' : undefined,
+      PotentialKgThisYear: k1, PotentialKgNextYear: k2,
+    }, changes.join(' · '));
   }
   closeDetail(); render(); cockpitRefresh();
 }
+/* Ghi thay đổi lên SharePoint + một dòng nhật ký. Lỗi thì nói thẳng, vì bản trên
+   màn hình đã đổi rồi mà bản thật thì chưa. */
+function pushProjectPatch(rec, patch, note){
+  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
+  if(!rec.spId){
+    toast('Dự án này chưa có trên SharePoint nên thay đổi chưa được lưu lại.');
+    return;
+  }
+  FISG_STORE.updateProject(rec.spId, patch)
+    .then(()=>{ if(note) return FISG_STORE.addProjectUpdate(rec.spId, note, (me&&(me.pic||me.name))||'', isoOf(TODAY)); })
+    .catch(e=>{
+      console.error('[detail] không cập nhật được dự án trên SharePoint:', e);
+      toast('Thay đổi CHƯA lên được SharePoint: '+(e.message||e));
+    });
+}
+
 function closeDetail(){
   NAV.back(function(){ document.getElementById('dov').classList.remove('open'); });
 }

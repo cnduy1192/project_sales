@@ -147,6 +147,35 @@ function filterEvents(list, opts){
 }
 function buildEvents(days, opts){ return filterEvents(_cachedEvents(days), opts); }
 
+/* ====== VIỆC SẮP TỚI ======
+   Dòng thời gian cố ý chỉ nhìn LẠI: from = hôm nay - N ngày, to = hôm nay. Nên
+   hoạt động sales đã lên lịch cho ngày mai không hiện ở đâu trên Tổng quan, và
+   quản lý tưởng đội không làm gì. Đây là phần nhìn TỚI, tách hẳn ra để không lẫn
+   việc dự định với việc đã làm.
+
+   Chỉ hoạt động — dự án không có "ngày sẽ xảy ra", ngày đóng dự kiến đã có ô
+   riêng trên Dashboard. */
+function buildUpcoming(days, opts){
+  const from = todayISO(), to = shiftISO(Math.abs(days || 7));
+  const { records, acts } = cockpitScope();
+  const byId = {}; records.forEach(r => byId[r.id] = r);
+  const out = [];
+  acts.forEach(a => {
+    const ts = normDate(a.date);
+    if(!ts || ts <= from || ts > to) return;          // > hôm nay: chưa xảy ra
+    const proj = a.projectId ? byId[a.projectId] : null;
+    out.push({
+      ts, kind:'act', ncc:a.ncc, custKey:custKey(a.customer), custLabel:custLabel(a.customer),
+      pic:picKey(a.pic), picLabel:picLabel(a.pic),
+      segment: proj ? proj.segment : null, product: a.product || (proj ? proj.product : null),
+      projectId: a.projectId || null, actType: a.type, potential: a.potential,
+      text: a.note || '', next: a.next || '', status:null, inferred:false, upcoming:true
+    });
+  });
+  out.sort((a,b) => a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0);   // gần nhất trước
+  return filterEvents(out, opts);
+}
+
 /* ====== CHỈ MỤC KHÁCH HÀNG ====== */
 function _rawCustomerIndex(){
   const { records, acts } = cockpitScope();

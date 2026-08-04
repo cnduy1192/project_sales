@@ -200,6 +200,56 @@ Cột này nhận cả ba dạng: Person nhiều giá trị, nhiều dòng text,
 ngăn cách bằng dấu phẩy/chấm phẩy. Tên phải khớp với `Tên PIC` hoặc `Tên đầy đủ`
 trong list `Users` (không phân biệt hoa thường và dấu tiếng Việt).
 
+## 3d. App ghi ngược lên SharePoint — cột bắt buộc
+
+Cho tới bản 05/08/2026 phần mềm chỉ **đọc**: mọi hoạt động sales nhập chỉ nằm
+trong `localStorage` của chính trình duyệt đó, nên quản lý không bao giờ thấy;
+dự án tạo hoặc sửa trong app thì mất hẳn khi tải lại trang. Nay app ghi thật.
+
+Thao tác nào ghi vào đâu:
+
+| Thao tác trong app | List | Kiểu |
+|---|---|---|
+| Ghi hoạt động | `Activities` | tạo dòng mới |
+| Gắn hoạt động vào dự án | `Activities` | cập nhật cột `Dự án liên quan` |
+| Thêm dự án | `Projects` | tạo dòng mới |
+| Sửa giai đoạn / tiến độ / ngày đóng / KG | `Projects` | cập nhật |
+| Đóng dự án | `Projects` | cập nhật `Trạng thái` + `Kết quả` |
+| Bình luận, đổi giai đoạn, đóng dự án | `ProjectUpdates` | tạo dòng nhật ký |
+| Khách hàng / nguyên liệu mới gõ tay | `Customers`, `Products` | tạo dòng mới |
+
+**App không bao giờ tự tạo dòng trong `Suppliers`.** Danh sách nhà cung cấp là cố
+định, và "Khác" không phải một NCC nên hoạt động gắn "Khác" sẽ để trống cột NCC.
+
+Về tên cột: app **tự dò internal name** theo tên hiển thị tiếng Việt (SharePoint
+mã hoá tên cột tiếng Việt thành kiểu `OData__x004e_CC`), nên bạn không cần đổi
+tên cột. Cột nào không tìm thấy thì app **bỏ qua field đó và cảnh báo ở Console**
+chứ không làm hỏng thao tác lưu — nhưng dữ liệu ở cột đó sẽ trống. Sau lần ghi
+đầu tiên, mở F12 xem có dòng `[store] list ... không có cột:` nào không.
+
+Riêng người phụ trách: app ghi vào cột `PICName` nếu list có cột đó, không thì ghi
+vào cột `Sale phụ trách` **với điều kiện đó là cột text**. Nếu bạn để nó là cột
+Person thì app không ghi được tên và sẽ cảnh báo — cách gọn nhất là thêm một cột
+text tên `PICName` vào cả `Projects`, `Activities` và `ProjectUpdates`.
+
+Cột `Người liên quan` của `Projects`: app thử ghi dạng text ngăn cách bằng dấu
+chấm phẩy. Nếu đó là cột Person, SharePoint từ chối và app **vẫn tạo dự án** rồi
+báo ở Console — dự án không mất, chỉ thiếu cột đó.
+
+### Khi ghi hỏng
+
+Hoạt động vừa nhập hiện nhãn vàng **"chưa đồng bộ"** trong bảng Customer
+Activities, kèm một thông báo nói rõ quản lý chưa thấy việc này. Nó nằm lại trong
+máy và **tự thử lại ở lần đăng nhập sau**. Muốn đẩy ngay thì mở Console:
+
+```js
+FISG_STORE.pushPendingActs()
+```
+
+Dự án thì không có hàng chờ: nếu ghi hỏng, app báo ngay và dự án chỉ đang nằm
+trên màn hình — tải lại trang là mất. Đây là chủ ý: giấu một dự án hỏng vào hàng
+chờ nguy hiểm hơn là nói thẳng.
+
 ## 4. Chẩn đoán khi có trục trặc
 
 Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là im lặng, đúng như mong đợi. Số liệu và cảnh báo đi vào Console (F12):
@@ -213,6 +263,9 @@ Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là i
 | `FISG_STORE.canWriteUsers()` | App có ghi được lên list Users không |
 | `FISG_STORE.findDuplicateCustomers()` | Nhóm khách hàng nghi trùng tên |
 | `FISG_STORE.findSeedActivities()` | Hoạt động trùng nội dung dữ liệu mẫu cũ |
+| `FISG_STORE.canWrite()` | App có đang ở trạng thái ghi được không |
+| `LS.pendingActs()` | Hoạt động đã nhập nhưng chưa lên SharePoint |
+| `FISG_STORE.pushPendingActs()` | Đẩy ngay số hoạt động còn kẹt |
 | `LISTS` | Toàn bộ danh mục app đang dùng |
 | `USERS` | Danh sách người dùng đọc được từ list Users |
 | `RECORDS.length`, `ACTIVITIES.length` | Số bản ghi đã tải |

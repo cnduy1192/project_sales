@@ -26,6 +26,8 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
   const w=dom.window,d=w.document,E=c=>w.eval(c);
   let pass=0;
   function step(n,fn){try{fn();pass++;console.log('OK   '+n)}catch(e){errs.push(n+': '+e.message);console.log('FAIL '+n+' — '+e.message)}}
+  /* Đường ghi là bất đồng bộ: step đồng bộ sẽ báo ĐẠT trước khi assert kịp chạy. */
+  async function astep(n,fn){try{await fn();pass++;console.log('OK   '+n)}catch(e){errs.push(n+': '+e.message);console.log('FAIL '+n+' — '+e.message)}}
   const T=todayIso=>E('todayISO()');
 
   // Ngọc xuất hiện dưới HAI tên tắt trong dữ liệu
@@ -235,6 +237,160 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!/Hoạt động gần nhất/.test(ck))throw new Error('thiếu "Hoạt động gần nhất"');
   });
 
+  // ---- ĐƯỜNG GHI LÊN SHAREPOINT ----
+  /* Giả lập Graph. Cột Activities cố tình dùng internal name BỊ MÃ HOÁ và KHÔNG
+     có cột PICName — đúng cảnh SharePoint tạo cột bằng tên tiếng Việt. Nếu lớp
+     ghi đoán tên cột thay vì dò, mấy bước dưới đây trượt hết. Mock cũng từ chối
+     field lạ y như Graph thật (400), để lỗi lộ ra ở đây thay vì trên máy khách. */
+  const SP = { created:[], updated:[], nextId:900, fail:false };
+  const COLS = {
+    Activities:{ Title:'Title', OData__x004b_H:'Khách hàng', PIC:'Sale phụ trách',
+      OData__x004e_CC:'NCC quan tâm', ActivityType:'Loại hoạt động', ActivityDate:'Ngày',
+      Content:'Nội dung', NextStep:'Kết quả / Next step', PotentialLevel:'Mức độ tiềm năng',
+      RelatedProject:'Dự án liên quan', Product:'Nguyên liệu quan tâm' },
+    Projects:{ Title:'Title', Customer:'Khách hàng', Products:'Nguyên liệu', Supplier:'NCC',
+      Application:'Ứng dụng', Segment:'Segment', SegmentGroup:'Nhóm ngành', Stage:'Giai đoạn',
+      Status:'Trạng thái', Result:'Kết quả', WinProbability:'Xác suất thắng %',
+      PotentialKgThisYear:'KG năm nay', PotentialKgNextYear:'KG năm sau',
+      PICName:'PICName', CreationDate:'Ngày tạo', ClosingDate:'Ngày dự kiến chốt' },
+    ProjectUpdates:{ Title:'Title', Project:'Dự án', PICName:'PICName',
+      UpdateDate:'Ngày cập nhật', Content:'Nội dung' },
+    Customers:{ Title:'Title' }, Products:{ Title:'Title' }, Suppliers:{ Title:'Title' },
+  };
+  const ITEMS = { Customers:[{id:'11',fields:{Title:'A'}}], Products:[{id:'21',fields:{Title:'X'}}],
+                  Suppliers:[{id:'31',fields:{Title:'Roquette'}},{id:'32',fields:{Title:'IFF'}}] };
+  w.FISG_CFG.USE_GRAPH = true;
+  w.FISG_AUTH = { account:()=>({username:'duy@f.vn'}), getToken:async()=>'t' };
+  w.FISG_GRAPH = {
+    columns: async l => COLS[l] || {},
+    listItems: async l => ITEMS[l] || [],
+    createItem: async (l,f) => {
+      if(SP.fail) throw new Error('Graph 403: không có quyền ghi');
+      const bad = Object.keys(f).filter(k => !(COLS[l]||{})[k.replace(/LookupId$/,'')]);
+      if(bad.length) throw new Error('Graph 400: cột không tồn tại: '+bad.join(','));
+      const it = { id:String(SP.nextId++), fields:Object.assign({},f) };
+      (ITEMS[l] = ITEMS[l] || []).push(it);
+      SP.created.push({ list:l, fields:f, id:it.id });
+      return it;
+    },
+    updateItem: async (l,id,f) => { SP.updated.push({ list:l, id, fields:f }); return null; },
+    deleteItem: async () => null,
+  };
+  const wait = () => new Promise(r => setTimeout(r, 80));
+  const madeIn = l => SP.created.filter(x => x.list === l);
+
+  E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome(); go('acts')`);
+  E("openActForm({customer:'Khách Mới Toanh', ncc:'Roquette'})");
+  d.getElementById('a-note').value='ghi thử lên SharePoint';
+  d.getElementById('a-next').value='gửi mẫu';
+  E('saveAct()');
+  await wait();
+
+  await astep('ghi hoạt động lên SharePoint bằng đúng tên cột thật',()=>{
+    const c=madeIn('Activities');
+    if(!c.length)throw new Error('không gọi createItem, chỉ tạo: '+SP.created.map(x=>x.list).join(','));
+    const f=c[0].fields;
+    if(!f.OData__x004b_HLookupId)throw new Error('không dò ra cột Khách hàng: '+Object.keys(f).join(','));
+    if(f.Customer||f.CustomerLookupId)throw new Error('ghi bằng tên cột đoán bừa');
+    if(f.PICName)throw new Error('ghi PICName dù list không có cột đó — Graph sẽ trả 400');
+    if(f.PIC!=='Phạm Bích Ngọc')throw new Error('thiếu tên người phụ trách: '+JSON.stringify(f));
+    if(!/^\d{4}-\d{2}-\d{2}T/.test(f.ActivityDate))throw new Error('ngày sai định dạng: '+f.ActivityDate);
+    if(f.Content!=='ghi thử lên SharePoint')throw new Error('nội dung sai');
+  });
+  await astep('khách hàng mới tự tạo trong Customers, nhà cung cấp thì không',()=>{
+    const cus=madeIn('Customers');
+    if(cus.length!==1||cus[0].fields.Title!=='Khách Mới Toanh')throw new Error('không tạo khách mới');
+    if(madeIn('Suppliers').length)throw new Error('tự sinh nhà cung cấp — không được');
+  });
+  await astep('ghi xong thì bỏ cờ chưa đồng bộ',()=>{
+    const sp=E("(ACTIVITIES.find(function(x){return x.customer==='Khách Mới Toanh'})||{}).spId");
+    if(!sp)throw new Error('chưa gắn spId');
+    if(E('LS.pendingActs().length'))throw new Error('vẫn nằm trong hàng chờ');
+  });
+  await astep('hoạt động NCC "Khác" không sinh dòng rác trong Suppliers',async()=>{
+    await E(`FISG_STORE.createActivity({id:'AL-x',customer:'A',pic:'Tam',ncc:'Khác',type:'Seminar',
+      date:'2026-08-01',note:'hội thảo',next:'—',potential:'Warm',projectId:null})`);
+    if(madeIn('Suppliers').length)throw new Error('sinh NCC "Khác"');
+    const f=SP.created[SP.created.length-1].fields;
+    if(f.OData__x004e_CCLookupId)throw new Error('vẫn gắn NCC cho hoạt động Khác');
+  });
+
+  SP.fail = true;
+  E("openActForm({customer:'A', ncc:'Roquette'})");
+  d.getElementById('a-note').value='ghi lúc mất mạng';
+  E('saveAct()');
+  await wait();
+  await astep('ghi hỏng: giữ lại để thử lại, không giả vờ đã lưu',()=>{
+    const p=E("LS.pendingActs().map(function(a){return a.note}).join('|')");
+    if(!/ghi lúc mất mạng/.test(p))throw new Error('mất việc vừa nhập: '+p);
+    if(E("(ACTIVITIES.find(function(x){return x.note==='ghi lúc mất mạng'})||{}).spId"))
+      throw new Error('gắn spId dù ghi hỏng');
+    if(!E("actPending(ACTIVITIES.find(function(x){return x.note==='ghi lúc mất mạng'}))"))
+      throw new Error('không đánh dấu chưa đồng bộ');
+    if(!/chưa đồng bộ/.test(d.getElementById('actRows').textContent))
+      throw new Error('bảng không hiện dấu chưa đồng bộ');
+  });
+  SP.fail = false;
+  await astep('lần đồng bộ sau tự đẩy nốt việc còn kẹt',async()=>{
+    const n=await E('FISG_STORE.pushPendingActs()');
+    if(n!==1)throw new Error('đẩy được '+n+' việc');
+    if(E('LS.pendingActs().length'))throw new Error('vẫn còn kẹt');
+  });
+
+  // ---- dự án ----
+  E("go('funnel'); openForm(); buildForm();");
+  [['f-cust','Khách Dự Án'],['f-prod','Sản phẩm mới'],['f-app','Ứng dụng A'],['f-closing','2026-12-31']]
+    .forEach(([id,v])=>{ d.getElementById(id).value=v; });
+  E('saveForm()');
+  await wait();
+  await astep('tạo dự án ghi lên list Projects và đổi id theo SharePoint',()=>{
+    const c=madeIn('Projects');
+    if(!c.length)throw new Error('không ghi dự án');
+    const f=c[0].fields;
+    if(!f.CustomerLookupId)throw new Error('thiếu lookup khách hàng: '+Object.keys(f).join(','));
+    if(f.Status!=='Open')throw new Error('trạng thái sai: '+f.Status);
+    if(f.PICName!=='Phạm Bích Ngọc')throw new Error('thiếu PIC: '+f.PICName);
+    const id=E("(RECORDS.find(function(r){return r.customer==='Khách Dự Án'})||{}).id");
+    if(!/^P-\d+$/.test(String(id)))throw new Error('id chưa đổi theo SharePoint: '+id);
+    if(!E("(RECORDS.find(function(r){return r.customer==='Khách Dự Án'})||{}).spId"))
+      throw new Error('thiếu spId');
+  });
+  const pid = E("RECORDS.find(function(r){return r.customer==='Khách Dự Án'}).id");
+  E(`openDetail('${pid}')`);
+  d.getElementById('d-kg1').value='1234';
+  E('saveDetail()');
+  await wait();
+  await astep('sửa dự án ghi PATCH kèm một dòng nhật ký',()=>{
+    const u=SP.updated.filter(x=>x.list==='Projects');
+    if(!u.length)throw new Error('không gọi updateItem');
+    if(u[0].fields.PotentialKgThisYear!==1234)throw new Error('sai giá trị: '+JSON.stringify(u[0].fields));
+    if(!madeIn('ProjectUpdates').length)throw new Error('thiếu dòng nhật ký');
+  });
+
+  // ---- khối Sắp tới ----
+  await astep('khối Sắp tới hiện việc đã lên lịch, Dòng thời gian thì không',()=>{
+    E(`loginAs(${ix('duy@f.vn')});
+       ACTIVITIES.push(
+         {id:'AL-U1',customer:'A',pic:'Phạm Bích Ngọc',ncc:'Roquette',product:'',type:'Visit',date:shiftISO(2),note:'ghé thăm tuần sau',next:'—',potential:'Hot',projectId:null},
+         {id:'AL-U2',customer:'B',pic:'Tam',ncc:'IFF',product:'',type:'Call',date:shiftISO(30),note:'quá xa',next:'—',potential:'Warm',projectId:null});
+       invalidateCockpit(); go('cockpit')`);
+    const up=d.getElementById('ckUp').textContent;
+    if(!/ghé thăm tuần sau/.test(up))throw new Error('thiếu việc sắp tới');
+    if(/quá xa/.test(up))throw new Error('lấy cả việc ngoài 7 ngày');
+    if(/ghé thăm tuần sau/.test(d.getElementById('ckFeed').textContent))
+      throw new Error('việc tương lai lọt vào Dòng thời gian');
+    const n=parseInt(d.getElementById('ckUpCount').textContent,10);
+    if(!(n>=1))throw new Error('đếm sai: '+d.getElementById('ckUpCount').textContent);
+    if(d.querySelectorAll('#ckUp .ck-ev-up').length!==n)
+      throw new Error('số dòng không khớp số đếm');
+  });
+  await astep('Sắp tới chịu cùng bộ lọc NCC với Dòng thời gian',()=>{
+    E("ckToggleNcc('IFF')");
+    if(/ghé thăm tuần sau/.test(d.getElementById('ckUp').textContent))
+      throw new Error('không chịu bộ lọc NCC');
+    E("ckToggleNcc('IFF')");
+  });
+
   // ================= HỒI QUY =================
   step('cấu hình quy trình ba NCC còn nguyên',()=>{
     const p=JSON.parse(E('JSON.stringify(LISTS.pipelines)'));
@@ -255,11 +411,13 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     E(`USERS.push(
        {email:'dir@f.vn',picRaw:null,fullName:'Lê Giám Đốc',name:'Lê Giám Đốc',pic:'Lê Giám Đốc',role:'director',color:'#6D28D9'},
        {email:'rnd@f.vn',picRaw:null,fullName:'Trần Hoa',name:'Trần Hoa',pic:'Trần Hoa',role:'rnd',color:'#B45309'});
-       RECORDS[0].rnd='Trần Hoa'; loginAs(USERS.length-2);`);
-    if(E("canEdit(RECORDS[0])")||E("canClose(RECORDS[0])"))throw new Error('Director sửa được');
+       RECORDS.find(function(r){return r.id==='P-1'}).rnd='Trần Hoa';
+       loginAs(USERS.length-2);`);
+    const P1="RECORDS.find(function(r){return r.id==='P-1'})";
+    if(E("canEdit("+P1+")")||E("canClose("+P1+")"))throw new Error('Director sửa được');
     E('loginAs(USERS.length-1)');
-    if(!E("canEdit(RECORDS[0])"))throw new Error('R&D phải ghi được');
-    if(E("canClose(RECORDS[0])"))throw new Error('R&D không được đóng dự án');
+    if(!E("canEdit("+P1+")"))throw new Error('R&D phải ghi được');
+    if(E("canClose("+P1+")"))throw new Error('R&D không được đóng dự án');
     if(E('visible().map(function(r){return r.id}).join(",")')!=='P-1')throw new Error('phạm vi R&D sai');
   });
   step('Cockpit, Funnel, Hoạt động, Dashboard, Báo cáo đều dựng được',()=>{

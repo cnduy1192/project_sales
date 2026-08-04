@@ -146,6 +146,13 @@ function confirmClose(){
   render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast(`Đã đóng ${r.id} (${STATUS_VI[closeResult]}). Thông báo gửi qua Email & Teams đến: ${recipientsOf(r).join(', ')}.`);
+  /* Đóng dự án là thay đổi lớn nhất trong vòng đời một dự án — không được phép
+     chỉ tồn tại trên màn hình của người bấm nút. */
+  if(typeof pushProjectPatch==='function')
+    pushProjectPatch(r, {
+      Status: 'Closed', Result: closeResult,
+      WinProbability: closeResult==='WON' ? 100 : 0,
+    }, '[Đóng dự án — '+STATUS_VI[closeResult]+'] '+reason);
 }
 function closeCloseModal(){
   NAV.back(function(){

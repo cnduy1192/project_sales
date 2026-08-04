@@ -230,3 +230,15 @@
   .ck-drawer{transition:none}
   .ck-sig:hover{transform:none}
 }
+
+/* ---------- Sắp tới ----------
+   Việc chưa xảy ra phải nhìn khác việc đã xảy ra, nếu không quản lý đọc kế hoạch
+   thành thành tích. Đường thời gian đứt nét và chấm rỗng là đủ — không thêm màu
+   mới, vì màu ở đây đã dành cho loại sự kiện. */
+.ck-day-up .ck-day-b::before{
+  background:none;
+  border-left:1.5px dashed rgba(1,66,106,.34);
+  width:0}
+.ck-ev-up::before{ background:var(--surface) }
+.ck-ev-up .ck-ev-note{ font-style:italic }
+.ck-note{ font-size:11.5px; color:var(--text-3) }

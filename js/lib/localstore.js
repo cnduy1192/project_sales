@@ -81,6 +81,32 @@ var LS = (function(){
     return a;
   }
 
+  /* Đánh dấu một hoạt động đã lên được SharePoint. Còn nằm trong acts (để lịch
+     sử đánh dấu "đã làm" không đứt), nhưng mergeActs sẽ không nhân bản nữa vì
+     store.js đọc về đúng dòng đó với id A-<spId>. */
+  function markSent(id, spId){
+    var d = load(), hit = null;
+    d.acts.forEach(function(a){ if(a.id === id){ a.spId = spId; a.sentAt = todayISO(); hit = a; } });
+    if(hit) save();
+    return hit;
+  }
+  /* Việc đã nhập nhưng CHƯA lên được SharePoint — chỉ mình người nhập thấy. */
+  function pendingActs(){
+    return load().acts.filter(function(a){ return !a.spId; });
+  }
+  /* Đã lên SharePoint rồi thì bản địa phương hết nhiệm vụ: store.js sẽ tải về
+     bản chính thức. Giữ lại cờ "đã làm" theo id mới. */
+  function dropAct(id, newId){
+    var d = load(), i = -1;
+    d.acts.forEach(function(a, k){ if(a.id === id) i = k; });
+    if(i < 0) return false;
+    if(newId && d.done[id]){ d.done[newId] = d.done[id]; }
+    delete d.done[id];
+    d.acts.splice(i, 1);
+    save();
+    return true;
+  }
+
   /* iso = null để gỡ cờ. */
   function markDone(id, iso){
     var d = load();
@@ -152,6 +178,7 @@ var LS = (function(){
     available: available, load: load, save: save, reset: reset,
     mergeActs: mergeActs, nextActId: nextActId, addAct: addAct,
     markDone: markDone, isDone: isDone, isLocal: isLocal, isMissed: isMissed,
+    markSent: markSent, pendingActs: pendingActs, dropAct: dropAct,
     addReport: addReport, nextReportId: nextReportId,
     allReports: allReports, reportsFor: reportsFor
   };

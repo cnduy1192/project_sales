@@ -49,6 +49,7 @@ function renderCockpit(){
   ckRenderHead();
   ckRenderSignals(sig);
   ckRenderFeed(sig);
+  ckRenderUpcoming();
   ckRenderTable(sig);
 }
 window.renderCockpit = renderCockpit;
@@ -149,6 +150,46 @@ function ckRenderFeed(sig){
   }).join('');
 }
 
+/* ====== SẮP TỚI ======
+   Dòng thời gian chỉ nhìn lại quá khứ, nên việc sales đã lên lịch cho ngày mai
+   không xuất hiện ở đâu — quản lý tưởng đội không có kế hoạch gì. Khối này nhìn
+   tới 7 ngày, dùng chung bộ lọc NCC / loại / sales với dòng thời gian. */
+const CK_UP_DAYS = 7;
+function ckRenderUpcoming(){
+  const box = document.getElementById('ckUp');
+  const panel = document.getElementById('ckUpPanel');
+  if(!box) return;
+  /* Bộ lọc "loại sự kiện" chỉ có nghĩa với quá khứ: sắp tới toàn là hoạt động.
+     Chọn Dự án mới / Đóng dự án thì khối này rỗng chứ không nên bịa ra gì. */
+  const o = ckFeedOpts();
+  const hidden = o.kinds && o.kinds.length && o.kinds.indexOf('act') < 0;
+  const evs = hidden ? [] : buildUpcoming(CK_UP_DAYS, { nccs:o.nccs, pic:o.pic });
+  document.getElementById('ckUpCount').textContent = evs.length + ' việc';
+  if(panel) panel.style.display = (hidden && !evs.length) ? 'none' : '';
+  if(!evs.length){
+    box.innerHTML = `<div class="ck-empty">
+      <b>Chưa có việc nào được lên lịch</b>
+      <p>Hoạt động sales đặt cho ${CK_UP_DAYS} ngày tới sẽ hiện ở đây.</p></div>`;
+    return;
+  }
+  const days = [];
+  evs.forEach(e => {
+    const last = days[days.length-1];
+    if(last && last.ts === e.ts) last.items.push(e); else days.push({ ts:e.ts, items:[e] });
+  });
+  box.innerHTML = days.map(d => `<div class="ck-day ck-day-up">
+      <div class="ck-day-h"><b>${ckUpLabel(d.ts)}</b><span>${ckVN(d.ts)}</span><em>${d.items.length} việc</em></div>
+      <div class="ck-day-b">${d.items.map(ckEventRow).join('')}</div>
+    </div>`).join('');
+}
+/* Ngày mai / Ngày kia rồi mới đến thứ — đọc nhanh hơn ngày tháng. */
+function ckUpLabel(iso){
+  const d = daysSince(iso);           // âm vì nằm ở tương lai
+  if(d === -1) return 'Ngày mai';
+  if(d === -2) return 'Ngày kia';
+  return ckDayLabel(iso);
+}
+
 function ckEventRow(e){
   const m = ckKindMeta(e);
   const open = e.projectId
@@ -159,7 +200,7 @@ function ckEventRow(e){
   const when = e.inferred
     ? `<span class="ck-meta dot ck-approx" title="Ngày ước tính từ lần cập nhật cuối — bản ghi cũ không lưu ngày đóng">~${ckVN(e.ts)}</span>`
     : '';
-  return `<button class="ck-ev" style="--kc:${m.c};--kc-bg:${m.bg}" ${open}>
+  return `<button class="ck-ev${e.upcoming?' ck-ev-up':''}" style="--kc:${m.c};--kc-bg:${m.bg}" ${open}>
     <span class="ck-ev-t">
       <span class="ck-ev-pic">${ckEsc(picLabel(e.pic))}</span>
       <span class="ck-ev-arrow">→</span>

@@ -25,7 +25,7 @@ function renderActs(){
       <div class="act-date">${new Date(a.date).toLocaleDateString('vi-VN')}<span class="act-type">${a.type}</span></div>
       <div><b style="font-size:13px">${a.customer}</b><div style="font-size:11px;color:var(--ink-3)">${a.ncc}</div></div>
       <div class="r-pic"><span class="avatar" style="width:22px;height:22px;font-size:9.5px;background:${u?u.color:'#8A90A4'}">${(a.pic||'?').slice(0,2).toUpperCase()}</span>${a.pic}</div>
-      <div class="act-note">${a.note}<small>→ ${a.next}</small></div>
+      <div class="act-note">${a.note}${actPending(a)?' <span class="act-pending" title="Đã lưu trên máy bạn, chưa lên SharePoint — quản lý chưa thấy. Sẽ tự thử lại ở lần đăng nhập sau.">chưa đồng bộ</span>':''}<small>→ ${a.next}</small></div>
       <div><span class="pot pot-${a.potential}">${a.potential}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
@@ -82,6 +82,30 @@ function saveAct(){
   closeActForm(); renderActs(); render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast('Đã lưu hoạt động'+(a.projectId?' và gắn vào dự án — đã thông báo người liên quan.':'. Có thể tạo dự án từ hoạt động này bất cứ lúc nào.'));
+  /* Hiện lên màn hình trước, đẩy lên SharePoint sau — nhập liệu không phải chờ
+     mạng. Nhưng nếu đẩy hỏng thì PHẢI nói, vì lúc đó chỉ mình người nhập thấy
+     việc này, quản lý không thấy gì cả. */
+  pushAct(a);
+}
+function pushAct(a){
+  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
+  FISG_STORE.createActivity(a).then(spId=>{
+    LS.markSent(a.id, spId);
+    a.spId = spId;
+    if(typeof invalidateCockpit==='function') invalidateCockpit();
+    renderActs(); cockpitRefresh();
+  }).catch(e=>{
+    console.warn('[activities] chưa đẩy được lên SharePoint:', e && (e.message||e));
+    renderActs();
+    toast('Đã lưu trên máy bạn nhưng CHƯA lên SharePoint — quản lý chưa thấy hoạt động này. '
+      + 'Phần mềm sẽ tự thử lại ở lần đăng nhập sau.');
+  });
+}
+/* Việc đã nhập nhưng chưa lên SharePoint: chỉ mình người nhập thấy, nên phải
+   nhìn ra được ngay trên bảng chứ không im lặng. */
+function actPending(a){
+  return !!(window.LS && LS.isLocal && LS.isLocal(a) && !a.spId
+            && window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite());
 }
 function createProjectFromAct(aid){
   const a=ACTIVITIES.find(x=>x.id===aid); if(!a)return;
