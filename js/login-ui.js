@@ -41,7 +41,6 @@
       '<main class="lg-pane">' +
         '<h2 class="lg-h2">Đăng nhập</h2>' +
         '<div class="lg-actions" id="lgActions"></div>' +
-        '<div class="lg-demo"><div class="lg-demo-h">Xem thử theo vai trò</div></div>' +
       '</main>';
 
     const card = login.querySelector(".login-card");
@@ -67,7 +66,9 @@
       '<svg class="lg-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     actions.appendChild(g);
 
-    shell.querySelector(".lg-demo").appendChild(roleRow);          // giữ handler chọn vai trò
+    /* Không còn đăng nhập nhanh theo vai trò — mọi tài khoản đến từ Microsoft 365,
+       phân quyền đọc từ list Users. Giữ node #roleRow (ẩn) vì vài chỗ còn tham chiếu. */
+    if (roleRow) { roleRow.style.display = "none"; shell.appendChild(roleRow); }
     if (card) card.remove();
     login.dataset.rebuilt = "1";
   }

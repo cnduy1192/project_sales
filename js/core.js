@@ -1,13 +1,9 @@
 /* js/core.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
 /* ====== LOGIN ====== */
+/* Không còn nút đăng nhập nhanh theo vai trò: mọi tài khoản đến từ Microsoft 365
+   và phân quyền đọc từ list Users trên SharePoint. */
 const roleRow = document.getElementById('roleRow');
-function initials(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
-USERS.forEach((u,i)=>{
-  const b=document.createElement('button'); b.className='role-btn';
-  const badge = u.role==='superadmin' ? '<span class="badge-admin">SUPER ADMIN</span>' : u.role==='manager' ? '<span class="badge-mgr">MANAGER</span>' : '';
-  b.innerHTML=`<span class="avatar" style="background:${u.color}">${initials(u.name)}</span><span><b>${u.name}</b><small>${u.email}</small></span>${badge}`;
-  b.onclick=()=>loginAs(i); roleRow.appendChild(b);
-});
+function initials(n){return String(n||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}
 function roleVI(r){return r==='superadmin'?'Super Admin':r==='manager'?'Manager':'Sales'}
 function loginAs(i){
   me=USERS[i];
@@ -19,15 +15,35 @@ function loginAs(i){
   const isAdmin = me.role==='superadmin';
   document.getElementById('navAdminLabel').style.display = isAdmin?'block':'none';
   document.getElementById('navUsers').style.display = isAdmin?'flex':'none';
-  document.getElementById('nccTabs').innerHTML=NCCS.map(n=>
-    `<button class="ncc-tab${n===nccFilter?' on':''}" data-ncc="${n}" onclick="setNcc('${n}')">${n}</button>`).join('');
-  go('funnel'); buildForm(); buildUsers(); renderNotifs(); initAI();
+  /* Tổng quan điều hành là góc nhìn toàn đội — sales không có việc gì ở đó. */
+  const isLead = me.role==='manager' || isAdmin;
+  document.getElementById('navCockpitLabel').style.display = isLead?'block':'none';
+  document.getElementById('navCockpit').style.display = isLead?'flex':'none';
+  rebuildNccTabs();
+  /* Tổng quan tuần là góc nhìn của một sales; manager/admin mở tay được ở chế độ chỉ đọc. */
+  LS.reset(); LS.mergeActs(); NAV.clear();
+  go(isLead?'cockpit':'funnel'); buildForm(); buildUsers(); renderNotifs();
+  if(me.role==='sales') wcMaybeAutoOpen();
 }
 
+/* Tab NCC dựng lại được: lúc đăng nhập danh mục còn rỗng, dữ liệu SharePoint về sau. */
+function rebuildNccTabs(){
+  const box=document.getElementById('nccTabs'); if(!box)return;
+  box.innerHTML=NCCS.map(n=>
+    `<button class="ncc-tab${n===nccFilter?' on':''}" data-ncc="${n.replace(/"/g,'&quot;')}" onclick="setNcc('${n.replace(/'/g,"\\'")}')">${n}</button>`).join('');
+}
+window.rebuildNccTabs=rebuildNccTabs;
+
 /* ====== NAV ====== */
+const VIEWS=['cockpit','funnel','acts','dash','reports','users'];
 function go(v){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
-  ['funnel','acts','dash','users'].forEach(x=>document.getElementById('view-'+x).style.display = x===v?'block':'none');
+  VIEWS.forEach(x=>document.getElementById('view-'+x).style.display = x===v?'block':'none');
+  /* Cockpit gộp cả ba NCC nên tab NCC ở header sẽ gây hiểu nhầm — ẩn khi vào view này. */
+  const tabs=document.getElementById('nccTabs');
+  if(tabs) tabs.style.display = v==='cockpit' ? 'none' : '';
+  if(v==='cockpit')renderCockpit();
+  if(v==='reports')renderReports();
   if(v==='funnel')render(); if(v==='dash')renderDash(); if(v==='acts')renderActs();
 }
 
@@ -88,13 +104,16 @@ function grp(r){
   if(ry===y) return 'thisyear';
   return 'later';
 }
+/* Nhãn quý/năm suy từ TODAY — trước đây ghi cứng Q3/2026 nên sang quý là sai. */
+const _Q = Math.floor(TODAY.getMonth()/3)+1, _Y = TODAY.getFullYear();
+const _NQ = _Q===4 ? {q:1,y:_Y+1} : {q:_Q+1,y:_Y};
 const MAJORS=[
   {id:'run', title:'ĐANG CHẠY', color:'#1E3A8A', subs:[
     {id:'overdue', title:'Quá hạn — cần xử lý', color:'var(--overdue)'},
-    {id:'thisq', title:'Đóng trong quý này (Q3/2026)', color:'var(--prog)'},
-    {id:'nextq', title:'Quý sau (Q4/2026)', color:'#B45309'},
-    {id:'thisyear', title:'Còn lại trong 2026', color:'var(--sbg)'},
-    {id:'later', title:'2027 trở đi', color:'var(--text-3)'},
+    {id:'thisq', title:'Đóng trong quý này (Q'+_Q+'/'+_Y+')', color:'var(--prog)'},
+    {id:'nextq', title:'Quý sau (Q'+_NQ.q+'/'+_NQ.y+')', color:'#B45309'},
+    {id:'thisyear', title:'Còn lại trong '+_Y, color:'var(--sbg)'},
+    {id:'later', title:(_Y+1)+' trở đi', color:'var(--text-3)'},
   ]},
   {id:'closed', title:'ĐÃ ĐÓNG', color:'#565668', subs:[
     {id:'closed-won', title:'Thắng', color:'var(--won)'},

@@ -110,7 +110,18 @@ function openCloseModal(id){
   document.getElementById('c-won').classList.remove('sel');
   document.getElementById('c-lost').classList.remove('sel');
   document.getElementById('c-reason').value='';
-  closeDetail();
+  /* Modal này mở được từ hai nơi: từ trong modal dự án, hoặc thẳng từ dòng trên
+     bảng funnel. Chỉ tháo lớp dự án khi lớp đó thật sự đang mở.
+     `base` giữ nơi xuất phát sâu hơn, để sau khi đóng dự án xong về thẳng đó. */
+  var dov = document.getElementById('dov');
+  if(dov.classList.contains('open')){
+    var back = NAV.back(function(){ dov.classList.remove('open'); });
+    NAV.enter({ label: r.customer + ' · ' + r.product, base: back,
+                restore: function(){ openDetail(id, back); } });
+  } else {
+    NAV.enter();
+  }
+  NAV.renderBack('c-back');
   document.getElementById('cov').classList.add('open');
 }
 function pickResult(res){
@@ -124,10 +135,21 @@ function confirmClose(){
   if(!closeResult){toast('Chọn kết quả Thắng hoặc Thua.');return;}
   if(!reason){toast('Vui lòng nhập lý do đóng dự án.');return;}
   r.status=closeResult; r.prob=closeResult==='WON'?1:0;
+  /* Cockpit cần biết dự án đóng NGÀY nào; bản ghi cũ phải suy đoán từ update cuối. */
+  r.closedAt=isoOf(TODAY);
   r.comments.push({by:me.pic||me.name,at:nowStr(),text:`[Đóng dự án — ${STATUS_VI[closeResult]}] ${reason}`});
   notify(r,`đã đóng dự án <b>${r.customer} · ${r.product}</b> — kết quả: <b>${STATUS_VI[closeResult]}</b>. Lý do: ${reason.slice(0,60)}${reason.length>60?'…':''}`);
-  closeCloseModal(); render();
+  /* Đã đóng dự án xong thì bỏ qua modal dự án, về thẳng nơi xuất phát. */
+  document.getElementById('cov').classList.remove('open'); closeRecId=null;
+  var layer = NAV.popRaw();
+  if(layer && layer.base && typeof layer.base.restore === 'function') layer.base.restore();
+  render(); cockpitRefresh();
+  if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast(`Đã đóng ${r.id} (${STATUS_VI[closeResult]}). Thông báo gửi qua Email & Teams đến: ${recipientsOf(r).join(', ')}.`);
 }
-function closeCloseModal(){document.getElementById('cov').classList.remove('open');closeRecId=null;}
+function closeCloseModal(){
+  NAV.back(function(){
+    document.getElementById('cov').classList.remove('open'); closeRecId=null;
+  });
+}
 

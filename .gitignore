@@ -1,0 +1,9 @@
+# Phụ thuộc và rác của công cụ
+node_modules/
+package-lock.json
+.DS_Store
+Thumbs.db
+
+# File tạm khi kiểm thử
+__test.html
+*.log

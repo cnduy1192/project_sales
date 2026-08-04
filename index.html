@@ -8,13 +8,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/@azure/msal-browser@3/lib/msal-browser.min.js';document.head.appendChild(s);"></script>
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 <link rel="stylesheet" href="ui-kit.css?v=5">
 <link rel="stylesheet" href="share.css?v=5">
 <link rel="stylesheet" href="login.css?v=5">
 <link rel="stylesheet" href="funnel.css?v=5">
 <link rel="stylesheet" href="extras.css?v=5">
 <link rel="stylesheet" href="charts.css?v=5">
+<link rel="stylesheet" href="cockpit.css?v=1">
+<link rel="stylesheet" href="welcome.css?v=1">
 </head>
 <body>
 
@@ -24,12 +26,12 @@
     <div class="logo"><div class="logo-mark">FI</div>FI SAIGON <span style="color:var(--text-3);font-weight:600">JSC</span></div>
     <h1>Sales Funnel</h1>
     <p>Đăng nhập bằng tài khoản công ty <b>@fisaigon.vn</b>.</p>
-    <button class="ms-btn" onclick="toast('Bản demo: chọn nhanh một vai trò bên dưới. Bản thật sẽ mở cửa sổ đăng nhập Microsoft 365.')">
+    <button class="ms-btn" onclick="toast('Đang tải Microsoft 365… Nếu không mở được cửa sổ đăng nhập, tải lại trang.')">
       <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
       Đăng nhập bằng Microsoft 365
     </button>
-    <div class="demo-note">
-      <span>Demo — đăng nhập nhanh theo vai trò</span>
+    <!-- #roleRow giữ lại vì login-ui.js di chuyển node này; không còn nút demo nào. -->
+    <div class="demo-note" id="demoNote" style="display:none">
       <div class="role-row" id="roleRow"></div>
     </div>
   </div>
@@ -46,6 +48,13 @@
       </button>
     </div>
     <nav class="side-nav">
+      <div class="nav-label" id="navCockpitLabel">Điều hành</div>
+      <button class="nav-item" data-view="cockpit" onclick="go('cockpit')" id="navCockpit">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 4-6 5 4"/><path d="M3 21h18"/><circle cx="8" cy="11" r="1.3"/><circle cx="12" cy="14" r="1.3"/><circle cx="16" cy="8" r="1.3"/></svg>
+        <span class="nav-t">Tổng quan điều hành</span></button>
+      <button class="nav-item" data-view="welcome" onclick="openWelcome()" id="navWelcome">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="12" cy="14.5" r="1.6"/></svg>
+        <span class="nav-t">Tổng quan tuần</span></button>
       <div class="nav-label">Làm việc</div>
       <button class="nav-item active" data-view="funnel" onclick="go('funnel')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
@@ -56,6 +65,9 @@
       <button class="nav-item" data-view="dash" onclick="go('dash')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         <span class="nav-t">Dashboard</span></button>
+      <button class="nav-item" data-view="reports" onclick="go('reports')" id="navReports">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3h9l5 5v13a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v6h6M9 13h6M9 17h4"/></svg>
+        <span class="nav-t">Báo cáo</span></button>
       <div class="nav-label" id="navAdminLabel">Quản trị</div>
       <button class="nav-item" data-view="users" onclick="go('users')" id="navUsers">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.6a3.5 3.5 0 010 6.8M18.5 14.7c1.6.8 2.7 2.3 3 5.3"/></svg>
@@ -85,6 +97,39 @@
       </div>
       <span class="avatar" id="hAvatar" style="width:38px;height:38px;font-size:13px"></span>
     </div>
+
+    <!-- COCKPIT VIEW — tổng quan điều hành cho Manager / Super Admin -->
+    <section id="view-cockpit" style="display:none">
+      <div class="topbar ck-top">
+        <h2>Tổng quan điều hành</h2>
+        <div class="ck-period" id="ckPeriod" role="group" aria-label="Chọn cửa sổ thời gian"></div>
+      </div>
+      <div class="ck-range" id="ckRange"></div>
+
+      <div class="ck-signals" id="ckSignals" role="group" aria-label="Tín hiệu cần chú ý"></div>
+
+      <section class="ck-panel glass" aria-labelledby="ckFeedH">
+        <div class="ck-head">
+          <h3 id="ckFeedH">Dòng thời gian<span class="ck-count" id="ckFeedCount"></span></h3>
+          <div class="ck-head-tools" id="ckFilters"></div>
+        </div>
+        <div class="ck-feed" id="ckFeed"></div>
+      </section>
+
+      <section class="ck-panel glass" aria-labelledby="ckCustH">
+        <div class="ck-head">
+          <h3 id="ckCustH">Khách hàng<span class="ck-count" id="ckCustCount"></span></h3>
+          <div class="ck-head-tools">
+            <div class="ck-search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="ckQ" placeholder="Tìm khách hàng…" aria-label="Tìm khách hàng" oninput="ckSetQuery(this.value)">
+            </div>
+          </div>
+        </div>
+        <div class="ck-thead ck-grid" id="ckThead"></div>
+        <div class="ck-rows" id="ckRows"></div>
+      </section>
+    </section>
 
     <!-- FUNNEL VIEW -->
     <section id="view-funnel">
@@ -156,6 +201,18 @@
       </div>
     </section>
 
+    <!-- REPORTS VIEW -->
+    <section id="view-reports" style="display:none">
+      <div class="topbar">
+        <h2>Báo cáo</h2>
+        <div id="rpTools"></div>
+      </div>
+      <div class="rp-grid">
+        <div class="rp-list glass" id="rpList"></div>
+        <div class="rp-panel glass" id="rpPanel"></div>
+      </div>
+    </section>
+
     <!-- USERS VIEW -->
     <section id="view-users" style="display:none">
       <div class="topbar"><h2>Người dùng &amp; phân quyền</h2></div>
@@ -172,7 +229,8 @@
 <div class="overlay" id="ov">
   <div class="modal">
     <div class="modal-head">
-      <div><h3>Thêm dự án mới</h3></div>
+      <div><button class="mh-back" id="f-back" onclick="closeForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3>Thêm dự án mới</h3></div>
       <button class="x-btn" onclick="closeForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -210,6 +268,7 @@
   <div class="modal wide">
     <div class="modal-head">
       <div>
+        <button class="mh-back" id="d-back" onclick="closeDetail()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
         <h3 id="d-title"></h3>
         <div class="mh-sub" id="d-pills"></div>
       </div>
@@ -233,14 +292,19 @@
         <h5 style="margin-top:18px">Người tham gia</h5>
         <div class="tags" id="d-relTags"><select id="d-rel" onchange="dAddRel()"></select></div>
       </div>
-      <div class="d-col">
-        <h5>Trao đổi trong dự án</h5>
-        <div class="comments" id="d-comments"></div>
-        <div class="cmt-input">
-          <input id="d-cmt" placeholder="Viết trao đổi… (Enter để gửi)" onkeydown="if(event.key==='Enter')postComment()">
-          <button class="send-btn" onclick="postComment()" aria-label="Gửi">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
-        </div>
+      <div class="d-col d-chat-col">
+        <section class="chat" aria-label="Trao đổi trong dự án">
+          <div class="chat-head">
+            <h5>Trao đổi trong dự án</h5>
+            <span class="chat-count" id="d-cmt-count"></span>
+          </div>
+          <div class="comments" id="d-comments" role="log" aria-live="polite"></div>
+          <div class="cmt-input">
+            <input id="d-cmt" placeholder="Viết trao đổi… (Enter để gửi)" onkeydown="if(event.key==='Enter')postComment()">
+            <button class="send-btn" onclick="postComment()" aria-label="Gửi">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+          </div>
+        </section>
       </div>
     </div>
     <div class="modal-foot">
@@ -257,7 +321,8 @@
 <div class="overlay" id="cov">
   <div class="modal narrow">
     <div class="modal-head">
-      <div><h3>Đóng dự án</h3><div class="mh-sub" id="c-sub"></div></div>
+      <div><button class="mh-back" id="c-back" onclick="closeCloseModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3>Đóng dự án</h3><div class="mh-sub" id="c-sub"></div></div>
       <button class="x-btn" onclick="closeCloseModal()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div style="padding:22px 26px;display:flex;flex-direction:column;gap:15px">
@@ -284,7 +349,8 @@
 <!-- ============ ACTIVITY MODAL ============ -->
 <div class="overlay" id="aov">
   <div class="modal narrow">
-    <div class="modal-head"><div><h3 id="a-title">Ghi hoạt động khách hàng</h3><div class="mh-sub" id="a-sub"></div></div>
+    <div class="modal-head"><div><button class="mh-back" id="a-back" onclick="closeActForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3 id="a-title">Ghi hoạt động khách hàng</h3><div class="mh-sub" id="a-sub"></div></div>
       <button class="x-btn" onclick="closeActForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="modal-body">
       <div class="field full"><label>Khách hàng <span class="req">*</span></label>
@@ -304,6 +370,51 @@
   </div>
 </div>
 
+<!-- ============ CUSTOMER DRAWER (cockpit) ============ -->
+<div class="ck-bd" id="ckDrawerBd" onclick="closeCustomer()"></div>
+<aside class="ck-drawer" id="ckDrawer" role="dialog" aria-modal="true" aria-labelledby="ckDrawerTitle" tabindex="-1">
+  <div class="ck-dr-head">
+    <h3 id="ckDrawerTitle"></h3>
+    <div class="ck-dr-sub" id="ckDrawerSub"></div>
+    <button class="ck-dr-x" onclick="closeCustomer()" aria-label="Đóng">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="ck-dr-body" id="ckDrawerBody"></div>
+  <div class="ck-dr-foot">
+    <button class="ck-link" onclick="ckOpenHistory()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+      Xem toàn bộ lịch sử dự án</button>
+  </div>
+</aside>
+
+<!-- ============ WELCOME (chào tuần cho sales) ============ -->
+<div class="wc-bd" id="wcBd" onclick="closeWelcome()"></div>
+<div class="wc-modal" id="wcModal" role="dialog" aria-modal="true" aria-labelledby="wcTitle" tabindex="-1">
+  <div class="wc-head">
+    <div class="wc-hi">
+      <h2 id="wcTitle"></h2>
+    </div>
+    <div class="wc-meta">
+      <div class="wc-date">
+        <div class="wc-daystamp" id="wcDay"></div>
+        <div class="wc-when" id="wcWhen"></div>
+      </div>
+      <button class="wc-modechip" id="wcMode" onclick="wcCycleMode()"></button>
+    </div>
+    <button class="wc-x" onclick="closeWelcome()" aria-label="Đóng màn hình tổng quan tuần">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="wc-week" id="wcWeek" role="list" aria-label="Bảy ngày trong tuần"></div>
+    <div class="wc-legend">
+      <span><i class="wc-dot done"></i>Đã làm</span>
+      <span><i class="wc-dot plan"></i>Kế hoạch</span>
+      <span><i class="wc-dot miss"></i>Chưa đánh dấu</span>
+    </div>
+    <div class="wc-stats" id="wcStats"></div>
+  </div>
+  <div class="wc-body" id="wcBody"></div>
+  <div class="wc-foot" id="wcFoot"></div>
+</div>
+
 <!-- % quick-edit popover -->
 <div class="prob-pop glass" id="probPop">
   <div class="pp-title">% dự án</div>
@@ -311,54 +422,27 @@
 </div>
 
 
-<!-- ============ AI ASSISTANT ============ -->
-<button class="ai-fab" id="aiFab" onclick="toggleAI()" aria-label="Trợ lý AI" style="display:none">
-  <svg class="ai-spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2z"/></svg>
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
-    <rect x="4" y="7" width="16" height="12" rx="4"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7V4M9 4h6"/></svg>
-</button>
-<div class="ai-panel" id="aiPanel">
-  <div class="ai-head">
-    <span class="ai-avatar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="7" width="16" height="12" rx="4"/><circle cx="9.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13" r="1.4" fill="currentColor" stroke="none"/><path d="M12 7V4M9 4h6"/></svg></span>
-    <div><b>FI Assistant</b><small><span class="ai-status" id="aiStatus"></span><span id="aiStatusText">Gemini qua Cloudflare</span></small></div>
-    <button class="x-btn" onclick="toggleAISettings()" aria-label="Cài đặt" title="Cài đặt gateway">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
-    <button class="x-btn" onclick="toggleAI()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
-  <div class="ai-settings" id="aiSettings">
-    <label>Cloudflare Worker URL (API Gateway)</label>
-    <div class="as-row">
-      <input id="aiUrl" placeholder="https://fisg-ai.your-name.workers.dev">
-      <button class="btn-primary" style="padding:8px 13px;font-size:12px" onclick="saveAIUrl()">Lưu</button>
-    </div>
-    <div class="hint">Chưa có URL → chatbot chạy chế độ phân tích cục bộ trên dữ liệu pipeline. Deploy Worker theo file <b>FISG_AI_Worker.js</b> trong folder dự án.</div>
-  </div>
-  <div class="ai-msgs" id="aiMsgs"></div>
-  <div class="ai-quick">
-    <button class="ai-chip" onclick="aiQuick('Soạn báo cáo tuần cho manager: dự án mới, thay đổi tiến độ, quá hạn, sắp đóng và đề xuất ưu tiên.')">Báo cáo tuần cho manager</button>
-    <button class="ai-chip" onclick="aiQuickFill('Tổng hợp các dự án đang ở tiến độ 30% và gợi ý bước tiếp theo để tăng khả năng thắng.')">Tổng hợp theo % tiến độ</button>
-  </div>
-  <div class="ai-input">
-    <input id="aiText" placeholder="Hỏi về pipeline, phụ gia thực phẩm, cách tăng win-rate…" onkeydown="if(event.key==='Enter')aiSend()">
-    <button class="send-btn" onclick="aiSend()" aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
-  </div>
-</div>
-
 <div class="lc-tip" id="lcTip"></div>
 
 <div class="toast" id="toastEl"></div>
 
 <script src="js/sp-config.js?v=5"></script>
-<script src="js/data/demo-data.js?v=5"></script>
+<script src="js/data/schema.js?v=1"></script>
 <script src="js/config.js?v=5"></script>
+<script src="js/lib/navstack.js?v=1"></script>
+<script src="js/lib/insights.js?v=1"></script>
+<script src="js/lib/localstore.js?v=1"></script>
+<script src="js/lib/weekly.js?v=1"></script>
 <script src="js/core.js?v=5"></script>
 <script src="js/views/funnel.js?v=5"></script>
 <script src="js/views/dashboard.js?v=5"></script>
+<script src="js/views/cockpit.js?v=1"></script>
+<script src="js/views/welcome.js?v=1"></script>
+<script src="js/views/reports.js?v=1"></script>
 <script src="js/views/activities.js?v=5"></script>
-<script src="js/views/detail.js?v=5"></script>
+<script src="js/views/detail.js?v=9"></script>
 <script src="js/components/notifications.js?v=5"></script>
 <script src="js/views/admin.js?v=5"></script>
-<script src="js/views/ai.js?v=5"></script>
 <script src="js/components/toast.js?v=5"></script>
 <script src="js/i18n.js?v=5"></script>
 <script src="js/auth.js?v=5"></script>

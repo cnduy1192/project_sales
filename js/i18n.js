@@ -126,6 +126,8 @@
     "click một lát để mở segment bên trong": "click a slice to open the segments inside",
     "NHÓM NGÀNH": "SEGMENT GROUP", "Chưa có ngày đóng": "No closing date",
     "Xoá tra cứu": "Clear lookup",
+    "Viết trao đổi… (Enter để gửi)": "Write a message… (Enter to send)",
+    "Gửi": "Send",
     "Thu gọn thanh điều hướng": "Collapse navigation",
     "Mở rộng thanh điều hướng": "Expand navigation",
     "Ngôn ngữ hiển thị": "Display language",
@@ -142,6 +144,7 @@
 
   // ---- luật regex cho chuỗi có nội suy số (áp khi không khớp nguyên câu) ----
   const RULES = [
+    [/(\d+)\s*tin nhắn/g, "$1 messages"],
     [/(\d+)\s*đang chạy/g, "$1 in progress"], [/(\d+)\s*thắng/g, "$1 won"], [/(\d+)\s*thua/g, "$1 lost"],
     [/dự án mới/g, "new projects"], [/dự án khác/g, "more projects"],
     [/(\d+)\s*dự án/g, "$1 projects"], [/dự án/g, "project"],

@@ -1,7 +1,9 @@
 /* js/store.js — LỚP DỮ LIỆU (đường ranh cô lập app khỏi SharePoint).
  * Tự DÒ internal name thật của cột (SharePoint hay mã hoá tên cột tiếng Việt),
  * map về shape record của app, tráo vào RECORDS/ACTIVITIES rồi re-render.
- * Không đăng nhập / lỗi -> giữ dữ liệu demo. View KHÔNG cần biết dữ liệu đến từ đâu. */
+ * Không đăng nhập -> app rỗng (đã bỏ toàn bộ dữ liệu demo).
+ * Dựng luôn cả danh mục (NCC, segment, pipeline, sales) và list Users phân quyền.
+ * View KHÔNG cần biết dữ liệu đến từ đâu. */
 (function () {
   const CFG = window.FISG_CFG;
 
@@ -21,6 +23,13 @@
       Content: "Nội dung", NextStep: "Kết quả / Next step", PotentialLevel: "Mức độ tiềm năng",
       RelatedProject: "Dự án liên quan",
     },
+    // Pipelines: mỗi dòng = một giai đoạn của một NCC.
+    Pipelines: {
+      Supplier: "NCC", Stage: "Giai đoạn", StageOrder: "Thứ tự",
+      StageGroup: "Nhóm giai đoạn", WinProbability: "Xác suất thắng %",
+    },
+    // Users: phân quyền. Title = email đăng nhập.
+    Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò" },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -84,6 +93,199 @@
     if (res === "LOST") return "LOST";
     if (st === "closed") return "LOST";
     return "IN PROGRESS";
+  }
+
+  /* ---------- DANH MỤC ----------
+     Phần lớn danh mục suy thẳng từ Projects/Activities đã map đúng, nên không phụ
+     thuộc vào việc đoán tên cột của các list phụ. Chỉ pipeline (thứ tự giai đoạn,
+     nhóm, % mặc định) mới bắt buộc đọc list Pipelines. */
+  function uniqSorted(arr) {
+    return [...new Set(arr.map(v => String(v == null ? "" : v).trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "vi"));
+  }
+  function replaceInPlace(target, values) { target.length = 0; values.forEach(v => target.push(v)); }
+  function clearObj(o) { Object.keys(o).forEach(k => delete o[k]); }
+
+  async function loadPipelines() {
+    try {
+      const [cols, items] = await Promise.all([
+        FISG_GRAPH.columns("Pipelines"), FISG_GRAPH.listItems("Pipelines"),
+      ]);
+      const g = makeGetter("Pipelines", cols);
+      const rows = items.map(it => {
+        const f = it.fields || {};
+        return {
+          ncc: txt(g(f, "Supplier")) || txt(f.SupplierLookupId ? "" : ""),
+          stage: txt(g(f, "Stage")) || txt(f.Title),
+          order: Number(g(f, "StageOrder")) || 0,
+          group: txt(g(f, "StageGroup")),
+          prob: Number(g(f, "WinProbability")),
+        };
+      }).filter(r => r.stage);
+      return rows;
+    } catch (e) {
+      console.warn("[store] không đọc được list Pipelines:", e.message || e);
+      return null;
+    }
+  }
+
+  async function buildLists(recs, acts) {
+    replaceInPlace(LISTS.nccs, uniqSorted(recs.map(r => r.ncc)));
+    replaceInPlace(LISTS.customers, uniqSorted(recs.map(r => r.customer).concat(acts.map(a => a.customer))));
+    replaceInPlace(LISTS.products, uniqSorted(recs.map(r => r.product).concat(acts.map(a => a.product))));
+    replaceInPlace(LISTS.applications, uniqSorted(recs.map(r => r.application)));
+    replaceInPlace(LISTS.pics, uniqSorted(recs.map(r => r.pic).concat(acts.map(a => a.pic))));
+    replaceInPlace(LISTS.segments, uniqSorted(recs.map(r => r.segment)));
+
+    clearObj(LISTS.segTree);
+    recs.forEach(r => {
+      const grp = String(r.group || "").trim() || "Khác";
+      const seg = String(r.segment || "").trim();
+      if (!seg) return;
+      (LISTS.segTree[grp] = LISTS.segTree[grp] || []);
+      if (LISTS.segTree[grp].indexOf(seg) < 0) LISTS.segTree[grp].push(seg);
+    });
+    Object.keys(LISTS.segTree).forEach(k => LISTS.segTree[k].sort((a, b) => a.localeCompare(b, "vi")));
+
+    clearObj(LISTS.pipelines); clearObj(LISTS.groupOf); clearObj(LISTS.probOf);
+    const pipe = await loadPipelines();
+    if (pipe && pipe.length) {
+      const byNcc = {};
+      pipe.forEach(p => { (byNcc[p.ncc] = byNcc[p.ncc] || []).push(p); });
+      Object.keys(byNcc).forEach(n => {
+        byNcc[n].sort((a, b) => a.order - b.order);
+        LISTS.pipelines[n] = byNcc[n].map(p => p.stage);
+      });
+      pipe.forEach(p => {
+        if (p.group) LISTS.groupOf[p.stage] = p.group;
+        if (!isNaN(p.prob)) LISTS.probOf[p.stage] = p.prob;
+      });
+    } else {
+      /* Không có list Pipelines thì vẫn phải có gì đó để lọc: lấy các giai đoạn
+         thật đang xuất hiện, theo thứ tự gặp lần đầu. Thứ tự có thể không đúng
+         quy trình — tạo list Pipelines để sửa. */
+      recs.forEach(r => {
+        if (!r.ncc || !r.stage) return;
+        const arr = (LISTS.pipelines[r.ncc] = LISTS.pipelines[r.ncc] || []);
+        if (arr.indexOf(r.stage) < 0) arr.push(r.stage);
+      });
+    }
+    if (window.rebuildDerived) rebuildDerived();
+    return { pipelineFromList: !!(pipe && pipe.length) };
+  }
+
+  /* ---------- NGƯỜI DÙNG & PHÂN QUYỀN ----------
+     Nguồn sự thật là list Users trên SharePoint. Nếu list chưa tồn tại, KHÔNG
+     khoá cửa: quay về quy tắc cũ (ADMIN_EMAIL = superadmin, còn lại manager) và
+     báo rõ để người quản trị tạo list. */
+  const ROLE_COLOR = { superadmin: "#1E3A8A", manager: "#0E7490", sales: "#0D9488", guest: "#6D28D9" };
+  let usersLoaded = false;
+
+  async function loadUsers() {
+    if (usersLoaded) return true;
+    const listName = (CFG && CFG.USERS_LIST) || "Users";
+    try {
+      const [cols, items] = await Promise.all([
+        FISG_GRAPH.columns(listName), FISG_GRAPH.listItems(listName),
+      ]);
+      const g = makeGetter("Users", cols);
+      const rows = items.map(it => {
+        const f = it.fields || {};
+        const email = (txt(g(f, "Email")) || txt(f.Title)).toLowerCase();
+        const role = (txt(g(f, "Role")) || "sales").toLowerCase();
+        return {
+          email: email,
+          name: txt(g(f, "PICName")) || email,
+          pic: txt(g(f, "PICName")) || null,
+          role: ["sales", "manager", "superadmin"].indexOf(role) >= 0 ? role : "sales",
+          color: ROLE_COLOR[role] || "#0D9488",
+        };
+      }).filter(u => u.email);
+      if (!rows.length) throw new Error("list " + listName + " rỗng");
+      USERS.length = 0; rows.forEach(u => USERS.push(u));
+      usersLoaded = true;
+      if (window.buildUsers) buildUsers();
+      return true;
+    } catch (e) {
+      console.warn("[store] không đọc được list " + listName + ":", e.message || e);
+      return false;
+    }
+  }
+
+  /* Hồ sơ của người vừa đăng nhập.
+     PIC = TÊN HIỂN THỊ O365 của chính người đó — vì cột PIC trong Projects là
+     trường Person, SharePoint trả về đúng tên đầy đủ ấy. Cột PICName trong list
+     Users chỉ là ĐƯỜNG LUI: điền khi tên O365 khác với giá trị PIC trong dữ liệu
+     (đổi tên, tên viết tắt cũ…). Bỏ trống là chuyện bình thường.
+     Vai trò thì ngược lại: chỉ list Users mới quyết định được. */
+  async function profileFor(email, displayName) {
+    const ok = await loadUsers();
+    const mail = String(email || "").toLowerCase();
+    const full = String(displayName || "").trim();
+    let u = USERS.filter(x => (x.email || "").toLowerCase() === mail)[0];
+    if (u) {
+      if (full) u.name = full;              // tên hiển thị luôn lấy từ O365
+      if (!u.pic && full) u.pic = full;     // không khai PICName → dùng tên O365
+      if (window.buildUsers) buildUsers();
+      return { user: u, fromList: ok, index: USERS.indexOf(u) };
+    }
+    if (ok) return { user: null, fromList: true, index: -1 };
+    /* Chưa có list Users — dùng quy tắc dự phòng để không khoá cửa. */
+    const isAdmin = mail === String((CFG && CFG.ADMIN_EMAIL) || "").toLowerCase();
+    u = { name: full || email, email: email, pic: full || null,
+          role: isAdmin ? "superadmin" : "manager", color: isAdmin ? "#1E3A8A" : "#0E7490" };
+    USERS.push(u);
+    if (window.buildUsers) buildUsers();
+    return { user: u, fromList: false, index: USERS.length - 1 };
+  }
+
+  /* Sai lệch giữa tên O365 và cột PIC trong dữ liệu là kiểu hỏng ÂM THẦM: app
+     chạy bình thường nhưng người đó không thấy dự án nào của mình. Phải nói ra. */
+  function picMatchReport(pic) {
+    const want = String(pic || "").trim();
+    const all = [...new Set([].concat(
+      RECORDS.map(r => r.pic), ACTIVITIES.map(a => a.pic)
+    ).map(v => String(v || "").trim()).filter(Boolean))];
+    if (!want) return { ok: false, reason: "empty", all: all };
+    const hit = all.filter(v => v.toLowerCase() === want.toLowerCase());
+    if (hit.length) return { ok: true, matched: hit[0], all: all };
+    /* Gợi ý tên gần đúng: trùng ít nhất một từ. */
+    const words = want.toLowerCase().split(/\s+/).filter(x => x.length > 1);
+    const near = all.filter(v => {
+      const lv = v.toLowerCase();
+      return words.some(x => lv.indexOf(x) >= 0);
+    }).slice(0, 6);
+    return { ok: false, reason: "nomatch", near: near, all: all };
+  }
+  window.picMatchReport = picMatchReport;
+
+  /* ---------- DÒ KHÁCH HÀNG TRÙNG TÊN ----------
+     Không tự gộp — chỉ liệt kê để dọn trên SharePoint. Bỏ hậu tố pháp nhân,
+     bỏ dấu tiếng Việt, rồi gom các tên rút về cùng một gốc. */
+  const CO_SUFFIX = /\b(CO\.?,?\s*LTD|CO\.?LTD|LTD|JSC|CTY|CONG TY|COMPANY|CORP|CORPORATION|GROUP|VIETNAM|VIET NAM|VN|MTV|TNHH|CP)\b/g;
+  function slug(name) {
+    return String(name || "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/gi, "d")
+      .toUpperCase().replace(/[^A-Z0-9\s]/g, " ")
+      .replace(CO_SUFFIX, " ").replace(/\s+/g, " ").trim();
+  }
+  function findDuplicateCustomers() {
+    const names = [...new Set([].concat(
+      RECORDS.map(r => r.customer), ACTIVITIES.map(a => a.customer)
+    ).map(v => String(v || "").trim()).filter(Boolean))];
+    const groups = {};
+    names.forEach(n => {
+      const k = slug(n); if (!k) return;
+      (groups[k] = groups[k] || []).push(n);
+    });
+    const dups = Object.keys(groups).filter(k => groups[k].length > 1)
+      .map(k => ({ key: k, names: groups[k].sort() }))
+      .sort((a, b) => b.names.length - a.names.length || a.key.localeCompare(b.key));
+    console.log("=== Khách hàng nghi trùng tên: " + dups.length + " nhóm / " + names.length + " tên ===");
+    dups.forEach(d => console.log("  " + d.names.join("   ≡   ")));
+    if (!dups.length) console.log("  (không có nhóm nào)");
+    console.log("Sửa trên SharePoint list Customers, rồi trỏ lại lookup của Projects/Activities.");
+    return dups;
   }
 
   async function syncFromGraph() {
@@ -157,29 +359,53 @@
         };
       });
 
-      if (!recs.length) { if (window.toast) toast("SharePoint trả 0 dự án — vẫn dùng dữ liệu demo."); return false; }
+      if (!recs.length) {
+        if (window.toast) toast("SharePoint trả về 0 dự án. Kiểm tra list Projects và quyền truy cập.");
+        return false;
+      }
 
       RECORDS.length = 0; recs.forEach(r => RECORDS.push(r));
       ACTIVITIES.length = 0; A.forEach(a => ACTIVITIES.push(a));
 
-      // NCC đang lọc phải khớp dữ liệu thật, nếu không funnel sẽ trống
-      const nccs = [...new Set(RECORDS.map(r => r.ncc).filter(Boolean))];
-      if (nccs.length && typeof nccFilter !== "undefined" && !nccs.includes(nccFilter)) {
-        nccFilter = nccs[0];
-        document.querySelectorAll(".ncc-tab").forEach(t =>
-          t.classList.toggle("on", t.dataset.ncc === nccFilter));
-      }
+      // Danh mục (NCC, segment, pipeline, sales…) cũng dựng từ dữ liệu thật.
+      const meta = await buildLists(RECORDS, ACTIVITIES);
+
+      // Việc sales tự nhập lúc offline phải được nối lại sau khi thay mảng.
+      if (window.LS && LS.mergeActs) LS.mergeActs();
+      if (typeof invalidateCockpit === "function") invalidateCockpit();
+
+      document.querySelectorAll(".ncc-tab").forEach(t =>
+        t.classList.toggle("on", t.dataset.ncc === nccFilter));
+      if (window.rebuildNccTabs) rebuildNccTabs();
       if (window.render) render();
       if (window.renderDash) renderDash();
       if (window.renderActs) renderActs();
+      if (window.renderCockpit && document.getElementById("view-cockpit")) renderCockpit();
+      if (window.welcomeRefresh) welcomeRefresh();
+      if (window.buildForm) buildForm();
+
+      /* Đối chiếu tên O365 với cột PIC trong dữ liệu — báo ngay nếu lệch. */
+      if (typeof me !== "undefined" && me && me.pic) {
+        const m = picMatchReport(me.pic);
+        if (!m.ok && window.toast) {
+          setTimeout(() => toast(
+            'Tên O365 của bạn ("' + me.pic + '") không khớp giá trị PIC nào trong dữ liệu'
+            + (m.near && m.near.length ? '. Gần nhất: ' + m.near.join(', ') : '')
+            + '. Điền cột PICName trong list Users để chỉ đúng tên trong dữ liệu.'), 3200);
+          console.warn("[store] PIC không khớp:", me.pic, "| các PIC có trong dữ liệu:", m.all);
+        }
+      }
 
       const blank = RECORDS.filter(r => !r.ncc).length;
       if (window.toast)
-        toast("Đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length + " hoạt động."
-              + (blank ? " (" + blank + " dự án thiếu NCC)" : ""));
+        toast("Đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length + " hoạt động · "
+              + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng."
+              + (blank ? " (" + blank + " dự án thiếu NCC)" : "")
+              + (meta.pipelineFromList ? "" : " Chưa đọc được list Pipelines — thứ tự giai đoạn có thể sai."));
       return true;
     } catch (e) {
-      if (window.toast) toast("Không tải được SharePoint — dùng dữ liệu demo. (" + (e.message || e) + ")");
+      if (window.toast) toast("Không tải được dữ liệu SharePoint: " + (e.message || e));
+      console.error("[store] syncFromGraph", e);
       return false;
     }
   }
@@ -195,5 +421,6 @@
     return { cols, sample: items[0] && items[0].fields, count: items.length };
   }
 
-  window.FISG_STORE = { syncFromGraph, debug };
+  window.FISG_STORE = { syncFromGraph, debug, loadUsers, profileFor, picMatchReport,
+                        findDuplicateCustomers, buildLists };
 })();

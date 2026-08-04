@@ -80,16 +80,21 @@
       await FISG_GUEST.afterLogin(email);
       return;
     }
-    let idx = USERS.findIndex(u => (u.email || "").toLowerCase() === email);
-    if (idx < 0) {
-      const isAdmin = email === (CFG.ADMIN_EMAIL || "").toLowerCase();
-      USERS.push({ name: acc.name || acc.username, email: acc.username,
-                   role: isAdmin ? "superadmin" : "manager", pic: null, color: "#1E3A8A" });
-      idx = USERS.length - 1;
-      if (window.buildUsers) buildUsers();
+    /* Phân quyền là của SharePoint, không phải của code. Đọc list Users trước khi
+       vào app để biết người này là sales nào và vai trò gì. */
+    if (!window.FISG_STORE) { toast("Thiếu js/store.js — không tải được dữ liệu."); return; }
+    const p = await FISG_STORE.profileFor(email, acc.name || acc.username);
+    if (!p.user) {
+      toast("Tài khoản " + acc.username + " chưa có trong list Users trên SharePoint. "
+            + "Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.");
+      return;
     }
-    loginAs(idx);                       // dựng toàn bộ UI như đăng nhập demo
-    if (window.FISG_STORE) await FISG_STORE.syncFromGraph();   // thay dữ liệu demo bằng SharePoint
+    if (!p.fromList) {
+      toast("Chưa đọc được list Users — tạm cấp quyền " + p.user.role
+            + ". Tạo list Users trên SharePoint để phân quyền đúng.");
+    }
+    loginAs(p.index);
+    await FISG_STORE.syncFromGraph();   // đổ dữ liệu thật vào toàn bộ màn hình
   }
 
   async function handleRedirect() {

@@ -256,7 +256,9 @@ document.addEventListener('click',e=>{if(!e.target.closest('.ins-wrap'))document
 const INS_TAG={kh:'<span class="t t-kh">KHÁCH HÀNG</span>',prod:'<span class="t t-prod">SẢN PHẨM</span>',
   grp:'<span class="t t-grp">NHÓM NGÀNH</span>',seg:'<span class="t t-seg">SEGMENT</span>',
   stage:'<span class="t t-stage">BOP STAGE</span>',pic:'<span class="t t-pic">SALES</span>'};
-const INS_MATCH={kh:(k)=>r=>r.customer===k,prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
+/* Tên khách hàng trong dữ liệu có cả 'Bibica' lẫn 'BIBICA'. So khớp nguyên văn
+   sẽ bỏ sót nửa lịch sử, nên khoá khách hàng đi qua custKey(). */
+const INS_MATCH={kh:(k)=>r=>custKey(r.customer)===custKey(k),prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
   seg:(k)=>r=>r.segment===k,stage:(k)=>r=>r.stage===k,pic:(k)=>r=>r.pic===k};
 function showInsight(type,key){
   INSIGHT={type,key};

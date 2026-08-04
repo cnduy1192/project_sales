@@ -154,7 +154,7 @@
     const deny = () => { if (window.toast) toast("Chế độ khách: chỉ xem, không chỉnh sửa."); };
     ["openForm", "saveForm", "openCloseModal", "confirmClose", "pickResult", "openProbPop",
      "setProb", "postComment", "saveDetail", "openActForm", "saveAct", "createProjectFromAct",
-     "attachAct", "addRel", "rmRel", "dAddRel", "dRmRel", "setRole", "toggleAI"
+     "attachAct", "addRel", "rmRel", "dAddRel", "dRmRel", "setRole"
     ].forEach(fn => { if (typeof window[fn] === "function") window[fn] = deny; });
     if (window.FISG_SHARE) FISG_SHARE.open = deny;
   }

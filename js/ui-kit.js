@@ -271,14 +271,14 @@
   /* ---------- A. Thay tên tắt PIC bằng TÊN THẬT trên O365 ----------
    * Đối chiếu qua "User Information List" của site (chỉ cần quyền Sites.ReadWrite.All đã có),
    * không cần thêm quyền User.Read.All. */
-  const PIC_EMAIL = {
-    "Thu": "thu.trantam@fisaigon.vn", "Tam": "tam.lethanh@fisaigon.vn",
-    "Hung": "hung.tranviet@fisaigon.vn", "Ngoc": "ngoc.phambich@fisaigon.vn",
-    "Bich Ngoc": "ngoc.phambich@fisaigon.vn", "Phi": "phi.truongba@fisaigon.vn",
-    "Phong": "phong.nguyenduc@fisaigon.vn", "Yen": "yen.nguyenhong@fisaigon.vn",
-    "Y Nang": "nang.nguyeny@fisaigon.vn", "Hai": "hai.tranngoc@fisaigon.vn",
-    "Tu": "tu.phanthanh@fisaigon.vn", "Khoa": "khoa.nguyendang@fisaigon.vn",
-  };
+  /* Tên tắt PIC → email, dựng từ list Users trên SharePoint. Trước đây bảng này
+     ghi cứng 12 người; thêm sales mới là phải sửa code. */
+  function picEmailMap() {
+    const m = {};
+    if (typeof USERS !== "undefined")
+      USERS.forEach(u => { if (u.pic && u.email) m[u.pic] = String(u.email).toLowerCase(); });
+    return m;
+  }
   let PIC_FULL = {};        // tên tắt -> tên đầy đủ O365
   let PEOPLE = [];          // [{name, mail}] nguồn cho ô "Người liên quan / tham gia"
   const SCOPE_GROUP = ["GroupMember.Read.All"];
@@ -317,7 +317,7 @@
     } catch (e) { notes.push("site users: " + (e.message || e).slice(0, 90)); }
 
     // (3) Tra thẳng từng email PIC (nếu 1+2 chưa đủ)
-    const missing = Object.values(PIC_EMAIL).filter(
+    const missing = Object.values(picEmailMap()).filter(
       m => !out.some(u => u.mail === m.toLowerCase()));
     if (missing.length) {
       for (const mail of [...new Set(missing)]) {
@@ -347,6 +347,7 @@
     people.forEach(u => { byMail[u.mail] = u.name; });
 
     PIC_FULL = {};
+    const PIC_EMAIL = picEmailMap();
     Object.keys(PIC_EMAIL).forEach(short => {
       const full = byMail[PIC_EMAIL[short].toLowerCase()];
       if (full && full !== short) PIC_FULL[short] = full;

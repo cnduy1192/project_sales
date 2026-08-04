@@ -25,33 +25,55 @@ function renderActs(){
       <div><span class="pot pot-${a.potential}">${a.potential}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
-function openActForm(){
+/* prefill là tuỳ chọn — gọi openActForm() không tham số thì hành vi y như trước.
+   Màn hình chào tuần truyền sẵn khách hàng, NCC, ngày và dự án vào đây. */
+function openActForm(prefill, origin){
+  const p = prefill && typeof prefill === 'object' ? prefill : {};
   srcAct=null;
-  document.getElementById('a-title').textContent='Ghi hoạt động khách hàng';
-  document.getElementById('a-sub').innerHTML='';
-  document.getElementById('a-ncc').innerHTML=NCCS.map(n=>`<option${n===nccFilter?' selected':''}>${n}</option>`).join('');
-  document.getElementById('a-date').value='2026-07-07';
-  ['a-cust','a-note','a-next'].forEach(x=>document.getElementById(x).value='');
+  NAV.enter(origin); NAV.renderBack('a-back');
+  document.getElementById('a-title').textContent = p.title || 'Ghi hoạt động khách hàng';
+  document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
+  const ncc = p.ncc || nccFilter;
+  document.getElementById('a-ncc').innerHTML=NCCS.map(n=>`<option${n===ncc?' selected':''}>${n}</option>`).join('');
+  document.getElementById('a-date').value = p.date || isoOf(TODAY);
+  document.getElementById('a-cust').value = p.customer || '';
+  document.getElementById('a-note').value = p.note || '';
+  document.getElementById('a-next').value = p.next || '';
+  if(p.type) document.getElementById('a-type').value = p.type;
+  if(p.potential) document.getElementById('a-pot').value = p.potential;
   const mine=visible().filter(r=>r.status==='IN PROGRESS');
+  /* Dự án gợi ý có thể nằm ngoài nccFilter hiện tại, nên chèn thêm nếu thiếu. */
+  const list = p.projectId && !mine.some(r=>r.id===p.projectId)
+    ? [RECORDS.find(r=>r.id===p.projectId)].filter(Boolean).concat(mine)
+    : mine;
   document.getElementById('a-proj').innerHTML='<option value="">— Chưa gắn dự án nào —</option>'
-    +mine.slice(0,200).map(r=>`<option value="${r.id}">${r.customer} · ${r.product}</option>`).join('');
+    +list.slice(0,200).map(r=>`<option value="${r.id}"${r.id===p.projectId?' selected':''}>${r.customer} · ${r.product}</option>`).join('');
   document.getElementById('aov').classList.add('open');
+  document.getElementById(p.customer?'a-note':'a-cust').focus();
 }
-function closeActForm(){document.getElementById('aov').classList.remove('open');}
+function esc4(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function closeActForm(){
+  NAV.back(function(){ document.getElementById('aov').classList.remove('open'); });
+}
 function saveAct(){
   const g=id=>document.getElementById(id).value.trim();
   if(!g('a-cust')){toast('Nhập tên khách hàng.');return;}
-  const a={id:'A-'+String(ACTIVITIES.length+1).padStart(4,'0'),customer:g('a-cust'),pic:me.pic||me.name,
+  /* Id cũ sinh theo ACTIVITIES.length nên đụng ngay id có sẵn (A-0335 đã tồn tại).
+     Tiền tố AL- vừa tránh đụng, vừa đánh dấu bản ghi do người dùng nhập trong
+     phần mềm — thứ duy nhất phân biệt được kế hoạch với thực tế. */
+  const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
     ncc:g('a-ncc'),product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
     next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};
   ACTIVITIES.unshift(a);
+  LS.addAct(a);
   if(!LISTS.customers.includes(a.customer))LISTS.customers.push(a.customer);
   if(a.projectId){
     const pr=RECORDS.find(r=>r.id===a.projectId);
     if(pr){pr.comments.push({by:a.pic,at:a.date,text:'['+a.type+'] '+a.note+' → '+a.next});
       notify(pr,`đã ghi hoạt động vào <b>${pr.customer} · ${pr.product}</b>: ${a.note}`);}
   }
-  closeActForm(); renderActs(); render();
+  closeActForm(); renderActs(); render(); cockpitRefresh();
+  if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast('Đã lưu hoạt động'+(a.projectId?' và gắn vào dự án — đã thông báo người liên quan.':'. Có thể tạo dự án từ hoạt động này bất cứ lúc nào.'));
 }
 function createProjectFromAct(aid){

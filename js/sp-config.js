@@ -12,7 +12,10 @@ window.FISG_CFG = {
   sitePath:    "/sites/SalesProjectTracker",
   scopes:      ["User.Read", "Sites.ReadWrite.All", "People.Read"],
   lists: ["Suppliers","Products","Customers","Pipelines","Activities",
-          "Projects","ProjectUpdates","Samples","MarketPotentials","MarketTrends"],
+          "Projects","ProjectUpdates","Samples","MarketPotentials","MarketTrends","Users"],
+  // List phân quyền: Title(email) · PICName · Role(sales|manager|superadmin).
+  // Xem docs/SharePoint_Users_List.md để biết cách tạo.
+  USERS_LIST: "Users",
   // true = khi đăng nhập Microsoft sẽ tải dữ liệu thật từ SharePoint;
   // false = luôn chạy demo trên dữ liệu nhúng (tiện phát triển/giao diện).
   USE_GRAPH: true,

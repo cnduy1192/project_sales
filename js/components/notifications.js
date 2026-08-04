@@ -9,6 +9,15 @@ function notify(rec,action){
   NOTIFS.unshift({who:me.pic||me.name,action,to:recipientsOf(rec),at:nowStr()});
   renderNotifs();
 }
+/* Báo cáo tuần không gắn với dự án nào nên không dùng được recipientsOf().
+   Hàm này nhận thẳng danh sách người nhận. */
+function notifyPlain(action,to){
+  NOTIFS.unshift({who:me.pic||me.name,action,to:(to&&to.length?to:['(chưa có người nhận)']),at:nowStr()});
+  renderNotifs();
+}
+function managerNames(){
+  return USERS.filter(u=>u.role==='manager'||u.role==='superadmin').map(u=>u.pic||u.name);
+}
 function renderNotifs(){
   const dot=document.getElementById('bellDot');
   dot.style.display=NOTIFS.length?'flex':'none'; dot.textContent=NOTIFS.length;

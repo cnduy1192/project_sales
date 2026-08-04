@@ -11,7 +11,7 @@ function buildForm(){
   onFormGroup();
   document.getElementById('f-stage').innerHTML=activeStages().map(s=>`<option>${s}</option>`).join('');
   rebuildRel(); syncProb();
-  document.getElementById('f-created').value='2026-07-07';
+  document.getElementById('f-created').value=isoOf(TODAY);
 }
 function rebuildRel(){
   const sel=document.getElementById('f-rel');
@@ -29,15 +29,20 @@ function rmRel(v,btn){related=related.filter(x=>x!==v);btn.parentElement.remove(
 function syncProb(){probOptions('f-prob',STAGE_PROB[document.getElementById('f-stage').value]||10);}
 function onFormGroup(){
   const g=document.getElementById('f-grp').value;
-  document.getElementById('f-seg').innerHTML=SEG_TREE[g].map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('f-seg').innerHTML=(SEG_TREE[g]||[]).map(s=>`<option>${s}</option>`).join('');
 }
 function onFormNcc(){
   const n=document.getElementById('f-ncc').value;
   document.getElementById('f-stage').innerHTML=(PIPELINES[n]||[]).map(s=>`<option>${s}</option>`).join('');
   syncProb();
 }
-function openForm(){document.getElementById('ov').classList.add('open');}
-function closeForm(){document.getElementById('ov').classList.remove('open');}
+function openForm(origin){
+  NAV.enter(origin); NAV.renderBack('f-back');
+  document.getElementById('ov').classList.add('open');
+}
+function closeForm(){
+  NAV.back(function(){ document.getElementById('ov').classList.remove('open'); });
+}
 function saveForm(){
   const g=id=>document.getElementById(id).value.trim();
   if(!g('f-cust')||!g('f-prod')||!g('f-app')||!g('f-closing')){toast('Vui lòng điền Khách hàng, Sản phẩm, Ứng dụng và Ngày đóng dự kiến.');return;}
@@ -57,14 +62,15 @@ function saveForm(){
     srcAct=null; renderActs();}
   ['f-cust','f-prod','f-app','f-kg1','f-kg2','f-desc'].forEach(x=>document.getElementById(x).value='');
   related=[]; document.querySelectorAll('#relTags .tag').forEach(t=>t.remove());
-  buildForm(); closeForm(); render();
+  buildForm(); closeForm(); render(); cockpitRefresh();
   notify(rec,`đã tạo dự án mới <b>${rec.customer} · ${rec.product}</b>`);
   toast('Đã lưu '+rec.id+(synced.length?' — giá trị mới được sync 2 chiều lên '+synced.join(', '):'')+'. Thông báo gửi qua Email & Teams.');
 }
 
 /* ====== DETAIL MODAL ====== */
-function openDetail(id){
+function openDetail(id, origin){
   curRec=RECORDS.find(r=>r.id===id); if(!curRec)return;
+  NAV.enter(origin); NAV.renderBack('d-back');
   dRelated=[...curRec.related];
   document.getElementById('d-title').textContent=curRec.customer+' — '+curRec.id;
   document.getElementById('d-pills').innerHTML=
@@ -96,12 +102,17 @@ function dRenderActs(){
     +`<button class="act-link" style="margin-top:8px" onclick="attachAct()">+ Ghi hoạt động cho dự án này</button>`;
 }
 function attachAct(){
-  const pr=curRec; closeDetail(); openActForm();
-  document.getElementById('a-title').textContent='Ghi hoạt động cho dự án';
-  document.getElementById('a-sub').innerHTML=`<span class="pill p-sbg">${pr.customer} · ${pr.product}</span>`;
-  document.getElementById('a-cust').value=pr.customer;
-  document.getElementById('a-ncc').value=pr.ncc;
-  document.getElementById('a-proj').value=pr.id;
+  const pr=curRec;
+  /* Hoạt động này mở TỪ dự án, nên đường về phải là dự án — không phải bảng chủ. */
+  const back=NAV.top();
+  document.getElementById('dov').classList.remove('open');
+  NAV.popRaw();
+  openActForm({
+    title:'Ghi hoạt động cho dự án',
+    sub:pr.customer+' · '+pr.product,
+    customer:pr.customer, ncc:pr.ncc, projectId:pr.id
+  },{ label:pr.customer+' · '+pr.product,
+      restore:function(){ openDetail(pr.id, back); } });
 }
 function dSyncProb(){probOptions('d-prob',STAGE_PROB[document.getElementById('d-stage').value]||10);}
 function dRenderRel(editable){
@@ -120,15 +131,26 @@ function dAddRel(){const v=document.getElementById('d-rel').value;if(!v)return;d
 function dRmRel(v){dRelated=dRelated.filter(x=>x!==v);dRenderRel(true);}
 function dRenderComments(){
   const box=document.getElementById('d-comments');
-  if(!curRec.comments.length){
+  const count=document.getElementById('d-cmt-count');
+  const n=curRec.comments.length;
+  if(count)count.textContent=n?n+' tin nhắn':'';
+  if(!n){
     box.innerHTML='<div class="d-empty">'+(curRec.desc?('Ghi chú từ Excel: “'+curRec.desc+'”'):'Chưa có trao đổi nào.')+'</div>';return;}
+  /* Your own messages sit on the right; everyone else on the left. */
+  const mine=me&&(me.pic||me.name);
   box.innerHTML=curRec.comments.map(c=>{
     const u=USERS.find(x=>(x.pic||x.name)===c.by);
-    return `<div class="cmt"><span class="avatar" style="width:26px;height:26px;font-size:10px;background:${u?u.color:'#8A90A4'}">${c.by.slice(0,2).toUpperCase()}</span>
+    const own=c.by===mine;
+    return `<div class="cmt${own?' me':''}">
+      <span class="avatar" style="width:26px;height:26px;font-size:10px;background:${u?u.color:'#8A90A4'}">${c.by.slice(0,2).toUpperCase()}</span>
       <div class="c-body"><b>${c.by}</b><small>${c.at}</small><p>${c.text}</p></div></div>`;}).join('');
   box.scrollTop=box.scrollHeight;
 }
-function nowStr(){return '07/07/2026 '+new Date().toTimeString().slice(0,5)}
+function nowStr(){
+  var d=new Date();
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+
+         d.getFullYear()+' '+d.toTimeString().slice(0,5);
+}
 function postComment(){
   const inp=document.getElementById('d-cmt'); const v=inp.value.trim(); if(!v)return;
   curRec.comments.push({by:me.pic||me.name,at:nowStr(),text:v});
@@ -151,7 +173,15 @@ function saveDetail(){
     notify(curRec,`đã cập nhật <b>${curRec.customer} · ${curRec.product}</b>: ${changes.join(' · ')}`);
     toast('Đã lưu. Thông báo gửi qua Email & Microsoft Teams đến: '+recipientsOf(curRec).join(', ')+'.');
   }
-  closeDetail(); render();
+  closeDetail(); render(); cockpitRefresh();
 }
-function closeDetail(){document.getElementById('dov').classList.remove('open');}
+function closeDetail(){
+  NAV.back(function(){ document.getElementById('dov').classList.remove('open'); });
+}
+/* Lưu xong là hành động dứt điểm: bỏ lớp trung gian, về thẳng nơi xuất phát. */
+function closeDetailDone(){
+  document.getElementById('dov').classList.remove('open');
+  var o=NAV.back(function(){});
+  return o;
+}
 

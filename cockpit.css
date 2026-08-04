@@ -1,0 +1,232 @@
+/* cockpit.css — Tổng quan điều hành.
+   Kế thừa token của styles.css: marine trên nền ngọc trai, Outfit cho tiêu đề,
+   Inter cho nội dung. Không đặt màu mới ngoài bảng đã có.
+
+   Hai yếu tố nhận diện của trang:
+   1. Trục dọc marine chạy suốt dòng thời gian, nối tiếp ngôn ngữ "thân cây"
+      đã dùng ở timeline Dashboard — trang mới thuộc cùng một họ.
+   2. Thanh im lặng ở bảng khách hàng: khoảng thời gian bặt tin hiện thành
+      hình khối, manager quét mắt là thấy khách nào nguội mà không cần đọc số. */
+
+:root{
+  --ck-act:#0E7490; --ck-update:#0A5C8F; --ck-new:#1E3A8A;
+  --ck-gap:18px;
+}
+
+/* ---------- ĐẦU TRANG ---------- */
+.ck-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.ck-range{font-size:12.5px;color:var(--text-3);margin:-2px 0 16px;font-variant-numeric:tabular-nums}
+.ck-range b{color:var(--marine-label);font-weight:600}
+
+.ck-period{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.ck-period button{
+  padding:6px 13px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--text-2);
+  font-variant-numeric:tabular-nums;transition:background .14s,color .14s}
+.ck-period button:hover{background:var(--pearl)}
+.ck-period button[aria-pressed="true"]{background:var(--marine);color:#fff}
+.ck-period button:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+
+/* ---------- DẢI TÍN HIỆU ---------- */
+.ck-signals{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--ck-gap);margin-bottom:var(--ck-gap)}
+.ck-sig{
+  position:relative;text-align:left;padding:16px 18px 15px;border-radius:var(--r);
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);
+  transition:border-color .15s,box-shadow .15s,transform .15s;overflow:hidden}
+.ck-sig::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sig,var(--marine));opacity:.5;transition:opacity .15s}
+.ck-sig:hover{border-color:var(--marine-line);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.ck-sig:hover::before{opacity:1}
+.ck-sig:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.ck-sig[aria-pressed="true"]{border-color:var(--sig,var(--marine));box-shadow:0 0 0 1px var(--sig,var(--marine)) inset,var(--shadow-md)}
+.ck-sig[aria-pressed="true"]::before{opacity:1}
+.ck-sig-k{display:block;font-size:11px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--text-3)}
+.ck-sig-v{display:block;font-family:var(--font-display);font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.02em;margin:7px 0 3px;color:var(--sig,var(--marine));font-variant-numeric:tabular-nums}
+.ck-sig-v small{font-size:14px;font-weight:600;color:var(--text-3);margin-left:5px;letter-spacing:0}
+.ck-sig-s{display:block;font-size:11.5px;color:var(--text-3);line-height:1.4}
+
+/* ---------- KHUNG CHUNG ---------- */
+.ck-panel{border-radius:var(--r);margin-bottom:var(--ck-gap);overflow:hidden}
+.ck-head{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:15px 18px;border-bottom:1px solid var(--line-2)}
+.ck-head h3{font-family:var(--font-display);font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.ck-count{font-weight:600;color:var(--text-3);font-size:12.5px;margin-left:6px;font-variant-numeric:tabular-nums}
+.ck-head-tools{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.ck-chip{
+  padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);
+  font-size:12px;font-weight:600;color:var(--text-2);transition:all .14s;white-space:nowrap}
+.ck-chip:hover{border-color:var(--marine-line);background:var(--pearl-2)}
+.ck-chip[aria-pressed="true"]{background:var(--marine-soft);border-color:var(--marine-line);color:var(--marine)}
+.ck-chip:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.ck-badge{
+  display:inline-block;padding:4px 10px;border-radius:20px;background:var(--marine-soft);
+  border:1px solid var(--marine-line);font-size:11.5px;font-weight:600;color:var(--marine);white-space:nowrap}
+.ck-badge.warn{background:var(--overdue-bg);border-color:var(--lost-bd);color:var(--overdue)}
+.ck-sel{
+  border:1px solid var(--line);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:600;
+  color:var(--text-2);background:var(--surface)}
+.ck-sel:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+
+/* ---------- DÒNG THỜI GIAN ---------- */
+.ck-feed{max-height:min(58dvh,560px);overflow-y:auto;padding:6px 0 10px}
+.ck-day{padding:0 18px}
+.ck-day-h{
+  display:flex;align-items:baseline;gap:9px;padding:13px 0 8px;position:sticky;top:0;z-index:2;
+  background:var(--surface)}
+.ck-day-h b{font-family:var(--font-display);font-size:12.5px;font-weight:700;color:var(--marine-ink)}
+.ck-day-h span{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.ck-day-h em{margin-left:auto;font-style:normal;font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
+
+/* Trục dọc marine: nhạt dần về cuối kỳ, cùng ngữ pháp với timeline Dashboard. */
+.ck-day-b{position:relative;padding-left:20px}
+.ck-day-b::before{
+  content:'';position:absolute;left:5px;top:4px;bottom:4px;width:1.5px;border-radius:2px;
+  background:linear-gradient(var(--f0,rgba(1,66,106,.5)),var(--f1,rgba(1,66,106,.12)))}
+
+.ck-ev{
+  position:relative;display:block;width:100%;text-align:left;padding:9px 10px 10px 4px;border-radius:8px;
+  transition:background .13s}
+.ck-ev:hover{background:var(--pearl-2)}
+.ck-ev:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
+.ck-ev::before{
+  content:'';position:absolute;left:-19px;top:15px;width:9px;height:9px;border-radius:50%;
+  background:var(--kc,var(--marine));border:2px solid var(--surface);box-shadow:0 0 0 1.5px var(--kc,var(--marine))}
+.ck-ev-t{display:flex;align-items:center;gap:7px;flex-wrap:wrap;line-height:1.35}
+.ck-ev-pic{font-weight:600;color:var(--marine-ink);font-size:13px}
+.ck-ev-arrow{color:var(--text-3);font-size:12px}
+.ck-ev-cust{font-weight:700;color:var(--marine);font-size:13px}
+.ck-ev-note{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-top:4px;max-width:74ch}
+.ck-ev-next{font-size:12px;color:var(--text-3);margin-top:3px}
+.ck-ev-next b{color:var(--marine-label);font-weight:600}
+
+.ck-tag{
+  font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 7px;border-radius:5px;
+  background:var(--kc-bg,var(--marine-soft));color:var(--kc,var(--marine));white-space:nowrap}
+.ck-meta{font-size:11px;color:var(--text-3);white-space:nowrap}
+.ck-meta.dot::before{content:'·';margin-right:6px;color:var(--line)}
+.ck-approx{cursor:help;border-bottom:1px dotted var(--text-3)}
+
+/* ---------- BẢNG KHÁCH HÀNG ---------- */
+.ck-search{position:relative;display:flex;align-items:center}
+.ck-search svg{position:absolute;left:10px;color:var(--text-3);pointer-events:none}
+.ck-search input{
+  border:1px solid var(--line);border-radius:20px;padding:6px 12px 6px 31px;font-size:12.5px;
+  width:210px;background:var(--surface);transition:border-color .14s}
+.ck-search input:focus{outline:none;border-color:var(--marine)}
+
+.ck-grid{display:grid;grid-template-columns:minmax(180px,2.1fr) 1.3fr 1.2fr .9fr .8fr .9fr 1.25fr;gap:12px;align-items:center}
+.ck-thead{
+  padding:9px 18px;border-bottom:1px solid var(--line-2);background:var(--pearl-2);
+  font-size:10.5px;font-weight:700;letter-spacing:.055em;text-transform:uppercase;color:var(--text-3)}
+.ck-thead button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;text-align:left;display:flex;align-items:center;gap:4px}
+.ck-thead button:hover{color:var(--marine)}
+.ck-thead button:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.ck-thead .num,.ck-row .num{text-align:right;justify-content:flex-end}
+.ck-thead .sorted{color:var(--marine)}
+
+.ck-rows{max-height:min(56dvh,540px);overflow-y:auto}
+.ck-row{
+  width:100%;padding:11px 18px;border-bottom:1px solid var(--line-2);text-align:left;
+  transition:background .13s}
+.ck-row:hover{background:var(--pearl-2)}
+.ck-row:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
+.ck-row[hidden]{display:none}
+.ck-row-n{font-weight:700;font-size:13px;color:var(--marine-ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-row .sub{display:block;font-size:11px;font-weight:500;color:var(--text-3);margin-top:2px}
+.ck-row .cell{font-size:12.5px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck-row .num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--marine-ink);font-size:12.5px}
+.ck-more{color:var(--text-3);font-weight:600}
+
+/* Thanh im lặng — bao lâu rồi chưa ai chạm vào khách này. */
+.ck-quiet{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ck-quiet-t{font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ck-quiet-b{height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
+.ck-quiet-b i{display:block;height:100%;border-radius:2px;background:var(--qc,var(--marine-2))}
+
+/* ---------- NGĂN KÉO KHÁCH HÀNG ---------- */
+.ck-bd{
+  position:fixed;inset:0;background:rgba(11,36,54,.34);opacity:0;pointer-events:none;
+  transition:opacity .18s ease-out;z-index:840}
+.ck-bd.open{opacity:1;pointer-events:auto}
+.ck-drawer{
+  position:fixed;top:0;right:0;bottom:0;width:480px;max-width:94vw;background:var(--surface);
+  border-left:1px solid var(--line);box-shadow:var(--shadow-lg);transform:translateX(100%);
+  transition:transform .2s ease-out;z-index:850;display:flex;flex-direction:column;
+  padding-bottom:env(safe-area-inset-bottom)}
+.ck-drawer.open{transform:none}
+.ck-drawer:focus,.ck-drawer:focus-visible{outline:none}
+.ck-dr-head{padding:20px 22px 16px;border-bottom:1px solid var(--line-2);position:relative}
+.ck-dr-head h3{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:-.015em;
+  color:var(--marine-ink);padding-right:36px;line-height:1.25}
+.ck-dr-sub{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.ck-dr-x{position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:background .14s,color .14s}
+.ck-dr-x:hover{background:var(--pearl);color:var(--text)}
+.ck-dr-x:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.ck-dr-body{flex:1;overflow-y:auto;padding:4px 22px 22px}
+.ck-dr-foot{padding:14px 22px;border-top:1px solid var(--line-2);background:var(--pearl-2)}
+
+.ck-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 0 4px}
+.ck-stat{padding:11px 12px;border-radius:8px;background:var(--pearl-2);border:1px solid var(--line-2)}
+.ck-stat b{display:block;font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--marine);
+  line-height:1.2;font-variant-numeric:tabular-nums}
+.ck-stat span{display:block;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3);margin-top:3px}
+
+.ck-block{padding:18px 0 0;border-top:1px solid var(--line-2);margin-top:18px}
+.ck-block:first-of-type{border-top:none;margin-top:0}
+.ck-block h4{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:11px}
+.ck-people{display:flex;flex-direction:column;gap:7px}
+.ck-person{display:flex;align-items:center;gap:9px;font-size:13px}
+.ck-person b{font-weight:600;color:var(--marine-ink)}
+.ck-person span{margin-left:auto;font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.ck-tags{display:flex;gap:6px;flex-wrap:wrap}
+
+.ck-prod{width:100%;text-align:left;display:grid;grid-template-columns:1fr auto;gap:3px 12px;
+  padding:9px 11px;border-radius:8px;border:1px solid var(--line-2);margin-bottom:7px;transition:border-color .14s,background .14s}
+.ck-prod:hover{border-color:var(--marine-line);background:var(--pearl-2)}
+.ck-prod:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.ck-prod b{font-size:12.5px;font-weight:600;color:var(--marine-ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ck-prod .kg{font-size:12px;font-weight:600;color:var(--marine);font-variant-numeric:tabular-nums;text-align:right}
+.ck-prod .m{grid-column:1/-1;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--text-3)}
+
+.ck-mini{position:relative;padding-left:18px}
+.ck-mini::before{content:'';position:absolute;left:3px;top:6px;bottom:6px;width:1.5px;border-radius:2px;
+  background:linear-gradient(rgba(1,66,106,.42),rgba(1,66,106,.08))}
+.ck-mini-i{position:relative;padding:7px 0 8px}
+.ck-mini-i::before{content:'';position:absolute;left:-18px;top:11px;width:7px;height:7px;border-radius:50%;
+  background:var(--kc,var(--marine));border:2px solid var(--surface);box-shadow:0 0 0 1.5px var(--kc,var(--marine))}
+.ck-mini-d{font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
+.ck-mini-t{font-size:12.5px;color:var(--text-2);line-height:1.5;margin-top:2px}
+
+.ck-link{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;
+  border:1px solid var(--marine-line);border-radius:8px;background:var(--surface);
+  font-size:13px;font-weight:600;color:var(--marine);transition:background .14s,border-color .14s}
+.ck-link:hover{background:var(--marine-soft);border-color:var(--marine)}
+.ck-link:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+
+/* ---------- TRỐNG ---------- */
+.ck-empty{padding:44px 24px;text-align:center;color:var(--text-3)}
+.ck-empty b{display:block;font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+.ck-empty p{font-size:12.5px;max-width:38ch;margin:0 auto 15px}
+.ck-empty .ck-chip{background:var(--marine-soft);border-color:var(--marine-line);color:var(--marine)}
+
+/* ---------- CO GIÃN ---------- */
+@media (max-width:1180px){
+  .ck-grid{grid-template-columns:minmax(150px,2fr) 1.2fr .8fr .8fr 1.1fr}
+  .ck-grid>.hide-md{display:none}
+}
+@media (max-width:900px){
+  .ck-signals{grid-template-columns:repeat(2,1fr)}
+  .ck-grid{grid-template-columns:minmax(130px,2fr) 1fr 1.1fr}
+  .ck-grid>.hide-sm{display:none}
+  .ck-drawer{width:100%}
+  .ck-search input{width:150px}
+  .ck-search input:focus{width:170px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ck-drawer{transition:none}
+  .ck-sig:hover{transform:none}
+}
