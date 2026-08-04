@@ -41,10 +41,18 @@ function dayStampVI(iso){
 /* ====== PHẠM VI CỦA MỘT NGƯỜI ======
    Tuần luôn là góc nhìn CÁ NHÂN, kể cả với người có quyền xem toàn đội — nên
    phạm vi 'all' thu về 'own-pic'. R&D bám cột "R&D phụ trách" thay vì cột PIC. */
-function scopeKindFor(pic){
+/* Tìm hồ sơ người dùng theo BẤT KỲ tên nào của họ — "Ngoc", "Bich Ngoc" hay
+   "Phạm Bích Ngọc" đều phải ra cùng một người. */
+function userByName(pic){
   var K = picKey(pic);
-  var u = (typeof USERS !== 'undefined' ? USERS : []).filter(function(x){
-    return picKey(x.pic) === K; })[0];
+  if(!K || typeof USERS === 'undefined') return null;
+  return USERS.filter(function(x){
+    return (typeof nameSetOf === 'function' ? nameSetOf(x) : [x.pic])
+      .some(function(n){ return picKey(n) === K; });
+  })[0] || null;
+}
+function scopeKindFor(pic){
+  var u = userByName(pic);
   var k = (u && typeof cap === 'function') ? cap(u.role).scope : 'own-pic';
   return k === 'own-rnd' ? 'own-rnd' : 'own-pic';
 }
@@ -52,13 +60,19 @@ function myScope(pic, kind){
   var K = picKey(pic);
   if(!K) return { key:'', records:[], acts:[] };
   kind = kind || scopeKindFor(pic);
+  var u = userByName(pic);
+  var mine = function(v){
+    if(!v) return false;
+    if(picKey(v) === K) return true;
+    return !!(u && typeof isMine === 'function' && isMine(v, u));
+  };
   var records = RECORDS.filter(function(r){
-    if(kind === 'own-rnd') return picKey(r.rnd) === K;
-    return picKey(r.pic) === K || (r.related||[]).some(function(x){ return picKey(x) === K; });
+    if(kind === 'own-rnd') return mine(r.rnd);
+    return mine(r.pic) || (r.related||[]).some(mine);
   });
   var ids = {}; records.forEach(function(r){ ids[r.id] = 1; });
   var acts = ACTIVITIES.filter(function(a){
-    return picKey(a.pic) === K || (a.projectId && ids[a.projectId]);
+    return mine(a.pic) || (a.projectId && ids[a.projectId]);
   });
   return { key:K, records:records, acts:acts };
 }

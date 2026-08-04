@@ -54,7 +54,7 @@ window.welcomeRefresh = welcomeRefresh;
 /* Mỗi ngày một lần cho mỗi người. Mục sidebar mở lại không ghi cờ. */
 function wcSeenKey(){ return 'fisg_wc_seen_' + ((me && me.email) || 'anon'); }
 function wcMaybeAutoOpen(){
-  if(!me || !myCap().weekly) return;
+  if(!me || !myCap().weeklyAuto) return;
   let seen = null;
   try{ seen = localStorage.getItem(wcSeenKey()); }catch(e){}
   if(seen === todayISO()) return;
@@ -255,25 +255,47 @@ function wcBodyStart(mw){
 }
 
 function wcBodyMid(mw){
-  const nothing = !mw.today.length && !mw.planned.length && !mw.missed.length;
-  if(nothing){
-    const sg = suggestWork(mw.pic, 3);
-    return wcSection('Tuần này chưa có việc nào trong lịch', sg.length,
-      sg.length ? sg.map(wcSuggestRow).join('')
-                : wcEmpty('Không có việc nào cần ưu tiên', 'Mở Sales Funnel', 'wcGo(\'funnel\')'),
-      'ba việc đáng làm nhất')
-      + (mw.done.length ? wcSection('Đã làm trong tuần', mw.done.length,
-          mw.done.map(a => wcActRow(a, LS.isLocal(a) ? 'undo' : null)).join('')) : '');
-  }
-  return (mw.today.length ? wcSection('Hôm nay', mw.today.length,
-            mw.today.map(a => wcActRow(a, LS.isDone(a) ? 'undo' : 'done')).join('')) : '')
-    + (mw.missed.length ? wcSection('Chưa đánh dấu — đã qua ngày', mw.missed.length,
-            mw.missed.map(a => wcActRow(a, 'done')).join(''),
-            'chỉ áp dụng với việc bạn tạo trong phần mềm') : '')
-    + (mw.planned.length ? wcSection('Còn lại trong tuần', mw.planned.length,
-            mw.planned.map(a => wcActRow(a, null)).join('')) : '')
-    + (mw.done.length ? wcSection('Đã làm trong tuần', mw.done.length,
-            mw.done.map(a => wcActRow(a, LS.isLocal(a) ? 'undo' : null)).join('')) : '');
+  /* Khối "Cập nhật hoạt động" LUÔN hiện, kể cả tuần trống — đây là việc chính
+     của giữa tuần, không phải phần thưởng khi có sẵn dữ liệu. Ba nhóm bám đúng
+     ba trạng thái một việc có thể ở: đã lên kế hoạch · đang làm · đã làm. */
+  const doing = mw.today.filter(function(a){ return !LS.isDone(a); });
+  const doneToday = mw.today.filter(LS.isDone);
+  const done = doneToday.concat(mw.done);
+  const total = mw.planned.length + doing.length + done.length + mw.missed.length;
+
+  const group = (title, count, items, render, emptyMsg, extra) =>
+    `<div class="wc-grp">
+       <div class="wc-grp-h"><b>${title}</b><span>${count}</span>${extra ? `<em>${extra}</em>` : ''}</div>
+       ${count ? items.map(render).join('') : `<div class="wc-grp-e">${emptyMsg}</div>`}
+     </div>`;
+
+  const board = wcSection('Cập nhật hoạt động', total,
+      group('Đang làm hôm nay', doing.length, doing,
+            a => wcActRow(a, 'done'),
+            'Hôm nay chưa có việc nào trên lịch.')
+    + group('Chưa đánh dấu — đã qua ngày', mw.missed.length, mw.missed,
+            a => wcActRow(a, 'done'),
+            'Không có việc nào bị bỏ quên.',
+            mw.missed.length ? 'chỉ áp dụng với việc bạn tạo trong phần mềm' : '')
+    + group('Đã lên kế hoạch — còn lại trong tuần', mw.planned.length, mw.planned,
+            a => wcActRow(a, null),
+            'Chưa đặt lịch việc nào cho những ngày còn lại.')
+    + group('Đã làm trong tuần', done.length, done,
+            a => wcActRow(a, LS.isLocal(a) ? 'undo' : null),
+            'Chưa có việc nào được đánh dấu hoàn thành.')
+    + (wcCanAct()
+        ? `<div class="wc-grp-act"><button class="wc-btn pri" onclick="wcSchedule()">Ghi hoạt động mới</button></div>`
+        : ''),
+    total ? 'đánh dấu "Đã làm" để báo cáo cuối tuần tính đúng' : '');
+
+  /* Tuần trống thì gợi ý thêm việc — nhưng ĐẶT DƯỚI khối cập nhật, không thay
+     thế nó, để chỗ ghi nhận công việc luôn ở cùng một vị trí. */
+  if(total) return board;
+  const sg = suggestWork(mw.pic, 3);
+  return board + (sg.length
+    ? wcSection('Việc đáng làm nhất lúc này', sg.length, sg.map(wcSuggestRow).join(''),
+                'gợi ý theo mức cấp thiết')
+    : '');
 }
 
 function wcBodyEnd(mw){

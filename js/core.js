@@ -23,7 +23,7 @@ function loginAs(i){
   /* Tổng quan tuần là góc nhìn của một sales; manager/admin mở tay được ở chế độ chỉ đọc. */
   LS.reset(); LS.mergeActs(); NAV.clear();
   go(c.cockpit?'cockpit':'funnel'); buildForm(); buildUsers(); renderNotifs();
-  if(c.weekly) wcMaybeAutoOpen();
+  if(c.weeklyAuto) wcMaybeAutoOpen();
 }
 
 /* Tab NCC dựng lại được: lúc đăng nhập danh mục còn rỗng, dữ liệu SharePoint về sau. */

@@ -83,8 +83,11 @@ window.buildUsers = buildUsers;
 
 /* Dòng phụ dưới tên: nói rõ đang đổi tên nào thành tên nào. */
 function admPicLine(u){
-  if(u.picRaw && u.fullName && picKey(u.picRaw) !== picKey(u.fullName))
-    return 'Dữ liệu ghi "' + admEsc(u.picRaw) + '" → hiển thị "' + admEsc(u.fullName) + '"';
+  const al = splitAliases(u.picRaw).filter(function(x){
+    return !u.fullName || picKey(x) !== picKey(u.fullName); });
+  if(al.length && u.fullName)
+    return 'Dữ liệu ghi ' + al.map(function(x){ return '"' + admEsc(x) + '"'; }).join(' · ')
+         + ' → hiển thị "' + admEsc(u.fullName) + '"';
   if(u.picRaw) return 'PIC: ' + admEsc(u.picRaw);
   if(u.fullName) return 'PIC: ' + admEsc(u.fullName) + ' (theo tên O365)';
   return 'PIC lấy theo tên O365 khi đăng nhập';

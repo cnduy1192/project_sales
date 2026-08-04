@@ -37,7 +37,7 @@ var NAV = (function(){
     if(explicit){ stack.push(explicit); return; }
 
     if(typeof wcIsOpen === 'function' && wcIsOpen()){
-      stack.push({ label:'Tổng quan tuần', restore: window.openWelcome });
+      stack.push({ label:'Kế hoạch tuần', restore: window.openWelcome });
       closeWelcome();
       return;
     }

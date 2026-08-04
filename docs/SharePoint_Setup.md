@@ -12,7 +12,7 @@ Từ giờ **không đăng nhập Microsoft 365 thì không có dữ liệu nào
 
 ### 1.1 Tạo list `Users` — bắt buộc
 
-Không có list này thì không ai được gán vai trò sales, và toàn bộ phần cá nhân hoá (Tổng quan tuần, phạm vi xem của sales, gợi ý việc) không hoạt động.
+Không có list này thì không ai được gán vai trò sales, và toàn bộ phần cá nhân hoá (Kế hoạch tuần, phạm vi xem của sales, gợi ý việc) không hoạt động.
 
 Site: `fisaigonvn.sharepoint.com/sites/SalesProjectTracker` → **New → List** → đặt tên `Users`.
 
@@ -58,21 +58,25 @@ Khai một lần trong màn Người dùng & phân quyền:
 | Tên đầy đủ (O365) | Tự điền khi bấm Tra O365 |
 | Tên PIC như trong dữ liệu | `Bich Ngoc` — chỉ điền khi dữ liệu ghi tên tắt |
 
+**Một người có nhiều tên tắt thì ngăn bằng dấu phẩy.** Funnel ghi cùng một người khi thì `Ngoc`, khi thì `Bich Ngoc` — điền `Ngoc, Bich Ngoc` là cả hai đều hiện thành `Phạm Bích Ngọc`, và người đó thấy được cả hai nhóm dự án của mình.
+
 Từ đó mọi màn hình — funnel, hoạt động, Cockpit, báo cáo — đều hiện `Phạm Bích Ngọc`. Bảng người dùng ghi rõ *Dữ liệu ghi "Bich Ngoc" → hiển thị "Phạm Bích Ngọc"* để bạn nhìn ra ai đang được đổi tên.
 
 Nếu dữ liệu đã ghi đúng tên đầy đủ thì **để trống ô PIC** — Tra O365 cũng cố tình không tự điền ô này.
 
 ### 1.1d Năm vai trò
 
-| Vai trò | Phạm vi dữ liệu | Sửa | Đóng dự án | Cockpit | Tổng quan tuần | Phân quyền |
+| Vai trò | Phạm vi dữ liệu | Sửa | Đóng dự án | Cockpit | Kế hoạch tuần | Phân quyền |
 |---|---|---|---|---|---|---|
 | Sales | dự án mình là PIC | ✓ | ✓ | — | ✓ | — |
 | R&D | dự án mình phụ trách R&D | ✓ | — | — | ✓ | — |
 | Manager | toàn đội | ✓ | ✓ | ✓ | — | — |
 | Director | toàn đội | — | — | ✓ | — | — |
-| Super Admin | toàn đội | ✓ | ✓ | ✓ | — | ✓ |
+| Super Admin | toàn đội | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 **R&D bám cột `RnDOwner`** ("R&D phụ trách") trong list Projects — cột này đã có sẵn nhưng trước đây app không đọc. Không có giá trị trong đó thì người R&D không thấy dự án nào.
+
+**Super Admin thấy mọi menu**, kể cả Kế hoạch tuần, để kiểm tra được màn hình của sales. Nhưng popup không tự bật mỗi sáng — đó là nhịp làm việc của sales, không phải của quản trị; mở bằng mục sidebar khi cần.
 
 **Director đọc được cả đội nhưng không nhập liệu**: không nút Lưu, không đóng dự án. Vẫn nhận báo cáo tuần của sales.
 

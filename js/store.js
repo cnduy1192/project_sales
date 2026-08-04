@@ -226,8 +226,11 @@
         const f = it.fields || {};
         const email = (txt(g(f, "Email")) || txt(f.Title)).toLowerCase();
         const role = (txt(g(f, "Role")) || "sales").toLowerCase();
+        /* PICName có thể chứa NHIỀU tên, ngăn bởi dấu phẩy: dữ liệu cũ ghi cùng
+           một người khi thì "Ngoc", khi thì "Bich Ngoc". */
         const picRaw = txt(g(f, "PICName")) || null;
         const full = txt(g(f, "FullName")) || null;
+        const first = (typeof splitAliases === "function" ? splitAliases(picRaw) : [])[0] || null;
         return {
           spId: it.id,
           email: email,
@@ -236,8 +239,9 @@
              để lúc ghi lại không đè mất bảng ánh xạ. */
           picRaw: picRaw,
           fullName: full,
-          name: full || picRaw || email,
-          pic: picRaw || full || null,
+          name: full || first || email,
+          /* pic = tên ĐANG DÙNG (một chuỗi), không phải cả danh sách tên tắt. */
+          pic: full || first || null,
           role: isKnownRoleSafe(role) ? role : "sales",
           color: ROLE_COLOR[role] || "#0D9488",
         };
@@ -361,8 +365,10 @@
   function picAliasMap(extra) {
     const m = {};
     USERS.forEach(u => {
-      const from = u.picRaw, to = u.fullName;
-      if (from && to && picKey(from) !== picKey(to)) m[picKey(from)] = to;
+      const to = u.fullName;
+      if (!to) return;
+      const list = (typeof splitAliases === "function") ? splitAliases(u.picRaw) : [];
+      list.forEach(from => { if (picKey(from) !== picKey(to)) m[picKey(from)] = to; });
     });
     if (extra) Object.keys(extra).forEach(k => {
       if (extra[k] && picKey(k) !== picKey(extra[k])) m[picKey(k)] = extra[k];

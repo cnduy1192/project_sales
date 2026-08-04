@@ -54,7 +54,7 @@
         <span class="nav-t">Tổng quan điều hành</span></button>
       <button class="nav-item" data-view="welcome" onclick="openWelcome()" id="navWelcome">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="12" cy="14.5" r="1.6"/></svg>
-        <span class="nav-t">Tổng quan tuần</span></button>
+        <span class="nav-t">Kế hoạch tuần</span></button>
       <div class="nav-label">Làm việc</div>
       <button class="nav-item active" data-view="funnel" onclick="go('funnel')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
@@ -420,9 +420,10 @@
       </div>
       <div class="field">
         <label for="u-pic">Tên PIC như trong dữ liệu</label>
-        <input id="u-pic" placeholder="Để trống nếu dữ liệu đã ghi đúng tên đầy đủ">
-        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi tên tắt, ví dụ <b>Bich Ngoc</b>.
-          App sẽ thay tên tắt đó bằng tên đầy đủ ở mọi màn hình.</div>
+        <input id="u-pic" placeholder="Ngoc, Bich Ngoc">
+        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi tên tắt.
+          <b>Một người có nhiều tên thì ngăn bằng dấu phẩy</b> — ví dụ <b>Ngoc, Bich Ngoc</b>
+          đều sẽ hiện thành tên đầy đủ ở mọi màn hình.</div>
       </div>
       <div class="field">
         <label for="u-role">Vai trò <span class="req">*</span></label>
