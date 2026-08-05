@@ -213,15 +213,21 @@
       const arr = (LISTS.pipelines[r.ncc] = LISTS.pipelines[r.ncc] || []);
       if (arr.indexOf(r.stage) < 0) { arr.push(r.stage); unknown.push(r.ncc + " · " + r.stage); }
     });
-    if (unknown.length)
-      console.warn("[store] giai đoạn có trong dữ liệu nhưng không có trong cấu hình:",
-                   [...new Set(unknown)]);
+    /* In THẲNG từng dòng. Console gói mảng dài thành "Array(15)" phải bấm mới
+       mở, mà cảnh báo phải đọc được ngay mới có tác dụng. */
+    const uniqUnknown = [...new Set(unknown)];
+    if (uniqUnknown.length) {
+      console.warn("[store] " + uniqUnknown.length + " giai đoạn có trong dữ liệu nhưng "
+        + "không có trong cấu hình — đã thêm vào cuối pipeline để không dự án nào biến mất:");
+      uniqUnknown.forEach(x => console.warn("   " + x));
+      console.warn("   Sửa ở list Pipelines trên SharePoint, hoặc js/data/catalog.js.");
+    }
 
     /* resetCatalog() trả LISTS về tên gốc "Kimica-Navido"; đổi lại ngay tại đây
        thay vì trông chờ hook chạy sau syncFromGraph. */
     if (window.FISG_RENAME_NCC) FISG_RENAME_NCC();
     if (window.rebuildDerived) rebuildDerived();
-    return { pipelineFromList: !!(pipe && pipe.length), unknownStages: [...new Set(unknown)] };
+    return { pipelineFromList: !!(pipe && pipe.length), unknownStages: uniqUnknown };
   }
 
   /* ---------- NGƯỜI DÙNG & PHÂN QUYỀN ----------
@@ -910,27 +916,62 @@
     }
   }
 
-  /* Bao nhiêu % bản ghi rỗng ở một trường lookup. Rỗng gần hết = dò trượt cột. */
+  /* Cảnh báo khi một trường lookup đọc về rỗng bất thường.
+
+     Phải phân biệt hai chuyện, nếu không báo động giả sẽ nhanh chóng bị bỏ qua:
+       · KHÔNG DÒ RA CỘT  → luôn là lỗi cấu hình, báo ngay.
+       · Dò ra cột nhưng dữ liệu rỗng → thường là dữ liệu rỗng thật. NCC chẳng
+         hạn: hoạt động gắn "Khác" cố ý để trống. Chỉ báo khi TOÀN BỘ rỗng và có
+         đủ nhiều bản ghi để kết luận. */
   function lookupHealth(list, get, rows, field, key) {
     if (!rows.length) return;
-    const empty = rows.filter(r => !r[field]).length;
-    if (empty / rows.length < 0.5) return;
     const col = (get && get.internal && get.internal(key)) || null;
-    console.warn("[store] " + empty + "/" + rows.length + " bản ghi " + list
-      + " không đọc được \"" + key + "\" — cột đang dò: " + (col || "KHÔNG TÌM THẤY")
-      + ". Chạy FISG_STORE.debug('" + list + "') để xem tên cột thật.");
+    const hint = " Chạy FISG_STORE.debug('" + list + "') để xem tên cột thật.";
+    if (!col) {
+      console.warn("[store] list " + list + " không tìm thấy cột \"" + key
+        + "\" — mọi bản ghi sẽ trống ở trường này." + hint);
+      return;
+    }
+    const empty = rows.filter(r => !r[field]).length;
+    if (empty === rows.length && rows.length >= 10)
+      console.warn("[store] cả " + rows.length + " bản ghi " + list + " đều trống \"" + key
+        + "\" dù đã dò ra cột " + col + " — kiểm tra xem cột này có dữ liệu không." + hint);
   }
 
   // Chẩn đoán: gõ FISG_STORE.debug() trong Console để xem cột thật & 1 bản ghi mẫu
+  /* Cột hệ thống SharePoint tự sinh — không liên quan tới nghiệp vụ, in ra chỉ
+     làm ngập màn hình đúng lúc đang cần đọc. */
+  const SYS_COLS = /^(ID|ContentType|Modified|Created|Author|Editor|_UIVersionString|Attachments|Edit|LinkTitleNoMenu|LinkTitle|DocIcon|ItemChildCount|FolderChildCount|_Compliance\w*|_ColorTag|AppAuthor|AppEditor|ComplianceAssetId|_Level|_IsRecord|_ModerationStatus|Order|GUID|FileLeafRef|FileDirRef|FSObjType|SortBehavior|PermMask|MetaInfo|_HasCopyDestinations|_CopySource|owshiddenversion|WorkflowVersion|_UIVersion|InstanceID|WorkflowInstanceID|ServerUrl|EncodedAbsUrl|BaseName|ContentTypeId|_EditMenuTableStart\w*|_EditMenuTableEnd|ServerRedirected\w*)$/;
+
   async function debug(list) {
     const L = list || "Projects";
     const cols = await FISG_GRAPH.columns(L);
-    console.log("=== Cột list " + L + " (internal | hiển thị) ===");
-    Object.keys(cols).forEach(k => console.log("  " + k + "  |  " + cols[k]));
+    const own = Object.keys(cols).filter(k => !SYS_COLS.test(k));
+
+    /* Quan trọng nhất KHÔNG phải danh sách cột, mà là bảng dò: khoá logic của
+       app đang trỏ vào cột nào. Trượt một dòng ở đây là mất cả một trường. */
+    const get = makeGetter(L, cols);
+    const keys = Object.keys(LABELS[L] || {});
+    if (keys.length) {
+      console.log("=== " + L + ": app đang dò khoá nào vào cột nào ===");
+      keys.forEach(k => {
+        const c = get.internal(k);
+        console.log("  " + (c ? "OK  " : "MẤT ") + k.padEnd(22) + " → " + (c || "KHÔNG TÌM THẤY"));
+      });
+      const miss = keys.filter(k => !get.internal(k));
+      if (miss.length)
+        console.warn("  Thiếu " + miss.length + " cột: " + miss.join(", ")
+          + ". Tạo cột với đúng tên hiển thị trong bảng dưới, hoặc báo tôi để sửa ánh xạ.");
+    }
+
+    console.log("=== Cột nghiệp vụ của list " + L + " (internal | hiển thị) ===");
+    own.forEach(k => console.log("  " + k + "  |  " + cols[k]));
+    console.log("(bỏ qua " + (Object.keys(cols).length - own.length) + " cột hệ thống)");
+
     const items = await FISG_GRAPH.listItems(L);
     console.log("Số item:", items.length);
     if (items.length) console.log("fields item đầu:", items[0].fields);
-    return { cols, sample: items[0] && items[0].fields, count: items.length };
+    return { cols, own, sample: items[0] && items[0].fields, count: items.length };
   }
 
   window.FISG_STORE = { syncFromGraph, debug, loadUsers, profileFor, picMatchReport,

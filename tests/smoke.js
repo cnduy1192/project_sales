@@ -518,6 +518,36 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(r.customer!=='CJ Foods'||r.product!=='Pregeflo PJ 30')
       throw new Error('dự án mất lookup: '+JSON.stringify(r));
   });
+  await astep('debug() chỉ ra khoá nào dò trượt cột nào',async()=>{
+    const r = await E("FISG_STORE.debug('Activities')");
+    if(!r || !r.own)throw new Error('debug không trả về danh sách cột nghiệp vụ');
+    if(r.own.indexOf('ContentType')>=0||r.own.indexOf('Modified')>=0)
+      throw new Error('vẫn liệt kê cột hệ thống');
+    if(r.own.indexOf('Customer0')<0)throw new Error('thiếu cột nghiệp vụ: '+r.own.join(','));
+  });
+  await astep('cảnh báo cột: im khi rỗng thật, kêu khi mất cột',async()=>{
+    /* NCC rỗng ở hoạt động "Khác" là chủ ý. Cảnh báo giả bị bỏ qua rất nhanh,
+       nên chỉ kêu khi KHÔNG DÒ RA CỘT. */
+    const grab = async () => {
+      const out=[], old=w.console.warn;
+      w.console.warn=(...a)=>{ out.push(a.map(String).join(' ')); };
+      try { await E('FISG_STORE.syncFromGraph()'); } finally { w.console.warn=old; }
+      return out.join('\n');
+    };
+    ITEMS.Activities.push({id:'702',fields:{ Title:'Khác · Seminar', Customer0LookupId:'11',
+      PIC:'Vo Tan Cuong', ActivityType:'Seminar', ActivityDate:'2026-08-06T12:00:00Z',
+      Content:'hội thảo chung', NextStep:'—', PotentialLevel:'Warm' }});
+    const quiet = await grab();
+    if(/không tìm thấy cột.*Supplier|đều trống.*Supplier/.test(quiet))
+      throw new Error('kêu oan khi NCC rỗng thật:\n'+quiet);
+
+    delete COLS.Activities.OData__x004e_CC;      // mất hẳn cột NCC
+    const loud = await grab();
+    if(!/không tìm thấy cột "Supplier"/.test(loud))
+      throw new Error('mất cột mà không cảnh báo:\n'+loud);
+    COLS.Activities.OData__x004e_CC = 'Supplier';
+    await E('FISG_STORE.syncFromGraph()');
+  });
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{
     /* Bản cũ chỉ đánh dấu "đã gửi" mà vẫn giữ bản AL- trong máy, nên lần đăng
        nhập sau mergeActs nối thêm một dòng y hệt bên cạnh bản chính thức. */
