@@ -523,7 +523,7 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     COLS.Activities = { Title:'Title', Customer0:'Customer', PIC:'PIC',
       OData__x004e_CC:'Supplier', ActivityType:'ActivityType', ActivityDate:'ActivityDate',
       Content:'Content', NextStep:'NextStep', PotentialLevel:'PotentialLevel',
-      RelatedProject0:'RelatedProject' };
+      RelatedProject0:'RelatedProject', Xong_x005f_ngay:'CompletedDate' };
     COLS.Projects = { Title:'Title', Customer0:'Customer', Products0:'Products',
       Supplier0:'Supplier', Stage:'Stage', Status:'Status', PICName:'PICName',
       ClosingDate:'ClosingDate', CreationDate:'CreationDate' };
@@ -552,6 +552,48 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!r.id)throw new Error('không đọc về dự án nào');
     if(r.customer!=='CJ Foods'||r.product!=='Pregeflo PJ 30')
       throw new Error('dự án mất lookup: '+JSON.stringify(r));
+  });
+  await astep('bấm Hoàn thành ghi ngày lên SharePoint',async()=>{
+    /* Sơ đồ cột đã đệm từ các bước trước, lúc mock chưa có cột này. */
+    E('FISG_STORE.forgetSchema()');
+    const act = E("ACTIVITIES.find(function(x){return x.id==='A-701'})");
+    if(!act)throw new Error('không có hoạt động nào đọc về');
+    SP.updated.length = 0;
+    E("wcMarkDone('A-701',1)");
+    await wait();
+    const u = SP.updated.filter(x=>x.list==='Activities');
+    if(!u.length)throw new Error('không gọi updateItem');
+    if(!/^\d{4}-\d{2}-\d{2}T/.test(String(u[0].fields.Xong_x005f_ngay||'')))
+      throw new Error('ghi sai cột/định dạng: '+JSON.stringify(u[0].fields));
+    if(!E("LS.isDone(ACTIVITIES.find(function(x){return x.id==='A-701'}))"))
+      throw new Error('màn hình chưa ghi nhận');
+    SP.updated.length = 0;
+    E("wcMarkDone('A-701',0)");
+    await wait();
+    const v = SP.updated.filter(x=>x.list==='Activities');
+    if(!v.length || v[0].fields.Xong_x005f_ngay !== null)
+      throw new Error('gỡ đánh dấu phải ghi null: '+JSON.stringify(v[0]&&v[0].fields));
+  });
+  await astep('trạng thái hoàn thành đọc từ SharePoint, không phụ thuộc máy',async()=>{
+    /* Xoá sạch cờ trong máy rồi đồng bộ lại: nếu vẫn thấy "đã xong" thì đúng là
+       đọc từ cột dùng chung. */
+    ITEMS.Activities[0].fields.Xong_x005f_ngay = '2026-08-05T12:00:00Z';
+    E("LS.markDone('A-701', null); LS.reset()");
+    await E('FISG_STORE.syncFromGraph()');
+    const a2 = JSON.parse(E("JSON.stringify(ACTIVITIES.find(function(x){return x.id==='A-701'})||{})"));
+    if(a2.doneAt!=='2026-08-05')throw new Error('không đọc được ngày hoàn thành: '+JSON.stringify(a2));
+    if(!E("LS.isDone(ACTIVITIES.find(function(x){return x.id==='A-701'}))"))
+      throw new Error('có ngày trên SharePoint mà vẫn coi là chưa xong');
+    ITEMS.Activities[0].fields.Xong_x005f_ngay = null;
+  });
+  await astep('list chưa có cột thì báo rõ, không âm thầm mất dữ liệu',async()=>{
+    const keep = COLS.Activities.Xong_x005f_ngay;
+    delete COLS.Activities.Xong_x005f_ngay;
+    E('FISG_STORE.forgetSchema()');
+    const res = await E("FISG_STORE.setActivityDone('701','2026-08-05')");
+    if(res!=='nocol')throw new Error('phải trả về nocol, đang trả: '+res);
+    COLS.Activities.Xong_x005f_ngay = keep;
+    E('FISG_STORE.forgetSchema()');
   });
   await astep('debug() chỉ ra khoá nào dò trượt cột nào',async()=>{
     const r = await E("FISG_STORE.debug('Activities')");

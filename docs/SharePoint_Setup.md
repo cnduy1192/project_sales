@@ -217,6 +217,7 @@ Thao tác nào ghi vào đâu:
 | Thao tác trong app | List | Kiểu |
 |---|---|---|
 | Ghi hoạt động | `Activities` | tạo dòng mới |
+| Bấm "Hoàn thành" ở Kế hoạch tuần | `Activities` | cập nhật cột `Ngày hoàn thành` |
 | Gắn hoạt động vào dự án | `Activities` | cập nhật cột `Dự án liên quan` |
 | Thêm dự án | `Projects` | tạo dòng mới |
 | Sửa giai đoạn / tiến độ / ngày đóng / KG | `Projects` | cập nhật |
@@ -241,6 +242,28 @@ text tên `PICName` vào cả `Projects`, `Activities` và `ProjectUpdates`.
 Cột `Người liên quan` của `Projects`: app thử ghi dạng text ngăn cách bằng dấu
 chấm phẩy. Nếu đó là cột Person, SharePoint từ chối và app **vẫn tạo dự án** rồi
 báo ở Console — dự án không mất, chỉ thiếu cột đó.
+
+## 3e. Cột "Ngày hoàn thành" — BẠN CẦN TẠO
+
+Trạng thái hoàn thành của một hoạt động phải là dữ liệu dùng chung, không phải
+ghi chú riêng trong trình duyệt của từng người. Tạo thêm **một cột** trong list
+`Activities`:
+
+| Cột | Kiểu | Tên hiển thị |
+|---|---|---|
+| `CompletedDate` | **Date and Time** (chỉ Date là đủ) | `Ngày hoàn thành` |
+
+Rỗng = chưa xong. Có ngày = sales đã bấm **Hoàn thành** hôm đó.
+
+Chọn kiểu Date thay vì Yes/No vì nó trả lời được cả câu "xong lúc nào" — thứ báo
+cáo cuối tuần và Tổng quan cần, mà một ô đánh dấu không có.
+
+**Trước khi có cột này** app vẫn chạy: trạng thái lưu tạm trong trình duyệt, và
+app nói thẳng "chưa dùng chung được" mỗi lần bấm. **Sau khi tạo cột**, những gì
+đã đánh dấu trước đó sẽ tự đẩy lên ở lần đăng nhập kế tiếp — không phải bấm lại.
+
+App đọc sơ đồ cột một lần mỗi phiên. Vừa tạo cột xong mà app đang mở thì bấm F5,
+hoặc gõ `FISG_STORE.forgetSchema()` trong Console.
 
 ### Khi đọc về mất tên khách hàng / NCC
 
@@ -286,6 +309,8 @@ Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là i
 | `FISG_STORE.canWrite()` | App có đang ở trạng thái ghi được không |
 | `LS.pendingActs()` | Hoạt động đã nhập nhưng chưa lên SharePoint |
 | `FISG_STORE.pushPendingActs()` | Đẩy ngay số hoạt động còn kẹt |
+| `FISG_STORE.pushPendingDone()` | Đẩy ngay trạng thái hoàn thành còn kẹt trong máy |
+| `FISG_STORE.forgetSchema()` | Đọc lại sơ đồ cột sau khi vừa thêm cột trên SharePoint |
 | `LISTS` | Toàn bộ danh mục app đang dùng |
 | `USERS` | Danh sách người dùng đọc được từ list Users |
 | `RECORDS.length`, `ACTIVITIES.length` | Số bản ghi đã tải |

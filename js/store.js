@@ -22,6 +22,9 @@
       Product: "Nguyên liệu quan tâm", ActivityType: "Loại hoạt động", ActivityDate: "Ngày",
       Content: "Nội dung", NextStep: "Kết quả / Next step", PotentialLevel: "Mức độ tiềm năng",
       RelatedProject: "Dự án liên quan",
+      /* Ngày sales bấm "Hoàn thành". Rỗng = chưa xong. Chọn kiểu Date thay vì
+         Yes/No vì nó trả lời được cả câu "xong lúc nào", thứ báo cáo tuần cần. */
+      CompletedDate: "Ngày hoàn thành",
     },
     // Pipelines: mỗi dòng = một giai đoạn của một NCC.
     Pipelines: {
@@ -543,6 +546,15 @@
   }
 
   /* Bảng tra Tên → id của các list danh mục (Customers, Products, Suppliers). */
+  /* Sơ đồ cột đọc một lần rồi nhớ suốt phiên. Thêm cột trên SharePoint giữa
+     chừng thì app chưa thấy — gọi FISG_STORE.forgetSchema() (hoặc F5). */
+  function forgetSchema() {
+    Object.keys(_schema).forEach(k => delete _schema[k]);
+    Object.keys(_lk).forEach(k => delete _lk[k]);
+    console.info("[store] đã quên sơ đồ cột — lần ghi tới sẽ đọc lại từ SharePoint.");
+    return true;
+  }
+
   const _lk = {};
   function lkKey(v) { return String(v == null ? "" : v).trim().toLowerCase(); }
   async function lookupTable(list) {
@@ -636,6 +648,7 @@
     set("Content", a.note);
     set("NextStep", a.next);
     set("PotentialLevel", a.potential);
+    if (a.doneAt) set("CompletedDate", spDate(a.doneAt));
     warnMissing("Activities", miss);
 
     const it = await FISG_GRAPH.createItem("Activities", f);
@@ -656,6 +669,29 @@
     if (!Object.keys(f).length) return false;
     await FISG_GRAPH.updateItem("Activities", spId, f);
     return true;
+  }
+
+  /* Đánh dấu hoàn thành / gỡ đánh dấu, ghi thẳng lên SharePoint để mọi máy và
+     quản lý cùng thấy một sự thật. iso = null nghĩa là gỡ.
+
+     Trả về:
+       'saved'   ghi được
+       'nocol'   list chưa có cột — người gọi giữ cờ trong máy và nói rõ
+       (ném lỗi) mạng/quyền hỏng */
+  async function setActivityDone(spId, iso) {
+    if (!canWrite()) return "nocol";
+    const get = await schemaOf("Activities");
+    if (!get.internal("CompletedDate")) {
+      console.warn("[store] list Activities chưa có cột \"Ngày hoàn thành\" (CompletedDate) — "
+        + "trạng thái hoàn thành đang chỉ lưu trong trình duyệt này. "
+        + "Xem docs/SharePoint_Setup.md mục 3e.");
+      return "nocol";
+    }
+    if (!spId) return "nocol";
+    const f = {};
+    put(f, get, "CompletedDate", iso ? spDate(iso) : null);
+    await FISG_GRAPH.updateItem("Activities", spId, f);
+    return "saved";
   }
 
   function spIdOfProject(projectId) {
@@ -758,6 +794,8 @@
     let n = 0;
     for (const a of list) {
       try {
+        /* Cờ hoàn thành đánh dấu lúc còn offline cũng phải theo lên cùng. */
+        if (!a.doneAt && LS.doneAt) a.doneAt = LS.doneAt(a) || "";
         const spId = await createActivity(a);
         LS.markSent(a.id, spId);
         const live = ACTIVITIES.find(x => x.id === a.id);
@@ -771,6 +809,33 @@
       }
     }
     if (n) console.info("[store] đã đẩy " + n + " hoạt động còn kẹt lên SharePoint.");
+    return n;
+  }
+
+  /* Cờ hoàn thành đánh dấu trước khi list có cột "Ngày hoàn thành" đang nằm kẹt
+     trong máy từng người. Lần đồng bộ nào cũng thử đẩy nốt, để không ai phải đi
+     bấm lại thủ công sau khi thêm cột. */
+  async function pushPendingDone() {
+    if (!canWrite() || !window.LS || !LS.load) return 0;
+    const flags = LS.load().done || {};
+    const ids = Object.keys(flags);
+    if (!ids.length) return 0;
+    const get = await schemaOf("Activities");
+    if (!get.internal("CompletedDate")) return 0;
+    let n = 0;
+    for (const id of ids) {
+      const a = ACTIVITIES.find(x => x.id === id);
+      if (!a || !a.spId || a.doneAt) continue;      // chưa lên SharePoint, hoặc đã có rồi
+      try {
+        await setActivityDone(a.spId, flags[id]);
+        a.doneAt = flags[id];
+        n++;
+      } catch (e) {
+        console.warn("[store] chưa đẩy được trạng thái hoàn thành của " + id + ":", e.message || e);
+        break;
+      }
+    }
+    if (n) console.info("[store] đã đồng bộ " + n + " trạng thái hoàn thành lên SharePoint.");
     return n;
   }
 
@@ -849,6 +914,7 @@
           date: txt(ga(f, "ActivityDate")).slice(0, 10),
           note: txt(ga(f, "Content")), next: txt(ga(f, "NextStep")),
           potential: txt(ga(f, "PotentialLevel")),
+          doneAt: txt(ga(f, "CompletedDate")).slice(0, 10),
           projectId: byItemId[String(
             (ga.internal("RelatedProject") ? f[ga.internal("RelatedProject") + "LookupId"] : null)
             || f.RelatedProjectLookupId || "")] || "",
@@ -877,7 +943,9 @@
       if (window.LS && LS.mergeActs) LS.mergeActs();
       /* …rồi thử đẩy nốt lên SharePoint. Không await: người dùng không phải đợi
          việc dọn dẹp, và hỏng thì cũng chỉ ghi Console. */
-      pushPendingActs().catch(e => console.warn("[store] pushPendingActs", e));
+      pushPendingActs()
+        .then(() => pushPendingDone())
+        .catch(e => console.warn("[store] đẩy phần còn kẹt", e));
       if (typeof invalidateCockpit === "function") invalidateCockpit();
 
       document.querySelectorAll(".ncc-tab").forEach(t =>
@@ -979,7 +1047,8 @@
                         saveUser, deleteUser, lookupUser, canWriteUsers,
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
-                        createActivity, updateActivity, createProject, updateProject, addProjectUpdate,
-                        pushPendingActs, canWrite,
+                        createActivity, updateActivity, setActivityDone,
+                        createProject, updateProject, addProjectUpdate,
+                        pushPendingActs, pushPendingDone, canWrite, forgetSchema,
                         usersListName: USERS_LIST };
 })();

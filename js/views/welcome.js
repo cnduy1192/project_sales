@@ -365,10 +365,27 @@ function wcOpenReports(){ closeWelcome(); go('reports'); openReportComposer(); }
 window.wcOpenReports = wcOpenReports;
 
 function wcMarkDone(id, on){
-  LS.markDone(id, on ? todayISO() : null);
+  const iso = on ? todayISO() : null;
+  const a = ACTIVITIES.find(x => x.id === id);
+  /* Đổi trên màn hình trước, ghi lên SharePoint sau — bấm xong là thấy ngay.
+     Nhưng đây là dữ liệu dùng chung, nên ghi hỏng thì phải nói, không im. */
+  LS.markDone(id, iso);
+  if(a) a.doneAt = iso || '';
   renderWelcome();
   toast(on ? 'Đã ghi nhận hoàn thành. Bấm "Hoàn tác" ở mục Đã làm trong tuần nếu nhầm.'
            : 'Đã bỏ đánh dấu hoàn thành.');
+  if(!a || !window.FISG_STORE || !FISG_STORE.setActivityDone) return;
+  FISG_STORE.setActivityDone(a.spId, iso).then(res => {
+    if(res === 'nocol' && a.spId)
+      toast('Đã lưu trên máy bạn. Trạng thái này chưa dùng chung được vì list Activities '
+          + 'thiếu cột "Ngày hoàn thành" — xem docs/SharePoint_Setup.md.');
+    if(typeof invalidateCockpit === 'function') invalidateCockpit();
+    if(window.renderActs) renderActs();
+  }).catch(e => {
+    console.warn('[welcome] không ghi được trạng thái hoàn thành:', e && (e.message || e));
+    toast('CHƯA lưu được lên SharePoint: ' + (e.message || e)
+        + '. Quản lý chưa thấy trạng thái này.');
+  });
 }
 window.wcMarkDone = wcMarkDone;
 

@@ -130,7 +130,17 @@ var LS = (function(){
 
      Nay chỉ một luật: có cờ thì mới xong. Cờ chỉ đặt được bằng nút "Hoàn thành". */
   function isDone(a){
-    return !!(a && load().done[a.id]);
+    if(!a) return false;
+    /* Cột "Ngày hoàn thành" trên SharePoint là NGUỒN SỰ THẬT — mọi máy và quản
+       lý cùng đọc một chỗ. Cờ trong máy chỉ là lớp đệm cho lúc mất mạng, hoặc
+       cho khi list chưa kịp thêm cột. */
+    if(a.doneAt) return true;
+    return !!load().done[a.id];
+  }
+  /* Ngày hoàn thành để hiển thị: ưu tiên bản trên SharePoint. */
+  function doneAt(a){
+    if(!a) return '';
+    return a.doneAt || load().done[a.id] || '';
   }
 
   /* Bản ghi do người dùng nhập trong phần mềm nhưng chưa lên SharePoint. */
@@ -141,7 +151,7 @@ var LS = (function(){
      thực tế. Nay mọi hoạt động đều do người dùng tạo và đều có cờ riêng, nên
      luật áp cho tất cả. Việc CỦA HÔM NAY chưa tính là bỏ quên — ngày vẫn còn. */
   function isMissed(a){
-    if(!a || load().done[a.id]) return false;
+    if(!a || isDone(a)) return false;
     var iso = normDate(a.date);
     return !!iso && iso < todayISO();
   }
@@ -187,7 +197,7 @@ var LS = (function(){
     available: available, load: load, save: save, reset: reset,
     mergeActs: mergeActs, nextActId: nextActId, addAct: addAct,
     markDone: markDone, isDone: isDone, isLocal: isLocal, isMissed: isMissed,
-    markSent: markSent, pendingActs: pendingActs, dropAct: dropAct,
+    markSent: markSent, pendingActs: pendingActs, dropAct: dropAct, doneAt: doneAt,
     addReport: addReport, nextReportId: nextReportId,
     allReports: allReports, reportsFor: reportsFor
   };
