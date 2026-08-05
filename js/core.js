@@ -36,15 +36,17 @@ function rebuildNccTabs(){
 window.rebuildNccTabs=rebuildNccTabs;
 
 /* ====== NAV ====== */
-const VIEWS=['cockpit','funnel','acts','dash','reports','users'];
+const VIEWS=['cockpit','funnel','customers','acts','dash','reports','users'];
 function go(v){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
   VIEWS.forEach(x=>document.getElementById('view-'+x).style.display = x===v?'block':'none');
-  /* Cockpit gộp cả ba NCC nên tab NCC ở header sẽ gây hiểu nhầm — ẩn khi vào view này. */
+  /* Cockpit và Danh bạ khách hàng gộp cả ba NCC nên tab NCC ở header gây hiểu
+     nhầm — ẩn khi vào các view này. */
   const tabs=document.getElementById('nccTabs');
-  if(tabs) tabs.style.display = v==='cockpit' ? 'none' : '';
+  if(tabs) tabs.style.display = (v==='cockpit'||v==='customers') ? 'none' : '';
   if(v==='cockpit')renderCockpit();
   if(v==='reports')renderReports();
+  if(v==='customers'&&window.renderCustomers)renderCustomers();
   if(v==='funnel')render(); if(v==='dash')renderDash(); if(v==='acts')renderActs();
 }
 

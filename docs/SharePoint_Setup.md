@@ -206,6 +206,47 @@ chia sẻ công khai. Sales mở popup một khách hàng chung sẽ chỉ thấ
 mình — kể cả số đếm dự án ở đầu popup cũng chỉ đếm phần đó, vì con số cũng là
 thông tin.
 
+## 3f. Danh bạ khách hàng theo chủ sở hữu
+
+Mỗi khách hàng thuộc về một sales; sales không thấy khách của nhau. Dữ liệu này
+nằm trong list `Customers`, thêm hai cột:
+
+| Cột | Kiểu | Tên hiển thị |
+|---|---|---|
+| `Owner` | Single line of text | `Người phụ trách` |
+| `LegalName` | Single line of text | `Tên pháp nhân` |
+
+`Title` = tên gọn (đã bỏ "Công ty TNHH", "Cổ phần", "Hộ kinh doanh"…). `Owner` =
+tên PIC của sales phụ trách (khớp cột PIC trong list Users). `LegalName` = tên
+pháp nhân đầy đủ, để sau này xuất hóa đơn hay đối chiếu.
+
+### Nhập 388 khách hàng một lần
+
+Tôi đã tạo sẵn `Customers_Import.xlsx` từ file bạn gửi: mỗi dòng có `Tên gọn
+(Title)`, `Tên pháp nhân (LegalName)`, `Chủ sở hữu (Owner)`, và một cột `Tên gốc`
+để bạn đối chiếu. Cách nhập:
+
+1. Mở `Customers_Import.xlsx`, rà cột `Tên gọn` — dòng nào cắt chưa vừa ý thì
+   sửa tay (388 dòng, 0 dòng rỗng, 0 khách bị hai sales cùng sở hữu — file đã
+   kiểm).
+2. Bỏ cột `Tên gốc` (chỉ để đối chiếu).
+3. Trong list `Customers`, dùng **Edit in grid view** hoặc **Import from Excel**
+   dán ba cột Title / LegalName / Owner.
+4. Tải lại app. Vào **Khách hàng của tôi** — mỗi sales thấy đúng khách của mình.
+
+Muốn tạo lại file (nếu đổi thuật toán làm gọn):
+`python3 tools/make_customers_import.py Customer_Data.xlsx Customers_Import.xlsx`
+
+### Phân quyền cộng thêm
+
+Sau khi có cột Owner, một sales thấy dự án/hoạt động nếu: là PIC, HOẶC là người
+liên quan, HOẶC **là chủ sở hữu khách hàng đó**. Ba đường cộng lại — chủ sở hữu
+chỉ mở rộng, không gỡ quyền ai. Khách chưa có trong danh bạ (chưa gán chủ) giữ
+nguyên phân quyền theo PIC dự án.
+
+Khách hàng gõ tay mới trong app tự gán chủ sở hữu = sales đang đăng nhập, ghi
+tên gọn vào Title và tên gốc vào LegalName.
+
 ## 3d. App ghi ngược lên SharePoint — cột bắt buộc
 
 Cho tới bản 05/08/2026 phần mềm chỉ **đọc**: mọi hoạt động sales nhập chỉ nằm
@@ -223,7 +264,7 @@ Thao tác nào ghi vào đâu:
 | Sửa giai đoạn / tiến độ / ngày đóng / KG | `Projects` | cập nhật |
 | Đóng dự án | `Projects` | cập nhật `Trạng thái` + `Kết quả` |
 | Bình luận, đổi giai đoạn, đóng dự án | `ProjectUpdates` | tạo dòng nhật ký |
-| Khách hàng / nguyên liệu mới gõ tay | `Customers`, `Products` | tạo dòng mới |
+| Khách hàng / nguyên liệu mới gõ tay | `Customers`, `Products` | tạo dòng mới (gán chủ sở hữu) |
 
 **App không bao giờ tự tạo dòng trong `Suppliers`.** Danh sách nhà cung cấp là cố
 định, và "Khác" không phải một NCC nên hoạt động gắn "Khác" sẽ để trống cột NCC.

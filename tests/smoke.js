@@ -188,6 +188,65 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(E("actsOfProject('P-3').length"))throw new Error('actsOfProject để lọt dữ liệu');
     if(E("actsOfProject('P-4').length")!==1)throw new Error('actsOfProject chặn nhầm dự án chung');
   });
+  // ---- LÀM GỌN TÊN KHÁCH HÀNG ----
+  step('cleanCustomerName bỏ tiền tố pháp nhân, giữ tên thật',()=>{
+    const c=s=>E(`cleanCustomerName(${JSON.stringify(s)})`);
+    if(c('CÔNG TY TNHH CJ FOODS VIỆT NAM')!=='CJ FOODS VIỆT NAM')throw new Error(c('CÔNG TY TNHH CJ FOODS VIỆT NAM'));
+    if(c('HỘ KINH DOANH -PHÙNG BÁ CƯỜNG')!=='PHÙNG BÁ CƯỜNG')throw new Error('HKD');
+    if(c('CÔNG TY CP THỦY SẢN MINH PHÚ - HẬU GIANG')!=='THỦY SẢN MINH PHÚ - HẬU GIANG')throw new Error('CP');
+    if(c('CPFOODS ABC')!=='CPFOODS ABC')throw new Error('ranh giới từ: '+c('CPFOODS ABC'));
+    if(c('TRẦN THỊ CẦM')!=='TRẦN THỊ CẦM')throw new Error('tên người bị cắt');
+    /* khoá đối chiếu: tên có tiền tố và không tiền tố ra cùng một khoá */
+    if(E("custOwnerKey('CÔNG TY TNHH ABC')")!==E("custOwnerKey('abc')"))throw new Error('khoá không khớp');
+  });
+
+  // ---- PHÂN QUYỀN THEO CHỦ SỞ HỮU KHÁCH HÀNG ----
+  step('sales thấy dự án của khách mình sở hữu dù PIC là người khác',()=>{
+    /* Danh bạ: "Cty E" thuộc Ngọc, "Cty F" thuộc Tâm. Hai dự án đều do Tâm làm
+       PIC. Ngọc phải thấy P-5 (khách của mình) nhưng KHÔNG thấy P-6. */
+    E(`CUSTOMER_DIR.length=0;
+       Object.keys(CUSTOMER_OWNER).forEach(function(k){delete CUSTOMER_OWNER[k]});
+       [['CÔNG TY TNHH E','Phạm Bích Ngọc'],['CÔNG TY TNHH F','Tam']].forEach(function(p){
+         CUSTOMER_DIR.push({name:cleanCustomerName(p[0]),owner:p[1],legal:p[0],spId:''});
+         CUSTOMER_OWNER[custOwnerKey(p[0])]=p[1];
+       });
+       RECORDS.push(
+         {id:'P-5',ncc:'Roquette',customer:'E',product:'Q',application:'u',segment:'MEAT',group:'SAVOURY',stage:'TESTING',status:'IN PROGRESS',prob:.3,kgThis:5,kgNext:0,pic:'Tam',rnd:'',related:[],created:'2026-07-06',closing:'2026-09-06',desc:'',comments:[],updates:[]},
+         {id:'P-6',ncc:'Roquette',customer:'F',product:'R',application:'u',segment:'MEAT',group:'SAVOURY',stage:'TESTING',status:'IN PROGRESS',prob:.3,kgThis:5,kgNext:0,pic:'Tam',rnd:'',related:[],created:'2026-07-06',closing:'2026-09-06',desc:'',comments:[],updates:[]});
+       ACTIVITIES.push(
+         {id:'A-20',customer:'E',pic:'Tam',ncc:'Roquette',product:'',type:'Call',date:'2026-07-25',note:'việc trên khách của Ngọc',next:'—',potential:'Hot',projectId:'P-5'},
+         {id:'A-21',customer:'F',pic:'Tam',ncc:'Roquette',product:'',type:'Call',date:'2026-07-25',note:'việc trên khách của Tâm',next:'—',potential:'Hot',projectId:'P-6'});
+       loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    if(E("customerOwnerOf('E')")!=='Phạm Bích Ngọc')throw new Error('tra chủ theo tên gọn: '+E("customerOwnerOf('E')"));
+    if(E("customerOwnerOf('CÔNG TY TNHH E')")!=='Phạm Bích Ngọc')throw new Error('tra chủ theo tên đầy đủ');
+    const v=E('visible().map(function(r){return r.id}).sort().join(",")');
+    if(!/P-5/.test(v))throw new Error('không thấy dự án của khách mình sở hữu: '+v);
+    if(/P-6/.test(v))throw new Error('thấy dự án của khách sales khác: '+v);
+    const a=E('visibleActs().map(function(x){return x.id}).join(",")');
+    if(!/A-20/.test(a))throw new Error('mất hoạt động trên khách của mình');
+    if(/A-21/.test(a))throw new Error('lộ hoạt động trên khách của sales khác');
+  });
+  step('chủ sở hữu chỉ CỘNG THÊM, PIC vẫn thấy như cũ',()=>{
+    E(`loginAs(${ix('duy@f.vn')})`);   // Tâm không phải user; dùng admin để chắc chắn thấy hết
+    if(E('visible().map(function(r){return r.id}).indexOf("P-6")')<0)throw new Error('admin mất dự án');
+    /* Ngọc vẫn thấy dự án mình là PIC (P-1) — nhánh chủ sở hữu không gỡ đường cũ */
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    if(E('visible().map(function(r){return r.id}).indexOf("P-1")')<0)throw new Error('mất dự án mình là PIC');
+  });
+  step('màn hình Khách hàng của tôi lọc theo chủ sở hữu',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome(); go('customers')`);
+    const t=d.getElementById('cuRows').textContent;
+    if(!/E/.test(t))throw new Error('thiếu khách của mình');
+    if(/CÔNG TY TNHH F/.test(t))throw new Error('lộ khách của sales khác');
+    if(E('cuRows().length')!==1)throw new Error('số khách sai: '+E('cuRows().length'));
+    /* admin thấy cả hai, lọc theo sales được */
+    E(`loginAs(${ix('duy@f.vn')}); go('customers')`);
+    if(E('cuRows().length')!==2)throw new Error('admin phải thấy cả hai: '+E('cuRows().length'));
+    E("cuSetOwner('Tam')");
+    if(E('cuRows().length')!==1||E("cuRows()[0].owner")!=='Tam')throw new Error('lọc theo sales sai');
+    E("cuSetOwner('')");
+  });
+
   step('popup khách hàng không lộ dự án của sales khác',()=>{
     /* P-3 (Tâm) và P-4 (Tâm, Ngọc là người liên quan) cùng khách "C"/"D".
        Đặt cả hai về chung một khách để popup phải chọn lọc. */

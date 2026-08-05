@@ -37,6 +37,9 @@
     },
     // Users: phân quyền. Title = email đăng nhập.
     Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ" },
+    /* Customers: danh bạ khách hàng. Title = tên gọn (đã bỏ tiền tố pháp nhân);
+       Owner = sales phụ trách khách này; LegalName = tên pháp nhân đầy đủ. */
+    Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân" },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -125,6 +128,62 @@
       return m;
     } catch (e) { return {}; }
   }
+
+  /* Danh bạ khách hàng: Title (tên gọn) + Owner (chủ sở hữu) + LegalName (tên
+     pháp nhân). Trả về mảng {name, owner, legal, spId} và dựng luôn hai bảng tra
+     theo custOwnerKey. custOwnerKey khớp cả tên trên list lẫn tên trong dự án dù
+     một bên còn tiền tố "Công ty…", nên phân quyền và danh bạ ăn khớp nhau. */
+  async function loadCustomerDirectory() {
+    const key = (typeof custOwnerKey === "function")
+      ? custOwnerKey : function (s) { return String(s == null ? "" : s).trim().toUpperCase(); };
+    let items = [];
+    try {
+      const [cols, its] = await Promise.all([
+        FISG_GRAPH.columns("Customers"), FISG_GRAPH.listItems("Customers"),
+      ]);
+      const g = makeGetter("Customers", cols);
+      items = (its || []).map(it => {
+        const f = it.fields || {};
+        return {
+          name: txt(f.Title),
+          owner: txtOf(g, f, "Owner"),
+          legal: txtOf(g, f, "LegalName"),
+          spId: it.id,
+        };
+      }).filter(c => c.name);
+    } catch (e) {
+      console.warn("[store] không đọc được list Customers:", e.message || e);
+      items = [];
+    }
+    CUSTOMER_DIR.length = 0;
+    Object.keys(CUSTOMER_OWNER).forEach(k => delete CUSTOMER_OWNER[k]);
+    Object.keys(CUSTOMER_LEGAL).forEach(k => delete CUSTOMER_LEGAL[k]);
+    items.forEach(c => {
+      CUSTOMER_DIR.push(c);
+      const k = key(c.name);
+      if (k && c.owner && !CUSTOMER_OWNER[k]) CUSTOMER_OWNER[k] = c.owner;
+      if (k && c.legal && !CUSTOMER_LEGAL[k]) CUSTOMER_LEGAL[k] = c.legal;
+    });
+    return items.length;
+  }
+
+  /* Chủ sở hữu của một khách hàng theo tên. Không có trong danh bạ → '' (khách
+     chưa gán chủ giữ nguyên phân quyền theo PIC dự án). Toàn cục để roles.js
+     dùng mà không phải phụ thuộc vào store. */
+  function customerOwnerOf(name) {
+    if (!name) return "";
+    const key = (typeof custOwnerKey === "function")
+      ? custOwnerKey : function (s) { return String(s || "").trim().toUpperCase(); };
+    return CUSTOMER_OWNER[key(name)] || "";
+  }
+  window.customerOwnerOf = customerOwnerOf;
+  function customerLegalOf(name) {
+    if (!name) return "";
+    const key = (typeof custOwnerKey === "function")
+      ? custOwnerKey : function (s) { return String(s || "").trim().toUpperCase(); };
+    return CUSTOMER_LEGAL[key(name)] || "";
+  }
+  window.customerLegalOf = customerLegalOf;
 
   function statusOf(status, result) {
     const st = txt(status).toLowerCase(), res = txt(result).toUpperCase();
@@ -570,17 +629,61 @@
   }
   /* create=true: khách hàng / nguyên liệu mới sales gõ tay thì tạo luôn dòng
      danh mục. Nhà cung cấp thì KHÔNG — danh sách NCC là cố định, và "Khác"
-     không phải một NCC nên không được sinh ra dòng rác. */
-  async function lookupId(list, title, create) {
+     không phải một NCC nên không được sinh ra dòng rác.
+
+     opts.owner: khi tạo MỘT khách hàng mới, gán luôn chủ sở hữu (sales đang
+     đăng nhập) và ghi tên gọn vào Title, tên gốc vào LegalName — để khách vừa
+     nhập tuân đúng quy ước của danh bạ, không phải dọn tay sau. */
+  async function lookupId(list, title, create, opts) {
     const name = String(title == null ? "" : title).trim();
     if (!name) return null;
     const m = await lookupTable(list);
     const k = lkKey(name);
     if (m[k]) return m[k];
     if (!create) return null;
-    const it = await FISG_GRAPH.createItem(list, { Title: name });
+
+    const fields = { Title: name };
+    if (list === "Customers") {
+      const clean = (typeof cleanCustomerName === "function") ? cleanCustomerName(name) : name;
+      fields.Title = clean;
+      try {
+        const g = await schemaOf("Customers");
+        if (clean !== name) put(fields, g, "LegalName", name);
+        if (opts && opts.owner) put(fields, g, "Owner", opts.owner);
+      } catch (e) { /* thiếu cột thì vẫn tạo được dòng, chỉ không có chủ */ }
+    }
+    const it = await FISG_GRAPH.createItem(list, fields);
     m[k] = it.id;
+    if (list === "Customers") {
+      const key = (typeof custOwnerKey === "function") ? custOwnerKey : lkKey;
+      const c = { name: fields.Title, owner: (opts && opts.owner) || "", legal: name, spId: it.id };
+      CUSTOMER_DIR.push(c);
+      const ck = key(c.name);
+      if (ck && c.owner) CUSTOMER_OWNER[ck] = c.owner;
+      if (ck && name !== c.name) CUSTOMER_LEGAL[ck] = name;
+    }
     return it.id;
+  }
+
+  /* Gán / đổi chủ sở hữu một khách hàng. Dùng khi sales tạo KH mới, hoặc admin
+     phân công lại. Ghi thẳng lên list Customers để mọi máy cùng thấy. */
+  async function setCustomerOwner(name, owner) {
+    if (!canWrite() || !name) return "nocol";
+    const spId = await lookupId("Customers", name, true, { owner: owner });
+    const g = await schemaOf("Customers");
+    if (!g.internal("Owner")) {
+      console.warn("[store] list Customers chưa có cột \"Người phụ trách\" (Owner).");
+      return "nocol";
+    }
+    const f = {};
+    put(f, g, "Owner", owner || "");
+    await FISG_GRAPH.updateItem("Customers", spId, f);
+    const key = (typeof custOwnerKey === "function") ? custOwnerKey : lkKey;
+    const ck = key(name);
+    if (ck) { if (owner) CUSTOMER_OWNER[ck] = owner; else delete CUSTOMER_OWNER[ck]; }
+    const hit = CUSTOMER_DIR.find(c => key(c.name) === ck);
+    if (hit) hit.owner = owner || "";
+    return "saved";
   }
 
   /* Đặt một field vào payload theo TÊN CỘT THẬT. Trả về false nếu list không có
@@ -629,7 +732,7 @@
 
     const other = typeof OTHER_NCC !== "undefined" ? OTHER_NCC : "Khác";
     const [cusId, prodId, supId, projSpId] = await Promise.all([
-      lookupId("Customers", a.customer, true),
+      lookupId("Customers", a.customer, true, { owner: a.pic || "" }),
       a.product ? lookupId("Products", a.product, true) : null,
       a.ncc && a.ncc !== other ? lookupId("Suppliers", a.ncc, false) : null,
       Promise.resolve(spIdOfProject(a.projectId)),
@@ -708,7 +811,7 @@
     const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
 
     const [cusId, prodId, supId] = await Promise.all([
-      lookupId("Customers", r.customer, true),
+      lookupId("Customers", r.customer, true, { owner: r.pic || "" }),
       lookupId("Products", r.product, true),
       lookupId("Suppliers", r.ncc, false),
     ]);
@@ -939,6 +1042,10 @@
       // Danh mục (NCC, segment, pipeline, sales…) cũng dựng từ dữ liệu thật.
       const meta = await buildLists(RECORDS, ACTIVITIES);
 
+      /* Danh bạ khách hàng + bảng chủ sở hữu. Đọc SAU buildLists nhưng TRƯỚC khi
+         render, vì phân quyền của mọi view dưới đây tra CUSTOMER_OWNER. */
+      const nCust = await loadCustomerDirectory();
+
       // Việc sales tự nhập lúc offline phải được nối lại sau khi thay mảng.
       if (window.LS && LS.mergeActs) LS.mergeActs();
       /* …rồi thử đẩy nốt lên SharePoint. Không await: người dùng không phải đợi
@@ -975,7 +1082,11 @@
       lookupHealth("Activities", ga, ACTIVITIES, "ncc", "Supplier");
       lookupHealth("Projects", gp, RECORDS, "customer", "Customer");
       console.info("[store] đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length
-        + " hoạt động · " + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng.");
+        + " hoạt động · " + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng"
+        + " · " + nCust + " KH trong danh bạ (" + Object.keys(CUSTOMER_OWNER).length + " có chủ).");
+      if (window.renderCustomers && document.getElementById("view-customers")) {
+        try { renderCustomers(); } catch (e) {}
+      }
       return true;
     } catch (e) {
       if (window.toast) toast("Không tải được dữ liệu SharePoint: " + (e.message || e));
@@ -1047,6 +1158,7 @@
                         saveUser, deleteUser, lookupUser, canWriteUsers,
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
+                        loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
                         createActivity, updateActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,

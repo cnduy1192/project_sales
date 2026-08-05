@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="charts.css?v=5">
 <link rel="stylesheet" href="cockpit.css?v=1">
 <link rel="stylesheet" href="welcome.css?v=2">
+<link rel="stylesheet" href="customers.css?v=1">
 </head>
 <body>
 
@@ -59,6 +60,9 @@
       <button class="nav-item active" data-view="funnel" onclick="go('funnel')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
         <span class="nav-t">Sales Funnel</span></button>
+      <button class="nav-item" data-view="customers" onclick="go('customers')" id="navCustomers">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/></svg>
+        <span class="nav-t">Khách hàng của tôi</span></button>
       <button class="nav-item" data-view="acts" onclick="go('acts')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="18" r="1.4"/></svg>
         <span class="nav-t">Hoạt động khách hàng</span></button>
@@ -219,6 +223,16 @@
         <div class="rp-list glass" id="rpList"></div>
         <div class="rp-panel glass" id="rpPanel"></div>
       </div>
+    </section>
+
+    <!-- CUSTOMERS VIEW -->
+    <section id="view-customers" style="display:none">
+      <div class="topbar">
+        <h2>Khách hàng của tôi</h2>
+        <div id="cuTools" class="cu-tools"></div>
+      </div>
+      <div class="cu-head"><span>Khách hàng</span><span>Phụ trách</span><span>Nhà cung cấp</span><span>Dự án</span><span>Hoạt động gần nhất</span><span></span></div>
+      <div id="cuRows" class="cu-list glass"></div>
     </section>
 
     <!-- USERS VIEW -->
@@ -499,6 +513,8 @@
 <script src="js/views/cockpit.js?v=1"></script>
 <script src="js/views/welcome.js?v=1"></script>
 <script src="js/views/reports.js?v=1"></script>
+<script src="js/lib/cleanname.js?v=1"></script>
+<script src="js/views/customers.js?v=1"></script>
 <script src="js/views/activities.js?v=5"></script>
 <script src="js/views/detail.js?v=9"></script>
 <script src="js/components/notifications.js?v=5"></script>

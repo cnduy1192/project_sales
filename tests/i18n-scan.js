@@ -100,6 +100,7 @@ const SKIP_SEL = '#aiMsgs, [data-noi18n], .wc-item-note, .ck-ev-note, .act-note,
   await visit('Tổng quan', "go('cockpit')");
   await visit('Tổng quan · ngăn kéo khách hàng', "openCustomer(custKey('Acecook'))");
   await visit('Sales Funnel', "closeCustomer(); go('funnel')");
+  await visit('Khách hàng của tôi', "CUSTOMER_DIR.push({name:'Acecook',owner:'Duy Che Ngoc',legal:'CTY TNHH Acecook',spId:'1'}); CUSTOMER_OWNER[custOwnerKey('Acecook')]='Duy Che Ngoc'; go('customers')");
   await visit('Chi tiết dự án', "openDetail('P-1')");
   await visit('Thêm dự án', "closeDetail(); openForm()");
   await visit('Đóng dự án', "closeForm(); openCloseModal('P-1')");

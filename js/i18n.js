@@ -253,6 +253,16 @@
     "— ví dụ": "— example", "bạn": "you", "Khác": "Other",
     "Sản phẩm đang chào": "Products offered",
     "Xem toàn bộ lịch sử dự án": "See the full project history",
+    // Màn hình Khách hàng của tôi
+    "Khách hàng của tôi": "My Customers", "Phụ trách": "Owner",
+    "Nhà cung cấp": "Supplier", "Dự án": "Projects",
+    "Tìm khách hàng": "Search customers", "chưa có dự án": "no project yet",
+    "Chưa có hoạt động": "No activity yet", "đang chạy": "in progress",
+    "Danh bạ khách hàng đang trống": "The customer directory is empty",
+    "Không có khách hàng khớp bộ lọc": "No customers match the filter",
+    "Thử bỏ bớt bộ lọc hoặc ô tìm kiếm.": "Try removing a filter or the search box.",
+    "Xem lịch sử khách hàng": "View customer history",
+    "+ Dự án": "+ Project", "Ghi hoạt động": "Log activity",
     "Trạng thái dự án": "Project status",
     "Đang xem thử chế độ giữa tuần. Bấm để xem chế độ tiếp theo.":
       "Previewing mid-week mode. Click for the next mode.",
@@ -291,6 +301,7 @@
     [/Người nhận: /g, "Recipient: "], [/theo tên O365/g, "from O365 name"],
     // câu có số
     [/(\d+)\s*tin nhắn/g, "$1 messages"], [/(\d+)\s*sự kiện/g, "$1 events"],
+    [/(\d+)\s*khách hàng/g, "$1 customers"], [/Chạm /g, "Touched "],
     [/(\d+)\s*việc/g, "$1 tasks"], [/(\d+)\s*ngày/g, "$1 days"],
     [/(\d+)\s*đã làm/g, "$1 done"], [/(\d+)\s*chưa đánh dấu/g, "$1 not marked"],
     [/(\d+)\s*đang chạy/g, "$1 in progress"], [/(\d+)\s*thắng/g, "$1 won"], [/(\d+)\s*thua/g, "$1 lost"],

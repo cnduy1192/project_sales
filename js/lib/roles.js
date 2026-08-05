@@ -85,20 +85,34 @@ function isMine(value, u){
   return nameSetOf(u).some(function(n){ return picKey(n) === k; });
 }
 
-/* Bản ghi này có thuộc về người dùng u không, theo phạm vi của vai trò. */
+/* Chủ sở hữu khách hàng (từ danh bạ Customers) có phải là u không.
+   customerOwnerOf do store.js cung cấp; chưa tải xong thì trả '' → không sao. */
+function ownsCustomer(customer, u){
+  if(!customer || !u) return false;
+  if(typeof customerOwnerOf !== 'function') return false;
+  return isMine(customerOwnerOf(customer), u);
+}
+
+/* Bản ghi này có thuộc về người dùng u không, theo phạm vi của vai trò.
+   Ba đường CỘNG THÊM (HOẶC), không đường nào gỡ quyền đường nào:
+     · là PIC dự án            · là người liên quan
+     · là chủ sở hữu khách hàng (danh bạ Customers)
+   R&D vẫn giới hạn theo cột RnDOwner như cũ. */
 function ownsRecord(r, u){
   if(!r || !u) return false;
   var c = cap(u.role);
   if(c.scope === 'all') return true;
-  if(c.scope === 'own-rnd') return isMine(r.rnd, u);
+  if(c.scope === 'own-rnd') return isMine(r.rnd, u) || ownsCustomer(r.customer, u);
   return isMine(r.pic, u)
-      || (r.related || []).some(function(x){ return isMine(x, u); });
+      || (r.related || []).some(function(x){ return isMine(x, u); })
+      || ownsCustomer(r.customer, u);
 }
 function ownsActivity(a, u, projectIds){
   if(!a || !u) return false;
   var c = cap(u.role);
   if(c.scope === 'all') return true;
   if(isMine(a.pic, u)) return true;
+  if(ownsCustomer(a.customer, u)) return true;
   /* R&D không phải người ghi hoạt động, nhưng hoạt động thuộc dự án họ phụ
      trách thì vẫn phải thấy — nếu không, dự án hiện ra mà lịch sử trống. */
   return !!(a.projectId && projectIds && projectIds[a.projectId]);
@@ -140,5 +154,6 @@ function capClose(r, u){
 
 window.cap = cap; window.myCap = myCap; window.roleLabel = roleLabel;
 window.splitAliases = splitAliases; window.nameSetOf = nameSetOf; window.isMine = isMine;
-window.ownsRecord = ownsRecord; window.scopeRecords = scopeRecords; window.scopeActs = scopeActs;
+window.ownsRecord = ownsRecord; window.ownsActivity = ownsActivity; window.ownsCustomer = ownsCustomer;
+window.scopeRecords = scopeRecords; window.scopeActs = scopeActs;
 window.capEdit = capEdit; window.capClose = capClose; window.isKnownRole = isKnownRole;

@@ -7,3 +7,7 @@ Thumbs.db
 # File tạm khi kiểm thử
 __test.html
 *.log
+
+# Dữ liệu khách hàng — không đưa vào git
+Customers_Import.xlsx
+Customer_Data.xlsx

@@ -115,3 +115,10 @@ window.resetCatalog = resetCatalog;
 /* Dữ liệu nghiệp vụ — rỗng cho tới khi đăng nhập và tải từ SharePoint. */
 var RECORDS = [];
 var ACTIVITIES = [];
+
+/* Danh bạ khách hàng đọc từ list Customers: mỗi phần tử {name, owner, legal,
+   spId}. Kèm hai bảng tra theo custOwnerKey để phân quyền và hiển thị tra nhanh.
+   store.js đổ đầy sau khi đăng nhập; giữ THAM CHIẾU nên chỉ sửa tại chỗ. */
+var CUSTOMER_DIR = [];
+var CUSTOMER_OWNER = {};   // custOwnerKey → tên chủ sở hữu
+var CUSTOMER_LEGAL = {};   // custOwnerKey → tên pháp nhân đầy đủ
