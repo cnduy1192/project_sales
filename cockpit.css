@@ -29,7 +29,7 @@
 /* ---------- DẢI TÍN HIỆU ---------- */
 .ck-signals{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--ck-gap);margin-bottom:var(--ck-gap)}
 .ck-sig{
-  position:relative;text-align:left;padding:16px 18px 15px;border-radius:var(--r);
+  position:relative;text-align:left;padding:15px 18px;border-radius:var(--r);
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);
   transition:border-color .15s,box-shadow .15s,transform .15s;overflow:hidden}
 .ck-sig::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sig,var(--marine));opacity:.5;transition:opacity .15s}
@@ -39,9 +39,9 @@
 .ck-sig[aria-pressed="true"]{border-color:var(--sig,var(--marine));box-shadow:0 0 0 1px var(--sig,var(--marine)) inset,var(--shadow-md)}
 .ck-sig[aria-pressed="true"]::before{opacity:1}
 .ck-sig-k{display:block;font-size:11px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--text-3)}
-.ck-sig-v{display:block;font-family:var(--font-display);font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.02em;margin:7px 0 3px;color:var(--sig,var(--marine));font-variant-numeric:tabular-nums}
+.ck-sig-v{display:block;font-family:var(--font-display);font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.02em;margin:8px 0 0;color:var(--sig,var(--marine));font-variant-numeric:tabular-nums}
 .ck-sig-v small{font-size:14px;font-weight:600;color:var(--text-3);margin-left:5px;letter-spacing:0}
-.ck-sig-s{display:block;font-size:11.5px;color:var(--text-3);line-height:1.4}
+/* .ck-sig-s đã bỏ: phần giải thích chuyển vào title, dải KPI chỉ còn nhãn + số. */
 
 /* ---------- KHUNG CHUNG ---------- */
 .ck-panel{border-radius:var(--r);margin-bottom:var(--ck-gap);overflow:hidden}

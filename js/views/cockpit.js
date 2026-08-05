@@ -75,21 +75,24 @@ window.ckSetDays = ckSetDays;
 /* ====== DẢI TÍN HIỆU ====== */
 function ckRenderSignals(sig){
   const closed = sig.closedWon + sig.closedLost;
+  /* Bốn ô chỉ còn nhãn và con số. Phần giải thích chuyển vào tooltip: đọc lướt
+     một dải KPI mà mỗi ô kèm hai dòng chữ nhỏ thì mắt phải làm việc gấp đôi để
+     lấy đúng bốn con số. Ai cần định nghĩa thì rê chuột. */
   const cards = [
     { id:'acts', k:'Hoạt động trong kỳ', v:sig.acts, c:'var(--ck-act)',
-      s:'Cuộc gọi, ghé thăm, email và cập nhật tiến độ' },
+      s:'Cuộc gọi, ghé thăm, email và cập nhật tiến độ trong kỳ đang xem' },
     { id:'closed', k:'Dự án đã đóng', v:closed, c:'var(--marine)',
       s:sig.closedWon + ' thắng · ' + sig.closedLost + ' thua' },
-    { id:'overdue', k:'Quá hạn ngày đóng', v:sig.overdue, c:'var(--overdue)',
+    { id:'overdue', k:'Dự án quá hạn', v:sig.overdue, c:'var(--overdue)',
       s:'Đang chạy nhưng đã qua ngày đóng dự kiến · tính đến hôm nay' },
-    { id:'silent', k:'Khách hàng im lặng', v:sig.silent, c:'var(--prog)',
+    { id:'silent', k:'Khách hàng chưa tương tác', v:sig.silent, c:'var(--prog)',
       s:'Có dự án đang chạy, hơn ' + SILENT_DAYS + ' ngày không ai chạm · tính đến hôm nay' }
   ];
   document.getElementById('ckSignals').innerHTML = cards.map(c => `
-    <button class="ck-sig" style="--sig:${c.c}" aria-pressed="${ckSignal===c.id}" onclick="ckToggleSignal('${c.id}')">
+    <button class="ck-sig" style="--sig:${c.c}" aria-pressed="${ckSignal===c.id}"
+            title="${ckEsc(c.s)}" onclick="ckToggleSignal('${c.id}')">
       <span class="ck-sig-k">${c.k}</span>
       <span class="ck-sig-v">${c.v}</span>
-      <span class="ck-sig-s">${ckEsc(c.s)}</span>
     </button>`).join('');
 }
 function ckToggleSignal(id){ ckSignal = (ckSignal === id) ? null : id; renderCockpit(); }

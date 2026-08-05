@@ -29,6 +29,10 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
   /* Đường ghi là bất đồng bộ: step đồng bộ sẽ báo ĐẠT trước khi assert kịp chạy. */
   async function astep(n,fn){try{await fn();pass++;console.log('OK   '+n)}catch(e){errs.push(n+': '+e.message);console.log('FAIL '+n+' — '+e.message)}}
   const T=todayIso=>E('todayISO()');
+  /* Kiểm thử hành vi, không kiểm thử bản dịch: ép về tiếng Việt để mọi assert
+     dưới đây so đúng chuỗi trong code. Phần song ngữ có máy dò riêng —
+     tests/i18n-scan.js. */
+  E("setLang('vi')");
 
   // Ngọc xuất hiện dưới HAI tên tắt trong dữ liệu
   E(`RECORDS.push(
