@@ -479,6 +479,58 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(E('LS.load().acts.length')!==n)throw new Error('mất sau khi tải lại');
   });
 
+  /* ---- ĐỌC VỀ: cột lookup có internal name khác tên logic ----
+     Đây là lỗi đã xảy ra thật: SharePoint đặt internal name là Customer0 (hoặc
+     mã hoá tên tiếng Việt) trong khi phía đọc gõ cứng "Customer", nên khách
+     hàng đọc về rỗng dù trên SharePoint nhìn vẫn đủ. Bước này phải chạy CUỐI
+     cùng vì syncFromGraph thay sạch RECORDS/ACTIVITIES. */
+  await astep('đọc được lookup dù internal name khác tên logic',async()=>{
+    COLS.Activities = { Title:'Title', Customer0:'Customer', PIC:'PIC',
+      OData__x004e_CC:'Supplier', ActivityType:'ActivityType', ActivityDate:'ActivityDate',
+      Content:'Content', NextStep:'NextStep', PotentialLevel:'PotentialLevel',
+      RelatedProject0:'RelatedProject' };
+    COLS.Projects = { Title:'Title', Customer0:'Customer', Products0:'Products',
+      Supplier0:'Supplier', Stage:'Stage', Status:'Status', PICName:'PICName',
+      ClosingDate:'ClosingDate', CreationDate:'CreationDate' };
+    ITEMS.Customers = [{id:'11',fields:{Title:'CJ Foods'}}];
+    ITEMS.Suppliers = [{id:'31',fields:{Title:'Roquette'}}];
+    ITEMS.Products  = [{id:'21',fields:{Title:'Pregeflo PJ 30'}}];
+    ITEMS.Projects  = [{id:'544',fields:{ Title:'P-0544 thử', Customer0LookupId:'11',
+      Products0LookupId:'21', Supplier0LookupId:'31', Stage:'SOLUTION TESTING',
+      Status:'Open', PICName:'Vo Tan Cuong', ClosingDate:'2026-12-31T12:00:00Z' }}];
+    ITEMS.Activities = [{id:'701',fields:{ Title:'CJ Foods · Call', Customer0LookupId:'11',
+      PIC:'Vo Tan Cuong', OData__x004e_CCLookupId:'31', ActivityType:'Call',
+      ActivityDate:'2026-08-05T12:00:00Z', Content:'Test', NextStep:'—',
+      PotentialLevel:'Warm', RelatedProject0LookupId:'544' }}];
+    ITEMS.ProjectUpdates = [];
+    const ok = await E('FISG_STORE.syncFromGraph()');
+    if(!ok)throw new Error('đồng bộ trả về false');
+    /* ACTIVITIES[0] có thể là bản địa phương merge vào đầu — tìm đúng dòng đọc về. */
+    const a = JSON.parse(E("JSON.stringify(ACTIVITIES.find(function(x){return x.id==='A-701'})||{})"));
+    if(!a.id)throw new Error('không đọc về dòng nào từ SharePoint');
+    if(a.customer!=='CJ Foods')throw new Error('mất tên khách hàng: '+JSON.stringify(a));
+    if(a.ncc!=='Roquette')throw new Error('mất NCC: '+a.ncc);
+    if(a.pic!=='Vo Tan Cuong')throw new Error('mất PIC: '+a.pic);
+    /* Mã dự án lấy từ tiền tố trong Title nếu có, nếu không mới dùng id item. */
+    if(a.projectId!=='P-0544')throw new Error('mất liên kết dự án: '+a.projectId);
+    const r = JSON.parse(E("JSON.stringify(RECORDS.find(function(x){return x.id==='P-0544'})||{})"));
+    if(!r.id)throw new Error('không đọc về dự án nào');
+    if(r.customer!=='CJ Foods'||r.product!=='Pregeflo PJ 30')
+      throw new Error('dự án mất lookup: '+JSON.stringify(r));
+  });
+  await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{
+    /* Bản cũ chỉ đánh dấu "đã gửi" mà vẫn giữ bản AL- trong máy, nên lần đăng
+       nhập sau mergeActs nối thêm một dòng y hệt bên cạnh bản chính thức. */
+    E(`LS.addAct({id:'AL-77',customer:'CJ Foods',pic:'Vo Tan Cuong',ncc:'Roquette',
+        product:'',type:'Call',date:'2026-08-05',note:'Test',next:'—',potential:'Warm',
+        projectId:null,spId:'701'});
+       LS.mergeActs()`);
+    const n=E("ACTIVITIES.filter(function(x){return x.note==='Test'}).length");
+    if(n!==1)throw new Error('có '+n+' dòng trùng nhau');
+    if(E("LS.load().acts.filter(function(x){return x.id==='AL-77'}).length"))
+      throw new Error('bản địa phương vẫn còn kẹt lại');
+  });
+
   const real=errs.filter(e=>!/createLinearGradient|getContext|offline|Pipelines|chưa đăng nhập/.test(e));
   console.log('\n'+pass+' bước đạt · '+(real.length?'LỖI:\n'+real.join('\n'):'KHÔNG CÓ LỖI RUNTIME'));
 }).catch(e=>console.error('HARNESS',e));

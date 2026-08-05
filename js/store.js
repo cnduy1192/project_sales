@@ -85,7 +85,14 @@
     return out;
   }
 
-  // Graph thường chỉ trả "<Cột>LookupId" (ID), không kèm tên -> cần bảng tra ID→Title
+  /* Graph thường chỉ trả "<Cột>LookupId" (ID), không kèm tên -> cần bảng tra ID→Title.
+
+     LƯU Ý ĐẮT GIÁ: base phải là TÊN CỘT THẬT, không phải khoá logic. Bản trước
+     gọi lookupVal(f, "Customer", …) trong khi cột trên SharePoint có internal
+     name khác (SharePoint sinh Customer0, hoặc mã hoá tên tiếng Việt), nên
+     f.CustomerLookupId không tồn tại và mọi khách hàng đọc về đều RỖNG — dù
+     trên SharePoint nhìn vẫn thấy đủ. Phía ghi thì dò tên đúng, nên dữ liệu lên
+     được mà đọc về lại mất. Dùng lookupOf() bên dưới thay vì gọi thẳng. */
   function lookupVal(f, base, map) {
     const direct = f[base];
     if (direct != null && direct !== "") {
@@ -97,6 +104,15 @@
     if (!Array.isArray(id)) id = [id];
     return id.map(x => (map && map[String(x)]) || "").filter(Boolean).join(", ");
   }
+
+  /* Tra theo KHOÁ LOGIC, tự resolve sang tên cột thật bằng chính bộ dò của
+     getter. Thiếu getter thì lùi về tên logic — vẫn đúng khi cột trùng tên. */
+  function lookupOf(get, f, key, map) {
+    const base = (get && get.internal && get.internal(key)) || key;
+    return lookupVal(f, base, map);
+  }
+  /* Field thường (không phải lookup) cũng vậy: đọc qua getter, đừng gõ f.Xxx. */
+  function txtOf(get, f, key) { return txt(get ? get(f, key) : f[key]); }
 
   async function idTitleMap(listName) {
     try {
@@ -768,15 +784,17 @@
       const nameOf = (getter, f, key) => key;   // cột đang đúng tên Anh; getter dùng cho field thường
 
       // gom ProjectUpdates theo dự án -> tab "Trao đổi"
+      const gu = ups && ups.length ? makeGetter("ProjectUpdates", await FISG_GRAPH.columns("ProjectUpdates").catch(() => ({}))) : null;
       const upsBy = {};
       (ups || []).forEach(it => {
         const f = it.fields || {};
-        const pid = String(f.ProjectLookupId || "");
+        const pcol = (gu && gu.internal("Project")) || "Project";
+        const pid = String(f[pcol + "LookupId"] || f.ProjectLookupId || "");
         if (!pid) return;
         (upsBy[pid] = upsBy[pid] || []).push({
-          by: txt(f.PICName) || "—",
-          at: txt(f.UpdateDate).slice(0, 10),
-          text: txt(f.Content),
+          by: txt(f.PICName) || txtOf(gu, f, "PIC") || "—",
+          at: (txt(f.UpdateDate) || txtOf(gu, f, "UpdateDate")).slice(0, 10),
+          text: txt(f.Content) || txtOf(gu, f, "Content"),
         });
       });
 
@@ -785,9 +803,9 @@
         const title = txt(f.Title);
         const code = (title.match(/^(P-\d+)/) || [])[1] || ("P-" + (it.id || i));
         return {
-          ncc: lookupVal(f, "Supplier", supMap),
-          customer: lookupVal(f, "Customer", cusMap),
-          product: lookupVal(f, "Products", prodMap),
+          ncc: lookupOf(gp, f, "Supplier", supMap),
+          customer: lookupOf(gp, f, "Customer", cusMap),
+          product: lookupOf(gp, f, "Products", prodMap),
           application: txt(gp(f, "Application")),
           segment: txt(gp(f, "Segment")), group: txt(gp(f, "SegmentGroup")),
           stage: txt(gp(f, "Stage")),
@@ -796,13 +814,15 @@
           prob: (Number(gp(f, "WinProbability")) || 0) / 100,
           kgThis: Number(gp(f, "PotentialKgThisYear")) || 0,
           kgNext: Number(gp(f, "PotentialKgNextYear")) || 0,
-          pic: txt(f.PICName) || txt(gp(f, "PIC")),
+          pic: txt(f.PICName) || txtOf(gp, f, "PIC"),
           /* Cột "R&D phụ trách" đã có sẵn trên SharePoint nhưng chưa bao giờ
              được đọc. Vai trò R&D giới hạn phạm vi theo cột này. */
-          rnd: txt(f.RnDOwnerName) || txt(gp(f, "RnDOwner")),
+          rnd: txt(f.RnDOwnerName) || txtOf(gp, f, "RnDOwner"),
           /* Trước đây luôn để rỗng, nên "người liên quan" không bao giờ tồn tại —
              mà quyền xem của Sales lại dựa vào đúng cột này. */
           related: nameList(f.RelatedPeople != null ? f.RelatedPeople : gp(f, "RelatedPeople")),
+          /* Ghi chú: RelatedPeople đọc trực tiếp trước rồi mới qua getter, vì cột
+             Person trả về mảng object mà getter cũng lấy đúng khoá đó. */
           created: txt(gp(f, "CreationDate")).slice(0, 10),
           closing: txt(gp(f, "ClosingDate")).slice(0, 10),
           desc: title, id: code, spId: it.id,
@@ -815,15 +835,17 @@
       const A = acts.map((it, i) => {
         const f = it.fields || {};
         return {
-          customer: lookupVal(f, "Customer", cusMap),
-          pic: txt(f.PICName) || txt(ga(f, "PIC")),
-          ncc: lookupVal(f, "Supplier", supMap),
-          product: lookupVal(f, "Product", prodMap),
+          customer: lookupOf(ga, f, "Customer", cusMap),
+          pic: txt(f.PICName) || txtOf(ga, f, "PIC"),
+          ncc: lookupOf(ga, f, "Supplier", supMap),
+          product: lookupOf(ga, f, "Product", prodMap),
           type: txt(ga(f, "ActivityType")) || "Khác",
           date: txt(ga(f, "ActivityDate")).slice(0, 10),
           note: txt(ga(f, "Content")), next: txt(ga(f, "NextStep")),
           potential: txt(ga(f, "PotentialLevel")),
-          projectId: byItemId[String(f.RelatedProjectLookupId || "")] || "",
+          projectId: byItemId[String(
+            (ga.internal("RelatedProject") ? f[ga.internal("RelatedProject") + "LookupId"] : null)
+            || f.RelatedProjectLookupId || "")] || "",
           id: "A-" + (it.id || i), spId: it.id,
         };
       });
@@ -873,6 +895,11 @@
       }
       const blank = RECORDS.filter(r => !r.ncc).length;
       if (blank) console.warn("[store] " + blank + " dự án thiếu NCC.");
+      /* Cột lookup dò trượt là lỗi ÂM THẦM: SharePoint nhìn vẫn đủ, app thì
+         rỗng. Nói ngay, kèm tên cột đã dò được, để khỏi phải đoán. */
+      lookupHealth("Activities", ga, ACTIVITIES, "customer", "Customer");
+      lookupHealth("Activities", ga, ACTIVITIES, "ncc", "Supplier");
+      lookupHealth("Projects", gp, RECORDS, "customer", "Customer");
       console.info("[store] đã tải " + RECORDS.length + " dự án · " + ACTIVITIES.length
         + " hoạt động · " + LISTS.nccs.length + " NCC · " + LISTS.customers.length + " khách hàng.");
       return true;
@@ -883,12 +910,24 @@
     }
   }
 
+  /* Bao nhiêu % bản ghi rỗng ở một trường lookup. Rỗng gần hết = dò trượt cột. */
+  function lookupHealth(list, get, rows, field, key) {
+    if (!rows.length) return;
+    const empty = rows.filter(r => !r[field]).length;
+    if (empty / rows.length < 0.5) return;
+    const col = (get && get.internal && get.internal(key)) || null;
+    console.warn("[store] " + empty + "/" + rows.length + " bản ghi " + list
+      + " không đọc được \"" + key + "\" — cột đang dò: " + (col || "KHÔNG TÌM THẤY")
+      + ". Chạy FISG_STORE.debug('" + list + "') để xem tên cột thật.");
+  }
+
   // Chẩn đoán: gõ FISG_STORE.debug() trong Console để xem cột thật & 1 bản ghi mẫu
-  async function debug() {
-    const cols = await FISG_GRAPH.columns("Projects");
-    console.log("=== Cột list Projects (internal | hiển thị) ===");
+  async function debug(list) {
+    const L = list || "Projects";
+    const cols = await FISG_GRAPH.columns(L);
+    console.log("=== Cột list " + L + " (internal | hiển thị) ===");
     Object.keys(cols).forEach(k => console.log("  " + k + "  |  " + cols[k]));
-    const items = await FISG_GRAPH.listItems("Projects");
+    const items = await FISG_GRAPH.listItems(L);
     console.log("Số item:", items.length);
     if (items.length) console.log("fields item đầu:", items[0].fields);
     return { cols, sample: items[0] && items[0].fields, count: items.length };

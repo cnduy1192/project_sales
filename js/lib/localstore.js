@@ -59,9 +59,15 @@ var LS = (function(){
     var d = load();
     if(!d.acts.length) return 0;
     var have = {};
-    ACTIVITIES.forEach(function(a){ have[a.id] = 1; });
-    var added = 0;
-    d.acts.forEach(function(a){ if(!have[a.id]){ ACTIVITIES.unshift(a); added++; } });
+    ACTIVITIES.forEach(function(a){ have[a.id] = 1; if(a.spId) have['A-' + a.spId] = 1; });
+    var added = 0, stale = [];
+    d.acts.forEach(function(a){
+      /* Đã lên SharePoint rồi thì bản chính thức tự về với id A-<spId>; nối thêm
+         bản địa phương nữa là ra HAI dòng y hệt nhau trên bảng. */
+      if(a.spId){ stale.push(a); return; }
+      if(!have[a.id]){ ACTIVITIES.unshift(a); added++; }
+    });
+    stale.forEach(function(a){ dropAct(a.id, 'A-' + a.spId); });
     return added;
   }
 

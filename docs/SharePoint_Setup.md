@@ -242,6 +242,20 @@ Cột `Người liên quan` của `Projects`: app thử ghi dạng text ngăn c�
 chấm phẩy. Nếu đó là cột Person, SharePoint từ chối và app **vẫn tạo dự án** rồi
 báo ở Console — dự án không mất, chỉ thiếu cột đó.
 
+### Khi đọc về mất tên khách hàng / NCC
+
+Nếu trên SharePoint nhìn thấy đủ mà trong app cột Khách hàng hoặc NCC trống, đó
+là **cột lookup dò trượt tên**: SharePoint hay đặt internal name khác tên hiển
+thị (`Customer0` khi tên `Customer` đã bị dùng, hoặc mã hoá tên tiếng Việt thành
+`OData__x004e_CC`). App nay dò tên cột ở cả hai chiều đọc và ghi, và tự cảnh báo
+ở Console khi quá nửa số bản ghi rỗng ở một trường lookup:
+
+```
+[store] 4/5 bản ghi Activities không đọc được "Customer" — cột đang dò: KHÔNG TÌM THẤY.
+```
+
+Gặp dòng này thì chạy `FISG_STORE.debug('Activities')`, gửi tôi danh sách cột.
+
 ### Khi ghi hỏng
 
 Hoạt động vừa nhập hiện nhãn vàng **"chưa đồng bộ"** trong bảng Customer
@@ -262,7 +276,7 @@ Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là i
 
 | Lệnh | Cho biết |
 |---|---|
-| `FISG_STORE.debug()` | Tên cột thật của list Projects và một bản ghi mẫu |
+| `FISG_STORE.debug('Activities')` | Tên cột thật của một list và một bản ghi mẫu (mặc định `Projects`) |
 | `picMatchReport(me.pic)` | Tên O365 của bạn có khớp cột PIC trong dữ liệu không |
 | `FISG_STORE.picAliasMap()` | Bảng đổi tên tắt → tên đầy đủ đang áp dụng |
 | `myCap()` | Năng lực của vai trò bạn đang đăng nhập |

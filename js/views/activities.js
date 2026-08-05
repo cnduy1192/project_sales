@@ -96,8 +96,13 @@ function saveAct(){
 function pushAct(a){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
   FISG_STORE.createActivity(a).then(spId=>{
-    LS.markSent(a.id, spId);
-    a.spId = spId;
+    /* Đổi luôn sang id của SharePoint và bỏ bản địa phương. Bản trước chỉ đánh
+       dấu đã gửi mà vẫn giữ bản AL-, nên lần đăng nhập sau bảng hiện HAI dòng:
+       một bản SharePoint và một bản còn kẹt trong máy. */
+    const oldId = a.id;
+    LS.markSent(oldId, spId);
+    a.spId = spId; a.id = 'A-' + spId;
+    LS.dropAct(oldId, a.id);
     if(typeof invalidateCockpit==='function') invalidateCockpit();
     renderActs(); cockpitRefresh();
   }).catch(e=>{
