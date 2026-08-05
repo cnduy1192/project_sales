@@ -166,8 +166,18 @@
     }
     ov.classList.add("open");
 
-    const prj = (typeof RECORDS !== "undefined" ? RECORDS : []).filter(r => r.customer === cust);
-    const acts = (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(a => a.customer === cust);
+    /* Popup này đọc thẳng RECORDS/ACTIVITIES nên trước đây phơi luôn dự án và
+       hoạt động của sales khác trên cùng khách hàng — kể cả PIC và trạng thái
+       thắng/thua. Phải đi qua đúng bộ lọc quyền như mọi bảng khác: sales chỉ
+       thấy phần của mình, hoặc phần mình là người liên quan. Ẩn im lặng, không
+       ghi "còn N dự án bị ẩn" — con số đó cũng là thông tin. */
+    const allR = typeof RECORDS !== "undefined" ? RECORDS : [];
+    const allA = typeof ACTIVITIES !== "undefined" ? ACTIVITIES : [];
+    const meNow = typeof me !== "undefined" ? me : null;
+    const okR = typeof scopeRecords === "function" ? scopeRecords(allR, meNow) : allR;
+    const okA = typeof scopeActs === "function" ? scopeActs(allA, meNow, okR) : allA;
+    const prj = okR.filter(r => r.customer === cust);
+    const acts = okA.filter(a => a.customer === cust);
     const run = prj.filter(r => r.status === "IN PROGRESS").length;
     const won = prj.filter(r => r.status === "WON").length;
     const lost = prj.filter(r => r.status === "LOST").length;

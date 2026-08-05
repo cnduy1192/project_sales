@@ -102,7 +102,14 @@ function pushProject(rec){
 
 /* ====== DETAIL MODAL ====== */
 function openDetail(id, origin){
-  curRec=RECORDS.find(r=>r.id===id); if(!curRec)return;
+  const rec=RECORDS.find(r=>r.id===id); if(!rec)return;
+  /* Chốt chặn cuối: dù đường dẫn nào gọi tới (bảng, popup khách hàng, link cũ),
+     dự án ngoài phạm vi quyền cũng không được mở ra. */
+  if(typeof ownsRecord==='function' && me && !ownsRecord(rec, me)){
+    toast('Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.');
+    return;
+  }
+  curRec=rec;
   NAV.enter(origin); NAV.renderBack('d-back');
   dRelated=[...curRec.related];
   document.getElementById('d-title').textContent=curRec.customer+' — '+curRec.id;

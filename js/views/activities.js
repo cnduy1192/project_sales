@@ -14,9 +14,15 @@ function renderActs(){
   rows=rows.slice(0,120);
   if(!rows.length){box.innerHTML='<div class="empty"><b>Chưa có hoạt động nào</b>Bấm "Ghi hoạt động" để bắt đầu.</div>';return;}
   box.innerHTML=rows.map(a=>{
-    const pr=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
+    /* Hoạt động của mình có thể gắn vào dự án của sales khác. Thấy hoạt động
+       không có nghĩa được thấy dự án — nên chỉ hiện nút mở khi thật sự có quyền,
+       còn lại là một nhãn câm, không lộ tên sản phẩm. */
+    const prAll=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
+    const pr=prAll && (typeof ownsRecord!=='function' || !me || ownsRecord(prAll, me)) ? prAll : null;
     const u=USERS.find(x=>x.pic===a.pic);
-    const link=pr
+    const link=!pr && prAll
+      ? `<span class="act-link muted" title="Dự án do sales khác phụ trách">Dự án khác</span>`
+      : pr
       ? `<button class="act-link" onclick="openDetail('${pr.id}')" title="${pr.customer} · ${pr.product}">
            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>
            ${pr.product==='—'?pr.customer:pr.product}</button>`

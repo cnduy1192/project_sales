@@ -200,6 +200,12 @@ Cột này nhận cả ba dạng: Person nhiều giá trị, nhiều dòng text,
 ngăn cách bằng dấu phẩy/chấm phẩy. Tên phải khớp với `Tên PIC` hoặc `Tên đầy đủ`
 trong list `Users` (không phân biệt hoa thường và dấu tiếng Việt).
 
+Phạm vi này áp ở **mọi** chỗ, không chỉ bảng Sales Funnel: popup chi tiết khách
+hàng, danh sách hoạt động, mở thẳng một dự án bằng mã, và cả bản chụp của link
+chia sẻ công khai. Sales mở popup một khách hàng chung sẽ chỉ thấy phần của
+mình — kể cả số đếm dự án ở đầu popup cũng chỉ đếm phần đó, vì con số cũng là
+thông tin.
+
 ## 3d. App ghi ngược lên SharePoint — cột bắt buộc
 
 Cho tới bản 05/08/2026 phần mềm chỉ **đọc**: mọi hoạt động sales nhập chỉ nằm

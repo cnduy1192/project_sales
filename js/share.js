@@ -94,9 +94,18 @@
   const writeKey = () => { try { return localStorage.getItem(WKEY) || ""; } catch (e) { return ""; } };
   function setWriteKey(v) { try { localStorage.setItem(WKEY, v || ""); } catch (e) {} }
 
+  /* Dự án người đang đăng nhập được phép thấy. Link chia sẻ là trang CÔNG KHAI,
+     nên đây là chỗ rò rỉ nặng nhất nếu lấy thẳng RECORDS: một sales bấm chia sẻ
+     là đẩy nguyên funnel của cả công ty lên một URL ai cũng mở được. */
+  function myRecords() {
+    const all = (typeof RECORDS !== "undefined" ? RECORDS : []);
+    if (typeof scopeRecords !== "function") return all;
+    return scopeRecords(all, typeof me !== "undefined" ? me : null);
+  }
+
   // Bản chụp: dữ liệu đủ để app hiển thị mà không cần SharePoint
   function buildSnapshot(scope, ncc, codes) {
-    const recs = (typeof RECORDS !== "undefined" ? RECORDS : []).filter(r => {
+    const recs = myRecords().filter(r => {
       if (scope === "Tất cả NCC") return true;
       if (r.ncc !== ncc) return false;
       if (scope === "Chọn dự án") return codes.includes(r.id);
@@ -244,7 +253,7 @@
     const $ = id => document.getElementById(id);
     const renderPicker = () => {
       const ncc = $("shNcc").value;
-      const rows = (typeof RECORDS !== "undefined" ? RECORDS : []).filter(r => r.ncc === ncc);
+      const rows = myRecords().filter(r => r.ncc === ncc);
       $("shList").innerHTML = rows.length
         ? rows.map(r => `<label class="sh-item"><input type="checkbox" value="${esc(r.id)}">` +
             `<span><b>${esc(r.customer)}</b><small>${esc(r.id)} · ${esc(r.stage || "")}</small></span></label>`).join("")

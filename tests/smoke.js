@@ -149,6 +149,33 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(E("actsOfProject('P-3').length"))throw new Error('actsOfProject để lọt dữ liệu');
     if(E("actsOfProject('P-4').length")!==1)throw new Error('actsOfProject chặn nhầm dự án chung');
   });
+  step('popup khách hàng không lộ dự án của sales khác',()=>{
+    /* P-3 (Tâm) và P-4 (Tâm, Ngọc là người liên quan) cùng khách "C"/"D".
+       Đặt cả hai về chung một khách để popup phải chọn lọc. */
+    E(`RECORDS.find(function(r){return r.id==='P-3'}).customer='CJ Foods';
+       RECORDS.find(function(r){return r.id==='P-4'}).customer='CJ Foods';
+       ACTIVITIES.push({id:'A-11',customer:'CJ Foods',pic:'Tam',ncc:'Roquette',product:'',type:'Call',date:'2026-07-24',note:'ghi chú riêng của Tâm',next:'—',potential:'Hot',projectId:'P-3'});
+       loginAs(${ix('ngoc@f.vn')}); closeWelcome(); FISG_EXTRAS.customerModal('CJ Foods')`);
+    const b=d.getElementById('custBody').textContent;
+    if(/P-3/.test(b))throw new Error('lộ dự án của sales khác');
+    if(/ghi chú riêng của Tâm/.test(b))throw new Error('lộ hoạt động của sales khác');
+    if(!/P-4/.test(b))throw new Error('mất dự án mình là người liên quan');
+    const kpi=d.querySelector('#custBody .cust-kpi b').textContent;
+    if(kpi!=='1')throw new Error('số đếm vẫn tính cả dự án bị ẩn: '+kpi);
+    d.getElementById('custOv').classList.remove('open');
+  });
+  step('mở thẳng dự án của sales khác cũng bị chặn',()=>{
+    E("curRec=null; openDetail('P-3')");
+    if(E("curRec && curRec.id")==='P-3')throw new Error('vẫn mở được');
+    E("openDetail('P-4')");
+    if(E("curRec && curRec.id")!=='P-4')throw new Error('chặn nhầm dự án hợp lệ');
+    E('closeDetail()');
+  });
+  step('link chia sẻ chỉ chụp phần dữ liệu mình được xem',()=>{
+    const ids=E("JSON.stringify(FISG_SHARE_NET.buildSnapshot('Tất cả NCC','',[]).records.map(function(r){return r.id}))");
+    if(/P-3/.test(ids))throw new Error('đẩy dự án của sales khác lên link công khai: '+ids);
+    if(!/P-1/.test(ids))throw new Error('mất dự án của chính mình: '+ids);
+  });
   step('Manager vẫn thấy toàn bộ',()=>{
     E(`loginAs(${ix('duy@f.vn')})`);
     const v=E('visible().map(function(r){return r.id}).sort().join(",")');
