@@ -204,7 +204,7 @@ function wcSuggestRow(s){
 function wcActRow(a, action){
   let btn = '';
   if(wcCanAct() && action === 'done')
-    btn = `<button class="wc-btn ok" onclick="wcMarkDone('${ckAttr(a.id)}',1)">Đã làm</button>`;
+    btn = `<button class="wc-btn ok" onclick="wcMarkDone('${ckAttr(a.id)}',1)">Hoàn thành</button>`;
   if(wcCanAct() && action === 'undo')
     btn = `<button class="wc-btn" onclick="wcMarkDone('${ckAttr(a.id)}',0)">Hoàn tác</button>`;
   const open = a.projectId
@@ -275,18 +275,17 @@ function wcBodyMid(mw){
             'Hôm nay chưa có việc nào trên lịch.')
     + group('Chưa đánh dấu — đã qua ngày', mw.missed.length, mw.missed,
             a => wcActRow(a, 'done'),
-            'Không có việc nào bị bỏ quên.',
-            mw.missed.length ? 'chỉ áp dụng với việc bạn tạo trong phần mềm' : '')
+            'Không có việc nào bị bỏ quên.')
     + group('Đã lên kế hoạch — còn lại trong tuần', mw.planned.length, mw.planned,
             a => wcActRow(a, null),
             'Chưa đặt lịch việc nào cho những ngày còn lại.')
     + group('Đã làm trong tuần', done.length, done,
-            a => wcActRow(a, LS.isLocal(a) ? 'undo' : null),
+            a => wcActRow(a, 'undo'),
             'Chưa có việc nào được đánh dấu hoàn thành.')
     + (wcCanAct()
         ? `<div class="wc-grp-act"><button class="wc-btn pri" onclick="wcSchedule()">Ghi hoạt động mới</button></div>`
         : ''),
-    total ? 'đánh dấu "Đã làm" để báo cáo cuối tuần tính đúng' : '');
+    total ? 'bấm "Hoàn thành" để báo cáo cuối tuần tính đúng' : '');
 
   /* Tuần trống thì gợi ý thêm việc — nhưng ĐẶT DƯỚI khối cập nhật, không thay
      thế nó, để chỗ ghi nhận công việc luôn ở cùng một vị trí. */
@@ -315,7 +314,7 @@ function wcBodyEnd(mw){
 /* ====== CHÂN ====== */
 function wcRenderFoot(mode){
   const note = mode === 'start' ? 'Đặt lịch xong, việc sẽ hiện ở dải bảy ngày phía trên.'
-    : mode === 'mid' ? 'Đánh dấu "Đã làm" để báo cáo cuối tuần tính đúng.'
+    : mode === 'mid' ? 'Bấm "Hoàn thành" khi xong việc để báo cáo cuối tuần tính đúng.'
     : 'Báo cáo là ảnh chụp số liệu tại thời điểm gửi.';
   const main = mode === 'end'
     ? `<button class="wc-btn pri" onclick="wcOpenReports()">Soạn báo cáo tuần</button>`
@@ -368,7 +367,7 @@ window.wcOpenReports = wcOpenReports;
 function wcMarkDone(id, on){
   LS.markDone(id, on ? todayISO() : null);
   renderWelcome();
-  toast(on ? 'Đã đánh dấu hoàn thành. Bấm "Hoàn tác" ở mục Đã làm nếu nhầm.'
+  toast(on ? 'Đã ghi nhận hoàn thành. Bấm "Hoàn tác" ở mục Đã làm trong tuần nếu nhầm.'
            : 'Đã bỏ đánh dấu hoàn thành.');
 }
 window.wcMarkDone = wcMarkDone;

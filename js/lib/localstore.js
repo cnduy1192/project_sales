@@ -120,27 +120,30 @@ var LS = (function(){
     save();
   }
 
-  /* Ba luật, theo thứ tự — xem mục 5.3 của spec:
-     1. có cờ  → đã làm
-     2. ngày ≤ hôm nay → đã làm (334 bản ghi cũ không có cờ)
-     3. ngày > hôm nay → là kế hoạch */
+  /* HOÀN THÀNH LÀ MỘT HÀNH ĐỘNG, KHÔNG PHẢI MỘT PHÉP SUY.
+
+     Luật cũ có thêm một nhánh: ngày ≤ hôm nay thì coi như đã làm. Nó sinh ra cho
+     ~334 bản ghi lịch sử không có cờ, lúc dữ liệu còn nằm trong file demo. Nhưng
+     từ khi hoạt động đọc về từ SharePoint, nhánh đó biến MỌI việc vừa ghi thành
+     "đã hoàn thành" ngay sau khi tải lại trang — người dùng chưa bấm gì cả, mà
+     báo cáo tuần đã tính là xong.
+
+     Nay chỉ một luật: có cờ thì mới xong. Cờ chỉ đặt được bằng nút "Hoàn thành". */
   function isDone(a){
-    if(!a) return false;
-    var d = load();
-    if(d.done[a.id]) return true;
-    var iso = normDate(a.date);
-    return !!iso && iso <= todayISO();
+    return !!(a && load().done[a.id]);
   }
 
-  /* Kế hoạch trượt chỉ nhận ra được với hoạt động tạo trong phần mềm. Dữ liệu
-     nhập sẵn không phân biệt được kế hoạch với thực tế, và không giả vờ là có. */
+  /* Bản ghi do người dùng nhập trong phần mềm nhưng chưa lên SharePoint. */
   function isLocal(a){ return !!a && /^AL-/.test(a.id); }
+
+  /* Đã qua ngày mà chưa ai bấm hoàn thành. Trước đây chỉ xét bản ghi tạo trong
+     phần mềm (isLocal) vì dữ liệu nhập sẵn không phân biệt được kế hoạch với
+     thực tế. Nay mọi hoạt động đều do người dùng tạo và đều có cờ riêng, nên
+     luật áp cho tất cả. Việc CỦA HÔM NAY chưa tính là bỏ quên — ngày vẫn còn. */
   function isMissed(a){
-    if(!isLocal(a)) return false;
-    var d = load();
-    if(d.done[a.id]) return false;
+    if(!a || load().done[a.id]) return false;
     var iso = normDate(a.date);
-    return !!iso && iso <= todayISO();
+    return !!iso && iso < todayISO();
   }
 
   function addReport(r){

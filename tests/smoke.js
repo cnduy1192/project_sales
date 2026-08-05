@@ -121,6 +121,41 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(empties!==2)throw new Error('số nhóm rỗng phải còn 2, đang '+empties);
     if(/Việc đáng làm nhất/.test(b))throw new Error('tuần đã có việc thì không kèm gợi ý nữa');
   });
+  step('việc chưa bấm gì thì KHÔNG tự thành hoàn thành',()=>{
+    /* Lỗi thật: luật cũ coi "ngày ≤ hôm nay" là đã làm, nên tải lại trang là
+       mọi việc vừa ghi tự nhảy sang Đã làm dù chưa ai bấm. */
+    const t=E('todayISO()');
+    E(`ACTIVITIES.push(
+       {id:'A-500',customer:'A',pic:'Phạm Bích Ngọc',ncc:'Roquette',product:'',type:'Call',date:'${t}',note:'việc từ SharePoint hôm nay',next:'—',potential:'Hot',projectId:null},
+       {id:'A-501',customer:'A',pic:'Phạm Bích Ngọc',ncc:'Roquette',product:'',type:'Call',date:shiftISO(-2),note:'việc từ SharePoint hôm kia',next:'—',potential:'Hot',projectId:null});
+       renderWelcome();`);
+    if(E("LS.isDone(ACTIVITIES.find(function(a){return a.id==='A-500'}))"))
+      throw new Error('việc hôm nay tự thành đã làm');
+    if(E("LS.isDone(ACTIVITIES.find(function(a){return a.id==='A-501'}))"))
+      throw new Error('việc quá khứ tự thành đã làm');
+    const grps=[...d.querySelectorAll('#wcBody .wc-grp')];
+    const miss=grps.find(g=>/Chưa đánh dấu/.test(g.textContent));
+    if(!/việc từ SharePoint hôm kia/.test(miss.textContent))
+      throw new Error('việc quá hạn chưa bấm phải nằm ở Chưa đánh dấu');
+    const doing=grps.find(g=>/Đang làm hôm nay/.test(g.textContent));
+    if(!/việc từ SharePoint hôm nay/.test(doing.textContent))
+      throw new Error('việc hôm nay phải nằm ở Đang làm');
+  });
+  step('nút mang nhãn Hoàn thành và bấm mới ghi nhận',()=>{
+    const grps=[...d.querySelectorAll('#wcBody .wc-grp')];
+    const doing=grps.find(g=>/Đang làm hôm nay/.test(g.textContent));
+    const btn=[...doing.querySelectorAll('.wc-btn.ok')];
+    if(!btn.length)throw new Error('không có nút đánh dấu');
+    if(btn[0].textContent.trim()!=='Hoàn thành')
+      throw new Error('nhãn nút: '+btn[0].textContent.trim());
+    E("wcMarkDone('A-500',1)");
+    if(!E("LS.isDone(ACTIVITIES.find(function(a){return a.id==='A-500'}))"))
+      throw new Error('bấm rồi vẫn chưa ghi nhận');
+    E("wcMarkDone('A-500',0)");
+    if(E("LS.isDone(ACTIVITIES.find(function(a){return a.id==='A-500'}))"))
+      throw new Error('hoàn tác không gỡ được cờ');
+    E("ACTIVITIES=ACTIVITIES.filter(function(a){return a.id!=='A-500'&&a.id!=='A-501'}); renderWelcome();");
+  });
   step('đánh dấu Đã làm chuyển việc sang nhóm Đã làm',()=>{
     E("LS.markDone('AL-1', todayISO()); renderWelcome();");
     const grps=[...d.querySelectorAll('#wcBody .wc-grp')];

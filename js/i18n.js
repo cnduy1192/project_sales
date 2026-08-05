@@ -19,6 +19,14 @@
     "Thông báo": "Notifications", "Xuất Excel": "Export Excel",
     "Thêm dự án": "Add Project", "Phân bố giai đoạn": "Stage Distribution",
     "Bỏ lọc giai đoạn": "Clear stage filter", "Tất cả": "All",
+    /* Bảng chào tuần: "Hoàn thành" là NÚT (hành động), "Đã làm" là NHÃN
+       (trạng thái) — dịch khác nhau cho khỏi lẫn. */
+    "Hoàn thành": "Mark done", "Hoàn tác": "Undo", "Đã làm": "Done",
+    "Đã làm trong tuần": "Done this week",
+    "Đang làm hôm nay": "Doing today",
+    "Chưa đánh dấu — đã qua ngày": "Not marked — date passed",
+    "Đã lên kế hoạch — còn lại trong tuần": "Planned — rest of week",
+    "Cập nhật hoạt động": "Update activities",
     "Ghi hoạt động": "Log Activity", "Đã gắn dự án": "Linked to project",
     "Chưa có dự án": "No project yet", "Tra cứu chi tiết & lịch sử": "Detail & History Lookup",
     "Khách hàng · Segment · Sales": "Customer · Segment · Sales",
