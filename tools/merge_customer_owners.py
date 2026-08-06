@@ -80,6 +80,28 @@ def okey(raw):
     return re.sub(r"\s+", " ", strip_diacritics(clean_name(raw)).upper()).strip()
 
 
+# ---- khớp mờ giữa tên ngắn (list) và tên pháp nhân đầy đủ (file) ----
+STOP = {"CONG", "TY", "TNHH", "CO", "CP", "PHAN", "SAN", "XUAT", "THUONG", "MAI",
+        "DICH", "VU", "VIET", "NAM", "GROUP", "FOOD", "FOODS", "JSC", "LTD",
+        "MTV", "HO", "KINH", "DOANH", "CHI", "NHANH", "NHA", "MAY", "CO", "SO",
+        "VAN", "PHONG", "DAI", "DIEN", "TAP", "DOAN", "AND"}
+
+
+def norm_full(s):
+    return re.sub(r"[^A-Z0-9]+", " ", strip_diacritics(s).upper()).strip()
+
+
+def tokens(s):
+    return [t for t in norm_full(s).split() if t and t not in STOP and len(t) > 1]
+
+
+def contains_phrase(hay, needle):
+    """needle (đã chuẩn hoá) xuất hiện như cụm từ có ranh giới trong hay."""
+    if not needle:
+        return False
+    return re.search(r"(?:^| )" + re.escape(needle) + r"(?:$| )", hay) is not None
+
+
 def col_index(header_row, *names):
     """Tìm cột theo tên (không phân biệt hoa thường / khoảng trắng). Trả 1-based."""
     low = {str(c.value).strip().lower(): i + 1 for i, c in enumerate(header_row) if c.value}
@@ -101,6 +123,7 @@ def main():
     ob = openpyxl.load_workbook(owners, read_only=True, data_only=True)
     ows = ob[ob.sheetnames[0]]
     owner_of, legal_of = {}, {}
+    file_rows = []                       # [(legal, owner, norm_full, key)]
     for r in ows.iter_rows(min_row=2, values_only=True):
         if not r or not r[0]:
             continue
@@ -110,6 +133,49 @@ def main():
         if k and k not in owner_of:
             owner_of[k] = owner
             legal_of[k] = legal
+        file_rows.append((legal, owner, norm_full(legal), k))
+
+    def match_owner(title):
+        """Ghép một tên trong list với chủ sở hữu trong file.
+        Trả về (owner, legal, cách_khớp, ứng_viên_gợi_ý).
+        cách_khớp: 'exact' | 'substring' | '' (không chắc)."""
+        k = okey(title)
+        if k in owner_of:
+            return owner_of[k], legal_of[k], "exact", []
+        nt = norm_full(title)
+        # tên list xuất hiện như cụm từ trong tên pháp nhân đầy đủ
+        hits = [(lg, ow) for lg, ow, nf, _ in file_rows if contains_phrase(nf, nt)]
+        if hits:
+            owners = set(o for _, o in hits if o)
+            if len(owners) == 1:                    # mọi dòng khớp cùng một chủ
+                ow = next(iter(owners))
+                return ow, hits[0][0], "substring", []
+            # nhiều chủ khác nhau → mơ hồ, đưa ra gợi ý
+            return "", "", "", [lg + " · " + ow for lg, ow in hits[:5]]
+        # gợi ý để RÀ TAY, không tự gán. Chỉ đưa gợi ý ĐÁNG TIN, nếu không thà để
+        # trống còn hơn gợi ý sai (vd "Huu Binh" vs "Vinasoy Bình Dương" chỉ trùng
+        # "BINH"). Tiêu chí: trùng ≥2 token đặc trưng, HOẶC trùng đúng 1 token dài
+        # (≥4 ký tự) mà token đó hiếm trong file (≤3 dòng).
+        tset = set(tokens(title))
+        if not tset:
+            return "", "", "", []
+        # tần suất token trong file để loại token phổ biến
+        freq = {}
+        for _, _, nf, _ in file_rows:
+            for t in set(tokens(nf)):
+                freq[t] = freq.get(t, 0) + 1
+        scored = []
+        for lg, ow, nf, _ in file_rows:
+            inter = tset & set(tokens(lg))
+            if not inter:
+                continue
+            strong = [t for t in inter if len(t) >= 4]
+            rare = [t for t in strong if freq.get(t, 0) <= 3]
+            if len(inter) >= 2 or (len(strong) >= 1 and rare):
+                score = len(inter) * 10 + sum(len(t) for t in strong)
+                scored.append((score, lg, ow))
+        scored.sort(reverse=True)
+        return "", "", "", [lg + " · " + ow for _, lg, ow in scored[:3]]
 
     # --- bản xuất Customers hiện tại ---
     eb = openpyxl.load_workbook(export, data_only=True)
@@ -131,27 +197,33 @@ def main():
         ci_legal = es.max_column + 1
         es.cell(row=1, column=ci_legal, value="LegalName")
 
-    fill_new = PatternFill("solid", fgColor="D1FAE5")   # xanh: vừa điền
-    matched, kept, unmatched = 0, 0, []
+    fill_exact = PatternFill("solid", fgColor="D1FAE5")   # xanh: khớp chắc
+    fill_sub = PatternFill("solid", fgColor="FEF9C3")     # vàng nhạt: khớp mờ, nên rà
+    matched, submatch, kept = 0, 0, 0
+    review = []      # [(title, gợi ý…)] — không gán được chắc
     used = set()
     for row in range(2, es.max_row + 1):
         title = es.cell(row=row, column=ci_title).value
         if not title:
             continue
-        k = okey(title)
-        if k in owner_of:
-            used.add(k)
+        owner, legal, how, cands = match_owner(title)
+        if how:                                          # gán được
+            used.add(okey(legal) if legal else "")
             cur_owner = es.cell(row=row, column=ci_owner).value
+            fill = fill_exact if how == "exact" else fill_sub
             if not (cur_owner and str(cur_owner).strip()):
-                es.cell(row=row, column=ci_owner, value=owner_of[k]).fill = fill_new
-                matched += 1
+                es.cell(row=row, column=ci_owner, value=owner).fill = fill
+                if how == "exact":
+                    matched += 1
+                else:
+                    submatch += 1
             else:
-                kept += 1                                # đã có chủ → không đè
+                kept += 1
             cur_legal = es.cell(row=row, column=ci_legal).value
-            if not (cur_legal and str(cur_legal).strip()) and legal_of[k]:
-                es.cell(row=row, column=ci_legal, value=legal_of[k]).fill = fill_new
+            if not (cur_legal and str(cur_legal).strip()) and legal:
+                es.cell(row=row, column=ci_legal, value=legal).fill = fill
         else:
-            unmatched.append(str(title))
+            review.append((str(title), cands))
 
     es.title = "Cập nhật"
 
@@ -168,21 +240,29 @@ def main():
         new_sheet.append([clean_name(legal_of[k]), legal_of[k], owner])
         n_new += 1
 
-    # sheet chưa khớp (trong list, file không có chủ)
-    un_sheet = eb.create_sheet("Chưa khớp")
-    un_sheet.append(["Title (giữ phân quyền theo PIC dự án)"])
-    un_sheet["A1"].font = Font(bold=True)
-    for t in unmatched:
-        un_sheet.append([t])
+    # sheet cần rà: list-customer chưa gán được chắc, kèm gợi ý từ file
+    rv_sheet = eb.create_sheet("Cần rà")
+    rv_sheet.append(["Title (trong list)", "Gợi ý 1", "Gợi ý 2", "Gợi ý 3",
+                     "Chủ chọn (điền tay)"])
+    for c in rv_sheet[1]:
+        c.font = Font(bold=True, color="FFFFFF")
+        c.fill = PatternFill("solid", fgColor="B45309")
+    for title, cands in review:
+        rv_sheet.append([title] + (cands + ["", "", ""])[:3] + [""])
+    for i, w in enumerate([26, 40, 40, 40, 22], 1):
+        rv_sheet.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+    rv_sheet.freeze_panes = "A2"
 
     eb.save(out)
     print("Đã xuất:", out)
-    print("  Điền chủ mới vào ô trống :", matched)
-    print("  Đã có chủ, giữ nguyên    :", kept)
-    print("  Khách mới (chưa có trong list):", n_new)
-    print("  Khách trong list không có chủ trong file:", len(unmatched))
-    print("\nDán cột Owner (và LegalName) từ sheet 'Cập nhật' về list qua Edit in grid view.")
-    print("Thêm 'Khách mới' bằng New / Import nếu muốn danh bạ đủ 388 khách.")
+    print("  Khớp CHẮC (tên trùng sau khi bỏ tiền tố):", matched)
+    print("  Khớp MỜ  (tên list nằm trong tên pháp nhân, 1 chủ):", submatch)
+    print("  Đã có chủ, giữ nguyên:", kept)
+    print("  CẦN RÀ TAY (kèm gợi ý):", len(review))
+    print("  Khách mới (có trong file, chưa có trong list):", n_new)
+    print("\nSheet 'Cập nhật': ô XANH = khớp chắc, ô VÀNG = khớp mờ nên liếc lại.")
+    print("Sheet 'Cần rà': mỗi dòng kèm tối đa 3 gợi ý; điền cột 'Chủ chọn' rồi dán về.")
+    print("Sheet 'Khách mới': thêm nếu muốn danh bạ đủ khách từ file.")
 
 
 if __name__ == "__main__":

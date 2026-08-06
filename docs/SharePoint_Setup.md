@@ -256,6 +256,19 @@ chỉ điền `Owner`/`LegalName` vào ô trống, giữ nguyên mọi cột kh�
    khớp "CÔNG TY TNHH CJ FOODS VIỆT NAM" trong file. Rà lại sheet Cập nhật rồi
    dán cột Owner (và LegalName) về list qua **Edit in grid view**.
 
+**Thực tế với dữ liệu hiện tại:** list của bạn dùng tên thương hiệu ngắn
+(Nutricare, Vinut, WFF) còn file dùng tên pháp nhân đầy đủ. Công cụ khớp ba mức:
+- **Khớp chắc** (ô xanh): tên trùng sau khi bỏ tiền tố.
+- **Khớp mờ** (ô vàng): tên ngắn nằm gọn trong một tên pháp nhân, và mọi dòng
+  khớp cùng một chủ → gán, nhưng nên liếc lại.
+- **Cần rà**: không đủ chắc. Sheet "Cần rà" kèm tối đa 3 gợi ý; chỉ gợi ý khi
+  trùng token đặc trưng, còn lại để trống chứ không đoán bừa ("Vinut" không nằm
+  trong tên pháp nhân nào nên để trống).
+
+Lần chạy đầu: 18 khớp chắc + 82 khớp mờ = 100/293 tự gán; 193 cần rà (55 có gợi
+ý). Còn lại điền tay từ hiểu biết nội bộ — không thuật toán nào suy được "Vinut"
+là pháp nhân nào nếu tên đó không xuất hiện.
+
 ### Phân quyền cộng thêm
 
 Sau khi có cột Owner, một sales thấy dự án/hoạt động nếu: là PIC, HOẶC là người
