@@ -237,6 +237,25 @@ Tôi đã tạo sẵn `Customers_Import.xlsx` từ file bạn gửi: mỗi dòng
 Muốn tạo lại file (nếu đổi thuật toán làm gọn):
 `python3 tools/make_customers_import.py Customer_Data.xlsx Customers_Import.xlsx`
 
+### Nếu list Customers ĐÃ có dữ liệu (Segment, Region, CustomerStatus…)
+
+Đừng import đè — sẽ nhân đôi khách và mất các cột đang có. Dùng công cụ GHÉP,
+chỉ điền `Owner`/`LegalName` vào ô trống, giữ nguyên mọi cột khác:
+
+1. Trên SharePoint mở list `Customers` → **Export to Excel**, lưu file (ví dụ
+   `Customers_export.xlsx`).
+2. Chạy:
+   `python3 tools/merge_customer_owners.py Customers_export.xlsx Customer_Data.xlsx Customers_Merged.xlsx`
+3. Mở `Customers_Merged.xlsx`:
+   - Sheet **Cập nhật**: y nguyên thứ tự & cột list của bạn, ô Owner/LegalName
+     vừa điền tô xanh. Khách đã có chủ sẵn thì GIỮ NGUYÊN, không đè.
+   - Sheet **Khách mới**: khách trong file mà list chưa có — thêm bằng New/Import.
+   - Sheet **Chưa khớp**: khách trong list mà file không có chủ — để trống, giữ
+     phân quyền theo PIC dự án.
+4. Ghép ăn theo tên đã bỏ tiền tố + bỏ dấu, nên "CJ Foods Việt Nam" trong list
+   khớp "CÔNG TY TNHH CJ FOODS VIỆT NAM" trong file. Rà lại sheet Cập nhật rồi
+   dán cột Owner (và LegalName) về list qua **Edit in grid view**.
+
 ### Phân quyền cộng thêm
 
 Sau khi có cột Owner, một sales thấy dự án/hoạt động nếu: là PIC, HOẶC là người
