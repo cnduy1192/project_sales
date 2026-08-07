@@ -258,6 +258,14 @@
     "Nhà cung cấp": "Supplier", "Dự án": "Projects",
     "Tìm khách hàng": "Search customers", "chưa có dự án": "no project yet",
     "Chưa có hoạt động": "No activity yet", "đang chạy": "in progress",
+    "Kế hoạch chưa đánh dấu": "Planned, not marked",
+    "Nhập / cập nhật khách hàng từ Excel": "Import / update customers from Excel",
+    "Chọn file Excel…": "Choose an Excel file…",
+    "Xem trước": "Preview", "Cập nhật lên SharePoint": "Update to SharePoint",
+    "File gồm cả khách cũ lẫn mới. App tự đối chiếu: khách đã có thì cập nhật Người phụ trách + Tên pháp nhân, khách mới thì tạo. Chạy lại vẫn an toàn.":
+      "The file may contain both existing and new customers. The app matches automatically: existing customers get their Owner + LegalName updated, new ones created. Safe to re-run.",
+    "Cột nhận diện: Title · Owner (Người phụ trách) · LegalName (Tên pháp nhân) · Segment · Region · CustomerStatus. Sheet phụ (Cần rà, Còn trống) tự bỏ qua.":
+      "Recognised columns: Title · Owner · LegalName · Segment · Region · CustomerStatus. Helper sheets are skipped.",
     "Danh bạ khách hàng đang trống": "The customer directory is empty",
     "Không có khách hàng khớp bộ lọc": "No customers match the filter",
     "Thử bỏ bớt bộ lọc hoặc ô tìm kiếm.": "Try removing a filter or the search box.",

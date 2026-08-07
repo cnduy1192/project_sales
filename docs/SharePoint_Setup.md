@@ -269,6 +269,31 @@ Lần chạy đầu: 18 khớp chắc + 82 khớp mờ = 100/293 tự gán; 193 
 ý). Còn lại điền tay từ hiểu biết nội bộ — không thuật toán nào suy được "Vinut"
 là pháp nhân nào nếu tên đó không xuất hiện.
 
+### Nhập / cập nhật hàng loạt NGAY TRONG APP (khỏi thao tác Excel thủ công)
+
+Đăng nhập bằng tài khoản admin → **Người dùng & phân quyền** → cuối trang có
+**Nhập / cập nhật khách hàng từ Excel**:
+
+1. Bấm **Chọn file Excel** — file gồm cả khách cũ lẫn mới (ví dụ
+   `Customers_Final.xlsx`; app đọc mọi sheet có cột Title + Owner/LegalName, tự
+   bỏ qua sheet phụ Cần rà / Còn trống).
+2. Bấm **Xem trước** — app đối chiếu với list Customers và báo: bao nhiêu **cập
+   nhật**, bao nhiêu **tạo mới**.
+3. Bấm **Cập nhật lên SharePoint** — ghi qua chính phiên đăng nhập của bạn, có
+   thanh tiến độ.
+
+Cam kết:
+- **Không sót:** mỗi dòng có tên đều cho ra đúng một cập nhật hoặc một tạo mới —
+  hoặc một lỗi ĐƯỢC BÁO (kèm tên khách) để chạy lại, chứ không âm thầm bỏ.
+- **Không mất dữ liệu:** Owner + LegalName ghi đè (đó là mục đích), còn
+  Segment/Region/CustomerStatus chỉ điền khi ô đang trống.
+- **Chạy lại an toàn:** khách đã có khớp theo tên gọn (Title hoặc LegalName) nên
+  chỉ cập nhật, không nhân bản. Lần chạy sau nếu còn dòng lỗi thì bấm lại là dọn
+  nốt.
+
+Đối chiếu ăn theo tên gọn của cả Title lẫn LegalName, nên khách cũ "Nutricare"
+và dòng mới "CÔNG TY … NUTRICARE" không tạo thành hai bản.
+
 ### Phân quyền cộng thêm
 
 Sau khi có cột Owner, một sales thấy dự án/hoạt động nếu: là PIC, HOẶC là người

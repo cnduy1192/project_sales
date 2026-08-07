@@ -78,6 +78,9 @@ function buildUsers(){
         ${self ? '' : `<button class="wc-btn danger" onclick="removeUser(${idx})">Xoá</button>`}` : '—'}</div>
     </div>`;
   }).join('');
+
+  /* Công cụ nhập/cập nhật khách hàng từ Excel — chỉ admin, dựng ở cuối màn. */
+  if(window.FISG_CUSTOMER_IMPORT) try { FISG_CUSTOMER_IMPORT.render(); } catch(e){}
 }
 window.buildUsers = buildUsers;
 

@@ -665,6 +665,127 @@
     return it.id;
   }
 
+  /* ==================== NHẬP / CẬP NHẬT HÀNG LOẠT KHÁCH HÀNG ====================
+     Nhận danh sách dòng đã parse từ Excel (mỗi dòng {title, owner, legal, segment,
+     region, status}), đối chiếu với list Customers ĐANG CÓ rồi UPSERT:
+       · khách đã có (khớp theo tên gọn của Title HOẶC LegalName) → CẬP NHẬT
+       · khách chưa có → TẠO MỚI
+
+     Ba cam kết "không sót data":
+       1. Mỗi dòng có Title đều cho ra đúng một update hoặc một create — hoặc một
+          lỗi ĐƯỢC BÁO, không bao giờ âm thầm bỏ.
+       2. KHÔNG xoá dữ liệu đang có: Owner/LegalName ghi đè (đó là mục đích cập
+          nhật), còn Segment/Region/CustomerStatus chỉ điền khi ô đang trống.
+       3. Chạy lại nhiều lần vẫn đúng: lần hai khách cũ đã khớp nên chỉ cập nhật,
+          không nhân bản. */
+  function planCustomerUpsert(rows, index) {
+    const key = (typeof custOwnerKey === "function") ? custOwnerKey
+      : function (s) { return String(s || "").trim().toUpperCase(); };
+    const clean = (typeof cleanCustomerName === "function") ? cleanCustomerName
+      : function (s) { return String(s || "").trim(); };
+    const plan = [];
+    (rows || []).forEach(r => {
+      const rawTitle = String(r.title || "").trim() || clean(r.legal || "");
+      if (!rawTitle) { plan.push({ row: r, action: "skip", why: "thiếu tên" }); return; }
+      const kTitle = key(rawTitle);
+      const kLegal = r.legal ? key(r.legal) : "";
+      const hit = index[kTitle] || (kLegal && index[kLegal]) || null;
+      if (hit) plan.push({ row: r, action: "update", spId: hit.spId, existing: hit.fields, k: kTitle });
+      else plan.push({ row: r, action: "create", title: clean(rawTitle), k: kTitle });
+    });
+    return plan;
+  }
+
+  async function customerIndex() {
+    const key = (typeof custOwnerKey === "function") ? custOwnerKey
+      : function (s) { return String(s || "").trim().toUpperCase(); };
+    const [cols, items] = await Promise.all([
+      FISG_GRAPH.columns("Customers"), FISG_GRAPH.listItems("Customers"),
+    ]);
+    const g = makeGetter("Customers", cols);
+    const idx = {};
+    items.forEach(it => {
+      const f = it.fields || {};
+      const entry = { spId: it.id, fields: f };
+      const kt = key(txt(f.Title));
+      if (kt && !idx[kt]) idx[kt] = entry;
+      const kl = key(txtOf(g, f, "LegalName"));
+      if (kl && !idx[kl]) idx[kl] = entry;
+    });
+    return { idx, get: g };
+  }
+
+  /* onProgress(done, total, phase). Trả về báo cáo {updated, created, skipped,
+     failed, errors[]}. Ghi TUẦN TỰ theo lô nhỏ để không vượt giới hạn tốc độ
+     Graph; api() đã tự retry khi 429. */
+  async function bulkUpsertCustomers(rows, onProgress) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const { idx, get } = await customerIndex();
+    if (!get.internal("Owner"))
+      throw new Error('list Customers thiếu cột "Người phụ trách" (Owner). Xem docs/SharePoint_Setup.md mục 3f.');
+
+    const plan = planCustomerUpsert(rows, idx);
+    const total = plan.length;
+    const rep = { updated: 0, created: 0, skipped: 0, failed: 0, errors: [] };
+    let done = 0;
+
+    const has = k => !!get.internal(k);
+    function fillFields(f, r, existing) {
+      /* Owner + LegalName: authoritative → ghi đè khi có giá trị mới. */
+      if (r.owner) put(f, get, "Owner", r.owner);
+      if (r.legal) put(f, get, "LegalName", r.legal);
+      /* Segment/Region/CustomerStatus: chỉ điền khi ô đang trống, giữ dữ liệu cũ. */
+      [["segment", "Segment"], ["region", "Region"], ["status", "CustomerStatus"]].forEach(([rk, ck]) => {
+        if (!r[rk] || !has(ck)) return;
+        const cur = existing ? txt(existing[get.internal(ck)]) : "";
+        if (!cur) put(f, get, ck, r[rk]);
+      });
+    }
+
+    async function one(step) {
+      try {
+        if (step.action === "skip") { rep.skipped++; return; }
+        if (step.action === "update") {
+          const f = {};
+          fillFields(f, step.row, step.existing);
+          if (Object.keys(f).length) await FISG_GRAPH.updateItem("Customers", step.spId, f);
+          rep.updated++;
+        } else {
+          const f = { Title: step.title };
+          fillFields(f, step.row, null);
+          const it = await FISG_GRAPH.createItem("Customers", f);
+          idx[step.k] = { spId: it.id, fields: f };   // để dòng trùng sau không tạo lại
+        rep.created++;
+        }
+      } catch (e) {
+        rep.failed++;
+        rep.errors.push((step.row.title || step.title || "?") + ": " + (e.message || e));
+      } finally {
+        done++;
+        if (onProgress) try { onProgress(done, total); } catch (e) {}
+      }
+    }
+
+    /* Lô 4 request song song — đủ nhanh mà không dồn Graph. */
+    const BATCH = 4;
+    for (let i = 0; i < plan.length; i += BATCH) {
+      await Promise.all(plan.slice(i, i + BATCH).map(one));
+    }
+    /* Nạp lại danh bạ trong bộ nhớ để app thấy ngay. */
+    try { await loadCustomerDirectory(); } catch (e) {}
+    if (window.renderCustomers) try { renderCustomers(); } catch (e) {}
+    return rep;
+  }
+
+  /* Đếm trước khi ghi (dry-run): bao nhiêu update / create / skip. */
+  async function previewCustomerUpsert(rows) {
+    const { idx } = await customerIndex();
+    const plan = planCustomerUpsert(rows, idx);
+    const r = { update: 0, create: 0, skip: 0, total: plan.length };
+    plan.forEach(p => { r[p.action]++; });
+    return r;
+  }
+
   /* Gán / đổi chủ sở hữu một khách hàng. Dùng khi sales tạo KH mới, hoặc admin
      phân công lại. Ghi thẳng lên list Customers để mọi máy cùng thấy. */
   async function setCustomerOwner(name, owner) {
@@ -1159,6 +1280,7 @@
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
+                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert,
                         createActivity, updateActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,

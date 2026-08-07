@@ -380,7 +380,9 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
       PICName:'PICName', CreationDate:'Ngày tạo', ClosingDate:'Ngày dự kiến chốt' },
     ProjectUpdates:{ Title:'Title', Project:'Dự án', PICName:'PICName',
       UpdateDate:'Ngày cập nhật', Content:'Nội dung' },
-    Customers:{ Title:'Title' }, Products:{ Title:'Title' }, Suppliers:{ Title:'Title' },
+    Customers:{ Title:'Title', OData__x004f_wn:'Owner', LegalName:'LegalName',
+                Segment:'Segment', Region:'Region', CustomerStatus:'CustomerStatus' },
+    Products:{ Title:'Title' }, Suppliers:{ Title:'Title' },
   };
   const ITEMS = { Customers:[{id:'11',fields:{Title:'A'}}], Products:[{id:'21',fields:{Title:'X'}}],
                   Suppliers:[{id:'31',fields:{Title:'Roquette'}},{id:'32',fields:{Title:'IFF'}}] };
@@ -688,6 +690,56 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     COLS.Activities.OData__x004e_CC = 'Supplier';
     await E('FISG_STORE.syncFromGraph()');
   });
+  // ---- NHẬP / CẬP NHẬT HÀNG LOẠT KHÁCH HÀNG ----
+  await astep('upsert khách hàng: khách cũ cập nhật, khách mới tạo, không sót',async()=>{
+    /* List có "Acecook" (chưa chủ, có Segment). File nhập: Acecook (khách cũ,
+       gán chủ, không đè Segment) + "DT Food" (khách mới). */
+    ITEMS.Customers = [{id:'11',fields:{Title:'Acecook', Segment:'NOODLES'}}];
+    SP.created.length=0; SP.updated.length=0;
+    const rows = [
+      {title:'Acecook', owner:'Phạm Bích Ngọc', legal:'CÔNG TY CP ACECOOK VIỆT NAM', segment:'BAKERY'},
+      {title:'DT Food', owner:'Tam', legal:'CÔNG TY CỔ PHẦN DT FOOD', segment:'DAIRY'},
+    ];
+    const pv = await E('FISG_STORE.previewCustomerUpsert('+JSON.stringify(rows)+')');
+    if(pv.update!==1||pv.create!==1)throw new Error('preview sai: '+JSON.stringify(pv));
+    const rep = await E('FISG_STORE.bulkUpsertCustomers('+JSON.stringify(rows)+')');
+    if(rep.updated!==1||rep.created!==1||rep.failed)throw new Error('report sai: '+JSON.stringify(rep));
+    const upd = SP.updated.filter(x=>x.list==='Customers');
+    if(!upd.length)throw new Error('không cập nhật khách cũ');
+    if(upd[0].fields.OData__x004f_wn!=='Phạm Bích Ngọc')throw new Error('không ghi chủ vào khách cũ');
+    if('Segment' in upd[0].fields)throw new Error('ĐÈ Segment đang có — phải giữ nguyên');
+    const cre = SP.created.filter(x=>x.list==='Customers');
+    if(!cre.length||cre[0].fields.Title!=='DT Food')throw new Error('không tạo khách mới đúng tên: '+JSON.stringify(cre));
+    if(cre[0].fields.Segment!=='DAIRY')throw new Error('khách mới mất Segment');
+  });
+  await astep('upsert chạy lại KHÔNG nhân bản khách',async()=>{
+    /* Sau lần trên, ITEMS.Customers đã có cả Acecook lẫn DT Food. Chạy lại cùng
+       dữ liệu: phải toàn update, 0 create. */
+    const rows = [
+      {title:'Acecook', owner:'Phạm Bích Ngọc', legal:'CÔNG TY CP ACECOOK VIỆT NAM'},
+      {title:'DT Food', owner:'Tam', legal:'CÔNG TY CỔ PHẦN DT FOOD'},
+    ];
+    const rep = await E('FISG_STORE.bulkUpsertCustomers('+JSON.stringify(rows)+')');
+    if(rep.created!==0)throw new Error('tạo lại khách đã có: '+JSON.stringify(rep));
+    if(rep.updated!==2)throw new Error('không cập nhật đủ: '+JSON.stringify(rep));
+  });
+  await astep('upsert báo lỗi từng dòng, không nuốt',async()=>{
+    const save=w.FISG_GRAPH.updateItem;
+    w.FISG_GRAPH.updateItem=async()=>{ throw new Error('Graph 500'); };
+    const rep=await E("FISG_STORE.bulkUpsertCustomers([{title:'Acecook',owner:'X'}])");
+    w.FISG_GRAPH.updateItem=save;
+    if(rep.failed!==1||!rep.errors.length)throw new Error('không báo lỗi: '+JSON.stringify(rep));
+    if(!/Acecook/.test(rep.errors[0]))throw new Error('lỗi không kèm tên khách');
+  });
+  await astep('list thiếu cột Owner thì từ chối rõ ràng',async()=>{
+    const keep=COLS.Customers.OData__x004f_wn; delete COLS.Customers.OData__x004f_wn;
+    let msg='';
+    try { await E("FISG_STORE.bulkUpsertCustomers([{title:'A',owner:'B'}])"); }
+    catch(e){ msg=String(e.message||e); }
+    COLS.Customers.OData__x004f_wn=keep;
+    if(!/Owner/.test(msg))throw new Error('không từ chối khi thiếu cột: '+msg);
+  });
+
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{
     /* Bản cũ chỉ đánh dấu "đã gửi" mà vẫn giữ bản AL- trong máy, nên lần đăng
        nhập sau mergeActs nối thêm một dòng y hệt bên cạnh bản chính thức. */

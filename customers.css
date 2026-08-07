@@ -58,3 +58,28 @@
   .cu-row{grid-template-columns:1fr;gap:6px}
   .cu-act{justify-content:flex-start}
 }
+
+/* ---------- Nhập / cập nhật khách hàng từ Excel (màn Người dùng) ---------- */
+.ci-card{margin-top:18px;padding:18px 20px;border-radius:var(--r)}
+.ci-head{display:flex;gap:12px;margin-bottom:14px}
+.ci-head b{font-size:14px;color:var(--marine-ink)}
+.ci-head p{margin:4px 0 0;font-size:12.5px;color:var(--text-3);line-height:1.5;max-width:640px}
+.ci-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ci-file{position:relative;overflow:hidden;display:inline-flex}
+.ci-file input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.ci-file span{
+  display:inline-flex;align-items:center;height:36px;padding:0 15px;border-radius:8px;
+  border:1px dashed var(--marine-line,var(--line));color:var(--marine);font-size:12.5px;
+  font-weight:600;background:var(--surface)}
+.ci-file:hover span{background:var(--pearl-2)}
+#ciPreview,#ciRun{height:36px}
+#ciPreview:disabled,#ciRun:disabled{opacity:.45;cursor:not-allowed}
+.ci-bar{height:6px;border-radius:20px;background:var(--line);overflow:hidden;margin-top:14px}
+.ci-bar #ciBarFill{height:100%;width:0;background:var(--marine);transition:width .2s}
+.ci-status{margin-top:12px;font-size:12.5px;color:var(--text-2);line-height:1.5}
+.ci-status.ci-ok{color:var(--won,#157F3C)}
+.ci-status.ci-err{color:var(--overdue,#DC2626)}
+.ci-errors{
+  margin-top:12px;padding:12px 14px;border-radius:8px;background:#FEF2F2;
+  border:1px solid #FECACA;font-size:12px;color:#991B1B;line-height:1.6;
+  max-height:220px;overflow:auto}
