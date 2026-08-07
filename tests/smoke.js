@@ -246,6 +246,42 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(E('cuRows().length')!==1||E("cuRows()[0].owner")!=='Tam')throw new Error('lọc theo sales sai');
     E("cuSetOwner('')");
   });
+  step('quyền sửa KH: admin toàn quyền, sales chỉ KH của mình',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    if(!E("cuCanEdit(cuFind('E'))"))throw new Error('Ngọc phải sửa được khách của mình (E)');
+    if(E("cuCanEdit(cuFind('CÔNG TY TNHH F'))"))throw new Error('Ngọc KHÔNG được sửa khách của Tâm (F)');
+    E(`loginAs(${ix('duy@f.vn')})`);
+    if(!E("cuCanEdit(cuFind('E'))")||!E("cuCanEdit(cuFind('CÔNG TY TNHH F'))"))
+      throw new Error('admin phải sửa được mọi khách');
+  });
+  step('bỏ nhãn giữ chỗ khi khách chưa có dự án / hoạt động',()=>{
+    /* Khách "E" chưa có hoạt động (chỉ dự án P-5 mới tạo, không activity đã qua).
+       Bảng không được hiện chữ "chưa có dự án" / "Chưa có hoạt động". */
+    E(`loginAs(${ix('duy@f.vn')}); go('customers')`);
+    const html=d.getElementById('cuRows').innerHTML;
+    if(/chưa có dự án/.test(html))throw new Error('còn nhãn "chưa có dự án"');
+    if(/Chưa có hoạt động/.test(html))throw new Error('còn nhãn "Chưa có hoạt động"');
+  });
+  step('click KH mở modal xem + sửa với thông tin liên quan',()=>{
+    E("cuOpenEdit('E')");
+    const ov=d.getElementById('cuEditOv');
+    if(!ov||!ov.classList.contains('open'))throw new Error('không mở modal');
+    if(!d.getElementById('cuf-title'))throw new Error('thiếu ô sửa tên');
+    if(!/Dự án của khách hàng/.test(ov.textContent))throw new Error('thiếu mục thông tin liên quan');
+    E("cuCloseEdit()");
+    if(d.getElementById('cuEditOv').classList.contains('open'))throw new Error('không đóng được');
+  });
+  step('sales mở KH của người khác thì form khoá lại',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome(); go('customers');`);
+    /* mở khách của Tâm — Ngọc không sửa được, nhưng vẫn xem được. Tạo một khách
+       của Tâm trong danh bạ để mở. */
+    E("cuOpenEdit('CÔNG TY TNHH F')");
+    const ov=d.getElementById('cuEditOv');
+    if(!/chỉ xem/.test(ov.textContent))throw new Error('không báo chỉ-xem');
+    if(!d.getElementById('cuf-title').disabled)throw new Error('ô sửa không bị khoá');
+    if(d.getElementById('cuf-save'))throw new Error('vẫn có nút Lưu cho người không có quyền');
+    E("cuCloseEdit()");
+  });
 
   step('popup khách hàng không lộ dự án của sales khác',()=>{
     /* P-3 (Tâm) và P-4 (Tâm, Ngọc là người liên quan) cùng khách "C"/"D".
@@ -738,6 +774,24 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     catch(e){ msg=String(e.message||e); }
     COLS.Customers.OData__x004f_wn=keep;
     if(!/Owner/.test(msg))throw new Error('không từ chối khi thiếu cột: '+msg);
+  });
+  await astep('saveCustomer tạo mới KH với tên gọn + chủ',async()=>{
+    ITEMS.Customers=[]; SP.created.length=0; SP.updated.length=0;
+    const sp=await E("FISG_STORE.saveCustomer({title:'CÔNG TY TNHH ABC Foods', legal:'CÔNG TY TNHH ABC Foods', owner:'Tam', segment:'DAIRY'})");
+    const c=SP.created.filter(x=>x.list==='Customers');
+    if(!c.length)throw new Error('không tạo');
+    if(c[0].fields.Title!=='ABC Foods')throw new Error('không ghi tên gọn: '+c[0].fields.Title);
+    if(c[0].fields.OData__x004f_wn!=='Tam')throw new Error('không ghi chủ');
+    if(c[0].fields.Segment!=='DAIRY')throw new Error('không ghi Segment');
+    if(!sp)throw new Error('không trả spId');
+  });
+  await astep('saveCustomer sửa KH đang có, không tạo trùng',async()=>{
+    SP.created.length=0; SP.updated.length=0;
+    const spId=ITEMS.Customers[0].id;
+    await E("FISG_STORE.saveCustomer({spId:'"+spId+"', title:'ABC Foods', owner:'Phạm Bích Ngọc'})");
+    if(SP.created.filter(x=>x.list==='Customers').length)throw new Error('tạo mới thay vì sửa');
+    const u=SP.updated.filter(x=>x.list==='Customers');
+    if(!u.length||u[0].fields.OData__x004f_wn!=='Phạm Bích Ngọc')throw new Error('không đổi chủ');
   });
 
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{

@@ -74,17 +74,18 @@ function renderCustomers(){
 
   box.innerHTML = rows.map(c => {
     const s = m[key(c.name)] || { open:0, total:0, lastTouch:null, nccs:new Set() };
-    const touch = s.lastTouch ? cuTouch(s.lastTouch) : { text:'Chưa có hoạt động', cls:'cu-quiet-none' };
+    /* Chưa có hoạt động / dự án thì để TRỐNG, không hiện nhãn giữ chỗ. */
+    const touch = s.lastTouch ? cuTouch(s.lastTouch) : { text:'', cls:'' };
     const legal = c.legal && custOwnerKey(c.legal) !== custOwnerKey(c.name)
       ? `<span class="cu-legal">${ckEsc(c.legal)}</span>` : '';
     const ncc = [...s.nccs].slice(0,3).map(n => `<span class="cu-ncc">${ckEsc(n)}</span>`).join('');
     return `<div class="cu-row">
-      <button class="cu-name" onclick="cuOpen('${ckAttr(c.name)}')" title="Xem lịch sử khách hàng">
+      <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="Xem & sửa thông tin khách hàng">
         <b>${ckEsc(custLabel(c.name))}</b>${legal}
       </button>
       <div class="cu-owner">${cuCanSeeAll() ? ckEsc(picLabel(c.owner) || '—') : ''}</div>
-      <div class="cu-meta">${ncc || '<span class="cu-none">chưa có dự án</span>'}</div>
-      <div class="cu-num"><b>${s.open}</b><span>đang chạy</span></div>
+      <div class="cu-meta">${ncc}</div>
+      <div class="cu-num"><b>${s.open}</b>${s.open ? '<span>đang chạy</span>' : ''}</div>
       <div class="cu-touch ${touch.cls}">${touch.text}</div>
       <div class="cu-act">
         <button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ Dự án</button>
@@ -94,6 +95,13 @@ function renderCustomers(){
   }).join('');
 }
 window.renderCustomers = renderCustomers;
+
+/* Ai được sửa một khách hàng: admin toàn quyền; sales chỉ khách của chính mình. */
+function cuCanEdit(entry){
+  if(!me) return false;
+  if(myCap().admin) return true;
+  return typeof ownsCustomer === 'function' && ownsCustomer(entry && entry.name ? entry.name : entry, me);
+}
 
 function cuTouch(iso){
   const d = daysSince(iso);
@@ -115,7 +123,11 @@ function cuRenderTools(count){
       ${owners.map(o => `<option value="${ckEsc(o)}"${picKey(cuFilterOwner)===picKey(o)?' selected':''}>${ckEsc(picLabel(o))}</option>`).join('')}
     </select>`;
   }
-  box.innerHTML = `${ownerSel}
+  const addBtn = (window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite())
+    ? `<button class="btn-primary cu-add" onclick="cuOpenEdit()">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+         Thêm khách hàng</button>` : '';
+  box.innerHTML = `${addBtn}${ownerSel}
     <div class="cu-search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input type="text" placeholder="Tìm khách hàng" value="${ckEsc(cuQuery)}" oninput="cuSetQuery(this.value)" aria-label="Tìm khách hàng">
@@ -134,7 +146,131 @@ function cuSetQuery(v){
 }
 window.cuSetOwner = cuSetOwner; window.cuSetQuery = cuSetQuery;
 
-/* Mở lịch sử khách hàng dùng lại ngăn kéo sẵn có ở Cockpit. */
+/* ====== XEM & SỬA THÔNG TIN KHÁCH HÀNG ======
+   name rỗng → tạo mới. Có name → mở khách đang có: hiện thông tin liên quan
+   (dự án, hoạt động — trong phạm vi quyền) + form sửa. Không có quyền sửa thì
+   các ô khoá lại, chỉ xem. */
+let cuEditName = null;
+
+function cuFind(name){
+  const key = (typeof custOwnerKey === 'function') ? custOwnerKey
+            : (s => String(s||'').trim().toUpperCase());
+  const k = key(name);
+  return (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []).find(c => key(c.name) === k) || null;
+}
+
+function cuOpenEdit(name){
+  const entry = name ? cuFind(name) : null;
+  const isNew = !entry;
+  cuEditName = entry ? entry.name : null;
+  const canEdit = isNew ? true : cuCanEdit(entry);
+
+  let ov = document.getElementById('cuEditOv');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'cuEditOv'; ov.className = 'cu-ov';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if(e.target === ov) cuCloseEdit(); });
+  }
+
+  /* Thông tin liên quan — chỉ khi sửa khách đang có. */
+  let related = '';
+  if(entry){
+    const okR = (typeof scopeRecords === 'function') ? scopeRecords(RECORDS, me) : RECORDS;
+    const okA = (typeof scopeActs === 'function') ? scopeActs(ACTIVITIES, me, okR) : ACTIVITIES;
+    const key = (typeof custOwnerKey === 'function') ? custOwnerKey : (s=>String(s||'').toUpperCase());
+    const k = key(entry.name);
+    const prj = okR.filter(r => key(r.customer) === k);
+    const acts = okA.filter(a => key(a.customer) === k);
+    const prjHtml = prj.length
+      ? prj.slice(0,8).map(r => `<button class="cu-rel-item" onclick="cuCloseEdit();openDetail('${ckAttr(r.id)}')">
+           <b>${ckEsc(r.product||r.id)}</b><span>${ckEsc(r.ncc)} · ${ckEsc(r.stage||'')}</span>
+           <em class="st st-${r.status==='WON'?'won':r.status==='LOST'?'lost':'run'}">${ckEsc(r.status)}</em></button>`).join('')
+      : '<div class="cu-rel-empty">Chưa có dự án nào.</div>';
+    const actHtml = acts.length
+      ? acts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6)
+          .map(a => `<div class="cu-rel-act"><span>${ckVN(normDate(a.date))}</span><b>${ckEsc(a.type)}</b> · ${ckEsc(picLabel(a.pic))}<em>${ckEsc(a.note||'')}</em></div>`).join('')
+      : '<div class="cu-rel-empty">Chưa có hoạt động nào.</div>';
+    related = `<div class="cu-rel">
+      <div class="cu-rel-h">Dự án của khách hàng${prj.length?` <span>${prj.length}</span>`:''}</div>
+      <div class="cu-rel-list">${prjHtml}</div>
+      <div class="cu-rel-h">Hoạt động gần đây${acts.length?` <span>${acts.length}</span>`:''}</div>
+      <div class="cu-rel-list">${actHtml}</div>
+    </div>`;
+  }
+
+  const v = entry || { name:'', legal:'', owner:(me&&(me.pic||me.name))||'', segment:'', region:'', status:'' };
+  /* Ô chủ sở hữu: admin chọn tự do; sales khoá về chính mình. */
+  const ownerField = myCap().admin
+    ? `<input id="cuf-owner" list="cuf-pics" value="${ckEsc(v.owner||'')}" ${canEdit?'':'disabled'}>
+       <datalist id="cuf-pics">${(typeof LISTS!=='undefined'?LISTS.pics:[]).map(p=>`<option value="${ckEsc(p)}">`).join('')}</datalist>`
+    : `<input id="cuf-owner" value="${ckEsc(v.owner||(me&&(me.pic||me.name))||'')}" disabled>`;
+
+  const dis = canEdit ? '' : 'disabled';
+  ov.innerHTML = `<div class="cu-modal glass" role="dialog" aria-modal="true">
+    <div class="cu-modal-h">
+      <h3>${isNew ? 'Thêm khách hàng' : ckEsc(custLabel(v.name))}</h3>
+      <button class="x-close" onclick="cuCloseEdit()" aria-label="Đóng">×</button>
+    </div>
+    <div class="cu-modal-b">
+      <div class="cu-form">
+        ${!canEdit ? '<div class="cu-readonly">Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.</div>' : ''}
+        <label>Tên hiển thị <span class="req">*</span>
+          <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="VD: Acecook" ${dis}></label>
+        <label>Tên pháp nhân
+          <input id="cuf-legal" value="${ckEsc(v.legal||'')}" placeholder="Tên đầy đủ trên giấy phép" ${dis}></label>
+        <label>Người phụ trách ${ownerField}</label>
+        <div class="cu-form-3">
+          <label>Segment <input id="cuf-seg" value="${ckEsc(v.segment||'')}" ${dis}></label>
+          <label>Region <input id="cuf-region" value="${ckEsc(v.region||'')}" ${dis}></label>
+          <label>Trạng thái <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
+        </div>
+        ${canEdit ? `<div class="cu-form-act">
+          <button class="btn-ghost" onclick="cuCloseEdit()">Đóng</button>
+          <button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>
+        </div>` : ''}
+      </div>
+      ${related}
+    </div>
+  </div>`;
+  ov.classList.add('open');
+  const first = document.getElementById(canEdit ? 'cuf-title' : 'cuf-legal');
+  if(first) setTimeout(()=>first.focus(), 30);
+}
+window.cuOpenEdit = cuOpenEdit;
+
+function cuCloseEdit(){
+  const ov = document.getElementById('cuEditOv');
+  if(ov) ov.classList.remove('open');
+  cuEditName = null;
+}
+window.cuCloseEdit = cuCloseEdit;
+
+function cuSaveCustomer(){
+  const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  const title = g('cuf-title');
+  if(!title){ if(window.toast) toast('Nhập tên khách hàng.'); return; }
+  const entry = cuEditName ? cuFind(cuEditName) : null;
+  const owner = myCap().admin ? g('cuf-owner') : ((me&&(me.pic||me.name))||'');
+  const row = { spId: entry ? entry.spId : null, title: title, legal: g('cuf-legal'),
+                owner: owner, segment: g('cuf-seg'), region: g('cuf-region'), status: g('cuf-status') };
+  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
+    if(window.toast) toast('Chưa đăng nhập Microsoft 365 — không lưu được.');
+    return;
+  }
+  const btn = document.getElementById('cuf-save'); if(btn){ btn.disabled = true; btn.textContent = 'Đang lưu…'; }
+  FISG_STORE.saveCustomer(row).then(()=>{
+    if(window.toast) toast(entry ? 'Đã lưu khách hàng.' : 'Đã thêm khách hàng ' + custLabel(title) + '.');
+    cuCloseEdit(); renderCustomers();
+  }).catch(e=>{
+    console.warn('[customers] lưu hỏng:', e && (e.message||e));
+    if(window.toast) toast('KHÔNG lưu được lên SharePoint: ' + (e.message||e));
+    if(btn){ btn.disabled = false; btn.textContent = entry ? 'Lưu thay đổi' : 'Tạo khách hàng'; }
+  });
+}
+window.cuSaveCustomer = cuSaveCustomer;
+
+/* Nút "Xem lịch sử" dùng lại ngăn kéo Cockpit. */
 function cuOpen(name){
   const k = (typeof custKey === 'function') ? custKey(name) : name;
   if(window.openCustomer) openCustomer(k);

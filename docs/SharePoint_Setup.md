@@ -304,6 +304,18 @@ nguyên phân quyền theo PIC dự án.
 Khách hàng gõ tay mới trong app tự gán chủ sở hữu = sales đang đăng nhập, ghi
 tên gọn vào Title và tên gốc vào LegalName.
 
+### Thêm / sửa khách hàng trong màn "Khách hàng của tôi"
+
+- **Thêm khách hàng**: nút ở góc phải. Điền tên hiển thị, tên pháp nhân, người
+  phụ trách, Segment/Region/Trạng thái. Admin chọn chủ tự do; sales tạo thì chủ
+  mặc định là chính mình.
+- **Bấm vào một khách**: mở bảng thông tin — dự án và hoạt động liên quan (trong
+  phạm vi quyền xem), kèm form sửa. Lưu ghi thẳng lên list Customers.
+- **Quyền sửa**: admin sửa mọi khách; sales chỉ sửa khách của chính mình
+  (`Owner` = mình). Không có quyền thì form khoá lại, vẫn xem được thông tin.
+- Bảng bỏ nhãn giữ chỗ: khách chưa có dự án / hoạt động thì để trống, không hiện
+  "chưa có dự án" hay "Chưa có hoạt động".
+
 ## 3d. App ghi ngược lên SharePoint — cột bắt buộc
 
 Cho tới bản 05/08/2026 phần mềm chỉ **đọc**: mọi hoạt động sales nhập chỉ nằm

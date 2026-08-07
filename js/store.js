@@ -39,7 +39,8 @@
     Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ" },
     /* Customers: danh bạ khách hàng. Title = tên gọn (đã bỏ tiền tố pháp nhân);
        Owner = sales phụ trách khách này; LegalName = tên pháp nhân đầy đủ. */
-    Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân" },
+    Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân",
+                 Segment: "Segment", Region: "Region", CustomerStatus: "Trạng thái" },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -148,6 +149,9 @@
           name: txt(f.Title),
           owner: txtOf(g, f, "Owner"),
           legal: txtOf(g, f, "LegalName"),
+          segment: txtOf(g, f, "Segment"),
+          region: txtOf(g, f, "Region"),
+          status: txtOf(g, f, "CustomerStatus"),
           spId: it.id,
         };
       }).filter(c => c.name);
@@ -786,6 +790,46 @@
     return r;
   }
 
+  /* Tạo mới HOẶC sửa một khách hàng trong danh bạ. row:
+       { spId?, title, legal, owner, segment, region, status }
+     spId rỗng → tạo mới; có spId → cập nhật đúng dòng đó.
+     Title ghi tên gọn; các cột khác chỉ ghi khi list CÓ cột tương ứng.
+     Trả về spId. Cập nhật luôn danh bạ trong bộ nhớ để app thấy ngay. */
+  async function saveCustomer(row) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const get = await schemaOf("Customers");
+    const clean = (typeof cleanCustomerName === "function") ? cleanCustomerName
+      : function (s) { return String(s || "").trim(); };
+    const title = clean(String(row.title || "").trim() || row.legal || "");
+    if (!title) throw new Error("thiếu tên khách hàng");
+
+    const f = {};
+    /* Đổi tên: chỉ ghi Title khi khác, để không đụng dòng vô ích. */
+    const isNew = !row.spId;
+    if (isNew) f.Title = title;
+    else {
+      /* khi sửa, cho phép đổi tên gọn */
+      if (row.title != null) f.Title = title;
+    }
+    if (row.owner != null) put(f, get, "Owner", row.owner);
+    if (row.legal != null) put(f, get, "LegalName", row.legal);
+    [["segment", "Segment"], ["region", "Region"], ["status", "CustomerStatus"]].forEach(([rk, ck]) => {
+      if (row[rk] != null && get.internal(ck)) put(f, get, ck, row[rk]);
+    });
+
+    let spId = row.spId;
+    if (isNew) {
+      const it = await FISG_GRAPH.createItem("Customers", f);
+      spId = it.id;
+    } else {
+      if (Object.keys(f).length) await FISG_GRAPH.updateItem("Customers", spId, f);
+    }
+    try { await loadCustomerDirectory(); } catch (e) {}
+    if (window.renderCustomers) try { renderCustomers(); } catch (e) {}
+    if (typeof invalidateCockpit === "function") invalidateCockpit();
+    return spId;
+  }
+
   /* Gán / đổi chủ sở hữu một khách hàng. Dùng khi sales tạo KH mới, hoặc admin
      phân công lại. Ghi thẳng lên list Customers để mọi máy cùng thấy. */
   async function setCustomerOwner(name, owner) {
@@ -1280,7 +1324,7 @@
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
-                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert,
+                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
                         createActivity, updateActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
