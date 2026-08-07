@@ -28,32 +28,64 @@ function renderActs(){
            ${pr.product==='—'?pr.customer:pr.product}</button>`
       : `<button class="act-new" onclick="createProjectFromAct('${a.id}')">+ Tạo dự án</button>`;
     return `<div class="act-row">
-      <div class="act-date">${new Date(a.date).toLocaleDateString('vi-VN')}<span class="act-type">${a.type}</span></div>
+      <div class="act-date">${new Date(a.date).toLocaleDateString('vi-VN')}<span class="act-type">${actType(a.type)}</span></div>
       <div><b style="font-size:13px">${a.customer}</b><div style="font-size:11px;color:var(--ink-3)">${a.ncc}</div></div>
       <div class="r-pic"><span class="avatar" style="width:22px;height:22px;font-size:9.5px;background:${u?u.color:'#8A90A4'}">${(a.pic||'?').slice(0,2).toUpperCase()}</span>${a.pic}</div>
       <div class="act-note">${a.note}${actPending(a)?' <span class="act-pending" title="Đã lưu trên máy bạn, chưa lên SharePoint — quản lý chưa thấy. Sẽ tự thử lại ở lần đăng nhập sau.">chưa đồng bộ</span>':''}<small>→ ${a.next}</small></div>
-      <div><span class="pot pot-${a.potential}">${a.potential}</span></div>
+      <div><span class="pot pot-${potLabel(a.potential)}">${potLabel(a.potential)}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
 /* prefill là tuỳ chọn — gọi openActForm() không tham số thì hành vi y như trước.
    Màn hình chào tuần truyền sẵn khách hàng, NCC, ngày và dự án vào đây. */
+/* Nhãn cũ Hot/Warm/Cold vẫn nằm trong dữ liệu SharePoint và các activity đã lưu,
+   nên ánh xạ sang High/Medium/Low khi hiển thị và khi nạp vào form. */
+const POT_MAP = { Hot:'High', Warm:'Medium', Cold:'Low' };
+function potLabel(v){ return POT_MAP[v] || v || ''; }
+window.potLabel = potLabel;
+/* Loại hoạt động: Seminar cũ gộp về Exhibition; các giá trị lạ giữ nguyên. */
+const ACT_TYPE_MAP = { Seminar:'Exhibition', 'Khác':'Call' };
+function actType(v){ return ACT_TYPE_MAP[v] || v || 'Call'; }
+
+/* Một khách hàng có thể được nhiều sales tương tác, nhưng chỉ một người là chủ
+   quản lý (Owner trên list Customers). Khi chọn khách, cho biết ai đang quản lý. */
+function onActCustomer(){
+  const name = (document.getElementById('a-cust').value || '').trim();
+  const box = document.getElementById('a-owner');
+  if(!box) return;
+  const owner = (typeof customerOwnerOf === 'function') ? customerOwnerOf(name) : '';
+  if(!name || !owner){ box.hidden = true; box.textContent = ''; return; }
+  const mine = me && (owner === (me.pic || me.name));
+  box.hidden = false;
+  box.className = 'owner-note' + (mine ? ' me' : '');
+  /* Tên chủ đặt CUỐI câu (trong <b>) để phần chữ còn lại là một text-node liền
+     mạch, dịch EN không bị cắt ngang bởi tên riêng. */
+  box.innerHTML = mine
+    ? 'Bạn đang quản lý khách hàng này.'
+    : 'Khách hàng đang được quản lý bởi <b>' + esc4(owner) + '</b>. '
+      + '<span class="on-hint">Bạn vẫn có thể ghi tương tác.</span>';
+}
+window.onActCustomer = onActCustomer;
+
 function openActForm(prefill, origin){
   const p = prefill && typeof prefill === 'object' ? prefill : {};
   srcAct=null;
   NAV.enter(origin); NAV.renderBack('a-back');
-  document.getElementById('a-title').textContent = p.title || 'Ghi hoạt động khách hàng';
+  document.getElementById('a-title').textContent = p.title || 'Ghi kế hoạch tuần';
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
   const ncc = p.ncc || formNcc();
-  /* "Khác" cho hoạt động chưa gắn nhà cung cấp nào — hội thảo chung, khách mới
-     chưa rõ sẽ chào hàng của ai. Trước đây bắt buộc phải chọn một trong ba NCC. */
+  /* Nhà cung cấp giờ là ô nhập tự do (datalist) — chọn từ list đang có HOẶC gõ
+     một NCC mới ngay tại đây, không cần mở màn hình thêm NCC trước. */
   const nccOpts = NCCS.concat(NCCS.indexOf(OTHER_NCC) < 0 ? [OTHER_NCC] : []);
-  document.getElementById('a-ncc').innerHTML=nccOpts.map(n=>`<option${n===ncc?' selected':''}>${n}</option>`).join('');
+  const dl = document.getElementById('dl-ncc');
+  if(dl) dl.innerHTML = nccOpts.map(n=>`<option value="${esc4(n)}"></option>`).join('');
+  document.getElementById('a-ncc').value = ncc;
   document.getElementById('a-date').value = p.date || isoOf(TODAY);
   document.getElementById('a-cust').value = p.customer || '';
   document.getElementById('a-note').value = p.note || '';
   document.getElementById('a-next').value = p.next || '';
-  if(p.type) document.getElementById('a-type').value = p.type;
-  if(p.potential) document.getElementById('a-pot').value = p.potential;
+  document.getElementById('a-type').value = actType(p.type);
+  document.getElementById('a-pot').value = p.potential ? potLabel(p.potential) : 'High';
+  onActCustomer();
   const mine=visible().filter(r=>r.status==='IN PROGRESS');
   /* Dự án gợi ý có thể nằm ngoài nccFilter hiện tại, nên chèn thêm nếu thiếu. */
   const list = p.projectId && !mine.some(r=>r.id===p.projectId)
@@ -74,12 +106,18 @@ function saveAct(){
   /* Id cũ sinh theo ACTIVITIES.length nên đụng ngay id có sẵn (A-0335 đã tồn tại).
      Tiền tố AL- vừa tránh đụng, vừa đánh dấu bản ghi do người dùng nhập trong
      phần mềm — thứ duy nhất phân biệt được kế hoạch với thực tế. */
+  /* Nhà cung cấp cho phép nhập tự do: nhận đúng chuỗi đã gõ; rỗng thì về "Khác". */
+  const ncc=g('a-ncc')||OTHER_NCC;
   const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
-    ncc:g('a-ncc'),product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
+    ncc:ncc,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
     next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};
   ACTIVITIES.unshift(a);
   LS.addAct(a);
   if(!LISTS.customers.includes(a.customer))LISTS.customers.push(a.customer);
+  /* NCC mới gõ tay được ghi nhớ cho phiên làm việc để lần sau chọn lại từ gợi ý. */
+  if(ncc && ncc!==OTHER_NCC && !LISTS.nccs.some(n=>String(n).trim().toLowerCase()===ncc.toLowerCase())){
+    LISTS.nccs.push(ncc); if(window.dedupeNccs) dedupeNccs();
+  }
   if(a.projectId){
     const pr=RECORDS.find(r=>r.id===a.projectId);
     if(pr){pr.comments.push({by:a.pic,at:a.date,text:'['+a.type+'] '+a.note+' → '+a.next});

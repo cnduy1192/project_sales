@@ -146,15 +146,61 @@ function wcRenderWeek(mw){
     const label = dots.length
       ? dots.length + ' việc ngày ' + ckVN(iso)
       : 'Không có việc ngày ' + ckVN(iso);
-    html += `<div class="wc-day${cls}" role="listitem" aria-label="${ckEsc(label)}">
+    html += `<button type="button" class="wc-day${cls}" data-iso="${iso}"
+      onclick="wcDayMenu(event,'${iso}')" aria-label="${ckEsc(label)} — bấm để thêm việc">
       <span class="wc-day-n">${WC_DAY_ABBR[d.getDay()]}</span>
       <span class="wc-day-d">${iso.slice(8,10)}</span>
       <span class="wc-dots">${shown.map(c => `<i class="wc-dot ${c}"></i>`).join('')}${
         dots.length > 5 ? `<i class="wc-kg">+${dots.length-5}</i>` : ''}</span>
-    </div>`;
+    </button>`;
   }
   document.getElementById('wcWeek').innerHTML = html;
 }
+
+/* Bấm một ngày trong lịch: mở menu nhỏ để tạo nhanh việc CHO ĐÚNG NGÀY đó —
+   ghi kế hoạch tuần hoặc mở dự án mới, ngày được điền sẵn. */
+function wcDayMenu(ev, iso){
+  ev.preventDefault(); ev.stopPropagation();
+  wcCloseDayMenu();
+  const anchor = ev.currentTarget;
+  const pop = document.createElement('div');
+  pop.className = 'wc-daypop glass';
+  pop.id = 'wcDayPop';
+  pop.innerHTML =
+    '<div class="wc-daypop-h">' + dayStampVI(iso) + '</div>' +
+    '<button type="button" class="wc-daypop-b" data-act="log">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ghi kế hoạch tuần</button>' +
+    '<button type="button" class="wc-daypop-b" data-act="proj">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>Tạo dự án</button>';
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  const pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let left = Math.min(r.left, innerWidth - pw - 10);
+  let top = r.bottom + 6;
+  if(top + ph > innerHeight - 10) top = r.top - ph - 6;   // flip above if it would overflow
+  pop.style.left = Math.max(10, left) + 'px';
+  pop.style.top = Math.max(10, top) + 'px';
+  pop.querySelector('[data-act="log"]').onclick = () => { wcCloseDayMenu(); wcQuickLog(iso); };
+  pop.querySelector('[data-act="proj"]').onclick = () => { wcCloseDayMenu(); wcQuickProject(iso); };
+  setTimeout(() => document.addEventListener('click', wcCloseDayMenu, { once:true }), 0);
+}
+function wcCloseDayMenu(){ const p = document.getElementById('wcDayPop'); if(p) p.remove(); }
+window.wcDayMenu = wcDayMenu;
+
+/* Từ lịch, đi thẳng vào form — welcome đóng lại để form (drawer phải) chiếm trọn. */
+function wcQuickLog(iso){
+  closeWelcome();
+  if(typeof openActForm === 'function') openActForm({ date: iso, title: 'Ghi kế hoạch tuần' });
+}
+function wcQuickProject(iso){
+  closeWelcome();
+  if(typeof openForm === 'function'){
+    openForm();
+    const el = document.getElementById('f-created'); if(el) el.value = iso;
+    const cl = document.getElementById('f-closing'); if(cl && !cl.value) cl.focus();
+  }
+}
+window.wcQuickLog = wcQuickLog; window.wcQuickProject = wcQuickProject;
 
 /* ---- Dải số ---- */
 function wcRenderStats(mw){

@@ -79,10 +79,28 @@
   display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:18px 0 0;
   border:1px solid var(--line-2);border-radius:10px;padding:10px;background:var(--pearl-2)}
 .wc-day{
+  display:block;width:100%;font:inherit;cursor:pointer;
   text-align:center;padding:7px 4px 8px;border-radius:8px;background:transparent;
-  border:1px solid transparent}
+  border:1px solid transparent;transition:background .14s,border-color .14s,box-shadow .14s,transform .1s}
+.wc-day:hover{background:var(--surface);border-color:var(--marine-line);box-shadow:var(--shadow-md)}
+.wc-day:active{transform:translateY(1px)}
+.wc-day:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 .wc-day.now{background:var(--surface);border-color:var(--marine-line);box-shadow:var(--shadow)}
 .wc-day.past{opacity:.62}
+.wc-day.past:hover{opacity:1}
+
+/* popover shown when a calendar day is clicked */
+.wc-daypop{position:fixed;z-index:1200;min-width:186px;padding:6px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg);
+  animation:drawerIn .16s ease-out}
+.wc-daypop-h{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text-3);
+  padding:6px 10px 7px;text-transform:uppercase}
+.wc-daypop-b{display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:9px 10px;border-radius:8px;font-size:13px;font-weight:600;color:var(--marine-ink);
+  transition:background .12s,color .12s}
+.wc-daypop-b svg{color:var(--marine)}
+.wc-daypop-b:hover{background:var(--marine-soft);color:var(--marine)}
+.wc-daypop-b:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
 .wc-day-n{display:block;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
 .wc-day.now .wc-day-n{color:var(--marine)}
 .wc-day-d{display:block;font-family:var(--font-display);font-size:15px;font-weight:700;

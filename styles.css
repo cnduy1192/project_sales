@@ -380,7 +380,14 @@ svg{flex:none}
 .act-new{font-size:11.5px;font-weight:600;color:var(--won);border:1px solid var(--won-bd);background:var(--won-bg);border-radius:7px;padding:4.5px 9px;transition:filter .12s}
 .act-new:hover{filter:brightness(.96)}
 .pot{font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px}
-.pot-Hot{background:var(--lost-bg);color:var(--lost)} .pot-Warm{background:var(--prog-bg);color:var(--prog)} .pot-Cold{background:var(--accent-soft);color:var(--accent)}
+.pot-Hot,.pot-High{background:var(--lost-bg);color:var(--lost)} .pot-Warm,.pot-Medium{background:var(--prog-bg);color:var(--prog)} .pot-Cold,.pot-Low{background:var(--accent-soft);color:var(--accent)}
+/* note under the customer field: who manages the selected customer */
+.owner-note{margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--ink-2);
+  background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.owner-note b{color:var(--ink);font-weight:700}
+.owner-note.me{background:var(--won-bg);border-color:var(--won-bd);color:var(--won)}
+.owner-note.me b{color:var(--won)}
+.owner-note .on-hint{color:var(--ink-3)}
 .linked-box{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--bg);max-height:150px;overflow:auto}
 .linked-item{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--ink-2);padding:5px 0;border-bottom:1px solid var(--line-2)}
 .linked-item:last-child{border-bottom:none}
@@ -462,14 +469,23 @@ svg{flex:none}
 .row:hover .close-btn{opacity:1}
 .close-btn:hover{background:var(--lost-bg)}
 
-/* ---------- MODALS ---------- */
-.overlay{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;align-items:flex-start;justify-content:center;padding:4vh 16px;overflow:auto;z-index:900;backdrop-filter:blur(3px)}
+/* ---------- MODALS AS RIGHT-SIDE DRAWERS ----------
+   Every dialog slides in as a full-height panel pinned to the right edge; the
+   scrim still dims the page behind it. The panel is a flex column so its header
+   and footer stay fixed while the body scrolls. */
+.overlay{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;
+  align-items:stretch;justify-content:flex-end;z-index:900;backdrop-filter:blur(3px)}
 .overlay.open{display:flex}
-.modal{background:#fff;border:1px solid var(--line);border-radius:14px;width:700px;max-width:100%;box-shadow:var(--shadow-lg);animation:pop .16s ease-out}
+.modal{background:#fff;border:none;border-left:1px solid var(--line);border-radius:0;
+  width:600px;max-width:100%;height:100dvh;display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);animation:drawerIn .28s cubic-bezier(.4,0,.2,1)}
 .modal.wide{width:840px}
-.modal.narrow{width:470px}
-@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
-.modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line)}
+.modal.narrow{width:480px}
+@keyframes drawerIn{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.modal{animation:none}}
+/* body between the fixed header and footer takes the slack and scrolls */
+.modal>.modal-body,.modal>.detail-grid{flex:1;min-height:0;overflow:auto}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);flex:none}
 .modal-head h3{font-size:16px;font-weight:700}
 .modal-head .mh-sub{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
 
@@ -504,7 +520,7 @@ svg{flex:none}
 .tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-border);font-weight:600;font-size:12px;border-radius:6px;padding:3.5px 8px}
 .tag button{color:var(--accent);font-size:14px;line-height:1}
 .tags select{border:none;outline:none;flex:1;min-width:140px;background:none;color:var(--ink-3);font-size:13px}
-.modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:16px 24px;border-top:1px solid var(--line);flex-wrap:wrap}
+.modal-foot{display:flex;justify-content:flex-end;gap:9px;padding:16px 24px;border-top:1px solid var(--line);flex-wrap:wrap;flex:none}
 datalist{display:none}
 .result-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .result-opt{border:1.5px solid var(--line);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .12s;background:#fff}
@@ -515,6 +531,7 @@ datalist{display:none}
 
 /* ---------- DETAIL ---------- */
 .detail-grid{padding:20px 24px;display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:stretch}
+@media (max-width:760px){.detail-grid{grid-template-columns:1fr}}
 .d-col h5{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
 .d-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
