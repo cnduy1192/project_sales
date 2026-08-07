@@ -227,18 +227,41 @@ def main():
 
     es.title = "Cập nhật"
 
-    # sheet khách mới (có trong file chủ, chưa có trong list)
+    # sheet khách mới (có trong file chủ, chưa có trong list). Định dạng ĐÚNG các
+    # cột của list (trừ cột hệ thống Item Type / Path) để dán thẳng vào cuối grid
+    # — Segment/Region/CustomerStatus để trống, điền sau; Owner + LegalName có sẵn.
+    SYS = {"item type", "path", "id", "content type", "modified", "created"}
+    list_cols = [(i + 1, str(c.value)) for i, c in enumerate(header)
+                 if c.value and str(c.value).strip().lower() not in SYS]
+    col_names = [n for _, n in list_cols]
     new_sheet = eb.create_sheet("Khách mới")
-    new_sheet.append(["Tên gọn (Title)", "Tên pháp nhân (LegalName)", "Chủ sở hữu (Owner)"])
+    new_sheet.append(col_names)
     for c in new_sheet[1]:
         c.font = Font(bold=True, color="FFFFFF")
         c.fill = PatternFill("solid", fgColor="01426A")
+    def put_row(title, legal, owner):
+        row = []
+        for name in col_names:
+            low = name.strip().lower()
+            if low == "title":
+                row.append(title)
+            elif low in ("owner", "người phụ trách"):
+                row.append(owner)
+            elif low in ("legalname", "tên pháp nhân"):
+                row.append(legal)
+            else:
+                row.append("")            # Segment/Region/CustomerStatus: để trống
+        new_sheet.append(row)
     n_new = 0
     for k, owner in owner_of.items():
         if k in used:
             continue
-        new_sheet.append([clean_name(legal_of[k]), legal_of[k], owner])
+        put_row(clean_name(legal_of[k]), legal_of[k], owner)
         n_new += 1
+    for i, (_, name) in enumerate(list_cols, 1):
+        w = 40 if name.strip().lower() in ("title", "legalname", "tên pháp nhân") else 18
+        new_sheet.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+    new_sheet.freeze_panes = "A2"
 
     # sheet cần rà: list-customer chưa gán được chắc, kèm gợi ý từ file
     rv_sheet = eb.create_sheet("Cần rà")
