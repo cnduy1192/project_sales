@@ -74,6 +74,8 @@
     "Gắn vào dự án đang chạy": "Attach to active project",
     "Lưu kế hoạch": "Save plan", "Lưu hoạt động": "Save activity",
     "Chọn hoặc nhập mới…": "Pick or type a new one…",
+    "Hôm nay": "Today", "Mở lịch chọn ngày": "Open date picker",
+    "Tháng trước": "Previous month", "Tháng sau": "Next month",
     "Bạn đang quản lý khách hàng này.": "You manage this customer.",
     "Khách hàng đang được quản lý bởi": "Managed by",
     "Khách hàng chưa có người tiếp quản.": "No sales owns this customer yet.",

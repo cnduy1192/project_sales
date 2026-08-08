@@ -518,6 +518,46 @@ svg{flex:none}
 .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;outline:none;transition:border-color .12s,box-shadow .12s;width:100%;font-size:13.5px}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .field input:disabled,.field select:disabled{background:var(--bg);color:var(--ink-3);cursor:not-allowed}
+
+/* ---------- CUSTOM DATE PICKER ---------- */
+.dp-wrap{position:relative;display:flex;align-items:center}
+.dp-wrap input[type=date]{flex:1;width:100%;padding-right:38px;cursor:pointer}
+/* hide the browser's own calendar button so only our picker shows */
+.dp-wrap input[type=date]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none}
+.dp-wrap input[type=date]::-webkit-inner-spin-button{display:none}
+.dp-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;
+  display:flex;align-items:center;justify-content:center;border-radius:7px;color:var(--marine);
+  background:none;transition:background .14s,color .14s}
+.dp-btn:hover{background:var(--marine-soft)}
+.dp-btn:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.dp-wrap input[type=date]:disabled~.dp-btn{color:var(--ink-3);pointer-events:none}
+
+.dp-cal{position:fixed;z-index:1300;width:266px;padding:12px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-lg);
+  animation:modalIn .16s cubic-bezier(.34,1.2,.5,1)}
+.dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.dp-title{font-family:var(--font-display);font-size:14.5px;font-weight:700;color:var(--marine-ink);letter-spacing:-.01em}
+.dp-nav{display:flex;gap:4px}
+.dp-mv{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  color:var(--marine-mute);transition:background .14s,color .14s}
+.dp-mv:hover{background:var(--marine-soft);color:var(--marine)}
+.dp-mv:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.dp-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.dp-dow span{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.02em;
+  color:var(--marine-label);padding:2px 0}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dp-pad{height:32px}
+.dp-d{height:32px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;transition:background .12s,color .12s,box-shadow .12s}
+.dp-d:hover{background:var(--marine-soft);color:var(--marine)}
+.dp-d:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
+.dp-d.today{color:var(--marine);box-shadow:inset 0 0 0 1.5px var(--marine-line)}
+.dp-d.sel{background:var(--marine);color:#fff;box-shadow:0 4px 12px rgba(1,66,106,.28)}
+.dp-d.sel:hover{background:var(--marine-deep);color:#fff}
+.dp-foot{display:flex;justify-content:space-between;margin-top:10px;padding-top:9px;border-top:1px solid var(--line-2)}
+.dp-link{font-size:12px;font-weight:600;color:var(--marine);padding:4px 8px;border-radius:7px;transition:background .12s}
+.dp-link:hover{background:var(--marine-soft)}
+.dp-link:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
 .tags{display:flex;flex-wrap:wrap;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px;min-height:40px;background:#fff}
 .tag{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-border);font-weight:600;font-size:12px;border-radius:6px;padding:3.5px 8px}
 .tag button{color:var(--accent);font-size:14px;line-height:1}
