@@ -54,12 +54,21 @@ function cuRows(){
 }
 
 function renderCustomers(){
+  const rows = cuRows();
+  cuRenderTools(rows.length);   /* rebuilds the toolbar (search box included) */
+  cuRenderRows();
+}
+window.renderCustomers = renderCustomers;
+
+/* Chỉ vẽ lại danh sách + cập nhật số đếm, KHÔNG đụng vào ô tìm — nhờ vậy con trỏ
+   không bị nhảy khi đang gõ. Dùng cho mỗi lần gõ vào ô tìm khách hàng. */
+function cuRenderRows(){
   const box = document.getElementById('cuRows');
   if(!box) return;
   const { m, key } = cuStats();
   const rows = cuRows();
-
-  cuRenderTools(rows.length);
+  const cnt = document.querySelector('#cuTools .cu-count');
+  if(cnt) cnt.textContent = rows.length + ' khách hàng';
 
   if(!rows.length){
     const dir = (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []);
@@ -94,7 +103,7 @@ function renderCustomers(){
     </div>`;
   }).join('');
 }
-window.renderCustomers = renderCustomers;
+window.cuRenderRows = cuRenderRows;
 
 /* Ai được sửa một khách hàng: admin toàn quyền; sales chỉ khách của chính mình. */
 function cuCanEdit(entry){
@@ -138,11 +147,8 @@ function cuRenderTools(count){
 function cuSetOwner(v){ cuFilterOwner = v; renderCustomers(); }
 function cuSetQuery(v){
   cuQuery = v;
-  const box = document.getElementById('cuRows');
-  /* Chỉ vẽ lại danh sách, giữ nguyên ô tìm để con trỏ không nhảy. */
-  const { m, key } = cuStats();
-  renderCustomers();
-  const inp = document.querySelector('#cuTools input'); if(inp){ inp.focus(); inp.value = v; }
+  /* Chỉ vẽ lại danh sách + số đếm; ô tìm giữ nguyên node nên con trỏ không nhảy. */
+  cuRenderRows();
 }
 window.cuSetOwner = cuSetOwner; window.cuSetQuery = cuSetQuery;
 

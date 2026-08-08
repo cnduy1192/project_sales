@@ -39,10 +39,14 @@ function rebuildDerived(){
   Object.keys(SEG2GROUP).forEach(k => delete SEG2GROUP[k]);
   SEG_GROUPS.forEach(g => (SEG_TREE[g]||[]).forEach(s => SEG2GROUP[s] = g));
   /* NCC đang lọc phải nằm trong danh sách thật, nếu không mọi bảng đều trống.
-     Trừ chế độ "Tất cả" — đó là trạng thái BỎ lọc, không phải một NCC. */
+     Trừ chế độ "Tất cả" — đó là trạng thái BỎ lọc, không phải một NCC.
+     Lúc mới nạp (nccFilter='') mặc định về "Tất cả", không khoá vào NCC đầu tiên. */
   if(NCCS.length && nccFilter !== ALL_NCC && NCCS.indexOf(nccFilter) < 0){
-    const same = NCCS.filter(n => n.toLowerCase() === String(nccFilter||'').trim().toLowerCase())[0];
-    nccFilter = same || NCCS[0];
+    if(!nccFilter){ nccFilter = ALL_NCC; }
+    else {
+      const same = NCCS.filter(n => n.toLowerCase() === String(nccFilter).trim().toLowerCase())[0];
+      nccFilter = same || ALL_NCC;
+    }
   }
   return { groups: SEG_GROUPS.length, nccs: NCCS.length };
 }

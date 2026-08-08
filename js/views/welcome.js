@@ -205,15 +205,29 @@ window.wcQuickLog = wcQuickLog; window.wcQuickProject = wcQuickProject;
 /* ---- Dải số ---- */
 function wcRenderStats(mw){
   const cards = [
-    { v: mw.stats.done,    k:'Đã làm',      c:'var(--wc-done)' },
-    { v: mw.stats.planned, k:'Kế hoạch',    c:'var(--wc-plan)' },
-    { v: mw.stats.missed,  k:'Chưa đánh dấu', c:'var(--wc-miss)' },
-    { v: mw.stats.overdue, k:'Dự án quá hạn', c:'var(--overdue)' },
-    { v: mw.stats.open,    k:'Đang chạy',   c:'var(--marine)' }
+    { v: mw.stats.done,    k:'Đã làm',        c:'var(--wc-done)', go:'done' },
+    { v: mw.stats.planned, k:'Kế hoạch',      c:'var(--wc-plan)', go:'planned' },
+    { v: mw.stats.missed,  k:'Chưa đánh dấu', c:'var(--wc-miss)', go:'missed' },
+    { v: mw.stats.overdue, k:'Dự án quá hạn', c:'var(--overdue)', go:'overdue' },
+    { v: mw.stats.open,    k:'Đang chạy',     c:'var(--marine)',  go:'open' }
   ];
   document.getElementById('wcStats').innerHTML = cards.map(c =>
-    `<div class="wc-stat" style="--sc:${c.c}"><b>${c.v}</b><span>${c.k}</span></div>`).join('');
+    `<button type="button" class="wc-stat" style="--sc:${c.c}" onclick="wcStatClick('${c.go}')"
+       aria-label="${ckEsc(c.k)}: ${c.v} — bấm để mở">
+       <b>${c.v}</b><span>${c.k}</span></button>`).join('');
 }
+/* Mỗi thẻ số đưa thẳng tới nơi làm việc tương ứng, đóng màn chào lại. */
+function wcStatClick(kind){
+  closeWelcome();
+  if(kind === 'overdue' || kind === 'open'){
+    if(typeof go === 'function') go('funnel');
+    if(kind === 'open' && typeof setF === 'function') setF('IN PROGRESS');
+    if(kind === 'overdue' && typeof setF === 'function') setF('IN PROGRESS');
+  } else {
+    if(typeof go === 'function') go('acts');
+  }
+}
+window.wcStatClick = wcStatClick;
 
 /* ---- Khối chung ---- */
 function wcSection(title, count, items, extra){
