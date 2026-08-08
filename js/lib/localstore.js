@@ -86,6 +86,14 @@ var LS = (function(){
     save();
     return a;
   }
+  /* Cập nhật một hoạt động đã lưu trong máy (sửa nội dung). Không có thì bỏ qua. */
+  function updateAct(a){
+    if(!a) return false;
+    var d = load(), hit = false;
+    d.acts = d.acts.map(function(x){ if(x.id === a.id){ hit = true; return a; } return x; });
+    if(hit) save();
+    return hit;
+  }
 
   /* Đánh dấu một hoạt động đã lên được SharePoint. Còn nằm trong acts (để lịch
      sử đánh dấu "đã làm" không đứt), nhưng mergeActs sẽ không nhân bản nữa vì
@@ -195,7 +203,7 @@ var LS = (function(){
 
   return {
     available: available, load: load, save: save, reset: reset,
-    mergeActs: mergeActs, nextActId: nextActId, addAct: addAct,
+    mergeActs: mergeActs, nextActId: nextActId, addAct: addAct, updateAct: updateAct,
     markDone: markDone, isDone: isDone, isLocal: isLocal, isMissed: isMissed,
     markSent: markSent, pendingActs: pendingActs, dropAct: dropAct, doneAt: doneAt,
     addReport: addReport, nextReportId: nextReportId,

@@ -87,13 +87,11 @@ function cuRenderRows(){
     const touch = s.lastTouch ? cuTouch(s.lastTouch) : { text:'', cls:'' };
     const legal = c.legal && custOwnerKey(c.legal) !== custOwnerKey(c.name)
       ? `<span class="cu-legal">${ckEsc(c.legal)}</span>` : '';
-    const ncc = [...s.nccs].slice(0,3).map(n => `<span class="cu-ncc">${ckEsc(n)}</span>`).join('');
     return `<div class="cu-row">
       <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="Xem & sửa thông tin khách hàng">
         <b>${ckEsc(custLabel(c.name))}</b>${legal}
       </button>
       <div class="cu-owner">${cuCanSeeAll() ? ckEsc(picLabel(c.owner) || '—') : ''}</div>
-      <div class="cu-meta">${ncc}</div>
       <div class="cu-num"><b>${s.open}</b>${s.open ? '<span>đang chạy</span>' : ''}</div>
       <div class="cu-touch ${touch.cls}">${touch.text}</div>
       <div class="cu-act">
@@ -114,7 +112,7 @@ function cuCanEdit(entry){
 
 function cuTouch(iso){
   const d = daysSince(iso);
-  if(d <= 7)  return { text:'Chạm ' + ckVN(iso), cls:'cu-quiet-ok' };
+  if(d <= 7)  return { text:ckVN(iso), cls:'cu-quiet-ok' };
   if(d <= 30) return { text:d + ' ngày trước', cls:'cu-quiet-mid' };
   return { text:d + ' ngày trước', cls:'cu-quiet-old' };
 }
@@ -179,31 +177,8 @@ function cuOpenEdit(name){
     ov.addEventListener('click', e => { if(e.target === ov) cuCloseEdit(); });
   }
 
-  /* Thông tin liên quan — chỉ khi sửa khách đang có. */
-  let related = '';
-  if(entry){
-    const okR = (typeof scopeRecords === 'function') ? scopeRecords(RECORDS, me) : RECORDS;
-    const okA = (typeof scopeActs === 'function') ? scopeActs(ACTIVITIES, me, okR) : ACTIVITIES;
-    const key = (typeof custOwnerKey === 'function') ? custOwnerKey : (s=>String(s||'').toUpperCase());
-    const k = key(entry.name);
-    const prj = okR.filter(r => key(r.customer) === k);
-    const acts = okA.filter(a => key(a.customer) === k);
-    const prjHtml = prj.length
-      ? prj.slice(0,8).map(r => `<button class="cu-rel-item" onclick="cuCloseEdit();openDetail('${ckAttr(r.id)}')">
-           <b>${ckEsc(r.product||r.id)}</b><span>${ckEsc(r.ncc)} · ${ckEsc(r.stage||'')}</span>
-           <em class="st st-${r.status==='WON'?'won':r.status==='LOST'?'lost':'run'}">${ckEsc(r.status)}</em></button>`).join('')
-      : '<div class="cu-rel-empty">Chưa có dự án nào.</div>';
-    const actHtml = acts.length
-      ? acts.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6)
-          .map(a => `<div class="cu-rel-act"><span>${ckVN(normDate(a.date))}</span><b>${ckEsc(a.type)}</b> · ${ckEsc(picLabel(a.pic))}<em>${ckEsc(a.note||'')}</em></div>`).join('')
-      : '<div class="cu-rel-empty">Chưa có hoạt động nào.</div>';
-    related = `<div class="cu-rel">
-      <div class="cu-rel-h">Dự án của khách hàng${prj.length?` <span>${prj.length}</span>`:''}</div>
-      <div class="cu-rel-list">${prjHtml}</div>
-      <div class="cu-rel-h">Hoạt động gần đây${acts.length?` <span>${acts.length}</span>`:''}</div>
-      <div class="cu-rel-list">${actHtml}</div>
-    </div>`;
-  }
+  /* Bỏ panel "Dự án / Hoạt động của khách hàng" bên phải — modal chỉ còn form. */
+  const related = '';
 
   const v = entry || { name:'', legal:'', owner:(me&&(me.pic||me.name))||'', segment:'', region:'', status:'' };
   /* Ô chủ sở hữu: admin chọn tự do; sales khoá về chính mình. */

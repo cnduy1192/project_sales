@@ -20,14 +20,17 @@ function renderActs(){
     const prAll=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
     const pr=prAll && (typeof ownsRecord!=='function' || !me || ownsRecord(prAll, me)) ? prAll : null;
     const u=USERS.find(x=>x.pic===a.pic);
+    /* Nút trong hàng phải chặn click để không đồng thời mở chi tiết hoạt động. */
     const link=!pr && prAll
       ? `<span class="act-link muted" title="Dự án do sales khác phụ trách">Dự án khác</span>`
       : pr
-      ? `<button class="act-link" onclick="openDetail('${pr.id}')" title="${pr.customer} · ${pr.product}">
+      ? `<button class="act-link" onclick="event.stopPropagation();openDetail('${pr.id}')" title="${pr.customer} · ${pr.product}">
            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg>
            ${pr.product==='—'?pr.customer:pr.product}</button>`
-      : `<button class="act-new" onclick="createProjectFromAct('${a.id}')">+ Tạo dự án</button>`;
-    return `<div class="act-row">
+      : `<button class="act-new" onclick="event.stopPropagation();createProjectFromAct('${a.id}')">+ Tạo dự án</button>`;
+    return `<div class="act-row" role="button" tabindex="0" onclick="openActEdit('${a.id}')"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openActEdit('${a.id}')}"
+        title="Bấm để xem & sửa hoạt động">
       <div class="act-date">${new Date(a.date).toLocaleDateString('vi-VN')}<span class="act-type">${actType(a.type)}</span></div>
       <div><b style="font-size:13px">${a.customer}</b><div style="font-size:11px;color:var(--ink-3)">${a.ncc}</div></div>
       <div class="r-pic"><span class="avatar" style="width:22px;height:22px;font-size:9.5px;background:${u?u.color:'#8A90A4'}">${(a.pic||'?').slice(0,2).toUpperCase()}</span>${a.pic}</div>
@@ -35,6 +38,20 @@ function renderActs(){
       <div><span class="pot pot-${potLabel(a.potential)}">${potLabel(a.potential)}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
+/* Ai được sửa/xoá một hoạt động: admin toàn quyền; sales chỉ hoạt động của mình. */
+function canEditAct(a){
+  if(!a || !me) return false;
+  if(me.role==='superadmin' || me.role==='manager') return true;
+  return a.pic === (me.pic || me.name);
+}
+function openActEdit(id){
+  var a = ACTIVITIES.find(function(x){ return x.id === id; });
+  if(!a) return;
+  openActForm({ editId: id, customer: a.customer, ncc: a.ncc, type: a.type, date: a.date,
+    potential: a.potential, note: a.note === '(không có nội dung)' ? '' : a.note,
+    next: a.next === '—' ? '' : a.next, projectId: a.projectId || '' });
+}
+window.openActEdit = openActEdit;
 /* prefill là tuỳ chọn — gọi openActForm() không tham số thì hành vi y như trước.
    Màn hình chào tuần truyền sẵn khách hàng, NCC, ngày và dự án vào đây. */
 /* Nhãn cũ Hot/Warm/Cold vẫn nằm trong dữ liệu SharePoint và các activity đã lưu,
@@ -67,11 +84,16 @@ function onActCustomer(){
 }
 window.onActCustomer = onActCustomer;
 
+var aEditId = null;   // id hoạt động đang sửa; null = tạo mới
 function openActForm(prefill, origin){
   const p = prefill && typeof prefill === 'object' ? prefill : {};
   srcAct=null;
+  aEditId = p.editId || null;
+  const editing = !!aEditId;
+  const editable = !editing || canEditAct(ACTIVITIES.find(function(x){return x.id===aEditId;}));
   NAV.enter(origin); NAV.renderBack('a-back');
-  document.getElementById('a-title').textContent = p.title || 'Kế hoạch làm việc';
+  document.getElementById('a-title').textContent =
+    p.title || (editing ? 'Chi tiết hoạt động' : 'Kế hoạch làm việc');
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
   const ncc = p.ncc || formNcc();
   /* Danh bạ khách hàng: hiện TOÀN BỘ khách của phần mềm, kể cả khách do sales khác
@@ -103,21 +125,69 @@ function openActForm(prefill, origin){
     : mine;
   document.getElementById('a-proj').innerHTML='<option value="">— Chưa gắn dự án nào —</option>'
     +list.slice(0,200).map(r=>`<option value="${r.id}"${r.id===p.projectId?' selected':''}>${r.customer} · ${r.product}</option>`).join('');
+  /* Chế độ sửa: khoá các ô khi không có quyền, đổi nhãn nút Lưu, hiện nút Xoá. */
+  ['a-cust','a-ncc','a-type','a-date','a-pot','a-note','a-next','a-proj'].forEach(function(id){
+    const el=document.getElementById(id); if(el) el.disabled = !editable;
+  });
+  const saveBtn=document.getElementById('a-save');
+  if(saveBtn){ saveBtn.textContent = editing ? 'Lưu thay đổi' : 'Lưu kế hoạch';
+    saveBtn.style.display = editable ? 'inline-flex' : 'none'; }
+  const delBtn=document.getElementById('a-del');
+  if(delBtn) delBtn.style.display = (editing && editable) ? 'inline-flex' : 'none';
   document.getElementById('aov').classList.add('open');
-  document.getElementById(p.customer?'a-note':'a-cust').focus();
+  document.getElementById(editable ? (p.customer?'a-note':'a-cust') : 'a-cust').focus();
 }
 function esc4(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function closeActForm(){
+  aEditId = null;
   NAV.back(function(){ document.getElementById('aov').classList.remove('open'); });
 }
+/* Xoá một hoạt động: chỉ chủ hoạt động hoặc quản lý; có xác nhận vì không hoàn tác. */
+function deleteAct(){
+  const id = aEditId; if(!id) return;
+  const a = ACTIVITIES.find(function(x){return x.id===id;});
+  if(!a){ closeActForm(); return; }
+  if(!canEditAct(a)){ toast('Bạn không có quyền xoá hoạt động này.'); return; }
+  if(!confirm('Xoá hoạt động với "'+a.customer+'" ngày '+new Date(a.date).toLocaleDateString('vi-VN')+'? Không thể hoàn tác.')) return;
+  const i = ACTIVITIES.indexOf(a); if(i>=0) ACTIVITIES.splice(i,1);
+  if(window.LS && LS.dropAct) LS.dropAct(id);
+  if(window.FISG_STORE && FISG_STORE.deleteActivity && FISG_STORE.canWrite && FISG_STORE.canWrite() && a.spId){
+    FISG_STORE.deleteActivity(a).catch(function(e){ console.warn('[activities] chưa xoá được trên SharePoint', e&&(e.message||e)); });
+  }
+  closeActForm(); renderActs(); render(); cockpitRefresh();
+  if(typeof welcomeRefresh==='function') welcomeRefresh();
+  toast('Đã xoá hoạt động.');
+}
+window.deleteAct = deleteAct;
 function saveAct(){
   const g=id=>document.getElementById(id).value.trim();
   if(!g('a-cust')){toast('Nhập tên khách hàng.');return;}
-  /* Id cũ sinh theo ACTIVITIES.length nên đụng ngay id có sẵn (A-0335 đã tồn tại).
-     Tiền tố AL- vừa tránh đụng, vừa đánh dấu bản ghi do người dùng nhập trong
-     phần mềm — thứ duy nhất phân biệt được kế hoạch với thực tế. */
-  /* Nhà cung cấp cho phép nhập tự do: nhận đúng chuỗi đã gõ; rỗng thì về "Khác". */
   const ncc=g('a-ncc')||OTHER_NCC;
+
+  /* ----- Chế độ SỬA: cập nhật tại chỗ hoạt động đang có ----- */
+  if(aEditId){
+    const a=ACTIVITIES.find(function(x){return x.id===aEditId;});
+    if(!a){ aEditId=null; closeActForm(); return; }
+    if(!canEditAct(a)){ toast('Bạn không có quyền sửa hoạt động này.'); return; }
+    a.customer=g('a-cust'); a.ncc=ncc; a.type=g('a-type'); a.date=g('a-date');
+    a.note=g('a-note')||'(không có nội dung)'; a.next=g('a-next')||'—';
+    a.potential=g('a-pot'); a.projectId=g('a-proj')||null;
+    if(window.LS && LS.updateAct) LS.updateAct(a);
+    /* Đồng bộ các trường vô hướng lên SharePoint (nếu đã có spId + quyền ghi).
+       Đổi khách/NCC/dự án cần tra lookup id nên chỉ lưu cục bộ, không đẩy ở đây. */
+    if(window.FISG_STORE && FISG_STORE.updateActivity && FISG_STORE.canWrite && FISG_STORE.canWrite() && a.spId){
+      FISG_STORE.updateActivity(a.spId, { ActivityType:a.type, ActivityDate:a.date,
+        Content:a.note, NextStep:a.next, PotentialLevel:a.potential })
+        .catch(function(e){ console.warn('[activities] chưa cập nhật được lên SharePoint', e&&(e.message||e)); });
+    }
+    aEditId=null;
+    closeActForm(); renderActs(); render(); cockpitRefresh();
+    if(typeof welcomeRefresh==='function') welcomeRefresh();
+    toast('Đã lưu thay đổi hoạt động.');
+    return;
+  }
+
+  /* ----- Chế độ TẠO MỚI ----- */
   const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
     ncc:ncc,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
     next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};

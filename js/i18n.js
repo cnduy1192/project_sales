@@ -73,6 +73,8 @@
     "Hành động": "Action", "Bước tiếp theo": "Next step",
     "Gắn vào dự án đang chạy": "Attach to active project",
     "Lưu kế hoạch": "Save plan", "Lưu hoạt động": "Save activity",
+    "Chi tiết hoạt động": "Activity details", "Lưu thay đổi": "Save changes",
+    "Xoá hoạt động": "Delete activity",
     "Chọn hoặc nhập mới…": "Pick or type a new one…",
     "Hôm nay": "Today", "Mở lịch chọn ngày": "Open date picker",
     "Tháng trước": "Previous month", "Tháng sau": "Next month",
