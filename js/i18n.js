@@ -76,6 +76,7 @@
     "Chọn hoặc nhập mới…": "Pick or type a new one…",
     "Bạn đang quản lý khách hàng này.": "You manage this customer.",
     "Khách hàng đang được quản lý bởi": "Managed by",
+    "Khách hàng chưa có người tiếp quản.": "No sales owns this customer yet.",
     "Bạn vẫn có thể ghi tương tác.": "You can still log interactions.",
     "Lưu": "Save", "trong folder dự án.": "in the project folder.",
     "Báo cáo tuần cho manager": "Weekly report for manager",

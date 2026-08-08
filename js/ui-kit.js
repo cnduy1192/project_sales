@@ -194,7 +194,7 @@
     const targets = [
       { sel: "#q", box: ".gsearch", after: () => window.render && render() },
       { sel: "#insQ", box: ".ins-wrap", after: () => window.clearInsight && clearInsight() },
-      { sel: "#f-cust" }, { sel: "#f-prod" }, { sel: "#f-app" }, { sel: "#a-cust" },
+      { sel: "#f-cust" }, { sel: "#f-prod" }, { sel: "#f-app" },
     ];
     targets.forEach(t => {
       const input = document.querySelector(t.sel);

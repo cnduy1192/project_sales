@@ -52,17 +52,18 @@ function onActCustomer(){
   const name = (document.getElementById('a-cust').value || '').trim();
   const box = document.getElementById('a-owner');
   if(!box) return;
+  if(!name){ box.hidden = true; box.textContent = ''; return; }
   const owner = (typeof customerOwnerOf === 'function') ? customerOwnerOf(name) : '';
-  if(!name || !owner){ box.hidden = true; box.textContent = ''; return; }
-  const mine = me && (owner === (me.pic || me.name));
+  const mine = owner && me && (owner === (me.pic || me.name));
   box.hidden = false;
-  box.className = 'owner-note' + (mine ? ' me' : '');
-  /* Tên chủ đặt CUỐI câu (trong <b>) để phần chữ còn lại là một text-node liền
-     mạch, dịch EN không bị cắt ngang bởi tên riêng. */
-  box.innerHTML = mine
+  box.className = 'owner-note' + (mine ? ' me' : (owner ? '' : ' none'));
+  /* Chỉ nêu khách này của ai. Tên chủ đặt CUỐI câu (trong <b>) để phần chữ còn
+     lại là một text-node liền mạch, dịch EN không bị cắt ngang bởi tên riêng. */
+  box.innerHTML = !owner
+    ? 'Khách hàng chưa có người tiếp quản.'
+    : mine
     ? 'Bạn đang quản lý khách hàng này.'
-    : 'Khách hàng đang được quản lý bởi <b>' + esc4(owner) + '</b>. '
-      + '<span class="on-hint">Bạn vẫn có thể ghi tương tác.</span>';
+    : 'Khách hàng đang được quản lý bởi <b>' + esc4(owner) + '</b>.';
 }
 window.onActCustomer = onActCustomer;
 
