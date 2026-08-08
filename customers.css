@@ -106,27 +106,41 @@
 
 /* ---------- Modal xem & sửa khách hàng ---------- */
 .cu-ov{
-  position:fixed;inset:0;z-index:900;display:none;align-items:flex-start;justify-content:center;
-  padding:44px 16px;background:rgba(11,32,51,.42);backdrop-filter:blur(2px);overflow:auto}
+  position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
+  padding:4vh 16px;background:rgba(11,32,51,.5);backdrop-filter:blur(3px);overflow:auto}
 .cu-ov.open{display:flex}
 .cu-modal{
-  width:min(520px,100%);border-radius:var(--r);background:var(--surface);
-  box-shadow:var(--shadow-lg,0 24px 60px rgba(11,32,51,.28));overflow:hidden}
+  width:min(560px,100%);max-height:92dvh;display:flex;flex-direction:column;
+  border-radius:16px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow-lg,0 24px 60px rgba(11,32,51,.28));overflow:hidden;
+  animation:modalIn .2s cubic-bezier(.34,1.2,.5,1)}
 .cu-modal-h{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:16px 20px;border-bottom:1px solid var(--line-2)}
-.cu-modal-h h3{margin:0;font-size:16px;color:var(--marine-ink)}
-.cu-modal-b{display:block}
-.cu-form{padding:18px 20px;display:flex;flex-direction:column;gap:13px}
-.cu-form label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--text-2)}
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;
+  padding:18px 22px 15px;border-bottom:1px solid var(--line-2)}
+.cu-modal-h h3{margin:0;font-family:var(--font-display);font-size:17px;font-weight:700;
+  letter-spacing:-.01em;color:var(--marine-ink);text-wrap:balance}
+.cu-modal-h .x-close{width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;
+  border:none;border-radius:9px;background:none;font-size:20px;line-height:1;color:var(--text-3);
+  cursor:pointer;transition:background .14s,color .14s}
+.cu-modal-h .x-close:hover{background:var(--pearl-2);color:var(--marine-ink)}
+.cu-modal-h .x-close:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.cu-modal-b{display:block;flex:1;min-height:0;overflow:auto}
+.cu-form{padding:20px 22px;display:flex;flex-direction:column;gap:15px}
+.cu-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;
+  letter-spacing:.01em;color:var(--text-2);min-width:0}
 .cu-form input{
-  height:36px;padding:0 11px;border-radius:8px;border:1px solid var(--line);
-  background:var(--surface);font-size:13px;color:var(--text);font-weight:400}
-.cu-form input:focus{outline:2px solid var(--marine);outline-offset:-1px;border-color:var(--marine)}
+  height:40px;padding:0 13px;border-radius:10px;border:1px solid var(--line);width:100%;
+  background:var(--surface);font-size:13.5px;color:var(--text);font-weight:400;
+  transition:border-color .14s,box-shadow .14s}
+.cu-form input::placeholder{color:var(--text-3)}
+.cu-form input:hover:not(:disabled){border-color:var(--marine-line)}
+.cu-form input:focus{outline:none;border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
 .cu-form input:disabled{background:var(--pearl-2);color:var(--text-3);cursor:not-allowed}
 .cu-form .req{color:var(--overdue)}
-.cu-form-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.cu-form-act{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+/* minmax(0,1fr) để ô Status không tràn khỏi modal khi placeholder dài */
+.cu-form-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cu-form-act{display:flex;justify-content:flex-end;gap:9px;margin-top:8px;
+  padding-top:16px;border-top:1px solid var(--line-2)}
 .cu-readonly{
   padding:9px 12px;border-radius:8px;background:#FEF9C3;border:1px solid #FDE68A;
   font-size:12px;color:#92400E;line-height:1.5}

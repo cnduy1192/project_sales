@@ -305,7 +305,7 @@
     "trên SharePoint — thay đổi ở đây sẽ mất khi tải lại trang. Tạo list rồi đăng nhập lại để lưu được.":
       "on SharePoint — changes here are lost on reload. Create the list and sign in again to save.",
     "Đang chạy": "In Progress", "Thắng": "Won", "Thua": "Lost",
-    "Đã đóng": "Closed", "ĐÃ ĐÓNG": "CLOSED", "Đóng": "Closed",
+    "Đã đóng": "Closed", "ĐÃ ĐÓNG": "CLOSED",
     "thắng · thua": "won · lost", "theo mốc thời gian": "by due date",
     "Tiếp cận": "Approach", "Thử mẫu": "Sampling", "Đàm phán": "Negotiation", "Hoãn": "On hold",
     "ĐANG CHẠY": "IN PROGRESS", "THẮNG": "WON", "THUA": "LOST",

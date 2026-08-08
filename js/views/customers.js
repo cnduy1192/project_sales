@@ -211,7 +211,7 @@ function cuOpenEdit(name){
           <label>Trạng thái <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
         </div>
         ${canEdit ? `<div class="cu-form-act">
-          <button class="btn-ghost" onclick="cuCloseEdit()">Đóng</button>
+          <button class="btn-ghost" onclick="cuCloseEdit()">Huỷ</button>
           <button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>
         </div>` : ''}
       </div>
