@@ -169,7 +169,7 @@ function wcDayMenu(ev, iso){
   pop.innerHTML =
     '<div class="wc-daypop-h">' + dayStampVI(iso) + '</div>' +
     '<button type="button" class="wc-daypop-b" data-act="log">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ghi kế hoạch tuần</button>' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tạo hoạt động</button>' +
     '<button type="button" class="wc-daypop-b" data-act="proj">' +
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>Tạo dự án</button>';
   document.body.appendChild(pop);
@@ -190,7 +190,7 @@ window.wcDayMenu = wcDayMenu;
 /* Từ lịch, đi thẳng vào form — welcome đóng lại để form (drawer phải) chiếm trọn. */
 function wcQuickLog(iso){
   closeWelcome();
-  if(typeof openActForm === 'function') openActForm({ date: iso, title: 'Ghi kế hoạch tuần' });
+  if(typeof openActForm === 'function') openActForm({ date: iso });
 }
 function wcQuickProject(iso){
   closeWelcome();

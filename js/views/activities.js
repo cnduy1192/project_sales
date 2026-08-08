@@ -70,15 +70,24 @@ function openActForm(prefill, origin){
   const p = prefill && typeof prefill === 'object' ? prefill : {};
   srcAct=null;
   NAV.enter(origin); NAV.renderBack('a-back');
-  document.getElementById('a-title').textContent = p.title || 'Ghi kế hoạch tuần';
+  document.getElementById('a-title').textContent = p.title || 'Kế hoạch làm việc';
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
   const ncc = p.ncc || formNcc();
-  /* Nhà cung cấp giờ là ô nhập tự do (datalist) — chọn từ list đang có HOẶC gõ
-     một NCC mới ngay tại đây, không cần mở màn hình thêm NCC trước. */
+  /* Danh bạ khách hàng: hiện TOÀN BỘ khách của phần mềm, kể cả khách do sales khác
+     phụ trách — nhân viên thấy được, chọn xong dòng owner-note báo khách của ai. */
+  const allCust = (typeof CUSTOMER_DIR !== 'undefined' && CUSTOMER_DIR.length)
+    ? CUSTOMER_DIR.map(c => c.name) : LISTS.customers;
+  const seenC = new Set(); const custList = [];
+  allCust.concat(LISTS.customers).forEach(n => {
+    const k = String(n||'').trim(); if(!k || seenC.has(k.toLowerCase())) return;
+    seenC.add(k.toLowerCase()); custList.push(k);
+  });
+  const dc = document.getElementById('dl-cust-all');
+  if(dc) dc.innerHTML = custList.slice(0,2000).map(n=>`<option value="${esc4(n)}"></option>`).join('');
+  /* Nhà cung cấp: danh sách đầy đủ các NCC + lựa chọn "Khác" cho hoạt động chung. */
   const nccOpts = NCCS.concat(NCCS.indexOf(OTHER_NCC) < 0 ? [OTHER_NCC] : []);
-  const dl = document.getElementById('dl-ncc');
-  if(dl) dl.innerHTML = nccOpts.map(n=>`<option value="${esc4(n)}"></option>`).join('');
-  document.getElementById('a-ncc').value = ncc;
+  document.getElementById('a-ncc').innerHTML =
+    nccOpts.map(n=>`<option${n===ncc?' selected':''}>${esc4(n)}</option>`).join('');
   document.getElementById('a-date').value = p.date || isoOf(TODAY);
   document.getElementById('a-cust').value = p.customer || '';
   document.getElementById('a-note').value = p.note || '';

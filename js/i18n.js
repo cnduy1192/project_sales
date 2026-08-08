@@ -62,9 +62,11 @@
     "Lưu thay đổi & thông báo": "Save changes & notify",
     "WON — chốt được đơn": "WON — deal closed", "LOST — dừng theo đuổi": "LOST — stop pursuing",
     "Lý do / ghi chú": "Reason / notes", "Xác nhận đóng & thông báo": "Confirm close & notify",
-    // hoạt động / kế hoạch tuần
+    // hoạt động / kế hoạch làm việc
+    "Kế hoạch làm việc": "Work plan", "Tạo hoạt động": "Create activity",
+    "Nhập hoặc chọn khách hàng…": "Type or pick a customer…",
     "Ghi kế hoạch tuần": "Log in weekly plan", "Ghi hoạt động khách hàng": "Log customer activity",
-    "Loại hoạt động": "Activity type",
+    "Ghi hoạt động": "Log activity", "Loại hoạt động": "Activity type",
     "Khác": "Other", "Ngày": "Date",
     "Mức độ quan tâm": "Interest level", "Mức độ tiềm năng": "Potential level",
     "Mục tiêu": "Purpose / Objective", "Nội dung trao đổi": "Discussion content",

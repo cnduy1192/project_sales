@@ -26,17 +26,38 @@ Mỗi khi tôi báo đã sửa xong:
 3. Nếu tôi đã commit sẵn: bấm **Push origin**.
    Nếu còn thay đổi chưa commit: gõ một dòng mô tả ở ô dưới bên trái, bấm **Commit to main**, rồi **Push origin**.
 
-## Commit đang chờ đẩy
+## Thay đổi đang chờ commit + đẩy
+
+Lần này tôi **không commit hộ được** vì `.git` đang bị khoá từ phía Windows
+(`.git/index.lock` — thường do GitHub Desktop đang mở, hoặc một tiến trình git
+trước đó chưa đóng). Sandbox không xoá được file khoá đó. Toàn bộ mã nguồn đã
+sửa xong và lưu đúng trong thư mục `web`.
+
+**Các bước:**
+
+1. Nếu GitHub Desktop đang mở, đóng và mở lại — nó tự dọn `index.lock`.
+   Nếu vẫn báo khoá: xoá tay file `web\.git\index.lock` trong File Explorer.
+2. Mở GitHub Desktop, tab **Changes**, gõ mô tả (gợi ý bên dưới),
+   bấm **Commit to main**, rồi **Push origin**.
 
 ```
-6a90c88  Bỏ dữ liệu demo, chạy trên SharePoint; thêm Cockpit và màn hình tuần của sales
+Form Kế hoạch làm việc + Tạo hoạt động; hộp thoại về giữa màn; supplier dropdown; khách hàng báo chủ quản lý
 ```
 
-31 file thay đổi · 3.686 dòng thêm · 162 dòng xoá.
+**Nội dung thay đổi:**
 
-Điểm cần biết: commit này **xoá** `js/data/demo-data.js` khỏi repo. Đó chính là thứ mà cách kéo thả file qua giao diện web GitHub không làm được — file cũ vẫn nằm lại trên đó mãi. Đẩy bằng git thì việc xoá được ghi nhận đúng.
+- Mọi hộp thoại (Kế hoạch làm việc, Thêm dự án, Chi tiết, Đóng dự án, Thêm NCC)
+  **hiển thị ở giữa màn hình**, cao tối đa 92% khung nhìn, tự cuộn phần thân.
+- Form tạo hoạt động: tiêu đề **"Kế hoạch làm việc"**; nút/menu tạo là **"Tạo
+  hoạt động"**. Loại hoạt động Call/Visit/Email/Exhibition; "Interest level"
+  High/Medium/Low; "Purpose / Objective"; "Action". Dữ liệu cũ Hot/Warm/Cold và
+  Seminar tự ánh xạ sang nhãn mới.
+- Khách hàng: danh sách xổ xuống **toàn bộ khách của phần mềm** (thấy cả khách
+  của sales khác); chọn xong hiện dòng **khách này do ai quản lý**.
+- Nhà cung cấp: **dropdown đầy đủ các NCC + lựa chọn "Khác"**.
+- Lịch tuần: **bấm một ngày** hiện menu tạo nhanh hoạt động hoặc dự án cho ngày đó.
 
-Ba commit "Add files via upload" trước đây vẫn còn nguyên trong lịch sử, không mất gì.
+Ba commit "Add files via upload" cũ vẫn còn nguyên trong lịch sử, không mất gì.
 
 ## Sau khi đẩy, kiểm tra nhanh
 

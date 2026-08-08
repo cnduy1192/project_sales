@@ -469,19 +469,20 @@ svg{flex:none}
 .row:hover .close-btn{opacity:1}
 .close-btn:hover{background:var(--lost-bg)}
 
-/* ---------- MODALS AS RIGHT-SIDE DRAWERS ----------
-   Every dialog slides in as a full-height panel pinned to the right edge; the
-   scrim still dims the page behind it. The panel is a flex column so its header
-   and footer stay fixed while the body scrolls. */
+/* ---------- MODALS (centred) ----------
+   Dialogs sit in the middle of the screen over a dimmed page. Each is a flex
+   column capped at the viewport height, so a tall form keeps its header and
+   footer fixed while the body scrolls inside. */
 .overlay{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;
-  align-items:stretch;justify-content:flex-end;z-index:900;backdrop-filter:blur(3px)}
+  align-items:center;justify-content:center;padding:4vh 16px;z-index:900;backdrop-filter:blur(3px)}
 .overlay.open{display:flex}
-.modal{background:#fff;border:none;border-left:1px solid var(--line);border-radius:0;
-  width:600px;max-width:100%;height:100dvh;display:flex;flex-direction:column;
-  box-shadow:var(--shadow-lg);animation:drawerIn .28s cubic-bezier(.4,0,.2,1)}
+.modal{background:#fff;border:1px solid var(--line);border-radius:14px;
+  width:700px;max-width:100%;max-height:92dvh;display:flex;flex-direction:column;
+  box-shadow:var(--shadow-lg);animation:modalIn .2s cubic-bezier(.34,1.2,.5,1)}
 .modal.wide{width:840px}
 .modal.narrow{width:480px}
-@keyframes drawerIn{from{transform:translateX(24px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes modalIn{from{transform:translateY(10px) scale(.99);opacity:0}to{transform:none;opacity:1}}
+@keyframes drawerIn{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.modal{animation:none}}
 /* body between the fixed header and footer takes the slack and scrolls */
 .modal>.modal-body,.modal>.detail-grid{flex:1;min-height:0;overflow:auto}
