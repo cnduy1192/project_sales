@@ -91,9 +91,13 @@ function cuRenderRows(){
       <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="Xem & sửa thông tin khách hàng">
         <b>${ckEsc(custLabel(c.name))}</b>${legal}
       </button>
-      <div class="cu-owner">${cuCanSeeAll() ? ckEsc(picLabel(c.owner) || '—') : ''}</div>
-      <div class="cu-num"><b>${s.open}</b>${s.open ? '<span>đang chạy</span>' : ''}</div>
-      <div class="cu-touch ${touch.cls}">${touch.text}</div>
+      <div class="cu-owner">${cuCanSeeAll() && picLabel(c.owner) ? ckEsc(picLabel(c.owner)) : '<span class="cu-dash">—</span>'}</div>
+      <div class="cu-num">${s.open
+        ? `<span class="cu-pill"><b>${s.open}</b><em>đang chạy</em></span>`
+        : '<span class="cu-zero">0</span>'}</div>
+      <div class="cu-touch ${touch.cls}">${touch.text
+        ? `<span class="cu-chip">${touch.text}</span>`
+        : '<span class="cu-dash">—</span>'}</div>
       <div class="cu-act">
         <button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ Dự án</button>
         <button class="cu-btn ghost" onclick="cuNewAct('${ckAttr(c.name)}')">Ghi hoạt động</button>
