@@ -128,6 +128,14 @@
 .cu-form{padding:20px 22px;display:flex;flex-direction:column;gap:15px}
 .cu-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;
   letter-spacing:.01em;color:var(--text-2);min-width:0}
+/* caption + dấu * nằm CÙNG một dòng, không rơi xuống dưới */
+.cu-cap{display:inline-flex;align-items:center;gap:4px}
+.cu-cap .req{color:var(--overdue);font-weight:700}
+/* Người phụ trách chỉ-đọc: hiện tên rõ ràng kèm avatar, không phải ô xám trống */
+.cu-static{display:flex;align-items:center;gap:10px;height:40px;padding:0 13px;border-radius:10px;
+  border:1px solid var(--line);background:var(--pearl-2);font-size:13.5px;font-weight:500;color:var(--marine-ink)}
+.cu-avatar{width:26px;height:26px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:700;color:#fff;background:linear-gradient(140deg,var(--marine-2),var(--marine))}
 .cu-form input{
   height:40px;padding:0 13px;border-radius:10px;border:1px solid var(--line);width:100%;
   background:var(--surface);font-size:13.5px;color:var(--text);font-weight:400;

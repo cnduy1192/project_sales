@@ -185,11 +185,17 @@ function cuOpenEdit(name){
   const related = '';
 
   const v = entry || { name:'', legal:'', owner:(me&&(me.pic||me.name))||'', segment:'', region:'', status:'' };
-  /* Ô chủ sở hữu: admin chọn tự do; sales khoá về chính mình. */
-  const ownerField = myCap().admin
-    ? `<input id="cuf-owner" list="cuf-pics" value="${ckEsc(v.owner||'')}" ${canEdit?'':'disabled'}>
+  /* Người phụ trách luôn hiển thị TÊN, không để trống: ưu tiên chủ hiện tại, nếu
+     chưa có thì lấy chính người đang đăng nhập. Dùng picLabel để ra tên đầy đủ. */
+  const ownerName = (typeof picLabel==='function'
+    ? (picLabel(v.owner) || picLabel(me&&(me.pic||me.name)))
+    : (v.owner || (me&&(me.pic||me.name)))) || '—';
+  /* Ô chủ sở hữu: admin chọn tự do; sales khoá về chính mình nhưng vẫn thấy rõ tên. */
+  const ownerField = (myCap().admin && canEdit)
+    ? `<input id="cuf-owner" list="cuf-pics" value="${ckEsc(v.owner||ownerName)}">
        <datalist id="cuf-pics">${(typeof LISTS!=='undefined'?LISTS.pics:[]).map(p=>`<option value="${ckEsc(p)}">`).join('')}</datalist>`
-    : `<input id="cuf-owner" value="${ckEsc(v.owner||(me&&(me.pic||me.name))||'')}" disabled>`;
+    : `<div class="cu-static" id="cuf-owner" data-val="${ckEsc(v.owner||(me&&(me.pic||me.name))||'')}">
+         <span class="cu-avatar">${ckEsc((ownerName||'?').slice(0,2).toUpperCase())}</span>${ckEsc(ownerName)}</div>`;
 
   const dis = canEdit ? '' : 'disabled';
   ov.innerHTML = `<div class="cu-modal glass" role="dialog" aria-modal="true">
@@ -200,15 +206,15 @@ function cuOpenEdit(name){
     <div class="cu-modal-b">
       <div class="cu-form">
         ${!canEdit ? '<div class="cu-readonly">Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.</div>' : ''}
-        <label>Tên hiển thị <span class="req">*</span>
+        <label><span class="cu-cap">Tên hiển thị <span class="req">*</span></span>
           <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="VD: Acecook" ${dis}></label>
-        <label>Tên pháp nhân
+        <label><span class="cu-cap">Tên pháp nhân</span>
           <input id="cuf-legal" value="${ckEsc(v.legal||'')}" placeholder="Tên đầy đủ trên giấy phép" ${dis}></label>
-        <label>Người phụ trách ${ownerField}</label>
+        <label><span class="cu-cap">Người phụ trách</span> ${ownerField}</label>
         <div class="cu-form-3">
-          <label>Segment <input id="cuf-seg" value="${ckEsc(v.segment||'')}" ${dis}></label>
-          <label>Region <input id="cuf-region" value="${ckEsc(v.region||'')}" ${dis}></label>
-          <label>Trạng thái <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
+          <label><span class="cu-cap">Segment</span> <input id="cuf-seg" value="${ckEsc(v.segment||'')}" ${dis}></label>
+          <label><span class="cu-cap">Region</span> <input id="cuf-region" value="${ckEsc(v.region||'')}" ${dis}></label>
+          <label><span class="cu-cap">Trạng thái</span> <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
         </div>
         ${canEdit ? `<div class="cu-form-act">
           <button class="btn-ghost" onclick="cuCloseEdit()">Huỷ</button>
