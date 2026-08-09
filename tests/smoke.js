@@ -13,6 +13,15 @@ const HTML=fs.readFileSync(path.join(ROOT,'index.html'),'utf8')
 const errs=[];
 Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dangerously',resources:'usable',pretendToBeVisual:true,
   beforeParse(w){
+    /* Ghim đồng hồ về THỨ TƯ 05/08/2026 để logic "trong tuần / đã qua / sắp tới"
+       không đổi theo ngày chạy thật của máy CI. new Date(iso) vẫn hoạt động. */
+    const RealDate = w.Date;
+    const FIXED = new RealDate('2026-08-05T00:00:00').getTime();
+    class D extends RealDate {
+      constructor(...a){ if(a.length){ super(...a); } else { super(FIXED); } }
+      static now(){ return FIXED; }
+    }
+    w.Date = D;
     w.matchMedia=()=>({matches:false,addListener(){},removeListener(){},addEventListener(){},removeEventListener(){}});
     function C(){return{destroy(){},resize(){},update(){},data:{},options:{}}}
     C.register=()=>{};C.defaults={font:{},plugins:{legend:{}},color:''};C.getChart=()=>null;w.Chart=C;
@@ -262,12 +271,13 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(/chưa có dự án/.test(html))throw new Error('còn nhãn "chưa có dự án"');
     if(/Chưa có hoạt động/.test(html))throw new Error('còn nhãn "Chưa có hoạt động"');
   });
-  step('click KH mở modal xem + sửa với thông tin liên quan',()=>{
+  step('click KH mở modal xem + sửa thông tin',()=>{
     E("cuOpenEdit('E')");
     const ov=d.getElementById('cuEditOv');
     if(!ov||!ov.classList.contains('open'))throw new Error('không mở modal');
     if(!d.getElementById('cuf-title'))throw new Error('thiếu ô sửa tên');
-    if(!/Dự án của khách hàng/.test(ov.textContent))throw new Error('thiếu mục thông tin liên quan');
+    if(!d.getElementById('cuf-owner'))throw new Error('thiếu ô người phụ trách');
+    if(d.getElementById('cuf-title').value!=='E')throw new Error('không nạp đúng khách');
     E("cuCloseEdit()");
     if(d.getElementById('cuEditOv').classList.contains('open'))throw new Error('không đóng được');
   });
@@ -418,6 +428,10 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
       UpdateDate:'Ngày cập nhật', Content:'Nội dung' },
     Customers:{ Title:'Title', OData__x004f_wn:'Owner', LegalName:'LegalName',
                 Segment:'Segment', Region:'Region', CustomerStatus:'CustomerStatus' },
+    Reports:{ Title:'Title', PICName:'PICName', WeekLabel:'WeekLabel', ReportDate:'ReportDate',
+              Content:'Content', StatsJson:'StatsJson', Recipients:'Recipients' },
+    ReportComments:{ Title:'Title', ReportCode:'ReportCode', PICName:'PICName',
+                     AuthorRole:'AuthorRole', CommentDate:'CommentDate', Content:'Content' },
     Products:{ Title:'Title' }, Suppliers:{ Title:'Title' },
   };
   const ITEMS = { Customers:[{id:'11',fields:{Title:'A'}}], Products:[{id:'21',fields:{Title:'X'}}],
@@ -792,6 +806,59 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(SP.created.filter(x=>x.list==='Customers').length)throw new Error('tạo mới thay vì sửa');
     const u=SP.updated.filter(x=>x.list==='Customers');
     if(!u.length||u[0].fields.OData__x004f_wn!=='Phạm Bích Ngọc')throw new Error('không đổi chủ');
+  });
+
+  // ---- BÁO CÁO TUẦN + PHẢN HỒI + THÔNG BÁO ----
+  await astep('gửi báo cáo ghi lên list Reports',async()=>{
+    ITEMS.Reports=[]; ITEMS.ReportComments=[]; SP.created.length=0;
+    const code=await E(`FISG_STORE.sendReportToSP({id:'R-100',pic:'Phạm Bích Ngọc',
+      weekLabel:'03/08 – 09/08',createdAt:'2026-08-05',note:'Tuần tập trung DAIRY',
+      to:['Duy Che Ngoc'],stats:{done:3,missed:1,changes:2,overdue:0},
+      doneActs:[],missedActs:[],projectChanges:[]})`);
+    const c=SP.created.filter(x=>x.list==='Reports');
+    if(!c.length)throw new Error('không ghi Reports');
+    if(c[0].fields.PICName!=='Phạm Bích Ngọc')throw new Error('thiếu người gửi');
+    if(!/DAIRY/.test(c[0].fields.Content||''))throw new Error('mất nhận xét');
+    const snap=JSON.parse(c[0].fields.StatsJson||'{}');
+    if(snap.stats.done!==3)throw new Error('mất snapshot số liệu');
+    if(E('REPORTS.length')!==1)throw new Error('không nạp lại REPORTS');
+  });
+  await astep('manager NHẬN thông báo khi có báo cáo mới',()=>{
+    E(`loginAs(${ix('duy@f.vn')}); refreshNotifs()`);
+    const n=E('RP_NOTIFS.length');
+    if(n<1)throw new Error('manager không có thông báo báo cáo: '+n);
+    if(!/báo cáo tuần/.test(E('RP_NOTIFS[0].action')))throw new Error('nội dung thông báo sai');
+    /* mở mục Báo cáo = đã xem → hết thông báo */
+    E('markReportsSeen()');
+    if(E('RP_NOTIFS.length'))throw new Error('xem rồi vẫn còn thông báo');
+  });
+  await astep('manager phản hồi → ghi ReportComments, sales nhận thông báo',async()=>{
+    await E("FISG_STORE.addReportComment('R-100','Làm tốt, tuần sau chốt mẫu nhé','Duy Che Ngoc','superadmin')");
+    const c=SP.created.filter(x=>x.list==='ReportComments');
+    if(!c.length)throw new Error('không ghi phản hồi');
+    if(!/chốt mẫu/.test(c[0].fields.Content||''))throw new Error('mất nội dung phản hồi');
+    if(E("REPORTS[0].comments.length")!==1)throw new Error('không gắn phản hồi vào báo cáo');
+    /* sales (Ngọc) phải thấy thông báo phản hồi */
+    E(`loginAs(${ix('ngoc@f.vn')}); refreshNotifs()`);
+    const has=E("RP_NOTIFS.some(function(n){return /phản hồi/.test(n.action)})");
+    if(!has)throw new Error('sales không nhận thông báo phản hồi');
+  });
+  await astep('quyền phản hồi: quản lý mọi báo cáo, sales chỉ của mình',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    const own=E("rpSentReports().find(function(r){return r.pic==='Phạm Bích Ngọc'})");
+    if(!E("rpCanComment(REPORTS.find(function(r){return r.id==='R-100'}))"))
+      throw new Error('sales phải phản hồi được báo cáo của mình');
+    /* thêm báo cáo của Tâm; Ngọc không được phản hồi */
+    E(`REPORTS.push({id:'R-200',pic:'Tam',picLabel:'Tam',weekLabel:'x',createdAt:'2026-08-05',
+       note:'',stats:{done:0,missed:0,changes:0,overdue:0},doneActs:[],missedActs:[],projectChanges:[],to:[],comments:[]})`);
+    if(E("rpCanComment(REPORTS.find(function(r){return r.id==='R-200'}))"))
+      throw new Error('sales KHÔNG được phản hồi báo cáo người khác');
+    /* sales chỉ thấy báo cáo của mình trong danh sách */
+    if(E("rpSentReports().some(function(r){return r.pic==='Tam'})"))
+      throw new Error('sales thấy báo cáo của người khác');
+    E(`loginAs(${ix('duy@f.vn')})`);
+    if(!E("rpCanComment(REPORTS.find(function(r){return r.id==='R-200'}))"))
+      throw new Error('quản lý phải phản hồi được mọi báo cáo');
   });
 
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{

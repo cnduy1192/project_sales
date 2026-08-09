@@ -403,6 +403,52 @@ Dự án thì không có hàng chờ: nếu ghi hỏng, app báo ngay và dự �
 trên màn hình — tải lại trang là mất. Đây là chủ ý: giấu một dự án hỏng vào hàng
 chờ nguy hiểm hơn là nói thẳng.
 
+## 3g. Báo cáo tuần + phản hồi (2 list mới)
+
+Sales gửi báo cáo tuần cho quản lý, quản lý phản hồi ngay trên báo cáo, và cả
+hai nhận thông báo trong phần mềm. Cần thêm hai list:
+
+**Reports** — mỗi dòng là một báo cáo đã gửi:
+
+| Cột | Kiểu | Tên hiển thị |
+|---|---|---|
+| `PICName` | Single line of text | `Người gửi` |
+| `WeekLabel` | Single line of text | `Tuần` |
+| `ReportDate` | Date and Time | `Ngày gửi` |
+| `Content` | Multiple lines of text | `Nhận xét` |
+| `StatsJson` | Multiple lines of text | `Số liệu` |
+| `Recipients` | Single line of text | `Người nhận` |
+
+`Title` = mã báo cáo (app tự sinh). `StatsJson` giữ ảnh chụp số liệu tuần dạng
+JSON để mở lại đọc đúng như lúc gửi.
+
+**ReportComments** — phản hồi hai chiều trên một báo cáo:
+
+| Cột | Kiểu | Tên hiển thị |
+|---|---|---|
+| `ReportCode` | Single line of text | `Mã báo cáo` |
+| `PICName` | Single line of text | `Người viết` |
+| `AuthorRole` | Single line of text | `Vai trò` |
+| `CommentDate` | Date and Time | `Ngày` |
+| `Content` | Multiple lines of text | `Nội dung` |
+
+`ReportCode` = Title của báo cáo tương ứng (nối phản hồi với báo cáo).
+
+Luồng:
+- Sales mở **Báo cáo** → **Soạn báo cáo tuần** → **Gửi cho quản lý**: ghi một
+  dòng vào Reports. Manager/Director/Super Admin nhận thông báo trên chuông.
+- Manager mở báo cáo, gõ phản hồi → ghi vào ReportComments. Sales nhận thông báo.
+- Sales trả lời lại trên chính báo cáo đó (hai chiều). Quản lý nhận thông báo.
+
+Phân quyền: sales chỉ thấy và phản hồi báo cáo của chính mình; quản lý thấy và
+phản hồi mọi báo cáo, lọc theo từng sales.
+
+Thông báo suy từ dữ liệu (không cần list riêng): "đã xem" lưu cục bộ theo từng
+người. Đổi máy chỉ khiến thông báo cũ hiện lại một lần — vô hại.
+
+Chưa tạo hai list này thì mục Báo cáo vẫn chạy ở chế độ cục bộ (chỉ máy đó thấy),
+và app nói rõ khi gửi.
+
 ## 4. Chẩn đoán khi có trục trặc
 
 Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là im lặng, đúng như mong đợi. Số liệu và cảnh báo đi vào Console (F12):

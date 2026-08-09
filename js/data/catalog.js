@@ -122,3 +122,9 @@ var ACTIVITIES = [];
 var CUSTOMER_DIR = [];
 var CUSTOMER_OWNER = {};   // custOwnerKey → tên chủ sở hữu
 var CUSTOMER_LEGAL = {};   // custOwnerKey → tên pháp nhân đầy đủ
+
+/* Báo cáo tuần đã GỬI (đọc từ list Reports) kèm luồng phản hồi (ReportComments).
+   Mỗi phần tử: {id, spId, pic, picLabel, weekLabel, createdAt, note, stats,
+   doneActs, missedActs, projectChanges, to, comments:[{by,role,at,text}]}.
+   Bản nháp CHƯA gửi vẫn ở localStorage — chỉ khi bấm gửi mới lên SharePoint. */
+var REPORTS = [];

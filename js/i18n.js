@@ -275,6 +275,10 @@
     "Tìm khách hàng": "Search customers", "chưa có dự án": "no project yet",
     "Chưa có hoạt động": "No activity yet", "đang chạy": "in progress",
     "Kế hoạch chưa đánh dấu": "Planned, not marked",
+    // Báo cáo: luồng trao đổi
+    "Trao đổi": "Discussion", "Gửi phản hồi": "Send reply",
+    "Chưa có phản hồi nào.": "No replies yet.", "Quản lý": "Manager",
+    "Trả lời quản lý…": "Reply to manager…", "Nhập nội dung phản hồi.": "Enter a reply.",
     "Thêm khách hàng": "Add customer", "Xem & sửa thông tin khách hàng": "View & edit customer",
     "Tên hiển thị": "Display name", "Tên pháp nhân": "Legal name",
     "Người phụ trách": "Owner", "Trạng thái": "Status",
@@ -334,6 +338,7 @@
     // câu có số
     [/(\d+)\s*tin nhắn/g, "$1 messages"], [/(\d+)\s*sự kiện/g, "$1 events"],
     [/(\d+)\s*khách hàng/g, "$1 customers"], [/Chạm /g, "Touched "],
+    [/(\d+)\s*phản hồi/g, "$1 replies"], [/Phản hồi cho /g, "Reply to "],
     [/(\d+)\s*việc/g, "$1 tasks"], [/(\d+)\s*ngày/g, "$1 days"],
     [/(\d+)\s*đã làm/g, "$1 done"], [/(\d+)\s*chưa đánh dấu/g, "$1 not marked"],
     [/(\d+)\s*đang chạy/g, "$1 in progress"], [/(\d+)\s*thắng/g, "$1 won"], [/(\d+)\s*thua/g, "$1 lost"],
@@ -357,6 +362,12 @@
     // nhóm giai đoạn — xuất hiện lẫn trong câu tóm tắt
     [/Thử mẫu/g, "Sampling"], [/Tiếp cận/g, "Approach"],
     [/Đàm phán/g, "Negotiation"], [/Hoãn/g, "On hold"],
+    // aria-label ô lịch / thẻ trạng thái (chỉ trình đọc màn hình thấy)
+    [/Bấm để xem & sửa/g, "Click to view & edit"],
+    [/bấm để thêm việc/g, "click to add a task"],
+    [/bấm để mở/g, "click to open"], [/bấm để/g, "click to"],
+    [/Đang chạy:/g, "In progress:"], [/Chưa đánh dấu:/g, "Not marked:"],
+    [/Đã làm:/g, "Done:"], [/Kế hoạch:/g, "Planned:"], [/quá hạn/g, "overdue"],
     // từ lẻ, để CUỐI vì chúng cắt được giữa câu
     [/Tháng /g, "Month "], [/% thắng/g, "% win"], [/Tiến độ dự án/g, "project progress"],
     [/Dự án đang chạy/g, "In-progress projects"], [/[Dd]ự án/g, "project"],

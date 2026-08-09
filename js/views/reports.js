@@ -8,22 +8,41 @@ const RP_COLORS = ['#01426A','#0E7490','#B45309','#6D28D9','#0D9488','#DB2777','
 
 function rpIsLead(){ return !!(me && cap(me.role).scope === 'all'); }
 
+/* Báo cáo ĐÃ GỬI lấy từ SharePoint (REPORTS). Khi chưa đăng nhập được Graph thì
+   lùi về localStorage để vẫn xem được bản cũ trên máy này. */
+function rpSentReports(){
+  const useSp = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()
+             && typeof REPORTS !== 'undefined';
+  const all = useSp ? REPORTS.slice() : (window.LS ? LS.allReports() : []);
+  if(rpIsLead())
+    return all.filter(r => !rpFilterPic || picKey(r.pic) === picKey(rpFilterPic));
+  return all.filter(r => picKey(r.pic) === picKey((me && me.pic) || ''));
+}
+
+/* Ai được viết phản hồi trên một báo cáo: quản lý (nhìn toàn đội) trên MỌI báo
+   cáo; sales trên báo cáo của CHÍNH MÌNH (trao đổi hai chiều). */
+function rpCanComment(r){
+  if(!me || !r) return false;
+  if(cap(me.role).scope === 'all') return true;
+  return picKey(r.pic) === picKey(me.pic || '');
+}
+
 /* ====== ĐIỀU PHỐI ====== */
 function renderReports(){
-  const list = rpIsLead()
-    ? LS.allReports().filter(r => !rpFilterPic || picKey(r.pic) === picKey(rpFilterPic))
-    : LS.reportsFor((me && me.pic) || '');
-
+  const list = rpSentReports();
   rpRenderTools(list);
   rpRenderList(list);
   rpRenderPanel(list);
+  if(window.markReportsSeen) markReportsSeen();   // mở mục Báo cáo = đã xem
 }
 window.renderReports = renderReports;
 
 function rpRenderTools(list){
   const box = document.getElementById('rpTools');
   if(rpIsLead()){
-    const pics = Array.from(new Set(LS.allReports().map(r => picKey(r.pic)))).sort();
+    const src = (window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && typeof REPORTS!=='undefined')
+      ? REPORTS : (window.LS ? LS.allReports() : []);
+    const pics = Array.from(new Set(src.map(r => picKey(r.pic)))).sort();
     box.innerHTML = `<select class="ck-sel" aria-label="Lọc theo sales" onchange="rpSetPic(this.value)">
       <option value="">Tất cả sales</option>
       ${pics.map(p => `<option value="${ckEsc(p)}"${picKey(rpFilterPic)===p?' selected':''}>${ckEsc(picLabel(p))}</option>`).join('')}
@@ -53,12 +72,14 @@ function rpRenderList(list){
     </div>`;
     return;
   }
-  box.innerHTML = draftRow + list.map(r => `
-    <button class="rp-row" aria-current="${rpSel===r.id}" onclick="rpSelect('${ckAttr(r.id)}')">
+  box.innerHTML = draftRow + list.map(r => {
+    const nc = (r.comments || []).length;
+    return `<button class="rp-row" aria-current="${rpSel===r.id}" onclick="rpSelect('${ckAttr(r.id)}')">
       <b>${ckEsc(r.picLabel)} — tuần ${ckEsc(r.weekLabel)}</b>
-      <span class="w">${ckVN(r.createdAt)}</span>
+      <span class="w">${ckVN(r.createdAt)}${nc ? ` <span class="rp-cc">${nc} phản hồi</span>` : ''}</span>
       <span class="s">${r.stats.done} đã làm · ${r.stats.missed} chưa đánh dấu · ${r.stats.changes} thay đổi dự án</span>
-    </button>`).join('');
+    </button>`;
+  }).join('');
 }
 
 /* Bỏ bản nháp đang có nội dung thì phải hỏi — sales gõ nhận xét xong mà mất là
@@ -165,10 +186,69 @@ function rpRenderPanel(list){
       <button class="btn-primary" onclick="sendReport()">Gửi cho quản lý</button>
       <button class="btn-ghost" onclick="rpDiscard()">Bỏ bản nháp</button>
       <span class="rp-to">Người nhận: ${ckEsc(managerNames().join(', ') || '—')}</span>
-    </div>` : ''}`;
+    </div>` : rpThreadHtml(r)}`;
 
   rpDrawCharts(r);
 }
+
+/* ====== LUỒNG PHẢN HỒI ====== */
+function rpThreadHtml(r){
+  const cmts = r.comments || [];
+  const thread = cmts.length
+    ? cmts.map(c => {
+        const mine = me && picKey(c.by) === picKey(me.pic || me.name);
+        const lead = c.role && cap(c.role).scope === 'all';
+        return `<div class="rp-cmt${mine?' me':''}">
+          <div class="rp-cmt-h"><b>${ckEsc(picLabel(c.by) || c.by || '—')}</b>
+            ${lead ? '<span class="rp-cmt-tag">Quản lý</span>' : ''}
+            <span>${ckVN(c.at)}</span></div>
+          <div class="rp-cmt-b">${ckEsc(c.text || '')}</div>
+        </div>`;
+      }).join('')
+    : '<div class="rp-sum">Chưa có phản hồi nào.</div>';
+
+  const canComment = rpCanComment(r);
+  const box = canComment
+    ? `<div class="rp-cmt-form">
+         <textarea id="rpCmt" placeholder="${cap(me.role).scope==='all'
+            ? 'Phản hồi cho ' + ckEsc(r.picLabel) + '…' : 'Trả lời quản lý…'}" rows="2"></textarea>
+         <button class="btn-primary" onclick="rpPostComment('${ckAttr(r.id)}')">Gửi phản hồi</button>
+       </div>`
+    : '';
+
+  return `<div class="rp-thread">
+    <div class="wc-sec-h"><h3>Trao đổi</h3><span>${cmts.length}</span></div>
+    <div class="rp-thread-list">${thread}</div>
+    ${box}
+  </div>`;
+}
+
+function rpPostComment(code){
+  const el = document.getElementById('rpCmt');
+  const text = el ? el.value.trim() : '';
+  if(!text){ toast('Nhập nội dung phản hồi.'); return; }
+  const r = rpSentReports().find(x => x.id === code);
+  if(!r || !rpCanComment(r)){ toast('Bạn không có quyền phản hồi báo cáo này.'); return; }
+  if(!(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite())){
+    toast('Chưa đăng nhập Microsoft 365 — chưa gửi được phản hồi.'); return;
+  }
+  const btn = el && el.parentElement.querySelector('button');
+  if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
+  /* Hiện ngay trên màn hình để người viết thấy phản hồi của mình, rồi ghi. */
+  const by = (me && (me.pic || me.name)) || '';
+  r.comments = (r.comments || []).concat([{ by:by, role:me.role, at:todayISO(), text:text }]);
+  renderReports();
+  FISG_STORE.addReportComment(code, text, by, me.role).then(()=>{
+    if(window.refreshNotifs) refreshNotifs();
+    renderReports();
+    toast('Đã gửi phản hồi.');
+  }).catch(e=>{
+    console.warn('[reports] gửi phản hồi hỏng:', e && (e.message||e));
+    toast('CHƯA gửi được phản hồi lên SharePoint: ' + (e.message||e));
+    renderReports();
+  });
+}
+window.rpPostComment = rpPostComment;
 
 /* ====== BIỂU ĐỒ ======
    Không mượn donut() của dashboard vì tooltip ở đó ghi cứng đơn vị "dự án". */
@@ -226,12 +306,31 @@ function sendReport(){
   const note = (document.getElementById('rpNote')||{}).value || '';
   rpDraft.note = note.trim();
   rpDraft.to = managerNames();
-  const saved = LS.addReport(rpDraft);
-  notifyPlain('đã gửi <b>báo cáo tuần ' + saved.weekLabel + '</b> — ' +
-    saved.stats.done + ' hoạt động, ' + saved.stats.changes + ' thay đổi dự án', saved.to);
+  if(!rpDraft.id) rpDraft.id = (window.LS && LS.nextReportId) ? LS.nextReportId() : ('R-'+Date.now().toString(36).toUpperCase());
+  rpDraft.createdAt = rpDraft.createdAt || todayISO();
+
+  const draft = rpDraft;
+  if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()){
+    const btn = document.querySelector('.rp-send .btn-primary');
+    if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
+    FISG_STORE.sendReportToSP(draft).then(code=>{
+      rpDraft = null; rpSel = code;
+      if(window.refreshNotifs) refreshNotifs();
+      renderReports();
+      toast('Đã gửi báo cáo tuần ' + draft.weekLabel + ' đến: ' + draft.to.join(', ') + '. Quản lý sẽ nhận thông báo trên phần mềm.');
+    }).catch(e=>{
+      console.warn('[reports] gửi báo cáo hỏng:', e && (e.message||e));
+      toast('CHƯA gửi được lên SharePoint: ' + (e.message||e) + '. Bản nháp vẫn còn để gửi lại.');
+      if(btn){ btn.disabled = false; btn.textContent = 'Gửi cho quản lý'; }
+    });
+    return;
+  }
+  /* Không đăng nhập Graph: lùi về localStorage (chỉ máy này thấy). */
+  const saved = LS.addReport(draft);
+  notifyPlain('đã gửi <b>báo cáo tuần ' + saved.weekLabel + '</b>', saved.to);
   rpDraft = null; rpSel = saved.id;
   renderReports();
-  toast('Đã gửi báo cáo tuần ' + saved.weekLabel + ' đến: ' + saved.to.join(', ') + '.');
+  toast('Đã lưu báo cáo trên máy này (chưa đăng nhập SharePoint nên quản lý chưa nhận được).');
 }
 window.sendReport = sendReport;
 

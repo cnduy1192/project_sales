@@ -22,7 +22,8 @@ function loginAs(i){
   rebuildNccTabs();
   /* Tổng quan tuần là góc nhìn của một sales; manager/admin mở tay được ở chế độ chỉ đọc. */
   LS.reset(); LS.mergeActs(); NAV.clear();
-  go(c.cockpit?'cockpit':'funnel'); buildForm(); buildUsers(); renderNotifs();
+  go(c.cockpit?'cockpit':'funnel'); buildForm(); buildUsers();
+  if(window.refreshNotifs) refreshNotifs(); else renderNotifs();
   if(c.weeklyAuto) wcMaybeAutoOpen();
 }
 

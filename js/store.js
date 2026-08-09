@@ -41,6 +41,16 @@
        Owner = sales phụ trách khách này; LegalName = tên pháp nhân đầy đủ. */
     Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân",
                  Segment: "Segment", Region: "Region", CustomerStatus: "Trạng thái" },
+    /* Reports: báo cáo tuần sales gửi cho quản lý. Title = mã báo cáo. */
+    Reports: {
+      PICName: "Người gửi", WeekLabel: "Tuần", ReportDate: "Ngày gửi",
+      Content: "Nhận xét", StatsJson: "Số liệu", Recipients: "Người nhận",
+    },
+    /* ReportComments: phản hồi hai chiều trên một báo cáo. */
+    ReportComments: {
+      ReportCode: "Mã báo cáo", PICName: "Người viết", AuthorRole: "Vai trò",
+      CommentDate: "Ngày", Content: "Nội dung",
+    },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -790,6 +800,115 @@
     return r;
   }
 
+  /* ==================== BÁO CÁO TUẦN + PHẢN HỒI ====================
+     Reports = báo cáo đã gửi; ReportComments = luồng trao đổi. Cả hai đọc/ghi
+     qua Graph như mọi list khác (tự dò internal name). Bản nháp CHƯA gửi vẫn ở
+     localStorage — chỉ khi bấm gửi mới có dòng trên SharePoint. */
+  async function loadReports() {
+    if (!canWrite()) return 0;
+    let reps = [], cmts = [], gr, gc;
+    try {
+      const [rCols, rItems] = await Promise.all([
+        FISG_GRAPH.columns("Reports"), FISG_GRAPH.listItems("Reports"),
+      ]);
+      gr = makeGetter("Reports", rCols);
+      reps = rItems;
+    } catch (e) {
+      console.warn("[store] không đọc được list Reports:", e.message || e);
+      REPORTS.length = 0;
+      return 0;
+    }
+    try {
+      const [cCols, cItems] = await Promise.all([
+        FISG_GRAPH.columns("ReportComments"), FISG_GRAPH.listItems("ReportComments"),
+      ]);
+      gc = makeGetter("ReportComments", cCols);
+      cmts = cItems;
+    } catch (e) { cmts = []; }
+
+    /* gom phản hồi theo mã báo cáo (Title của Reports). */
+    const byCode = {};
+    (cmts || []).forEach(it => {
+      const f = it.fields || {};
+      const code = txtOf(gc, f, "ReportCode") || txt(f.Title);
+      if (!code) return;
+      (byCode[code] = byCode[code] || []).push({
+        by: txt(f.PICName) || txtOf(gc, f, "PICName"),
+        role: txtOf(gc, f, "AuthorRole"),
+        at: (txtOf(gc, f, "CommentDate") || "").slice(0, 10),
+        text: txtOf(gc, f, "Content"),
+        spId: it.id,
+      });
+    });
+    Object.keys(byCode).forEach(k => byCode[k].sort((a, b) => (a.at || "").localeCompare(b.at || "")));
+
+    REPORTS.length = 0;
+    (reps || []).forEach(it => {
+      const f = it.fields || {};
+      const code = txt(f.Title);
+      let snap = {};
+      try { snap = JSON.parse(txtOf(gr, f, "StatsJson") || "{}"); } catch (e) { snap = {}; }
+      const pic = txt(f.PICName) || txtOf(gr, f, "PICName");
+      REPORTS.push({
+        id: code, spId: it.id, pic: pic,
+        picLabel: (typeof picLabel === "function") ? picLabel(pic) : pic,
+        weekLabel: txtOf(gr, f, "WeekLabel") || (snap.weekLabel || ""),
+        createdAt: (txtOf(gr, f, "ReportDate") || "").slice(0, 10) || snap.createdAt || "",
+        note: txtOf(gr, f, "Content"),
+        stats: snap.stats || { done: 0, missed: 0, changes: 0, overdue: 0 },
+        doneActs: snap.doneActs || [], missedActs: snap.missedActs || [],
+        projectChanges: snap.projectChanges || [],
+        to: (txtOf(gr, f, "Recipients") || "").split(/[,;]/).map(x => x.trim()).filter(Boolean),
+        comments: byCode[code] || [],
+      });
+    });
+    REPORTS.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    return REPORTS.length;
+  }
+
+  /* Ghi một báo cáo lên list Reports. report là object buildReport() sinh ra +
+     {note, to}. Trả về mã báo cáo (Title). */
+  async function sendReportToSP(report) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const get = await schemaOf("Reports");
+    const code = report.id || ("R-" + Date.now().toString(36).toUpperCase());
+    const snap = {
+      weekLabel: report.weekLabel, createdAt: report.createdAt || todayISO(),
+      stats: report.stats, doneActs: report.doneActs || [],
+      missedActs: report.missedActs || [], projectChanges: report.projectChanges || [],
+    };
+    const f = { Title: code };
+    const miss = [];
+    const set = (k, v) => { if (v != null && v !== "" && !put(f, get, k, v)) miss.push(k); };
+    f.PICName = report.pic || "";
+    set("WeekLabel", report.weekLabel);
+    set("ReportDate", spDate(report.createdAt || todayISO()));
+    set("Content", report.note || "");
+    set("StatsJson", JSON.stringify(snap));
+    set("Recipients", (report.to || []).join(", "));
+    warnMissing("Reports", miss);
+    await FISG_GRAPH.createItem("Reports", f);
+    try { await loadReports(); } catch (e) {}
+    return code;
+  }
+
+  /* Thêm một phản hồi vào một báo cáo. */
+  async function addReportComment(reportCode, text, by, role) {
+    if (!canWrite() || !reportCode || !text) return false;
+    const get = await schemaOf("ReportComments");
+    const f = { Title: String(reportCode) };
+    const miss = [];
+    if (!put(f, get, "ReportCode", reportCode)) miss.push("ReportCode");
+    f.PICName = by || "";
+    if (role && !put(f, get, "AuthorRole", role)) miss.push("AuthorRole");
+    if (!put(f, get, "CommentDate", spDate(todayISO()))) miss.push("CommentDate");
+    if (!put(f, get, "Content", text)) miss.push("Content");
+    warnMissing("ReportComments", miss);
+    await FISG_GRAPH.createItem("ReportComments", f);
+    try { await loadReports(); } catch (e) {}
+    return true;
+  }
+
   /* Tạo mới HOẶC sửa một khách hàng trong danh bạ. row:
        { spId?, title, legal, owner, segment, region, status }
      spId rỗng → tạo mới; có spId → cập nhật đúng dòng đó.
@@ -1210,6 +1329,9 @@
       /* Danh bạ khách hàng + bảng chủ sở hữu. Đọc SAU buildLists nhưng TRƯỚC khi
          render, vì phân quyền của mọi view dưới đây tra CUSTOMER_OWNER. */
       const nCust = await loadCustomerDirectory();
+      /* Báo cáo + phản hồi: đọc để chuông thông báo và mục Báo cáo có dữ liệu
+         ngay khi đăng nhập. Hỏng thì bỏ qua, không chặn phần còn lại. */
+      try { await loadReports(); } catch (e) { console.warn("[store] loadReports", e); }
 
       // Việc sales tự nhập lúc offline phải được nối lại sau khi thay mảng.
       if (window.LS && LS.mergeActs) LS.mergeActs();
@@ -1251,6 +1373,10 @@
         + " · " + nCust + " KH trong danh bạ (" + Object.keys(CUSTOMER_OWNER).length + " có chủ).");
       if (window.renderCustomers && document.getElementById("view-customers")) {
         try { renderCustomers(); } catch (e) {}
+      }
+      if (window.refreshNotifs) try { refreshNotifs(); } catch (e) {}
+      if (window.renderReports && document.getElementById("view-reports")) {
+        try { renderReports(); } catch (e) {}
       }
       return true;
     } catch (e) {
@@ -1325,6 +1451,7 @@
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
+                        loadReports, sendReportToSP, addReportComment,
                         createActivity, updateActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
