@@ -33,6 +33,10 @@ function renderReports(){
   rpRenderTools(list);
   rpRenderList(list);
   rpRenderPanel(list);
+  /* Một trang giữa: có báo cáo/nháp đang mở thì ẩn danh sách, hiện tài liệu. */
+  const grid = document.querySelector('#view-reports .rp-grid');
+  const open = !!(rpSel && (rpSel === 'draft' ? rpDraft : list.some(x => x.id === rpSel)));
+  if(grid) grid.classList.toggle('has-open', open);
   if(window.markReportsSeen) markReportsSeen();   // mở mục Báo cáo = đã xem
 }
 window.renderReports = renderReports;
@@ -131,9 +135,11 @@ function rpRenderPanel(list){
     </div>`;
 
   box.innerHTML = `
+    <button class="rp-back" onclick="rpSelect(null)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Tất cả báo cáo</button>
     <h3>${ckEsc(r.picLabel)} — tuần ${ckEsc(r.weekLabel)}</h3>
     <div class="rp-meta">${draft ? 'Bản nháp · số liệu chốt khi bấm gửi'
-      : 'Đã gửi ' + ckVN(r.createdAt) + ' · đến ' + ckEsc((r.to||[]).join(', ') || '—')}</div>
+      : 'Đã gửi ' + ckVN(r.createdAt)}</div>
 
     <div class="wc-stats" style="margin-top:16px">
       <div class="wc-stat" style="--sc:var(--wc-done)"><b>${s.done}</b><span>Đã làm</span></div>
@@ -185,7 +191,6 @@ function rpRenderPanel(list){
     ${draft ? `<div class="rp-send">
       <button class="btn-primary" onclick="sendReport()">Gửi cho quản lý</button>
       <button class="btn-ghost" onclick="rpDiscard()">Bỏ bản nháp</button>
-      <span class="rp-to">Người nhận: ${ckEsc(managerNames().join(', ') || '—')}</span>
     </div>` : rpThreadHtml(r)}`;
 
   rpDrawCharts(r);
@@ -317,7 +322,7 @@ function sendReport(){
       rpDraft = null; rpSel = code;
       if(window.refreshNotifs) refreshNotifs();
       renderReports();
-      toast('Đã gửi báo cáo tuần ' + draft.weekLabel + ' đến: ' + draft.to.join(', ') + '. Quản lý sẽ nhận thông báo trên phần mềm.');
+      toast('Đã gửi báo cáo tuần ' + draft.weekLabel + '.');
     }).catch(e=>{
       console.warn('[reports] gửi báo cáo hỏng:', e && (e.message||e));
       toast('CHƯA gửi được lên SharePoint: ' + (e.message||e) + '. Bản nháp vẫn còn để gửi lại.');

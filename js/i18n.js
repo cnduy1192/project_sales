@@ -84,6 +84,8 @@
     "Bạn vẫn có thể ghi tương tác.": "You can still log interactions.",
     "Lưu": "Save", "trong folder dự án.": "in the project folder.",
     "Báo cáo tuần cho manager": "Weekly report for manager",
+    "Tất cả báo cáo": "All reports", "Gửi cho quản lý": "Send to manager",
+    "Bỏ bản nháp": "Discard draft", "Soạn báo cáo tuần": "Compose weekly report",
     "Tổng hợp theo % tiến độ": "Summary by progress %",
     // nhãn động
     "(chưa có người liên quan)": "(no related people)", "(không có nội dung)": "(no content)",

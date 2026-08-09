@@ -174,26 +174,43 @@
 .wc-foot .grow{margin-left:auto;display:flex;gap:10px}
 .wc-note-line{font-size:11.5px;color:var(--text-3);max-width:52ch}
 
-/* ---------- MỤC BÁO CÁO ---------- */
-/* Two panels of equal weight: same width, same height, empty states centred in
-   each so neither card collapses to its content. */
-.rp-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}
-.rp-list,.rp-panel{display:flex;flex-direction:column;min-height:340px}
-.rp-list{border-radius:var(--r);overflow:hidden}
-.rp-list .ck-empty,.rp-panel .ck-empty{margin:auto}
+/* ---------- MỤC BÁO CÁO ----------
+   Một trang chính căn giữa web: mặc định là DANH SÁCH báo cáo; chọn một cái thì
+   danh sách ẩn đi, báo cáo hiện thành trang tài liệu ở giữa. Áp dụng cho cả người
+   gửi (soạn) lẫn người nhận (đọc). */
+.rp-grid{display:block;max-width:860px;margin:0 auto}
+/* Trạng thái duyệt danh sách: chỉ hiện danh sách */
+.rp-grid:not(.has-open) .rp-panel{display:none}
+/* Trạng thái đọc/soạn: ẩn danh sách, báo cáo chiếm trọn trang giữa */
+.rp-grid.has-open .rp-list{display:none}
+
+.rp-list{border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow)}
+.rp-list .ck-empty{margin:auto;padding:56px 24px}
 .rp-row{
-  width:100%;text-align:left;padding:13px 16px;border-bottom:1px solid var(--line-2);
-  display:grid;grid-template-columns:1fr auto;gap:3px 12px;transition:background .15s}
+  width:100%;text-align:left;padding:15px 20px;border-bottom:1px solid var(--line-2);
+  display:grid;grid-template-columns:1fr auto;gap:4px 12px;transition:background .14s;position:relative}
+.rp-row:last-child{border-bottom:none}
+.rp-row::after{content:'';position:absolute;right:16px;top:50%;width:8px;height:8px;margin-top:-4px;
+  border-right:2px solid var(--text-3);border-top:2px solid var(--text-3);transform:rotate(45deg);
+  opacity:0;transition:opacity .14s}
 .rp-row:hover{background:var(--pearl-2)}
-.rp-row[aria-current="true"]{background:var(--marine-soft);box-shadow:inset 3px 0 0 var(--marine)}
+.rp-row:hover::after{opacity:.7}
 .rp-row:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
-.rp-row b{font-size:13px;font-weight:700;color:var(--marine-ink)}
-.rp-row .w{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.rp-row b{font-size:13.5px;font-weight:700;color:var(--marine-ink)}
+.rp-row .w{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;padding-right:16px}
 .rp-row .s{grid-column:1/-1;font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums}
 
-.rp-panel{border-radius:var(--r);padding:20px 22px}
-.rp-panel h3{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--marine-ink);
-  letter-spacing:-.015em;text-wrap:balance}
+/* Trang tài liệu báo cáo */
+.rp-panel{border-radius:16px;padding:26px 30px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow-md)}
+.rp-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12.5px;font-weight:600;
+  color:var(--marine);padding:5px 12px 5px 9px;border-radius:20px;background:var(--marine-soft);
+  border:1px solid var(--marine-line);transition:background .14s,border-color .14s}
+.rp-back:hover{background:var(--surface);border-color:var(--marine)}
+.rp-back:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.rp-panel h3{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--marine-ink);
+  letter-spacing:-.02em;text-wrap:balance}
 .rp-meta{font-size:12px;color:var(--text-3);margin-top:4px;font-variant-numeric:tabular-nums}
 .rp-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 4px}
 .rp-chart{border:1px solid var(--line-2);border-radius:10px;padding:13px}
