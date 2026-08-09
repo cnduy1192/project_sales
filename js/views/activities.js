@@ -151,12 +151,27 @@ function deleteAct(){
   if(!confirm('Xoá hoạt động với "'+a.customer+'" ngày '+new Date(a.date).toLocaleDateString('vi-VN')+'? Không thể hoàn tác.')) return;
   const i = ACTIVITIES.indexOf(a); if(i>=0) ACTIVITIES.splice(i,1);
   if(window.LS && LS.dropAct) LS.dropAct(id);
-  if(window.FISG_STORE && FISG_STORE.deleteActivity && FISG_STORE.canWrite && FISG_STORE.canWrite() && a.spId){
-    FISG_STORE.deleteActivity(a).catch(function(e){ console.warn('[activities] chưa xoá được trên SharePoint', e&&(e.message||e)); });
-  }
   closeActForm(); renderActs(); render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
-  toast('Đã xoá hoạt động.');
+
+  const onSP = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite();
+  if(a.spId && onSP){
+    /* Xoá trên SharePoint mới là xoá thật. Hỏng thì phải nói — nếu không người
+       dùng tưởng đã xoá, tải lại trang thấy nó quay về. */
+    FISG_STORE.deleteActivity(a).then(function(){
+      toast('Đã xoá hoạt động.');
+    }).catch(function(e){
+      console.warn('[activities] xoá trên SharePoint hỏng:', e&&(e.message||e));
+      /* Trả lại vào danh sách để trạng thái khớp SharePoint. */
+      if(ACTIVITIES.indexOf(a)<0) ACTIVITIES.unshift(a);
+      renderActs(); render(); cockpitRefresh();
+      toast('CHƯA xoá được trên SharePoint: '+(e.message||e)+'. Hoạt động vẫn còn.');
+    });
+  } else if(a.spId && !onSP){
+    toast('Đã bỏ khỏi màn hình, nhưng CHƯA đăng nhập SharePoint nên chưa xoá thật — tải lại trang sẽ thấy lại.');
+  } else {
+    toast('Đã xoá hoạt động.');   // bản ghi nội bộ, chưa từng lên SharePoint
+  }
 }
 window.deleteAct = deleteAct;
 function saveAct(){

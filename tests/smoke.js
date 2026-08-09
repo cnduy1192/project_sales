@@ -451,7 +451,7 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
       return it;
     },
     updateItem: async (l,id,f) => { SP.updated.push({ list:l, id, fields:f }); return null; },
-    deleteItem: async () => null,
+    deleteItem: async (l,id) => { if(ITEMS[l]) ITEMS[l]=ITEMS[l].filter(x=>String(x.id)!==String(id)); SP.deleted = (SP.deleted||[]).concat([{list:l,id:id}]); return null; },
   };
   const wait = () => new Promise(r => setTimeout(r, 80));
   const madeIn = l => SP.created.filter(x => x.list === l);
@@ -806,6 +806,28 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(SP.created.filter(x=>x.list==='Customers').length)throw new Error('tạo mới thay vì sửa');
     const u=SP.updated.filter(x=>x.list==='Customers');
     if(!u.length||u[0].fields.OData__x004f_wn!=='Phạm Bích Ngọc')throw new Error('không đổi chủ');
+  });
+
+  // ---- XOÁ HOẠT ĐỘNG PHẢI XOÁ THẬT (không sống lại sau reload) ----
+  await astep('xoá hoạt động xoá luôn trên SharePoint, sync lại không quay về',async()=>{
+    if(E("typeof FISG_STORE.deleteActivity")!=='function')
+      throw new Error('FISG_STORE.deleteActivity chưa tồn tại — đây chính là lỗi cũ');
+    /* Thêm 555 vào list (không đụng các dòng khác), nạp về, xoá, rồi sync lại. */
+    const snap=ITEMS.Activities.slice();
+    ITEMS.Activities.push({id:'555',fields:{ Title:'X · Call', Customer0LookupId:'11',
+      PIC:'Vo Tan Cuong', ActivityType:'Call', ActivityDate:'2026-08-04T12:00:00Z',
+      Content:'sẽ xoá', NextStep:'—', PotentialLevel:'Warm' }});
+    await E('FISG_STORE.syncFromGraph()');
+    if(!E("ACTIVITIES.some(function(x){return x.id==='A-555'})"))throw new Error('không nạp được để xoá');
+    (SP.deleted||[]).length=0;
+    await E("FISG_STORE.deleteActivity(ACTIVITIES.find(function(x){return x.id==='A-555'}))");
+    if(!(SP.deleted||[]).some(x=>x.list==='Activities'&&String(x.id)==='555'))
+      throw new Error('không gọi deleteItem trên Activities');
+    if(E("ACTIVITIES.some(function(x){return x.id==='A-555'})"))throw new Error('còn trong bộ nhớ');
+    await E('FISG_STORE.syncFromGraph()');   // mô phỏng reload
+    if(E("ACTIVITIES.some(function(x){return x.id==='A-555'})"))
+      throw new Error('hoạt động sống lại sau khi sync — đúng bug người dùng báo');
+    ITEMS.Activities.length=0; snap.forEach(x=>ITEMS.Activities.push(x));  // trả lại nguyên trạng
   });
 
   // ---- BÁO CÁO TUẦN + PHẢN HỒI + THÔNG BÁO ----

@@ -1058,6 +1058,22 @@
     return true;
   }
 
+  /* Xoá HẲN một hoạt động khỏi SharePoint. Trước đây thiếu hàm này nên nút xoá
+     chỉ bỏ khỏi bộ nhớ — tải lại trang là syncFromGraph đọc lại từ list và hoạt
+     động "sống lại". a có thể là object {spId} hoặc thẳng spId. */
+  async function deleteActivity(a) {
+    const spId = a && typeof a === "object" ? a.spId : a;
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!spId) return false;                       // bản ghi nội bộ chưa lên SP
+    await FISG_GRAPH.deleteItem("Activities", spId);
+    /* Bỏ luôn khỏi mảng trong bộ nhớ và cờ localStorage để không quay lại. */
+    const idx = ACTIVITIES.findIndex(x => x === a || x.spId === spId || x.id === (a && a.id));
+    if (idx >= 0) ACTIVITIES.splice(idx, 1);
+    if (window.LS && LS.dropAct && a && a.id) LS.dropAct(a.id);
+    if (typeof invalidateCockpit === "function") invalidateCockpit();
+    return true;
+  }
+
   /* Đánh dấu hoàn thành / gỡ đánh dấu, ghi thẳng lên SharePoint để mọi máy và
      quản lý cùng thấy một sự thật. iso = null nghĩa là gỡ.
 
@@ -1452,7 +1468,7 @@
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
                         loadReports, sendReportToSP, addReportComment,
-                        createActivity, updateActivity, setActivityDone,
+                        createActivity, updateActivity, deleteActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
                         usersListName: USERS_LIST };
