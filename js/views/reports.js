@@ -188,17 +188,20 @@ function rpRenderPanel(list){
         : `<div class="rp-sum" style="font-size:13px;color:var(--text-2)">${ckEsc(r.note || 'Không có nhận xét.')}</div>`}
     </div>
 
+    <div class="att-box" id="rp-attach"></div>
     ${draft ? `<div class="rp-send">
       <button class="btn-primary" onclick="sendReport()">Gửi cho quản lý</button>
       <button class="btn-ghost" onclick="rpDiscard()">Bỏ bản nháp</button>
-    </div>` : `<div class="att-box" id="rp-attach"></div>${rpThreadHtml(r)}`}`;
+    </div>` : rpThreadHtml(r)}`;
 
   rpDrawCharts(r);
-  /* Tệp đính kèm: chỉ báo cáo ĐÃ GỬI (có mã). Tải lên: người được phản hồi
-     (chủ báo cáo + quản lý); xoá theo quyền của FISG_ATTACH. */
-  if(!draft && window.FISG_ATTACH && document.getElementById('rp-attach')){
-    FISG_ATTACH.mount('rp-attach', { type:'report', id:r.id,
-      ctx:{ pic:r.pic, date:r.createdAt }, canUpload: rpCanComment(r) });
+  /* Tệp đính kèm: bản NHÁP đính kèm ngay (chờ tải khi Gửi); báo cáo ĐÃ GỬI thì
+     tải thẳng. Tải lên: chủ báo cáo + quản lý. */
+  if(window.FISG_ATTACH && document.getElementById('rp-attach')){
+    FISG_ATTACH.mount('rp-attach', { type:'report',
+      id: draft ? '' : r.id,
+      ctx:{ pic:r.pic || (me&&(me.pic||me.name)), date:r.createdAt || todayISO() },
+      canUpload: draft ? true : rpCanComment(r) });
   }
 }
 
@@ -321,10 +324,16 @@ function sendReport(){
   rpDraft.createdAt = rpDraft.createdAt || todayISO();
 
   const draft = rpDraft;
+  /* Chụp tệp đính kèm đang chờ TRƯỚC khi gửi; tải sau khi báo cáo có mã. */
+  const pend = window.FISG_ATTACH ? FISG_ATTACH.takePending('rp-attach') : [];
   if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()){
     const btn = document.querySelector('.rp-send .btn-primary');
     if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
     FISG_STORE.sendReportToSP(draft).then(code=>{
+      if(pend.length && window.FISG_ATTACH)
+        FISG_ATTACH.uploadFiles('report', code, { pic:draft.pic, date:draft.createdAt }, pend)
+          .then(function(){ if(window.loadAttachments) return FISG_STORE.loadAttachments(); })
+          .then(function(){ renderReports(); });
       rpDraft = null; rpSel = code;
       if(window.refreshNotifs) refreshNotifs();
       renderReports();

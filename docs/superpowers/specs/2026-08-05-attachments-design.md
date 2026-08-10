@@ -74,6 +74,15 @@ Mock Graph (ensureFolder/uploadFile/deleteDriveItem). Ca:
 - xoá gỡ cả driveItem lẫn dòng list; quyền xoá đúng người.
 - i18n-scan phủ chuỗi mới.
 
+## Cập nhật 2026-08-05 (v2): đính kèm khi ĐANG TẠO
+Trước đây phải lưu hoạt động/gửi báo cáo xong mới đính kèm được (cần bản ghi để
+gắn) — bất tiện. Nay:
+- Form mở ở CHẾ ĐỘ CHỜ khi bản ghi chưa có id: chọn file → giữ tạm ở client
+  (xem tên/kích thước, gỡ được), CHƯA tải. Kiểm loại/dung lượng ngay lúc chọn.
+- Khi bấm Lưu (hoạt động) / Gửi (báo cáo) và bản ghi có id trên SharePoint,
+  các file chờ tự tải lên (FISG_ATTACH.takePending chụp trước khi form đóng để
+  tránh mất, uploadFiles tải tuần tự, lỗi từng file được báo).
+
 ## Ngoài phạm vi
 Không xem trước (preview) file trong app — chỉ link mở trên SharePoint. Không
 version file. Không kéo-thả nhiều file cùng lúc (chọn từng file; có thể mở rộng

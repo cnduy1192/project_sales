@@ -184,21 +184,19 @@ function openActForm(prefill, origin){
   const cur0 = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
   if(delBtn) delBtn.style.display = (editing && canDelAct(cur0)) ? 'inline-flex' : 'none';
   actApplyGate();
-  /* Tệp đính kèm: chỉ với hoạt động ĐÃ LƯU (có spId trên SharePoint). Hoạt động
-     mới phải bấm Lưu trước — file cần một bản ghi để gắn vào. */
+  /* Tệp đính kèm: đính kèm được NGAY khi đang tạo. Hoạt động mới chưa có bản ghi
+     nên file xếp hàng chờ, tự tải lên khi bấm Lưu (xem pushAct). */
   const abox=document.getElementById('a-attach');
-  if(abox){
+  if(abox && window.FISG_ATTACH){
     const cur = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
-    if(cur && cur.spId && window.FISG_ATTACH){
-      abox.style.display='';
-      FISG_ATTACH.mount('a-attach', { type:'activity', id:cur.spId,
-        ctx:{ pic:cur.pic, date:cur.date, customer:cur.customer },
-        canUpload: editable,
-        onChange:function(){ renderActs(); } });
-    } else {
-      abox.style.display='none'; abox.innerHTML='';
-    }
-  }
+    abox.style.display='';
+    FISG_ATTACH.mount('a-attach', {
+      type:'activity',
+      id: cur && cur.spId ? cur.spId : '',            // rỗng = chờ tải khi lưu
+      ctx:{ pic:(cur&&cur.pic)||(me&&(me.pic||me.name)), date:(cur&&cur.date), customer:(cur&&cur.customer) },
+      canUpload: editable,
+      onChange:function(){ renderActs(); } });
+  } else if(abox){ abox.style.display='none'; abox.innerHTML=''; }
   document.getElementById('aov').classList.add('open');
   document.getElementById(editable ? (p.customer?'a-note':'a-cust') : 'a-cust').focus();
 }
@@ -283,17 +281,26 @@ function saveAct(){
     if(pr){pr.comments.push({by:a.pic,at:a.date,text:'['+a.type+'] '+a.note+' → '+a.next});
       notify(pr,`đã ghi hoạt động vào <b>${pr.customer} · ${pr.product}</b>: ${a.note}`);}
   }
+  /* Chụp các tệp đang chờ TRƯỚC khi đóng form (form đóng/mở lại sẽ reset hàng
+     chờ). Tải lên sau khi hoạt động có id trên SharePoint. */
+  const pend = window.FISG_ATTACH ? FISG_ATTACH.takePending('a-attach') : [];
   closeActForm(); renderActs(); render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast('Đã lưu hoạt động'+(a.projectId?' và gắn vào dự án — đã thông báo người liên quan.':'. Có thể tạo dự án từ hoạt động này bất cứ lúc nào.'));
   /* Hiện lên màn hình trước, đẩy lên SharePoint sau — nhập liệu không phải chờ
      mạng. Nhưng nếu đẩy hỏng thì PHẢI nói, vì lúc đó chỉ mình người nhập thấy
      việc này, quản lý không thấy gì cả. */
-  pushAct(a);
+  pushAct(a, pend);
 }
-function pushAct(a){
-  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
+function pushAct(a, pend){
+  if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
+    if(pend && pend.length) toast('Chưa đăng nhập SharePoint nên '+pend.length+' tệp đính kèm chưa được tải lên.');
+    return;
+  }
   FISG_STORE.createActivity(a).then(spId=>{
+    /* Tải nốt tệp đính kèm đã chọn lúc tạo. */
+    if(pend && pend.length && window.FISG_ATTACH)
+      FISG_ATTACH.uploadFiles('activity', spId, { pic:a.pic, date:a.date, customer:a.customer }, pend);
     /* Đổi luôn sang id của SharePoint và bỏ bản địa phương. Bản trước chỉ đánh
        dấu đã gửi mà vẫn giữ bản AL-, nên lần đăng nhập sau bảng hiện HAI dòng:
        một bản SharePoint và một bản còn kẹt trong máy. */

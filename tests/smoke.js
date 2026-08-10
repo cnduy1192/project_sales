@@ -1023,6 +1023,32 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!(SP.deleted||[]).some(x=>x.list==='Attachments'))throw new Error('không xoá dòng list');
     if(E("FISG_STORE.attachmentsOf('activity','A-701').length")!==0)throw new Error('còn trong bộ nhớ');
   });
+  await astep('đính kèm khi ĐANG TẠO: chờ tải, flush khi có id',async()=>{
+    /* mount ở chế độ chờ (id rỗng) → chọn file → chưa gọi upload; takePending
+       + uploadFiles mô phỏng lúc lưu xong. */
+    d.body.insertAdjacentHTML('beforeend','<div id="att-test"></div>');
+    E("FISG_ATTACH.mount('att-test',{type:'activity',id:'',ctx:{pic:'X'},canUpload:true})");
+    SP.uploads=[]; SP.created.length=0; ITEMS.Attachments=[];
+    w.__p=fakeFile('spec.docx',50000);
+    E("FISG_ATTACH.pick({files:[window.__p],value:''},'att-test')");
+    if((SP.uploads||[]).length)throw new Error('không được tải ngay khi đang tạo');
+    if(!E("FISG_ATTACH.hasPending('att-test')"))throw new Error('không xếp vào hàng chờ');
+    /* lưu xong → có id → flush */
+    const files=E("FISG_ATTACH.takePending('att-test')");  // trả về mảng (eval mất method nhưng còn tham chiếu)
+    // dùng lại biến toàn cục để giữ File thật
+    await E("FISG_ATTACH.uploadFiles('activity','A-999',{pic:'X',date:'2026-08-05',customer:'Y'}, [window.__p])");
+    const c=SP.created.filter(x=>x.list==='Attachments');
+    if(!c.length||c[0].fields.ParentId!=='A-999')throw new Error('flush không tải lên đúng bản ghi: '+JSON.stringify(c));
+    if(E("FISG_ATTACH.hasPending('att-test')"))throw new Error('hàng chờ chưa được dọn');
+    d.getElementById('att-test').remove();
+  });
+  await astep('chọn file sai loại lúc tạo thì KHÔNG vào hàng chờ',()=>{
+    d.body.insertAdjacentHTML('beforeend','<div id="att-test2"></div>');
+    E("FISG_ATTACH.mount('att-test2',{type:'report',id:'',ctx:{},canUpload:true})");
+    E("FISG_ATTACH.pick({files:[{name:'x.exe',size:100}],value:''},'att-test2')");
+    if(E("FISG_ATTACH.hasPending('att-test2')"))throw new Error('file .exe vẫn vào hàng chờ');
+    d.getElementById('att-test2').remove();
+  });
 
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{
     /* Bản cũ chỉ đánh dấu "đã gửi" mà vẫn giữ bản AL- trong máy, nên lần đăng

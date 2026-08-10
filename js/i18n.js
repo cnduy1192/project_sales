@@ -305,7 +305,9 @@
       "You can only view this customer. Only the owner or an admin can edit.",
     // Tệp đính kèm
     "Tệp đính kèm": "Attachments", "Chưa có tệp đính kèm.": "No attachments yet.",
-    "+ Đính kèm tệp": "+ Attach file", "Xoá tệp": "Delete file",
+    "+ Đính kèm tệp": "+ Attach file", "Xoá tệp": "Delete file", "Bỏ tệp": "Remove file",
+    "chờ tải khi lưu": "will upload on save",
+    "Sẽ tải lên khi bạn bấm Lưu.": "Will upload when you click Save.",
     "Tối đa 15MB · pdf, word, excel, ppt, ảnh, zip": "Up to 15MB · pdf, word, excel, ppt, images, zip",
     "Đăng nhập Microsoft 365 để đính kèm tệp.": "Sign in with Microsoft 365 to attach files.",
     "Đã xoá tệp.": "File deleted.",

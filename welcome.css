@@ -377,3 +377,8 @@
 /* Khoá tạo hoạt động khi khách do người khác quản lý */
 .a-gate{grid-column:1/-1;padding:11px 14px;border-radius:9px;background:#FEF9C3;
   border:1px solid #FDE68A;font-size:12.5px;color:#92400E;line-height:1.5}
+
+/* Tệp đang CHỜ tải (chọn lúc tạo, tải khi lưu) */
+.att-item.att-pend{background:#FEFCE8;border-color:#FDE68A}
+.att-item.att-pend .att-ext{background:#B45309}
+.att-item.att-pend .att-meta b{color:#92400E}
