@@ -114,6 +114,7 @@ const SKIP_SEL = '#aiMsgs, [data-noi18n], .wc-item-note, .ck-ev-note, .act-note,
   await visit('Soạn báo cáo', "openReportComposer()");
   await visit('Báo cáo · đã gửi + phản hồi', "REPORTS.push({id:'R-1',spId:'1',pic:'Duy Che Ngoc',picLabel:'Duy Che Ngoc',weekLabel:'03/08 – 09/08',createdAt:'2026-08-05',note:'Tuan tot',stats:{done:2,missed:0,changes:1,overdue:0},doneActs:[],missedActs:[],projectChanges:[],to:['Duy Che Ngoc'],comments:[{by:'Duy Che Ngoc',role:'superadmin',at:'2026-08-05',text:'ok'}]}); rpDiscard(); rpSelect('R-1')");
   await visit('Người dùng & phân quyền', "closeWelcome(); go('users')");
+  await visit('Nhập NCC (Super Admin)', "FISG_SUPPLIER_IMPORT && FISG_SUPPLIER_IMPORT.render && FISG_SUPPLIER_IMPORT.render()");
   for (const m of ['mon', 'mid', 'fri'])
     await visit('Kế hoạch tuần · ' + m, "openWelcome(); wcSetMode('" + m + "')");
   await visit('Chia sẻ', "closeWelcome(); FISG_SHARE.open && FISG_SHARE.open()");

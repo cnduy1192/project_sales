@@ -808,6 +808,25 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(!u.length||u[0].fields.OData__x004f_wn!=='Phạm Bích Ngọc')throw new Error('không đổi chủ');
   });
 
+  // ---- NHẬP NHÀ CUNG CẤP ----
+  await astep('nhập NCC: tên mới thì tạo, tên đã có thì bỏ qua',async()=>{
+    ITEMS.Suppliers=[{id:'31',fields:{Title:'Roquette'}},{id:'32',fields:{Title:'IFF'}}];
+    SP.created.length=0;
+    const names=['Roquette','Griffith','Lasenor','GRIFFITH','  Kerry  '];
+    const pv=await E('FISG_STORE.previewSupplierUpsert('+JSON.stringify(names)+')');
+    if(pv.create!==3)throw new Error('preview tạo mới sai: '+JSON.stringify(pv));  // Griffith,Lasenor,Kerry
+    const rep=await E('FISG_STORE.bulkUpsertSuppliers('+JSON.stringify(names)+')');
+    if(rep.created!==3||rep.failed)throw new Error('report sai: '+JSON.stringify(rep));
+    const made=SP.created.filter(x=>x.list==='Suppliers').map(x=>x.fields.Title);
+    if(made.indexOf('Roquette')>=0)throw new Error('tạo trùng NCC đã có');
+    if(made.indexOf('Griffith')<0||made.indexOf('Lasenor')<0)throw new Error('thiếu NCC mới: '+made.join(','));
+    if(made.indexOf('Kerry')<0)throw new Error('không gom khoảng trắng thừa');
+  });
+  await astep('nhập NCC chạy lại KHÔNG tạo trùng',async()=>{
+    const rep=await E("FISG_STORE.bulkUpsertSuppliers(['Griffith','Lasenor'])");
+    if(rep.created!==0)throw new Error('tạo lại NCC đã có: '+JSON.stringify(rep));
+  });
+
   // ---- XOÁ HOẠT ĐỘNG PHẢI XOÁ THẬT (không sống lại sau reload) ----
   await astep('xoá hoạt động xoá luôn trên SharePoint, sync lại không quay về',async()=>{
     if(E("typeof FISG_STORE.deleteActivity")!=='function')

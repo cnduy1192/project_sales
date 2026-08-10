@@ -79,8 +79,9 @@ function buildUsers(){
     </div>`;
   }).join('');
 
-  /* Công cụ nhập/cập nhật khách hàng từ Excel — chỉ admin, dựng ở cuối màn. */
+  /* Công cụ nhập từ Excel — chỉ Super Admin, dựng ở cuối màn. */
   if(window.FISG_CUSTOMER_IMPORT) try { FISG_CUSTOMER_IMPORT.render(); } catch(e){}
+  if(window.FISG_SUPPLIER_IMPORT) try { FISG_SUPPLIER_IMPORT.render(); } catch(e){}
 }
 window.buildUsers = buildUsers;
 

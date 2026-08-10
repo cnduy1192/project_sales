@@ -791,6 +791,63 @@
     return rep;
   }
 
+  /* ==================== NHẬP NHÀ CUNG CẤP ====================
+     Chỉ thêm TÊN nhà cung cấp vào list Suppliers: có rồi thì bỏ qua, chưa có thì
+     tạo. Không đụng dữ liệu khác. Đối chiếu theo tên chuẩn hoá (bỏ khoảng trắng
+     thừa + hoa hết) nên "IFF" và " iff " coi là một, không tạo trùng. */
+  function supKey(s){ return String(s == null ? "" : s).replace(/\s+/g, " ").trim().toUpperCase(); }
+
+  async function supplierIndex() {
+    const items = await FISG_GRAPH.listItems("Suppliers");
+    const idx = {};
+    items.forEach(it => {
+      const k = supKey(txt((it.fields || {}).Title));
+      if (k && !idx[k]) idx[k] = it.id;
+    });
+    return idx;
+  }
+
+  async function previewSupplierUpsert(names) {
+    const idx = await supplierIndex();
+    const seen = {};
+    let create = 0, skip = 0;
+    (names || []).forEach(n => {
+      const k = supKey(n);
+      if (!k) { skip++; return; }
+      if (idx[k] || seen[k]) { skip++; return; }
+      seen[k] = 1; create++;
+    });
+    return { create, skip, total: (names || []).length };
+  }
+
+  async function bulkUpsertSuppliers(names, onProgress) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const idx = await supplierIndex();
+    const list = [], seen = {};
+    (names || []).forEach(n => {
+      const k = supKey(n);
+      if (!k || idx[k] || seen[k]) return;         // rỗng / đã có / trùng trong file
+      seen[k] = 1; list.push(String(n).replace(/\s+/g, " ").trim());
+    });
+    const rep = { created: 0, skipped: (names || []).length - list.length, failed: 0, errors: [] };
+    let done = 0;
+    const BATCH = 4;
+    async function one(name) {
+      try {
+        const it = await FISG_GRAPH.createItem("Suppliers", { Title: name });
+        idx[supKey(name)] = it.id;
+        rep.created++;
+      } catch (e) {
+        rep.failed++; rep.errors.push(name + ": " + (e.message || e));
+      } finally {
+        done++; if (onProgress) try { onProgress(done, list.length); } catch (e) {}
+      }
+    }
+    for (let i = 0; i < list.length; i += BATCH)
+      await Promise.all(list.slice(i, i + BATCH).map(one));
+    return rep;
+  }
+
   /* Đếm trước khi ghi (dry-run): bao nhiêu update / create / skip. */
   async function previewCustomerUpsert(rows) {
     const { idx } = await customerIndex();
@@ -1467,6 +1524,7 @@
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
+                        bulkUpsertSuppliers, previewSupplierUpsert,
                         loadReports, sendReportToSP, addReportComment,
                         createActivity, updateActivity, deleteActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,

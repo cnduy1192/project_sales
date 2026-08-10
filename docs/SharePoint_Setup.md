@@ -269,6 +269,24 @@ Lần chạy đầu: 18 khớp chắc + 82 khớp mờ = 100/293 tự gán; 193 
 ý). Còn lại điền tay từ hiểu biết nội bộ — không thuật toán nào suy được "Vinut"
 là pháp nhân nào nếu tên đó không xuất hiện.
 
+### Nhập nhà cung cấp (Super Admin)
+
+Đăng nhập tài khoản **Super Admin** → **Người dùng & phân quyền** → cuối trang có
+**Nhập nhà cung cấp từ Excel**:
+
+1. Chọn file một cột tên NCC (nhận cột `Title`/`Supplier`/`Nhà cung cấp`, hoặc
+   cột đầu tiên).
+2. **Xem trước** — báo bao nhiêu tạo mới, bao nhiêu đã có (bỏ qua).
+3. **Cập nhật lên SharePoint** — tạo dòng cho tên mới.
+
+Chỉ thêm TÊN vào list `Suppliers` (cột `Title`). Đối chiếu theo tên chuẩn hoá nên
+"IFF" và " iff " coi là một, không tạo trùng. Chạy lại nhiều lần vẫn an toàn.
+
+Lưu ý: thêm vào list Suppliers giúp dự án/hoạt động tham chiếu đúng tên NCC, chứ
+CHƯA tạo thêm tab NCC hay pipeline riêng (giữ 3 NCC chính: Roquette, IFF,
+Kimica). Muốn một NCC mới thành tab có quy trình riêng là bước khác — báo tôi nếu
+cần.
+
 ### Nhập / cập nhật hàng loạt NGAY TRONG APP (khỏi thao tác Excel thủ công)
 
 Đăng nhập bằng tài khoản admin → **Người dùng & phân quyền** → cuối trang có

@@ -289,6 +289,11 @@
     "Chưa có dự án nào.": "No projects yet.", "Chưa có hoạt động nào.": "No activity yet.",
     "Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.":
       "You can only view this customer. Only the owner or an admin can edit.",
+    "Nhập nhà cung cấp từ Excel": "Import suppliers from Excel",
+    "File một cột tên NCC. App tự đối chiếu list Suppliers: tên mới thì tạo, tên đã có thì bỏ qua. Chạy lại vẫn an toàn.":
+      "A one-column file of supplier names. The app matches against the Suppliers list: new names are created, existing ones skipped. Safe to re-run.",
+    "Cột nhận diện: Title / Supplier / Nhà cung cấp (hoặc cột đầu tiên).":
+      "Recognised column: Title / Supplier (or the first column).",
     "Nhập / cập nhật khách hàng từ Excel": "Import / update customers from Excel",
     "Chọn file Excel…": "Choose an Excel file…",
     "Xem trước": "Preview", "Cập nhật lên SharePoint": "Update to SharePoint",
