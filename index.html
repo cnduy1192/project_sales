@@ -448,29 +448,28 @@
       <div class="field">
         <label for="u-name">Tên đầy đủ (O365)</label>
         <input id="u-name" placeholder="Tự điền sau khi tra O365">
-        <div class="u-hint">Tên này sẽ hiện khắp phần mềm.</div>
       </div>
       <div class="field">
         <label for="u-pic">Tên PIC như trong dữ liệu</label>
         <input id="u-pic" placeholder="Ngoc, Bich Ngoc">
-        <div class="u-hint">Chỉ điền khi cột PIC trong list Projects ghi tên tắt.
-          <b>Một người có nhiều tên thì ngăn bằng dấu phẩy</b> — ví dụ <b>Ngoc, Bich Ngoc</b>
-          đều sẽ hiện thành tên đầy đủ ở mọi màn hình.</div>
       </div>
       <div class="field">
         <label for="u-role">Vai trò <span class="req">*</span></label>
         <select id="u-role" onchange="admRoleHint()"></select>
-        <div class="u-hint" id="u-roleHint"></div>
       </div>
       <div class="field" id="u-reportsF">
         <label for="u-reports">Báo cáo cho</label>
         <select id="u-reports"></select>
-        <div class="u-hint">Line báo cáo: gửi báo cáo tuần tới người này. Để trống = gửi tất cả quản lý.</div>
       </div>
       <div class="field" id="u-supportsF" style="display:none">
         <label>Hỗ trợ các sales</label>
-        <div class="u-chips" id="u-supports"></div>
-        <div class="u-hint">Sale Support thấy và sửa được dữ liệu của những sales này (không xoá). Một người hỗ trợ được nhiều sales.</div>
+        <div class="u-splist-wrap">
+          <div class="u-splist-search">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="u-spsearch" placeholder="Tìm sales…" oninput="admFilterSupports(this.value)" autocomplete="off">
+          </div>
+          <div class="u-splist" id="u-supports"></div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">

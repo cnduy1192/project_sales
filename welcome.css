@@ -353,14 +353,26 @@
 .att-status.ci-ok,.att-status.ok{color:var(--won,#157F3C)}
 .att-status.ci-err,.att-status.err{color:var(--overdue,#DC2626)}
 
-/* Ô chọn sales cho Sale Support (list Người dùng) */
-.u-chips{display:flex;flex-wrap:wrap;gap:7px;max-height:150px;overflow:auto;padding:2px}
-.u-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;
-  font-size:12px;font-weight:600;color:var(--text-2);background:var(--surface);
-  border:1px solid var(--line);cursor:pointer;transition:all .12s}
-.u-chip input{margin:0;accent-color:var(--marine)}
-.u-chip:hover{border-color:var(--marine-line)}
-.u-chip.on{background:var(--marine-soft);border-color:var(--marine-line);color:var(--marine)}
+/* Ô chọn sales cho Sale Support — danh sách dọc, tick bên phải */
+.u-splist-wrap{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.u-splist-search{display:flex;align-items:center;gap:8px;padding:0 12px;height:38px;
+  border-bottom:1px solid var(--line-2)}
+.u-splist-search svg{color:var(--text-3);flex:none}
+.u-splist-search input{flex:1;border:none;outline:none;background:none;font-size:13px;color:var(--text)}
+.u-splist{max-height:220px;overflow:auto}
+.u-sprow{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;
+  border-top:1px solid var(--line-2);transition:background .12s;user-select:none}
+.u-sprow:first-child{border-top:none}
+.u-sprow input{position:absolute;opacity:0;width:0;height:0}
+.u-sprow:hover{background:var(--pearl-2)}
+.u-spname{flex:1;font-size:13px;font-weight:500;color:var(--marine-ink);min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-spcheck{flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;border:1.5px solid var(--line);color:transparent;transition:all .13s}
+.u-sprow.on{background:var(--marine-soft)}
+.u-sprow.on .u-spname{color:var(--marine);font-weight:600}
+.u-sprow.on .u-spcheck{background:var(--marine);border-color:var(--marine);color:#fff}
+.u-spempty{padding:16px 14px;font-size:12.5px;color:var(--text-3);font-style:italic}
 
 /* Khoá tạo hoạt động khi khách do người khác quản lý */
 .a-gate{grid-column:1/-1;padding:11px 14px;border-radius:9px;background:#FEF9C3;

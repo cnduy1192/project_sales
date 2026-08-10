@@ -179,6 +179,7 @@ function openUserForm(idx){
       leads.map(l => `<option value="${admEsc(l.pic||l.name)}"${u && sameName(u.reportsTo, l.pic||l.name)?' selected':''}>${admEsc(l.name||l.pic)}</option>`).join('');
   }
   /* Ô chọn sales để hỗ trợ (chỉ hiện với Sale Support). */
+  const sq = document.getElementById('u-spsearch'); if(sq) sq.value = '';
   admBuildSupports(u ? (u.supports||[]) : []);
 
   admRoleHint();
@@ -196,9 +197,17 @@ function admBuildSupports(picked){
   (typeof LISTS!=='undefined'?LISTS.pics:[]).forEach(n => { if(n && !set[picKey(n)]){ set[picKey(n)]=1; names.push(n); } });
   names.sort((a,b)=>a.localeCompare(b,'vi'));
   const on = {}; (picked||[]).forEach(p => on[picKey(p)] = 1);
-  box.innerHTML = names.map(n =>
-    `<label class="u-chip${on[picKey(n)]?' on':''}"><input type="checkbox" value="${admEsc(n)}"${on[picKey(n)]?' checked':''} onchange="this.parentElement.classList.toggle('on',this.checked)">${admEsc(n)}</label>`
-  ).join('') || '<span class="u-hint">Chưa có sales nào trong dữ liệu.</span>';
+  /* Danh sách dọc: tên bên trái, dấu tick bên phải — cả dòng bấm được. */
+  box.innerHTML = names.map(n => {
+    const sel = !!on[picKey(n)];
+    return `<label class="u-sprow${sel?' on':''}" data-name="${admEsc(n)}">
+      <input type="checkbox" value="${admEsc(n)}"${sel?' checked':''}
+             onchange="this.closest('.u-sprow').classList.toggle('on',this.checked)">
+      <span class="u-spname">${admEsc(n)}</span>
+      <span class="u-spcheck" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      </span></label>`;
+  }).join('') || '<div class="u-spempty">Chưa có sales nào trong dữ liệu.</div>';
 }
 window.openUserForm = openUserForm;
 
@@ -208,14 +217,20 @@ function closeUserForm(){
 window.closeUserForm = closeUserForm;
 
 function admRoleHint(){
-  const r = document.getElementById('u-role').value;
-  const hit = ROLES.filter(function(x){ return x.id === r; })[0];
-  document.getElementById('u-roleHint').textContent = hit ? hit.hint : '';
   /* Ô "Hỗ trợ sales" chỉ có nghĩa với Sale Support. */
+  const r = document.getElementById('u-role').value;
   const sf = document.getElementById('u-supportsF');
   if(sf) sf.style.display = (r === 'salesupport') ? '' : 'none';
 }
 window.admRoleHint = admRoleHint;
+/* Lọc danh sách sales theo ô tìm, giữ trạng thái tick. */
+function admFilterSupports(q){
+  const s = (q||'').trim().toLowerCase();
+  document.querySelectorAll('#u-supports .u-sprow').forEach(function(row){
+    row.style.display = (!s || row.dataset.name.toLowerCase().indexOf(s) >= 0) ? '' : 'none';
+  });
+}
+window.admFilterSupports = admFilterSupports;
 
 /* Tra O365 theo email. Tên hiển thị lấy về CHÍNH LÀ giá trị mà cột PIC (kiểu
    Person) trong list Projects trả về — nên điền thẳng vào PICName là khớp. */

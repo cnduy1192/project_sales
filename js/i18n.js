@@ -283,6 +283,7 @@
     "Trả lời quản lý…": "Reply to manager…", "Nhập nội dung phản hồi.": "Enter a reply.",
     // Phân quyền: line báo cáo + Sale Support
     "Báo cáo cho": "Reports to", "Hỗ trợ các sales": "Supports sales",
+    "Tìm sales…": "Search sales…",
     "— Tất cả quản lý —": "— All managers —",
     "Chưa có sales nào trong dữ liệu.": "No sales in the data yet.",
     "Line báo cáo: gửi báo cáo tuần tới người này. Để trống = gửi tất cả quản lý.":
