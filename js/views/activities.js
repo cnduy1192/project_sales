@@ -107,8 +107,8 @@ function openActForm(prefill, origin){
   });
   const dc = document.getElementById('dl-cust-all');
   if(dc) dc.innerHTML = custList.slice(0,2000).map(n=>`<option value="${esc4(n)}"></option>`).join('');
-  /* Nhà cung cấp: danh sách đầy đủ các NCC + lựa chọn "Khác" cho hoạt động chung. */
-  const nccOpts = NCCS.concat(NCCS.indexOf(OTHER_NCC) < 0 ? [OTHER_NCC] : []);
+  /* Nhà cung cấp: ĐỦ danh sách từ list Suppliers + lựa chọn "Khác" cho hoạt động chung. */
+  const nccOpts = supplierOptions().concat(OTHER_NCC);
   document.getElementById('a-ncc').innerHTML =
     nccOpts.map(n=>`<option${n===ncc?' selected':''}>${esc4(n)}</option>`).join('');
   document.getElementById('a-date').value = p.date || isoOf(TODAY);

@@ -75,6 +75,27 @@ function activeStages(){
   if(isAllNcc()) return stageGroups();
   return (nccFilter && PIPELINES[nccFilter]) || PIPELINES[NCCS[0]] || [];
 }
+/* Danh sách NCC đầy đủ cho các Ô CHỌN: gộp NCC chính (NCCS) + mọi nhà cung cấp
+   đọc từ list Suppliers trên SharePoint. NCC chính giữ đầu danh sách; phần còn
+   lại (Griffith, Lasenor, các công ty Others…) xếp abc. */
+function supplierOptions(){
+  var out = [], seen = {};
+  function add(n){ var k = String(n == null ? '' : n).trim(); if(!k) return;
+    var u = k.toUpperCase(); if(!seen[u]){ seen[u] = 1; out.push(k); } }
+  (NCCS || []).forEach(add);
+  var mainCount = out.length;
+  (typeof SUPPLIERS !== 'undefined' ? SUPPLIERS : []).forEach(add);
+  var rest = out.slice(mainCount).sort(function(a,b){ return a.localeCompare(b,'vi'); });
+  return out.slice(0, mainCount).concat(rest);
+}
+/* NCC mới (từ list Suppliers) chưa có quy trình riêng vẫn tạo được dự án nhờ
+   funnel mặc định — giống quy trình chuẩn của IFF. */
+var DEFAULT_PIPELINE = ['LEAD','SAMPLE SENT','TESTING','TEST PASSED','QUOTED / PO'];
+function pipelineOf(ncc){
+  return (ncc && PIPELINES[ncc] && PIPELINES[ncc].length) ? PIPELINES[ncc] : DEFAULT_PIPELINE;
+}
+window.supplierOptions = supplierOptions; window.pipelineOf = pipelineOf;
+
 /* So một dự án với một ô trên trục giai đoạn — theo nhóm khi đang xem Tất cả. */
 function atStage(r, s){
   if(!s) return true;

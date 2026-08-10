@@ -116,6 +116,11 @@ window.resetCatalog = resetCatalog;
 var RECORDS = [];
 var ACTIVITIES = [];
 
+/* Toàn bộ nhà cung cấp đọc từ list Suppliers trên SharePoint — dùng cho các Ô
+   CHỌN NCC (form dự án, ghi hoạt động, chia sẻ). Khác NCCS: NCCS là các NCC
+   chính có tab + quy trình riêng, còn đây là TẤT CẢ để chọn khi tạo dữ liệu. */
+var SUPPLIERS = [];
+
 /* Danh bạ khách hàng đọc từ list Customers: mỗi phần tử {name, owner, legal,
    spId}. Kèm hai bảng tra theo custOwnerKey để phân quyền và hiển thị tra nhanh.
    store.js đổ đầy sau khi đăng nhập; giữ THAM CHIẾU nên chỉ sửa tại chỗ. */

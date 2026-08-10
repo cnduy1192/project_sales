@@ -8,10 +8,11 @@ function buildForm(){
   dl('dl-cust',LISTS.customers); dl('dl-prod',LISTS.products); dl('dl-app',LISTS.applications);
   /* Form ghi dữ liệu nên không có "Tất cả": lấy NCC đang xem, hoặc NCC đầu. */
   const fn=formNcc();
-  document.getElementById('f-ncc').innerHTML=NCCS.map(n=>`<option${n===fn?' selected':''}>${n}</option>`).join('');
+  /* Ô chọn NCC lấy ĐỦ nhà cung cấp từ list Suppliers, không chỉ 3 NCC chính. */
+  document.getElementById('f-ncc').innerHTML=supplierOptions().map(n=>`<option${n===fn?' selected':''}>${n}</option>`).join('');
   document.getElementById('f-grp').innerHTML=SEG_GROUPS.map(g=>`<option>${g}</option>`).join('');
   onFormGroup();
-  document.getElementById('f-stage').innerHTML=(PIPELINES[fn]||[]).map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('f-stage').innerHTML=pipelineOf(fn).map(s=>`<option>${s}</option>`).join('');
   rebuildRel(); syncProb();
   document.getElementById('f-created').value=isoOf(TODAY);
 }
@@ -35,7 +36,7 @@ function onFormGroup(){
 }
 function onFormNcc(){
   const n=document.getElementById('f-ncc').value;
-  document.getElementById('f-stage').innerHTML=(PIPELINES[n]||[]).map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('f-stage').innerHTML=pipelineOf(n).map(s=>`<option>${s}</option>`).join('');
   syncProb();
 }
 function openForm(origin){
@@ -120,7 +121,7 @@ function openDetail(id, origin){
   document.getElementById('d-prod').value=curRec.product;
   document.getElementById('d-app').value=curRec.application;
   document.getElementById('d-type').value=curRec.boptype||'';
-  document.getElementById('d-stage').innerHTML=(PIPELINES[curRec.ncc]||[]).map(s=>`<option${s===curRec.stage?' selected':''}>${s}</option>`).join('');
+  document.getElementById('d-stage').innerHTML=pipelineOf(curRec.ncc).map(s=>`<option${s===curRec.stage?' selected':''}>${s}</option>`).join('');
   probOptions('d-prob',probPct(curRec));
   document.getElementById('d-closing').value=curRec.closing||'';
   document.getElementById('d-kg1').value=curRec.kgThis;

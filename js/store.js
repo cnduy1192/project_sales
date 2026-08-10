@@ -1314,6 +1314,12 @@
       // tên internal thật (đề phòng cột bị mã hoá) -> dùng cho lookupVal
       const nameOf = (getter, f, key) => key;   // cột đang đúng tên Anh; getter dùng cho field thường
 
+      /* Toàn bộ nhà cung cấp từ list Suppliers -> SUPPLIERS, cho các ô chọn NCC
+         trong form. "Kimica-Navido" hiển thị "Kimica" cho khớp phần còn lại. */
+      SUPPLIERS.length = 0;
+      Array.from(new Set(Object.values(supMap).map(t => txt(t).trim()).filter(Boolean)))
+        .forEach(t => SUPPLIERS.push(t === "Kimica-Navido" ? "Kimica" : t));
+
       // gom ProjectUpdates theo dự án -> tab "Trao đổi"
       const gu = ups && ups.length ? makeGetter("ProjectUpdates", await FISG_GRAPH.columns("ProjectUpdates").catch(() => ({}))) : null;
       const upsBy = {};

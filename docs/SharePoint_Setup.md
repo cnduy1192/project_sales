@@ -282,10 +282,15 @@ là pháp nhân nào nếu tên đó không xuất hiện.
 Chỉ thêm TÊN vào list `Suppliers` (cột `Title`). Đối chiếu theo tên chuẩn hoá nên
 "IFF" và " iff " coi là một, không tạo trùng. Chạy lại nhiều lần vẫn an toàn.
 
-Lưu ý: thêm vào list Suppliers giúp dự án/hoạt động tham chiếu đúng tên NCC, chứ
-CHƯA tạo thêm tab NCC hay pipeline riêng (giữ 3 NCC chính: Roquette, IFF,
-Kimica). Muốn một NCC mới thành tab có quy trình riêng là bước khác — báo tôi nếu
-cần.
+Sau khi nhập, mọi ô CHỌN nhà cung cấp trong app (form thêm dự án, ghi hoạt động,
+link chia sẻ) tự lấy ĐỦ danh sách từ list Suppliers — NCC chính đứng đầu, các NCC
+mới xếp abc phía sau. NCC mới chưa có quy trình riêng dùng funnel mặc định
+(LEAD → SAMPLE SENT → TESTING → TEST PASSED → QUOTED / PO) để vẫn tạo được dự án
+và chọn giai đoạn.
+
+Tab NCC ở đầu trang vẫn giữ các NCC chính (Roquette, IFF, Kimica) + NCC nào đã có
+dự án — không loãng thành hàng chục tab. Một NCC mới sẽ tự thành tab ngay khi có
+dự án đầu tiên gắn vào nó.
 
 ### Nhập / cập nhật hàng loạt NGAY TRONG APP (khỏi thao tác Excel thủ công)
 

@@ -380,6 +380,31 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(st.indexOf('Thử mẫu')>=0)throw new Error('form nhận nhóm giai đoạn thay vì giai đoạn thật');
     E("setNcc(NCCS[0])");
   });
+  step('ô chọn NCC lấy đủ nhà cung cấp từ list Suppliers',()=>{
+    E("SUPPLIERS.length=0; ['Griffith','Lasenor','Kancor'].forEach(function(s){SUPPLIERS.push(s)});");
+    const opts=E('JSON.stringify(supplierOptions())');
+    if(!/Griffith/.test(opts)||!/Lasenor/.test(opts))throw new Error('thiếu NCC mới: '+opts);
+    if(!/Roquette/.test(opts))throw new Error('mất NCC chính');
+    /* NCC chính đứng trước, NCC mới xếp abc sau */
+    const arr=JSON.parse(opts);
+    if(arr.indexOf('Roquette')>=arr.indexOf('Griffith'))throw new Error('NCC chính phải đứng trước NCC mới');
+    E('buildForm()');
+    const fncc=[...d.getElementById('f-ncc').options].map(o=>o.value);
+    if(fncc.indexOf('Griffith')<0)throw new Error('form thêm dự án thiếu Griffith');
+    E("openActForm()");
+    const anc=[...d.getElementById('a-ncc').options].map(o=>o.value);
+    if(anc.indexOf('Kancor')<0)throw new Error('form ghi hoạt động thiếu Kancor');
+    if(anc.indexOf('Khác')<0)throw new Error('mất tuỳ chọn Khác');
+    E('closeActForm()');
+  });
+  step('NCC mới chưa có pipeline dùng funnel mặc định',()=>{
+    const st=E('JSON.stringify(pipelineOf("Griffith"))');
+    if(!/LEAD/.test(st)||!/QUOTED/.test(st))throw new Error('funnel mặc định sai: '+st);
+    /* NCC chính vẫn dùng pipeline riêng */
+    const roq=E('JSON.stringify(pipelineOf("Roquette"))');
+    if(!/SOLUTION TESTING/.test(roq))throw new Error('NCC chính mất pipeline riêng');
+    E("SUPPLIERS.length=0;");
+  });
 
   // ---- cột Hoạt động gần nhất ----
   step('Hoạt động gần nhất phân biệt chưa có / đã đặt lịch / im lặng lâu',()=>{

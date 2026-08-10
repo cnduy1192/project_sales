@@ -212,7 +212,9 @@
     body.innerHTML = '<div class="share-loading">Đang chuẩn bị…</div>';
 
     const key = await genKey();
-    const nccs = (typeof NCCS !== "undefined" ? NCCS : []).slice();
+    /* Đủ nhà cung cấp từ list Suppliers để chia sẻ được cả NCC mới. */
+    const nccs = (typeof supplierOptions === "function")
+      ? supplierOptions() : (typeof NCCS !== "undefined" ? NCCS : []).slice();
     /* Link chia sẻ luôn theo một NCC cụ thể — "Tất cả" không phải phạm vi hợp lệ. */
     const cur = (typeof formNcc === "function" && formNcc())
       || (typeof nccFilter !== "undefined" && nccFilter) || nccs[0] || "";
