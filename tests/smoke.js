@@ -457,6 +457,10 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
               Content:'Content', StatsJson:'StatsJson', Recipients:'Recipients' },
     ReportComments:{ Title:'Title', ReportCode:'ReportCode', PICName:'PICName',
                      AuthorRole:'AuthorRole', CommentDate:'CommentDate', Content:'Content' },
+    Attachments:{ Title:'Title', ParentType:'ParentType', ParentId:'ParentId',
+                  FileName:'FileName', FileType:'FileType', Size:'Size', WebUrl:'WebUrl',
+                  DriveItemId:'DriveItemId', FolderPath:'FolderPath', PICName:'PICName',
+                  UploadDate:'UploadDate' },
     Products:{ Title:'Title' }, Suppliers:{ Title:'Title' },
   };
   const ITEMS = { Customers:[{id:'11',fields:{Title:'A'}}], Products:[{id:'21',fields:{Title:'X'}}],
@@ -477,6 +481,12 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     },
     updateItem: async (l,id,f) => { SP.updated.push({ list:l, id, fields:f }); return null; },
     deleteItem: async (l,id) => { if(ITEMS[l]) ITEMS[l]=ITEMS[l].filter(x=>String(x.id)!==String(id)); SP.deleted = (SP.deleted||[]).concat([{list:l,id:id}]); return null; },
+    /* Drive giả cho tệp đính kèm. */
+    cleanSeg: s => String(s==null?'':s).replace(/[\\/:*?"<>|#%]+/g,' ').replace(/\s+/g,' ').trim()||'_',
+    ensureFolder: async p => { SP.folders=(SP.folders||[]).concat([p]); return 'F-'+(SP.folders.length); },
+    uploadFile: async (folder,name,blob) => { SP.uploads=(SP.uploads||[]).concat([{folder:folder,name:name,size:blob&&blob.size}]);
+      const id='D-'+((SP.uploads||[]).length); return { id:id, name:name, webUrl:'https://sp/'+id, size:blob&&blob.size }; },
+    deleteDriveItem: async id => { SP.driveDeleted=(SP.driveDeleted||[]).concat([id]); return null; },
   };
   const wait = () => new Promise(r => setTimeout(r, 80));
   const madeIn = l => SP.created.filter(x => x.list === l);
@@ -925,6 +935,51 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     E(`loginAs(${ix('duy@f.vn')})`);
     if(!E("rpCanComment(REPORTS.find(function(r){return r.id==='R-200'}))"))
       throw new Error('quản lý phải phản hồi được mọi báo cáo');
+  });
+
+  // ---- TỆP ĐÍNH KÈM ----
+  const fakeFile=(name,size)=>({ name:name, size:size, slice:()=>({}) });
+  E(`loginAs(${ix('duy@f.vn')})`);
+  await astep('đính kèm hoạt động: đúng thư mục PIC/ngày/khách và metadata',async()=>{
+    ITEMS.Attachments=[]; SP.uploads=[]; SP.folders=[]; SP.created.length=0;
+    w.__f = fakeFile('bao-gia.pdf', 200000);
+    const sp=await E("FISG_STORE.uploadAttachment('activity','A-701',{pic:'Vo Tan Cuong',date:'2026-08-05',customer:'CJ Foods'}, window.__f)");
+    if(!(SP.folders||[]).some(p=>/FISG_Attachments\/Vo Tan Cuong\/2026-08-05\/CJ Foods/.test(p)))
+      throw new Error('thư mục sai: '+JSON.stringify(SP.folders));
+    const c=SP.created.filter(x=>x.list==='Attachments');
+    if(!c.length)throw new Error('không tạo dòng Attachments');
+    if(c[0].fields.ParentType!=='activity'||c[0].fields.ParentId!=='A-701')throw new Error('parent sai: '+JSON.stringify(c[0].fields));
+    if(c[0].fields.FileType!=='pdf')throw new Error('định dạng sai');
+    if(!/^https:\/\/sp\//.test(c[0].fields.WebUrl||''))throw new Error('thiếu link');
+    if(!/-\d{6}\.pdf$/.test(c[0].fields.FileName||''))throw new Error('tên tệp chưa thêm giờ: '+c[0].fields.FileName);
+    if(E("FISG_STORE.attachmentsOf('activity','A-701').length")!==1)throw new Error('attachmentsOf sai');
+  });
+  await astep('đính kèm báo cáo vào folder "Báo cáo"',async()=>{
+    SP.folders=[];
+    w.__f2=fakeFile('tong-hop.xlsx', 100000);
+    await E("FISG_STORE.uploadAttachment('report','R-100',{pic:'Phạm Bích Ngọc',date:'2026-08-05'}, window.__f2)");
+    if(!(SP.folders||[]).some(p=>/FISG_Attachments\/Ph.*\/2026-08-05\/Báo cáo/.test(p)))
+      throw new Error('folder báo cáo sai: '+JSON.stringify(SP.folders));
+    if(E("FISG_STORE.attachmentsOf('report','R-100').length")!==1)throw new Error('không gắn vào báo cáo');
+  });
+  await astep('chặn file quá 15MB và sai định dạng, KHÔNG tải lên',async()=>{
+    if(!E("FISG_STORE.attValidate({name:'a.exe',size:1000})"))throw new Error('không chặn .exe');
+    if(!E("FISG_STORE.attValidate({name:'a.pdf',size:20*1024*1024})"))throw new Error('không chặn >15MB');
+    if(E("FISG_STORE.attValidate({name:'a.pdf',size:1000})"))throw new Error('chặn nhầm file hợp lệ');
+    SP.uploads=[]; let threw=false;
+    try{ w.__big=fakeFile('big.pdf',20*1024*1024); await E("FISG_STORE.uploadAttachment('activity','A-701',{pic:'x'},window.__big)"); }
+    catch(e){ threw=true; }
+    if(!threw)throw new Error('phải ném lỗi khi file quá lớn');
+    if((SP.uploads||[]).length)throw new Error('vẫn tải file quá lớn lên');
+  });
+  await astep('xoá đính kèm gỡ cả file Drive lẫn dòng list',async()=>{
+    SP.driveDeleted=[]; SP.deleted=(SP.deleted||[]); SP.deleted.length=0;
+    const att=E("JSON.stringify(FISG_STORE.attachmentsOf('activity','A-701')[0])");
+    const a=JSON.parse(att);
+    await E("FISG_STORE.deleteAttachment("+att+")");
+    if(!(SP.driveDeleted||[]).length)throw new Error('không xoá file trên Drive');
+    if(!(SP.deleted||[]).some(x=>x.list==='Attachments'))throw new Error('không xoá dòng list');
+    if(E("FISG_STORE.attachmentsOf('activity','A-701').length")!==0)throw new Error('còn trong bộ nhớ');
   });
 
   await astep('hoạt động đã lên SharePoint không hiện thành hai dòng',async()=>{

@@ -51,6 +51,14 @@
       ReportCode: "Mã báo cáo", PICName: "Người viết", AuthorRole: "Vai trò",
       CommentDate: "Ngày", Content: "Nội dung",
     },
+    /* Attachments: tệp đính kèm cho hoạt động / báo cáo. File thật trong Document
+       Library; list này giữ metadata + liên kết. */
+    Attachments: {
+      ParentType: "Loại", ParentId: "Mã tham chiếu", FileName: "Tên tệp",
+      FileType: "Định dạng", Size: "Kích thước", WebUrl: "Đường dẫn",
+      DriveItemId: "DriveItemId", FolderPath: "Thư mục",
+      PICName: "Người tải", UploadDate: "Ngày tải",
+    },
   };
 
   // tạo hàm lấy field theo tên logic, tự khớp internal name thật
@@ -966,6 +974,128 @@
     return true;
   }
 
+  /* ==================== TỆP ĐÍNH KÈM ====================
+     File thật nằm trong Document Library theo cây thư mục cố định; list
+     Attachments giữ metadata để liệt kê đúng theo hoạt động/báo cáo và xoá đúng
+     file. Không có scope mới — Sites.ReadWrite.All đủ. */
+  const ATT_MAX = 15 * 1024 * 1024;                       // 15MB
+  const ATT_ROOT = "FISG_Attachments";                    // folder tổng
+  const ATT_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+                   "jpg", "jpeg", "png", "zip"];
+  function attExt(name) { const m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toLowerCase() : ""; }
+  function attKey(t, id) { return String(t) + ":" + String(id); }
+
+  async function loadAttachments() {
+    if (!canWrite()) return 0;
+    let items = [], g;
+    try {
+      const [cols, its] = await Promise.all([
+        FISG_GRAPH.columns("Attachments"), FISG_GRAPH.listItems("Attachments"),
+      ]);
+      g = makeGetter("Attachments", cols);
+      items = its || [];
+    } catch (e) {
+      console.warn("[store] không đọc được list Attachments:", e.message || e);
+      ATTACHMENTS.length = 0;
+      return 0;
+    }
+    ATTACHMENTS.length = 0;
+    items.forEach(it => {
+      const f = it.fields || {};
+      ATTACHMENTS.push({
+        id: txt(f.Title), spId: it.id,
+        parentType: txtOf(g, f, "ParentType"),
+        parentId: txtOf(g, f, "ParentId"),
+        fileName: txtOf(g, f, "FileName") || txt(f.Title),
+        fileType: txtOf(g, f, "FileType"),
+        size: Number(txtOf(g, f, "Size")) || 0,
+        webUrl: txtOf(g, f, "WebUrl"),
+        driveItemId: txtOf(g, f, "DriveItemId"),
+        folderPath: txtOf(g, f, "FolderPath"),
+        by: txt(f.PICName) || txtOf(g, f, "PICName"),
+        at: (txtOf(g, f, "UploadDate") || "").slice(0, 10),
+      });
+    });
+    return ATTACHMENTS.length;
+  }
+
+  function attachmentsOf(type, id) {
+    const k = attKey(type, id);
+    return ATTACHMENTS.filter(a => attKey(a.parentType, a.parentId) === k)
+      .sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  }
+
+  /* Kiểm tra file trước khi tải — trả về chuỗi lỗi hoặc "" nếu hợp lệ. */
+  function attValidate(file) {
+    if (!file) return "chưa chọn tệp";
+    if (file.size > ATT_MAX) return "tệp quá 15MB (" + Math.round(file.size / 1048576) + "MB)";
+    if (ATT_EXT.indexOf(attExt(file.name)) < 0)
+      return "định dạng không hỗ trợ (chỉ pdf, word, excel, powerpoint, ảnh, zip)";
+    return "";
+  }
+
+  /* Tải một tệp lên và ghi metadata.
+       ctx = { pic, date, customer }  (customer rỗng cho báo cáo → folder "Báo cáo") */
+  async function uploadAttachment(parentType, parentId, ctx, file) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const bad = attValidate(file);
+    if (bad) throw new Error(bad);
+
+    const pic = FISG_GRAPH.cleanSeg((ctx && ctx.pic) || "Chung");
+    const day = String((ctx && ctx.date) || todayISO()).slice(0, 10);
+    const leaf = parentType === "report" ? "Báo cáo"
+      : FISG_GRAPH.cleanSeg((ctx && ctx.customer) || "Khách hàng");
+    const folderPath = [ATT_ROOT, pic, day, leaf].join("/");
+
+    /* tên tệp thêm giờ để không đè nhau */
+    const ext = attExt(file.name);
+    const base = String(file.name).replace(/\.[a-z0-9]+$/i, "");
+    const stamped = base + "-" + new Date().toTimeString().slice(0, 8).replace(/:/g, "") + (ext ? "." + ext : "");
+
+    await FISG_GRAPH.ensureFolder(folderPath);
+    const item = await FISG_GRAPH.uploadFile(folderPath, stamped, file);
+
+    const get = await schemaOf("Attachments");
+    const f = { Title: item.name || stamped };
+    const miss = [];
+    const set = (k, v) => { if (v != null && v !== "" && !put(f, get, k, v)) miss.push(k); };
+    set("ParentType", parentType);
+    set("ParentId", String(parentId));
+    set("FileName", item.name || stamped);
+    set("FileType", ext);
+    set("Size", file.size);
+    set("WebUrl", item.webUrl || "");
+    set("DriveItemId", item.id || "");
+    set("FolderPath", folderPath);
+    f.PICName = (typeof me !== "undefined" && me && (me.pic || me.name)) || "";
+    set("UploadDate", spDate(todayISO()));
+    warnMissing("Attachments", miss);
+
+    let spId = null;
+    try {
+      const created = await FISG_GRAPH.createItem("Attachments", f);
+      spId = created.id;
+    } catch (e) {
+      /* Ghi metadata hỏng thì gỡ luôn file vừa tải để không rác kho. */
+      if (item.id) try { await FISG_GRAPH.deleteDriveItem(item.id); } catch (x) {}
+      throw e;
+    }
+    await loadAttachments();
+    return spId;
+  }
+
+  async function deleteAttachment(att) {
+    if (!canWrite() || !att) return false;
+    if (att.driveItemId) {
+      try { await FISG_GRAPH.deleteDriveItem(att.driveItemId); }
+      catch (e) { console.warn("[store] không xoá được file trên Drive:", e.message || e); }
+    }
+    if (att.spId) await FISG_GRAPH.deleteItem("Attachments", att.spId);
+    const i = ATTACHMENTS.findIndex(a => a.spId === att.spId);
+    if (i >= 0) ATTACHMENTS.splice(i, 1);
+    return true;
+  }
+
   /* Tạo mới HOẶC sửa một khách hàng trong danh bạ. row:
        { spId?, title, legal, owner, segment, region, status }
      spId rỗng → tạo mới; có spId → cập nhật đúng dòng đó.
@@ -1411,6 +1541,7 @@
       /* Báo cáo + phản hồi: đọc để chuông thông báo và mục Báo cáo có dữ liệu
          ngay khi đăng nhập. Hỏng thì bỏ qua, không chặn phần còn lại. */
       try { await loadReports(); } catch (e) { console.warn("[store] loadReports", e); }
+      try { await loadAttachments(); } catch (e) { console.warn("[store] loadAttachments", e); }
 
       // Việc sales tự nhập lúc offline phải được nối lại sau khi thay mảng.
       if (window.LS && LS.mergeActs) LS.mergeActs();
@@ -1532,6 +1663,7 @@
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
                         bulkUpsertSuppliers, previewSupplierUpsert,
                         loadReports, sendReportToSP, addReportComment,
+                        loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,
                         createActivity, updateActivity, deleteActivity, setActivityDone,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,

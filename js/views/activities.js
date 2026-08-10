@@ -134,6 +134,21 @@ function openActForm(prefill, origin){
     saveBtn.style.display = editable ? 'inline-flex' : 'none'; }
   const delBtn=document.getElementById('a-del');
   if(delBtn) delBtn.style.display = (editing && editable) ? 'inline-flex' : 'none';
+  /* Tệp đính kèm: chỉ với hoạt động ĐÃ LƯU (có spId trên SharePoint). Hoạt động
+     mới phải bấm Lưu trước — file cần một bản ghi để gắn vào. */
+  const abox=document.getElementById('a-attach');
+  if(abox){
+    const cur = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
+    if(cur && cur.spId && window.FISG_ATTACH){
+      abox.style.display='';
+      FISG_ATTACH.mount('a-attach', { type:'activity', id:cur.spId,
+        ctx:{ pic:cur.pic, date:cur.date, customer:cur.customer },
+        canUpload: editable,
+        onChange:function(){ renderActs(); } });
+    } else {
+      abox.style.display='none'; abox.innerHTML='';
+    }
+  }
   document.getElementById('aov').classList.add('open');
   document.getElementById(editable ? (p.customer?'a-note':'a-cust') : 'a-cust').focus();
 }

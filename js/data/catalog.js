@@ -133,3 +133,8 @@ var CUSTOMER_LEGAL = {};   // custOwnerKey → tên pháp nhân đầy đủ
    doneActs, missedActs, projectChanges, to, comments:[{by,role,at,text}]}.
    Bản nháp CHƯA gửi vẫn ở localStorage — chỉ khi bấm gửi mới lên SharePoint. */
 var REPORTS = [];
+
+/* Tệp đính kèm (đọc từ list Attachments): mỗi phần tử
+   {id, spId, parentType, parentId, fileName, fileType, size, webUrl, driveItemId,
+    folderPath, by, at}. File thật nằm trong Document Library. */
+var ATTACHMENTS = [];

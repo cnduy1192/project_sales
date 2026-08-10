@@ -88,6 +88,96 @@
     } catch (e) { return null; }
   }
 
+  /* ==================== TỆP ĐÍNH KÈM (Document Library) ====================
+     Dùng drive MẶC ĐỊNH của site (thư viện "Documents"). Scope Sites.ReadWrite.All
+     đã đủ. Tên thư mục/tệp phải sạch ký tự cấm của SharePoint. */
+  async function driveId() {
+    if (driveId._v) return driveId._v;
+    const sid = await getSiteId();
+    const d = await api("/sites/" + sid + "/drive");
+    driveId._v = d.id;
+    return d.id;
+  }
+
+  /* Bỏ ký tự SharePoint cấm trong tên thư mục/tệp; gom khoảng trắng. */
+  function cleanSeg(s) {
+    return String(s == null ? "" : s)
+      .replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim()
+      .replace(/^\.+|\.+$/g, "").slice(0, 120) || "_";
+  }
+  function encPath(path) {
+    return path.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+  }
+
+  /* Tạo dần từng cấp thư mục. Idempotent: đã có thì Graph trả về dòng cũ. */
+  async function ensureFolder(path) {
+    const drv = await driveId();
+    const segs = String(path || "").split("/").map(cleanSeg).filter(Boolean);
+    let parent = "root";
+    for (const seg of segs) {
+      try {
+        const body = { name: seg, folder: {}, "@microsoft.graph.conflictBehavior": "fail" };
+        const created = await api("/drives/" + drv + "/items/" + parent + "/children",
+          { method: "POST", body: JSON.stringify(body) });
+        parent = created.id;
+      } catch (e) {
+        /* 409 = đã tồn tại → lấy id của nó rồi đi tiếp. */
+        const found = await api("/drives/" + drv + "/items/" + parent
+          + "/children?$filter=" + encodeURIComponent("name eq '" + seg.replace(/'/g, "''") + "'")
+          + "&$select=id,name").catch(() => null);
+        const hit = found && found.value && found.value[0];
+        if (!hit) throw e;
+        parent = hit.id;
+      }
+    }
+    return parent;                       // id thư mục cuối
+  }
+
+  /* Tải một tệp lên thư mục theo ĐƯỜNG DẪN. ≤4MB dùng PUT thẳng; lớn hơn dùng
+     upload session theo mảnh. Trả về driveItem {id, webUrl, name, size}. */
+  async function uploadFile(folderPath, fileName, blob) {
+    const drv = await driveId();
+    const name = cleanSeg(fileName);
+    const full = encPath(folderPath) + "/" + encodeURIComponent(name);
+    const size = blob.size != null ? blob.size : (blob.byteLength || 0);
+
+    if (size <= 4 * 1024 * 1024) {
+      const token = await FISG_AUTH.getToken(CFG.scopes);
+      const res = await fetch(BASE + "/drives/" + drv + "/root:/" + full + ":/content",
+        { method: "PUT", headers: { Authorization: "Bearer " + token }, body: blob });
+      if (!res.ok) throw new Error("Upload " + res.status + ": " + (await res.text()).slice(0, 200));
+      return res.json();
+    }
+
+    /* >4MB: upload session, đẩy từng mảnh 3.2MB. */
+    const sess = await api("/drives/" + drv + "/root:/" + full + ":/createUploadSession",
+      { method: "POST", body: JSON.stringify({ item: { "@microsoft.graph.conflictBehavior": "replace" } }) });
+    const url = sess.uploadUrl;
+    const CHUNK = 3200000;
+    let start = 0, last = null;
+    while (start < size) {
+      const end = Math.min(start + CHUNK, size);
+      const slice = blob.slice(start, end);
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: { "Content-Length": String(end - start),
+                   "Content-Range": "bytes " + start + "-" + (end - 1) + "/" + size },
+        body: slice,
+      });
+      if (!res.ok && res.status !== 202)
+        throw new Error("Upload " + res.status + ": " + (await res.text()).slice(0, 200));
+      if (res.status !== 202) last = await res.json();
+      start = end;
+    }
+    return last || {};
+  }
+
+  async function deleteDriveItem(itemId) {
+    const drv = await driveId();
+    return api("/drives/" + drv + "/items/" + itemId, { method: "DELETE" });
+  }
+
   window.FISG_GRAPH = { api, getSiteId, listItems, createItem, updateItem, deleteItem,
-                        columns, lookupPerson };
+                        columns, lookupPerson,
+                        ensureFolder, uploadFile, deleteDriveItem, cleanSeg };
 })();

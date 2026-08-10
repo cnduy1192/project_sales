@@ -472,6 +472,43 @@ người. Đổi máy chỉ khiến thông báo cũ hiện lại một lần —
 Chưa tạo hai list này thì mục Báo cáo vẫn chạy ở chế độ cục bộ (chỉ máy đó thấy),
 và app nói rõ khi gửi.
 
+## 3h. Tệp đính kèm (list Attachments + Document Library)
+
+Đính kèm file (pdf, word, excel, ppt, ảnh, zip) vào từng hoạt động khách hàng và
+báo cáo tuần. File nằm trong thư viện tài liệu mặc định của site theo cây:
+
+- Hoạt động: `FISG_Attachments / <PIC> / <YYYY-MM-DD> / <Khách hàng> / <file>`
+- Báo cáo:   `FISG_Attachments / <PIC> / <YYYY-MM-DD> / Báo cáo / <file>`
+
+App tự tạo các cấp thư mục. Không cần tạo folder tay; không cần scope mới
+(`Sites.ReadWrite.All` đã đủ).
+
+Cần thêm list **Attachments** (giữ metadata + liên kết file ↔ hoạt động/báo cáo):
+
+| Cột | Kiểu |
+|---|---|
+| `ParentType` | Single line of text (`activity` / `report`) |
+| `ParentId` | Single line of text |
+| `FileName` | Single line of text |
+| `FileType` | Single line of text |
+| `Size` | Number |
+| `WebUrl` | Single line of text |
+| `DriveItemId` | Single line of text |
+| `FolderPath` | Single line of text |
+| `PICName` | Single line of text |
+| `UploadDate` | Date and Time |
+
+`Title` = tên file. Không tạo list này thì app báo lỗi khi đính kèm; các phần
+khác vẫn chạy.
+
+Cách dùng:
+- Hoạt động: mở một hoạt động **đã lưu** (Customer Activities → bấm dòng) → khu
+  "Tệp đính kèm" → **+ Đính kèm tệp**. Hoạt động mới phải Lưu trước.
+- Báo cáo: mở một báo cáo đã gửi → khu "Tệp đính kèm".
+
+Giới hạn: ≤ 15MB, loại pdf/word/excel/ppt/ảnh/zip (chặn ngay trên trình duyệt).
+Xoá: người tải lên hoặc quản lý/admin — xoá gỡ cả file trên Drive lẫn dòng list.
+
 ## 4. Chẩn đoán khi có trục trặc
 
 Sau khi đăng nhập app **không hiện thông báo gì** — tải xong là im lặng, đúng như mong đợi. Số liệu và cảnh báo đi vào Console (F12):

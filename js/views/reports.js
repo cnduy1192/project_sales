@@ -191,9 +191,15 @@ function rpRenderPanel(list){
     ${draft ? `<div class="rp-send">
       <button class="btn-primary" onclick="sendReport()">Gửi cho quản lý</button>
       <button class="btn-ghost" onclick="rpDiscard()">Bỏ bản nháp</button>
-    </div>` : rpThreadHtml(r)}`;
+    </div>` : `<div class="att-box" id="rp-attach"></div>${rpThreadHtml(r)}`}`;
 
   rpDrawCharts(r);
+  /* Tệp đính kèm: chỉ báo cáo ĐÃ GỬI (có mã). Tải lên: người được phản hồi
+     (chủ báo cáo + quản lý); xoá theo quyền của FISG_ATTACH. */
+  if(!draft && window.FISG_ATTACH && document.getElementById('rp-attach')){
+    FISG_ATTACH.mount('rp-attach', { type:'report', id:r.id,
+      ctx:{ pic:r.pic, date:r.createdAt }, canUpload: rpCanComment(r) });
+  }
 }
 
 /* ====== LUỒNG PHẢN HỒI ====== */

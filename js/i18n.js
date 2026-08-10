@@ -289,6 +289,12 @@
     "Chưa có dự án nào.": "No projects yet.", "Chưa có hoạt động nào.": "No activity yet.",
     "Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.":
       "You can only view this customer. Only the owner or an admin can edit.",
+    // Tệp đính kèm
+    "Tệp đính kèm": "Attachments", "Chưa có tệp đính kèm.": "No attachments yet.",
+    "+ Đính kèm tệp": "+ Attach file", "Xoá tệp": "Delete file",
+    "Tối đa 15MB · pdf, word, excel, ppt, ảnh, zip": "Up to 15MB · pdf, word, excel, ppt, images, zip",
+    "Đăng nhập Microsoft 365 để đính kèm tệp.": "Sign in with Microsoft 365 to attach files.",
+    "Đã xoá tệp.": "File deleted.",
     "Nhập nhà cung cấp từ Excel": "Import suppliers from Excel",
     "File một cột tên NCC. App tự đối chiếu list Suppliers: tên mới thì tạo, tên đã có thì bỏ qua. Chạy lại vẫn an toàn.":
       "A one-column file of supplier names. The app matches against the Suppliers list: new names are created, existing ones skipped. Safe to re-run.",
