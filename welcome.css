@@ -352,3 +352,16 @@
 .att-status{margin-top:8px;font-size:12px;color:var(--text-2)}
 .att-status.ci-ok,.att-status.ok{color:var(--won,#157F3C)}
 .att-status.ci-err,.att-status.err{color:var(--overdue,#DC2626)}
+
+/* Ô chọn sales cho Sale Support (list Người dùng) */
+.u-chips{display:flex;flex-wrap:wrap;gap:7px;max-height:150px;overflow:auto;padding:2px}
+.u-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;
+  font-size:12px;font-weight:600;color:var(--text-2);background:var(--surface);
+  border:1px solid var(--line);cursor:pointer;transition:all .12s}
+.u-chip input{margin:0;accent-color:var(--marine)}
+.u-chip:hover{border-color:var(--marine-line)}
+.u-chip.on{background:var(--marine-soft);border-color:var(--marine-line);color:var(--marine)}
+
+/* Khoá tạo hoạt động khi khách do người khác quản lý */
+.a-gate{grid-column:1/-1;padding:11px 14px;border-radius:9px;background:#FEF9C3;
+  border:1px solid #FDE68A;font-size:12.5px;color:#92400E;line-height:1.5}

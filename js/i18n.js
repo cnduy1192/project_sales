@@ -281,6 +281,19 @@
     "Trao đổi": "Discussion", "Gửi phản hồi": "Send reply",
     "Chưa có phản hồi nào.": "No replies yet.", "Quản lý": "Manager",
     "Trả lời quản lý…": "Reply to manager…", "Nhập nội dung phản hồi.": "Enter a reply.",
+    // Phân quyền: line báo cáo + Sale Support
+    "Báo cáo cho": "Reports to", "Hỗ trợ các sales": "Supports sales",
+    "— Tất cả quản lý —": "— All managers —",
+    "Chưa có sales nào trong dữ liệu.": "No sales in the data yet.",
+    "Line báo cáo: gửi báo cáo tuần tới người này. Để trống = gửi tất cả quản lý.":
+      "Reporting line: weekly reports go to this person. Empty = all managers.",
+    "Sale Support thấy và sửa được dữ liệu của những sales này (không xoá). Một người hỗ trợ được nhiều sales.":
+      "Sale Support can view and edit these sales' data (no delete). One support can cover many sales.",
+    "Hỗ trợ các sales được chỉ định: thấy và sửa dự án/hoạt động/khách của họ, nhưng KHÔNG xoá":
+      "Supports assigned sales: view and edit their projects/activities/customers, but NO delete",
+    "Quay lại Người dùng & phân quyền": "Back to Users & Permissions",
+    "Khách hàng này do sales khác quản lý — bạn không tạo hoạt động ở đây. Hãy chọn khách của mình hoặc khách chưa ai quản lý.":
+      "This customer is managed by another sales — you cannot log activity here. Pick your own customer or an unmanaged one.",
     "Thêm khách hàng": "Add customer", "Xem & sửa thông tin khách hàng": "View & edit customer",
     "Tên hiển thị": "Display name", "Tên pháp nhân": "Legal name",
     "Người phụ trách": "Owner", "Trạng thái": "Status",

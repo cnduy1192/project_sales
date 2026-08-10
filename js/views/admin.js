@@ -8,7 +8,7 @@ const ROLES = ROLE_ORDER.map(function(id){
   return { id:id, label:ROLE_DEF[id].label, hint:ROLE_DEF[id].hint };
 });
 const ROLE_COLOR = { sales:'#0D9488', rnd:'#B45309', manager:'#0E7490',
-                     director:'#6D28D9', superadmin:'#1E3A8A' };
+                     director:'#6D28D9', superadmin:'#1E3A8A', salesupport:'#0E9F6E' };
 
 let admBusy = false;
 function admEsc(s){ return ckEsc(s); }
@@ -170,10 +170,35 @@ function openUserForm(idx){
   document.getElementById('u-pic').value  = u ? (u.picRaw || '') : '';
   document.getElementById('u-role').innerHTML =
     ROLES.map(r => `<option value="${r.id}"${u && u.role===r.id?' selected':''}>${r.label}</option>`).join('');
+
+  /* Line báo cáo: chọn trong số người nhìn toàn đội (manager/director/admin). */
+  const leads = USERS.filter(x => cap(x.role).scope === 'all');
+  const rsel = document.getElementById('u-reports');
+  if(rsel){
+    rsel.innerHTML = '<option value="">— Tất cả quản lý —</option>' +
+      leads.map(l => `<option value="${admEsc(l.pic||l.name)}"${u && sameName(u.reportsTo, l.pic||l.name)?' selected':''}>${admEsc(l.name||l.pic)}</option>`).join('');
+  }
+  /* Ô chọn sales để hỗ trợ (chỉ hiện với Sale Support). */
+  admBuildSupports(u ? (u.supports||[]) : []);
+
   admRoleHint();
   document.getElementById('u-found').innerHTML = '';
   document.getElementById('uov').classList.add('open');
   document.getElementById(u ? 'u-pic' : 'u-mail').focus();
+}
+
+/* Danh sách sales để tick — nguồn: những user vai trò sales, cộng mọi tên PIC
+   xuất hiện trong dữ liệu (LISTS.pics) để không sót ai. */
+function admBuildSupports(picked){
+  const box = document.getElementById('u-supports'); if(!box) return;
+  const set = {}; const names = [];
+  USERS.filter(x => x.role==='sales').forEach(x => { const n=x.pic||x.name; if(n){ set[picKey(n)]=1; names.push(n); } });
+  (typeof LISTS!=='undefined'?LISTS.pics:[]).forEach(n => { if(n && !set[picKey(n)]){ set[picKey(n)]=1; names.push(n); } });
+  names.sort((a,b)=>a.localeCompare(b,'vi'));
+  const on = {}; (picked||[]).forEach(p => on[picKey(p)] = 1);
+  box.innerHTML = names.map(n =>
+    `<label class="u-chip${on[picKey(n)]?' on':''}"><input type="checkbox" value="${admEsc(n)}"${on[picKey(n)]?' checked':''} onchange="this.parentElement.classList.toggle('on',this.checked)">${admEsc(n)}</label>`
+  ).join('') || '<span class="u-hint">Chưa có sales nào trong dữ liệu.</span>';
 }
 window.openUserForm = openUserForm;
 
@@ -186,6 +211,9 @@ function admRoleHint(){
   const r = document.getElementById('u-role').value;
   const hit = ROLES.filter(function(x){ return x.id === r; })[0];
   document.getElementById('u-roleHint').textContent = hit ? hit.hint : '';
+  /* Ô "Hỗ trợ sales" chỉ có nghĩa với Sale Support. */
+  const sf = document.getElementById('u-supportsF');
+  if(sf) sf.style.display = (r === 'salesupport') ? '' : 'none';
 }
 window.admRoleHint = admRoleHint;
 
@@ -224,14 +252,21 @@ async function saveUserForm(){
   if(dup){ toast('Email này đã có trong danh sách.'); return; }
 
   const role = g('u-role');
+  const reportsTo = g('u-reports') || null;
+  /* Danh sách sales được hỗ trợ chỉ lưu khi vai trò là Sale Support. */
+  const supports = role === 'salesupport'
+    ? [...document.querySelectorAll('#u-supports input:checked')].map(x => x.value.trim()).filter(Boolean)
+    : [];
   let u = admEditIdx >= 0 ? USERS[admEditIdx] : null;
-  const before = u ? { name:u.name, pic:u.pic, picRaw:u.picRaw, fullName:u.fullName, role:u.role } : null;
+  const before = u ? { name:u.name, pic:u.pic, picRaw:u.picRaw, fullName:u.fullName, role:u.role,
+                       reportsTo:u.reportsTo, supports:u.supports } : null;
   const isNew = !u;
   const full = g('u-name'), picRaw = g('u-pic');
   if(isNew){
     u = { email: mail, name: full || mail, fullName: full || null,
           picRaw: picRaw || null, pic: picRaw || full || null,
-          role: role, color: ROLE_COLOR[role] || '#0D9488' };
+          role: role, color: ROLE_COLOR[role] || '#0D9488',
+          reportsTo: reportsTo, supports: supports };
     USERS.push(u);
   } else {
     u.fullName = full || null;
@@ -240,6 +275,8 @@ async function saveUserForm(){
     u.pic      = picRaw || full || null;
     u.role     = role;
     u.color    = ROLE_COLOR[role] || u.color;
+    u.reportsTo = reportsTo;
+    u.supports = supports;
   }
 
   const ok = await admPersist(u, (isNew ? 'Đã thêm ' : 'Đã cập nhật ') + (u.name || u.email) + '.',

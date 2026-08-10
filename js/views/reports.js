@@ -316,7 +316,7 @@ function sendReport(){
   if(!rpDraft) return;
   const note = (document.getElementById('rpNote')||{}).value || '';
   rpDraft.note = note.trim();
-  rpDraft.to = managerNames();
+  rpDraft.to = (window.reportRecipients ? reportRecipients(me) : managerNames());
   if(!rpDraft.id) rpDraft.id = (window.LS && LS.nextReportId) ? LS.nextReportId() : ('R-'+Date.now().toString(36).toUpperCase());
   rpDraft.createdAt = rpDraft.createdAt || todayISO();
 

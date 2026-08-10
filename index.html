@@ -387,6 +387,8 @@
         <input list="dl-cust-all" id="a-cust" placeholder="Nhập hoặc chọn khách hàng…" oninput="onActCustomer()" onchange="onActCustomer()">
         <datalist id="dl-cust-all"></datalist>
         <div class="owner-note" id="a-owner" hidden></div></div>
+      <div class="a-gate" id="a-gate" hidden></div>
+      <div class="a-fields" id="a-fields" style="display:contents">
       <div class="field"><label>Nhà cung cấp</label><select id="a-ncc"></select></div>
       <div class="field"><label>Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
       <div class="field"><label>Ngày</label><input type="date" id="a-date"></div>
@@ -395,6 +397,7 @@
       <div class="field full"><label>Hành động</label><input id="a-next" placeholder="Vd: Gửi mẫu 200g tuần sau"></div>
       <div class="field full"><label>Gắn vào dự án đang chạy</label><select id="a-proj"></select></div>
       <div class="field full att-box" id="a-attach"></div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-danger" id="a-del" onclick="deleteAct()" style="margin-right:auto;display:none">
@@ -458,6 +461,16 @@
         <label for="u-role">Vai trò <span class="req">*</span></label>
         <select id="u-role" onchange="admRoleHint()"></select>
         <div class="u-hint" id="u-roleHint"></div>
+      </div>
+      <div class="field" id="u-reportsF">
+        <label for="u-reports">Báo cáo cho</label>
+        <select id="u-reports"></select>
+        <div class="u-hint">Line báo cáo: gửi báo cáo tuần tới người này. Để trống = gửi tất cả quản lý.</div>
+      </div>
+      <div class="field" id="u-supportsF" style="display:none">
+        <label>Hỗ trợ các sales</label>
+        <div class="u-chips" id="u-supports"></div>
+        <div class="u-hint">Sale Support thấy và sửa được dữ liệu của những sales này (không xoá). Một người hỗ trợ được nhiều sales.</div>
       </div>
     </div>
     <div class="modal-foot">

@@ -36,7 +36,10 @@
       Project: "Dự án", PICName: "Người cập nhật", UpdateDate: "Ngày cập nhật", Content: "Nội dung",
     },
     // Users: phân quyền. Title = email đăng nhập.
-    Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ" },
+    Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò", FullName: "Tên đầy đủ",
+             /* ReportsTo = line báo cáo (gửi báo cáo tuần cho ai). Supports = với
+                vai trò Sale Support, danh sách sales được hỗ trợ (ngăn dấu phẩy). */
+             ReportsTo: "Báo cáo cho", Supports: "Hỗ trợ sales" },
     /* Customers: danh bạ khách hàng. Title = tên gọn (đã bỏ tiền tố pháp nhân);
        Owner = sales phụ trách khách này; LegalName = tên pháp nhân đầy đủ. */
     Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân",
@@ -319,7 +322,7 @@
      khoá cửa: quay về quy tắc cũ (ADMIN_EMAIL = superadmin, còn lại manager) và
      báo rõ để người quản trị tạo list. */
   const ROLE_COLOR = { superadmin: "#1E3A8A", director: "#6D28D9", manager: "#0E7490",
-                       rnd: "#B45309", sales: "#0D9488", guest: "#6D28D9" };
+                       rnd: "#B45309", sales: "#0D9488", salesupport: "#0E9F6E", guest: "#6D28D9" };
   function isKnownRoleSafe(r) {
     return (typeof isKnownRole === "function") ? isKnownRole(r)
       : ["sales", "rnd", "manager", "director", "superadmin"].indexOf(r) >= 0;
@@ -370,6 +373,8 @@
           pic: full || first || null,
           role: isKnownRoleSafe(role) ? role : "sales",
           color: ROLE_COLOR[role] || "#0D9488",
+          reportsTo: txt(g(f, "ReportsTo")) || null,
+          supports: (typeof splitAliases === "function" ? splitAliases(txt(g(f, "Supports"))) : []),
         };
       }).filter(u => u.email);
       if (!rows.length) throw new Error("list " + listName + " rỗng");
@@ -452,6 +457,11 @@
     f[fp] = u.picRaw || "";
     f[fr] = u.role;
     f[fn] = u.fullName || "";
+    /* Line báo cáo + danh sách sales hỗ trợ — chỉ ghi khi list CÓ cột (tránh
+       Graph từ chối cả request vì một field lạ). */
+    if (userCols && userCols[userField("ReportsTo")]) f[userField("ReportsTo")] = u.reportsTo || "";
+    if (userCols && userCols[userField("Supports")])
+      f[userField("Supports")] = (u.supports || []).join(", ");
     return f;
   }
 

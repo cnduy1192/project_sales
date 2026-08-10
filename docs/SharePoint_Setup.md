@@ -20,9 +20,11 @@ Site: `fisaigonvn.sharepoint.com/sites/SalesProjectTracker` → **New → List**
 |---|---|---|---|
 | `Title` | Single line of text | có | Email đăng nhập M365. Ví dụ `thu@fisaigon.vn` |
 | `Email` | Single line of text | không | Dùng khi không muốn để email ở cột Title |
-| `Role` | Choice | có | `sales` · `rnd` · `manager` · `director` · `superadmin` |
+| `Role` | Choice | có | `sales` · `salesupport` · `rnd` · `manager` · `director` · `superadmin` |
 | `PICName` | Single line of text | **không** | Tên tắt như nó nằm trong dữ liệu. Xem 1.1c |
 | `FullName` | Single line of text | **không** | Tên đầy đủ O365. App tự điền, không phải gõ |
+| `ReportsTo` | Single line of text | không | Line báo cáo: gửi báo cáo tuần cho ai. Trống = tất cả quản lý |
+| `Supports` | Single line of text | không | Với vai trò Sale Support: danh sách sales được hỗ trợ, ngăn bằng dấu phẩy |
 
 Chỉ cần tạo **một dòng duy nhất** cho tài khoản quản trị của bạn:
 

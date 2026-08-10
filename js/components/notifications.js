@@ -19,6 +19,15 @@ function managerNames(){
   /* Ai nhìn được toàn đội thì nhận báo cáo tuần — gồm cả Director. */
   return USERS.filter(u=>cap(u.role).scope==='all').map(u=>u.pic||u.name);
 }
+/* Người nhận báo cáo của MỘT người: line báo cáo được chỉ định (reportsTo) nếu
+   có, còn không thì gửi tất cả quản lý. Super Admin phân "báo cáo cho ai" trong
+   list Người dùng. */
+function reportRecipients(u){
+  u = u || (typeof me!=='undefined'?me:null);
+  if(u && u.reportsTo) return [u.reportsTo];
+  return managerNames();
+}
+window.reportRecipients = reportRecipients;
 
 /* ====== THÔNG BÁO SUY TỪ BÁO CÁO / PHẢN HỒI ======
    Không cần list Notifications riêng: mỗi lần vào, tính các "sự kiện đáng báo"
@@ -44,8 +53,12 @@ function _notifCandidates(){
   const meKey = picKey(me.pic||me.name);
   const out = [];
   REPORTS.forEach(r=>{
-    /* Quản lý: báo cáo mới do sales gửi. */
-    if(lead && picKey(r.pic)!==meKey)
+    /* Quản lý: báo cáo mới do sales gửi. Nếu báo cáo có line nhận cụ thể
+       (report.to) thì CHỈ người trong đó được báo; không có thì mọi quản lý. */
+    const addressed = (r.to||[]).filter(Boolean);
+    const forLead = lead && picKey(r.pic)!==meKey
+      && (addressed.length===0 || addressed.some(t=>picKey(t)===meKey));
+    if(forLead)
       out.push({ key:'R:'+r.id, who:r.pic, action:'đã gửi <b>báo cáo tuần '+r.weekLabel+'</b>',
                  at:r.createdAt, report:r.id });
     (r.comments||[]).forEach(c=>{

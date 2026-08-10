@@ -242,7 +242,11 @@ function cuSaveCustomer(){
   const title = g('cuf-title');
   if(!title){ if(window.toast) toast('Nhập tên khách hàng.'); return; }
   const entry = cuEditName ? cuFind(cuEditName) : null;
-  const owner = myCap().admin ? g('cuf-owner') : ((me&&(me.pic||me.name))||'');
+  /* Chủ sở hữu: admin đổi tự do; người khác thì GIỮ NGUYÊN chủ khi sửa (không tự
+     nhận về mình — Sale Support sửa hộ chứ không cướp khách), chỉ khi TẠO MỚI
+     mới mặc định về chính mình. */
+  const owner = myCap().admin ? g('cuf-owner')
+    : (entry ? (entry.owner || '') : ((me&&(me.pic||me.name))||''));
   const row = { spId: entry ? entry.spId : null, title: title, legal: g('cuf-legal'),
                 owner: owner, segment: g('cuf-seg'), region: g('cuf-region'), status: g('cuf-status') };
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){

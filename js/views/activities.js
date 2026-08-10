@@ -38,11 +38,33 @@ function renderActs(){
       <div><span class="pot pot-${potLabel(a.potential)}">${potLabel(a.potential)}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
-/* Ai được sửa/xoá một hoạt động: admin toàn quyền; sales chỉ hoạt động của mình. */
+/* Ai được SỬA một hoạt động — đi qua lớp quyền: admin/quản lý toàn quyền; sales
+   hoạt động của mình; Sale Support hoạt động của sales mình hỗ trợ. */
+function _actProjIds(){
+  const ids={}; (typeof scopeRecords==='function'?scopeRecords(RECORDS,me):RECORDS)
+    .forEach(function(r){ ids[r.id]=1; }); return ids;
+}
 function canEditAct(a){
   if(!a || !me) return false;
-  if(me.role==='superadmin' || me.role==='manager') return true;
-  return a.pic === (me.pic || me.name);
+  const c = cap(me.role);
+  if(!c.edit) return false;
+  if(c.admin || c.scope==='all') return true;
+  return ownsActivity(a, me, _actProjIds());
+}
+/* Ai được XOÁ — khác sửa: Sale Support sửa được nhưng KHÔNG xoá (cap.del=false). */
+function canDelAct(a){
+  if(!a || !me || !cap(me.role).del) return false;
+  return canEditAct(a);
+}
+/* Được TẠO hoạt động cho khách này không: admin/quản lý luôn được; còn lại chỉ
+   khi khách CHƯA có người quản lý, HOẶC khách là của mình / sales mình hỗ trợ. */
+function actCreateAllowed(name){
+  if(!me) return false;
+  const c = cap(me.role);
+  if(c.admin || c.scope==='all') return true;
+  const owner = (typeof customerOwnerOf==='function') ? customerOwnerOf(name) : '';
+  if(!owner) return true;
+  return typeof ownsCustomer==='function' && ownsCustomer(name, me);
 }
 function openActEdit(id){
   var a = ACTIVITIES.find(function(x){ return x.id === id; });
@@ -81,8 +103,34 @@ function onActCustomer(){
     : mine
     ? 'Bạn đang quản lý khách hàng này.'
     : 'Khách hàng đang được quản lý bởi <b>' + esc4(owner) + '</b>.';
+  actApplyGate();
 }
 window.onActCustomer = onActCustomer;
+
+/* Khi TẠO MỚI và khách do người khác quản lý → ẩn các trường tạo hoạt động,
+   chỉ mở khi khách của mình hoặc chưa ai quản lý. Lúc SỬA thì để nguyên (quyền
+   đã xử lý ở openActForm). */
+function actApplyGate(){
+  const editing = !!aEditId;
+  const fields = document.getElementById('a-fields');
+  const gate = document.getElementById('a-gate');
+  const saveBtn = document.getElementById('a-save');
+  if(editing){
+    if(fields) fields.style.display='contents';
+    if(gate) gate.hidden=true;
+    return;
+  }
+  const name = (document.getElementById('a-cust').value || '').trim();
+  const allowed = !name || actCreateAllowed(name);
+  if(fields) fields.style.display = allowed ? 'contents' : 'none';
+  if(saveBtn) saveBtn.style.display = allowed ? 'inline-flex' : 'none';
+  if(gate){
+    if(!allowed){ gate.hidden=false;
+      gate.textContent='Khách hàng này do sales khác quản lý — bạn không tạo hoạt động ở đây. Hãy chọn khách của mình hoặc khách chưa ai quản lý.'; }
+    else gate.hidden=true;
+  }
+}
+window.actApplyGate = actApplyGate;
 
 var aEditId = null;   // id hoạt động đang sửa; null = tạo mới
 function openActForm(prefill, origin){
@@ -133,7 +181,9 @@ function openActForm(prefill, origin){
   if(saveBtn){ saveBtn.textContent = editing ? 'Lưu thay đổi' : 'Lưu kế hoạch';
     saveBtn.style.display = editable ? 'inline-flex' : 'none'; }
   const delBtn=document.getElementById('a-del');
-  if(delBtn) delBtn.style.display = (editing && editable) ? 'inline-flex' : 'none';
+  const cur0 = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
+  if(delBtn) delBtn.style.display = (editing && canDelAct(cur0)) ? 'inline-flex' : 'none';
+  actApplyGate();
   /* Tệp đính kèm: chỉ với hoạt động ĐÃ LƯU (có spId trên SharePoint). Hoạt động
      mới phải bấm Lưu trước — file cần một bản ghi để gắn vào. */
   const abox=document.getElementById('a-attach');
@@ -162,7 +212,7 @@ function deleteAct(){
   const id = aEditId; if(!id) return;
   const a = ACTIVITIES.find(function(x){return x.id===id;});
   if(!a){ closeActForm(); return; }
-  if(!canEditAct(a)){ toast('Bạn không có quyền xoá hoạt động này.'); return; }
+  if(!canDelAct(a)){ toast('Bạn không có quyền xoá hoạt động này.'); return; }
   if(!confirm('Xoá hoạt động với "'+a.customer+'" ngày '+new Date(a.date).toLocaleDateString('vi-VN')+'? Không thể hoàn tác.')) return;
   const i = ACTIVITIES.indexOf(a); if(i>=0) ACTIVITIES.splice(i,1);
   if(window.LS && LS.dropAct) LS.dropAct(id);

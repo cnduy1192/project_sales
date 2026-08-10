@@ -613,11 +613,53 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
     if(E("STAGE_PROB['QUOTED / PO']")!==80)throw new Error('mất % mặc định');
     if(E('SEG_GROUPS.length')!==3)throw new Error('mất nhóm ngành');
   });
-  step('năm vai trò + vai trò lạ rơi vào mặc định chặt nhất',()=>{
-    if(E('JSON.stringify(ROLE_ORDER)')!=='["sales","rnd","manager","director","superadmin"]')
+  step('sáu vai trò + vai trò lạ rơi vào mặc định chặt nhất',()=>{
+    if(E('JSON.stringify(ROLE_ORDER)')!=='["sales","salesupport","rnd","manager","director","superadmin"]')
       throw new Error(E('JSON.stringify(ROLE_ORDER)'));
     const c=JSON.parse(E('JSON.stringify(cap("ke-toan"))'));
-    if(c.scope!=='own-pic'||c.edit||c.close||c.admin||c.cockpit||c.weekly)throw new Error(JSON.stringify(c));
+    if(c.scope!=='own-pic'||c.edit||c.close||c.del||c.admin||c.cockpit||c.weekly)throw new Error(JSON.stringify(c));
+  });
+  step('Manager có menu Kế hoạch tuần (weekly=true)',()=>{
+    if(!E('cap("manager").weekly'))throw new Error('manager thiếu weekly');
+    if(E('cap("manager").weeklyAuto'))throw new Error('manager không được tự bật popup');
+  });
+  step('Sale Support: thấy+sửa dữ liệu sales được hỗ trợ, KHÔNG xoá',()=>{
+    /* Support hỗ trợ "Tam". P-3/P-4 do Tam; A-9 do Tam. */
+    E(`USERS.push({email:'sup@f.vn',picRaw:null,fullName:'Hỗ Trợ',name:'Hỗ Trợ',pic:'Hỗ Trợ',
+        role:'salesupport',supports:['Tam'],color:'#0E9F6E'});
+       loginAs(USERS.length-1); closeWelcome();`);
+    const v=E('visible().map(function(r){return r.id}).sort().join(",")');
+    if(!/P-3/.test(v))throw new Error('support không thấy dự án của sales mình hỗ trợ: '+v);
+    if(/P-1/.test(v))throw new Error('support thấy dự án của sales KHÔNG hỗ trợ');
+    /* edit được */
+    if(!E("capEdit(RECORDS.find(function(r){return r.id==='P-3'}))"))throw new Error('support phải sửa được');
+    /* KHÔNG xoá được */
+    if(E("capDelete(RECORDS.find(function(r){return r.id==='P-3'}))"))throw new Error('support KHÔNG được xoá');
+    /* hoạt động: thấy + canEditAct nhưng canDelAct false */
+    const a=E("ACTIVITIES.find(function(x){return x.pic==='Tam'})&&ACTIVITIES.find(function(x){return x.pic==='Tam'}).id");
+    if(a){
+      if(!E("canEditAct(ACTIVITIES.find(function(x){return x.id==='"+a+"'}))"))throw new Error('support phải sửa được hoạt động');
+      if(E("canDelAct(ACTIVITIES.find(function(x){return x.id==='"+a+"'}))"))throw new Error('support KHÔNG được xoá hoạt động');
+    }
+  });
+  step('gate tạo hoạt động: khách của người khác thì không cho tạo',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    /* CUSTOMER_OWNER: "E" thuộc Ngọc, "CÔNG TY TNHH F" thuộc Tam (từ test trước). */
+    if(!E("actCreateAllowed('E')"))throw new Error('không cho tạo cho khách của mình');
+    if(!E("actCreateAllowed('Khách Chưa Ai Quản Lý')"))throw new Error('không cho tạo cho khách chưa có chủ');
+    if(E("actCreateAllowed('F')"))throw new Error('vẫn cho tạo cho khách của sales khác');
+    /* admin luôn được */
+    E(`loginAs(${ix('duy@f.vn')})`);
+    if(!E("actCreateAllowed('F')"))throw new Error('admin phải luôn tạo được');
+  });
+  step('báo cáo gửi theo line reportsTo, không có thì gửi mọi quản lý',()=>{
+    E(`USERS.find(function(u){return u.email==='ngoc@f.vn'}).reportsTo='Duy Che Ngoc';
+       loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    const to=E('JSON.stringify(reportRecipients(me))');
+    if(to!=='["Duy Che Ngoc"]')throw new Error('không gửi đúng line: '+to);
+    E("USERS.find(function(u){return u.email==='ngoc@f.vn'}).reportsTo=null;");
+    const all=E('reportRecipients(me).length');
+    if(all<1)throw new Error('không có line thì phải gửi mọi quản lý');
   });
   step('Director chỉ đọc, R&D không đóng dự án',()=>{
     E(`USERS.push(
