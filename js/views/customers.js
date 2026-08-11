@@ -10,7 +10,9 @@
 let cuFilterOwner = '';   // manager lọc theo một sales; rỗng = cả đội
 let cuQuery = '';
 
-function cuCanSeeAll(){ return !!(me && cap(me.role).scope === 'all'); }
+/* Xem cả danh bạ khách hàng của đội: quản lý/giám đốc/admin (scope 'all') và R&D
+   (viewAll). Dùng canViewAll để không bỏ sót vai trò được cấp quyền xem rộng. */
+function cuCanSeeAll(){ return !!(me && (typeof canViewAll==='function' ? canViewAll(me) : cap(me.role).scope === 'all')); }
 
 /* Gom số liệu nhanh cho mỗi khách: dự án đang chạy, hoạt động gần nhất. Join
    theo custOwnerKey nên khớp dù tên trong dự án còn tiền tố "Công ty…". */

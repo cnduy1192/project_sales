@@ -517,6 +517,7 @@ svg{flex:none}
 .field.full{grid-column:1/-1}
 .field label{font-size:12px;font-weight:600;color:var(--ink-2)}
 .field label .req{color:var(--lost)}
+.field label .lbl-hint{font-weight:400;color:var(--ink-3);font-size:11px}
 .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:#fff;outline:none;transition:border-color .12s,box-shadow .12s;width:100%;font-size:13.5px}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .field input:disabled,.field select:disabled{background:var(--bg);color:var(--ink-3);cursor:not-allowed}

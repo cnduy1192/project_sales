@@ -22,6 +22,13 @@
       Product: "Nguyên liệu quan tâm", ActivityType: "Loại hoạt động", ActivityDate: "Ngày",
       Content: "Nội dung", NextStep: "Kết quả / Next step", PotentialLevel: "Mức độ tiềm năng",
       RelatedProject: "Dự án liên quan",
+      /* Người liên quan được thêm vào hoạt động (Person nhiều giá trị hoặc text
+         ngăn dấu ";"). Hoạt động vào kế hoạch tuần & báo cáo của họ. */
+      RelatedPeople: "Người liên quan",
+      /* TẤT CẢ nhà cung cấp của hoạt động (text ngăn ";"). Supplier ở trên là NCC
+         CHÍNH (giữ quy trình/lọc); cột này giữ trọn danh sách để không mất khi
+         một hoạt động liên quan nhiều NCC. */
+      SupplierList: "Các NCC quan tâm",
       /* Ngày sales bấm "Hoàn thành". Rỗng = chưa xong. Chọn kiểu Date thay vì
          Yes/No vì nó trả lời được cả câu "xong lúc nào", thứ báo cáo tuần cần. */
       CompletedDate: "Ngày hoàn thành",
@@ -369,7 +376,12 @@
       const rows = items.map(it => {
         const f = it.fields || {};
         const email = (txt(g(f, "Email")) || txt(f.Title)).toLowerCase();
-        const role = (txt(g(f, "Role")) || "sales").toLowerCase();
+        /* Chuẩn hoá vai trò: cột Role có thể ghi nhãn hoặc tiếng Việt, không chỉ
+           id. roleFromText đưa về đúng khoá; không nhận ra thì để "" rồi rơi về
+           "sales" ở dưới (nhưng ưu tiên nhận diện đúng quản lý/giám đốc). */
+        const roleRaw = txt(g(f, "Role"));
+        const role = (typeof roleFromText === "function" ? roleFromText(roleRaw) : "")
+          || (roleRaw || "sales").toLowerCase();
         /* PICName có thể chứa NHIỀU tên, ngăn bởi dấu phẩy: dữ liệu cũ ghi cùng
            một người khi thì "Ngoc", khi thì "Bich Ngoc". */
         const picRaw = txt(g(f, "PICName")) || null;
@@ -1273,6 +1285,10 @@
     set("NextStep", a.next);
     set("PotentialLevel", a.potential);
     if (a.doneAt) set("CompletedDate", spDate(a.doneAt));
+    /* Người liên quan + toàn bộ NCC — lưu dạng text ngăn ";". Nếu list Activities
+       chưa có cột tương ứng thì set() bỏ qua (chỉ cảnh báo), không lỗi. */
+    if (a.related && a.related.length) set("RelatedPeople", a.related.join("; "));
+    if (a.nccs && a.nccs.length) set("SupplierList", a.nccs.join("; "));
     warnMissing("Activities", miss);
 
     const it = await FISG_GRAPH.createItem("Activities", f);
@@ -1551,15 +1567,24 @@
 
       const A = acts.map((it, i) => {
         const f = it.fields || {};
+        const supPrimary = lookupOf(ga, f, "Supplier", supMap);
+        /* Trọn danh sách NCC đọc từ cột text "Các NCC quan tâm"; chưa có cột thì
+           lùi về đúng NCC chính để hoạt động vẫn hiện một chip. NCC chính đứng đầu. */
+        let nccList = nameList(f.SupplierList != null ? f.SupplierList : ga(f, "SupplierList"));
+        if (supPrimary && nccList.map(x => x.toLowerCase()).indexOf(supPrimary.toLowerCase()) < 0)
+          nccList = [supPrimary].concat(nccList);
+        if (!nccList.length && supPrimary) nccList = [supPrimary];
         return {
           customer: lookupOf(ga, f, "Customer", cusMap),
           pic: txt(f.PICName) || txtOf(ga, f, "PIC"),
-          ncc: lookupOf(ga, f, "Supplier", supMap),
+          ncc: supPrimary || nccList[0] || "",
+          nccs: nccList,
           product: lookupOf(ga, f, "Product", prodMap),
           type: txt(ga(f, "ActivityType")) || "Khác",
           date: txt(ga(f, "ActivityDate")).slice(0, 10),
           note: txt(ga(f, "Content")), next: txt(ga(f, "NextStep")),
           potential: txt(ga(f, "PotentialLevel")),
+          related: nameList(f.RelatedPeople != null ? f.RelatedPeople : ga(f, "RelatedPeople")),
           doneAt: txt(ga(f, "CompletedDate")).slice(0, 10),
           projectId: byItemId[String(
             (ga.internal("RelatedProject") ? f[ga.internal("RelatedProject") + "LookupId"] : null)

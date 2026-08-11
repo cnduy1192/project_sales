@@ -106,7 +106,10 @@ function openDetail(id, origin){
   const rec=RECORDS.find(r=>r.id===id); if(!rec)return;
   /* Chốt chặn cuối: dù đường dẫn nào gọi tới (bảng, popup khách hàng, link cũ),
      dự án ngoài phạm vi quyền cũng không được mở ra. */
-  if(typeof ownsRecord==='function' && me && !ownsRecord(rec, me)){
+  /* R&D (viewAll) và quản lý xem được mọi dự án — chỉ chặn khi KHÔNG xem-tất-cả
+     và cũng không sở hữu dự án. */
+  if(typeof ownsRecord==='function' && me
+     && !(typeof canViewAll==='function' && canViewAll(me)) && !ownsRecord(rec, me)){
     toast('Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.');
     return;
   }

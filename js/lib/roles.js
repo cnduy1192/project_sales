@@ -16,35 +16,39 @@
 var ROLE_DEF = {
   sales: {
     label:'Sales', scope:'own-pic',
-    edit:true,  close:true,  del:true,  admin:false, cockpit:false, weekly:true, weeklyAuto:true,
+    edit:true,  close:true,  del:true,  admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
     hint:'Chỉ thấy dự án và hoạt động của mình'
   },
   salesupport: {
     label:'Sale Support', scope:'support',
-    edit:true,  close:true,  del:false, admin:false, cockpit:false, weekly:true,  weeklyAuto:false,
+    edit:true,  close:true,  del:false, admin:false, cockpit:false, weekly:true,  weeklyAuto:false, report:true,
     hint:'Hỗ trợ các sales được chỉ định: thấy và sửa dự án/hoạt động/khách của họ, nhưng KHÔNG xoá'
   },
   rnd: {
-    label:'R&D', scope:'own-rnd',
-    edit:true,  close:false, del:true,  admin:false, cockpit:false, weekly:true, weeklyAuto:true,
-    hint:'Chỉ thấy dự án mình phụ trách R&D; ghi được hoạt động, không đóng dự án'
+    /* viewAll: R&D XEM được toàn bộ khách hàng, dự án và funnel như quản lý, và
+       tạo được hoạt động với bất kỳ khách nào. Nhưng scope vẫn 'own-rnd' nên quyền
+       SỬA/XOÁ dự án chỉ giới hạn ở dự án mình phụ trách R&D — thấy rộng, sửa hẹp.
+       Kế hoạch tuần và báo cáo cũng bám cột R&D, không biến R&D thành "quản lý". */
+    label:'R&D', scope:'own-rnd', viewAll:true,
+    edit:true,  close:false, del:true,  admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    hint:'Thấy toàn bộ khách hàng và dự án; ghi được hoạt động với mọi khách; chỉ sửa dự án mình phụ trách R&D, không đóng dự án'
   },
   manager: {
     label:'Manager', scope:'all',
-    edit:true,  close:true,  del:true,  admin:false, cockpit:true,  weekly:true,  weeklyAuto:false,
-    hint:'Thấy toàn đội, đóng được dự án, có Kế hoạch tuần; không sửa phân quyền'
+    edit:true,  close:true,  del:true,  admin:false, cockpit:true,  weekly:true,  weeklyAuto:false, report:true,
+    hint:'Thấy toàn đội, đóng được dự án, có Kế hoạch tuần; TỰ SOẠN báo cáo tuần của mình và ĐỌC báo cáo của đội; không sửa phân quyền'
   },
   director: {
     label:'Director', scope:'all',
-    edit:false, close:false, del:false, admin:false, cockpit:true,  weekly:false, weeklyAuto:false,
+    edit:false, close:false, del:false, admin:false, cockpit:true,  weekly:false, weeklyAuto:false, report:false,
     hint:'Thấy toàn đội ở chế độ chỉ đọc; không nhập liệu, không đóng dự án'
   },
   superadmin: {
     label:'Super Admin', scope:'all',
     /* Super Admin thấy MỌI menu — kể cả Kế hoạch tuần, để kiểm tra được màn hình
        của sales. Nhưng popup không tự bật mỗi sáng: đó là nhịp làm việc của
-       sales, không phải của quản trị. */
-    edit:true,  close:true,  del:true,  admin:true,  cockpit:true,  weekly:true, weeklyAuto:false,
+       sales, không phải của quản trị. Không tự soạn báo cáo (đọc của đội). */
+    edit:true,  close:true,  del:true,  admin:true,  cockpit:true,  weekly:true, weeklyAuto:false, report:false,
     hint:'Toàn quyền, xem được mọi màn hình'
   }
 };
@@ -53,7 +57,7 @@ var ROLE_DEF = {
    trống và đi hỏi, còn hơn âm thầm đọc được dữ liệu cả công ty. */
 var ROLE_FALLBACK = {
   label:'Chưa phân quyền', scope:'own-pic',
-  edit:false, close:false, del:false, admin:false, cockpit:false, weekly:false, weeklyAuto:false,
+  edit:false, close:false, del:false, admin:false, cockpit:false, weekly:false, weeklyAuto:false, report:false,
   hint:'Vai trò không hợp lệ — liên hệ quản trị'
 };
 
@@ -61,8 +65,46 @@ var ROLE_ORDER = ['sales','salesupport','rnd','manager','director','superadmin']
 
 function cap(role){ return ROLE_DEF[role] || ROLE_FALLBACK; }
 function myCap(){ return cap(typeof me !== 'undefined' && me ? me.role : null); }
+/* XEM được toàn bộ dữ liệu không — tách khỏi scope. scope 'all' (quản lý/giám
+   đốc/admin) đương nhiên xem hết. Cờ viewAll cấp riêng quyền XEM cho vai trò có
+   scope hẹp (R&D) mà không nới quyền SỬA của họ. */
+function canViewAll(u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!u) return false;
+  var c = cap(u.role);
+  return c.scope === 'all' || !!c.viewAll;
+}
 function roleLabel(role){ return cap(role).label; }
 function isKnownRole(role){ return Object.prototype.hasOwnProperty.call(ROLE_DEF, role); }
+
+/* Vai trò này CÓ tự soạn báo cáo tuần không. Đây là quyền DƯƠNG (chỉ người thực
+   thi trực tiếp: sales, R&D, sale support). Quản lý/giám đốc/super admin ĐỌC báo
+   cáo của đội, không tự soạn. Dùng quyền dương thay vì "ai không phải quản lý"
+   để vai trò lạ/chưa nhận ra cũng KHÔNG lọt vào luồng soạn báo cáo. */
+function capReport(role){ return !!cap(role).report; }
+
+/* Chuẩn hoá chuỗi vai trò đọc từ SharePoint về đúng khoá ROLE_DEF. Cột Role có
+   thể ghi id ('manager'), hoặc nhãn ('Manager', 'Sale Support', 'Super Admin'),
+   hoặc tiếng Việt ('Quản lý', 'Giám đốc', 'Hỗ trợ'). Không nhận ra → '' để phía
+   gọi tự quyết mặc định. */
+function roleFromText(s){
+  var t = String(s == null ? '' : s).trim().toLowerCase().replace(/\s+/g, ' ');
+  if(!t) return '';
+  if(isKnownRole(t)) return t;
+  var ALIAS = {
+    'sale':'sales', 'nhân viên':'sales', 'nhan vien':'sales', 'nhân viên kinh doanh':'sales',
+    'sale support':'salesupport', 'sales support':'salesupport', 'hỗ trợ':'salesupport',
+    'ho tro':'salesupport', 'hỗ trợ sales':'salesupport', 'trợ lý sales':'salesupport',
+    'r&d':'rnd', 'rd':'rnd', 'nghiên cứu':'rnd', 'nghien cuu':'rnd',
+    'quản lý':'manager', 'quan ly':'manager', 'trưởng phòng':'manager', 'truong phong':'manager',
+    'giám đốc':'director', 'giam doc':'director',
+    'super admin':'superadmin', 'quản trị':'superadmin', 'quan tri':'superadmin', 'admin':'superadmin'
+  };
+  if(ALIAS[t]) return ALIAS[t];
+  /* thử khớp theo nhãn đã khai trong ROLE_DEF */
+  for(var k in ROLE_DEF){ if(ROLE_DEF[k].label.toLowerCase() === t) return k; }
+  return '';
+}
 
 /* ---------- TÊN GỌI ----------
    Một người có thể xuất hiện trong dữ liệu dưới nhiều tên: cột PIC của dự án
@@ -133,6 +175,9 @@ function ownsActivity(a, u, projectIds){
   var c = cap(u.role);
   if(c.scope === 'all') return true;
   if(coversPic(a.pic, u)) return true;
+  /* Người liên quan được thêm vào hoạt động cũng "sở hữu" hoạt động đó: nó hiện
+     trong kế hoạch tuần và báo cáo của họ. */
+  if((a.related || []).some(function(x){ return coversPic(x, u); })) return true;
   if(ownsCustomer(a.customer, u)) return true;
   /* R&D không phải người ghi hoạt động, nhưng hoạt động thuộc dự án họ phụ
      trách thì vẫn phải thấy — nếu không, dự án hiện ra mà lịch sử trống. */
@@ -143,13 +188,13 @@ function ownsActivity(a, u, projectIds){
 function scopeRecords(list, u){
   u = u || (typeof me !== 'undefined' ? me : null);
   if(!u) return [];
-  if(cap(u.role).scope === 'all') return list.slice();
+  if(canViewAll(u)) return list.slice();
   return list.filter(function(r){ return ownsRecord(r, u); });
 }
 function scopeActs(list, u, records){
   u = u || (typeof me !== 'undefined' ? me : null);
   if(!u) return [];
-  if(cap(u.role).scope === 'all') return list.slice();
+  if(canViewAll(u)) return list.slice();
   var ids = {};
   (records || []).forEach(function(r){ ids[r.id] = 1; });
   return list.filter(function(a){ return ownsActivity(a, u, ids); });
@@ -181,9 +226,10 @@ function capClose(r, u){
   return !!u.pic && isMine(r.pic, u);
 }
 
-window.cap = cap; window.myCap = myCap; window.roleLabel = roleLabel;
+window.cap = cap; window.myCap = myCap; window.roleLabel = roleLabel; window.canViewAll = canViewAll;
 window.splitAliases = splitAliases; window.nameSetOf = nameSetOf; window.isMine = isMine;
 window.ownsRecord = ownsRecord; window.ownsActivity = ownsActivity; window.ownsCustomer = ownsCustomer;
 window.coversPic = coversPic; window.supportsList = supportsList;
 window.scopeRecords = scopeRecords; window.scopeActs = scopeActs;
 window.capEdit = capEdit; window.capClose = capClose; window.capDelete = capDelete; window.isKnownRole = isKnownRole;
+window.capReport = capReport; window.roleFromText = roleFromText;

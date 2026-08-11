@@ -389,12 +389,15 @@
         <div class="owner-note" id="a-owner" hidden></div></div>
       <div class="a-gate" id="a-gate" hidden></div>
       <div class="a-fields" id="a-fields" style="display:contents">
-      <div class="field"><label>Nhà cung cấp</label><select id="a-ncc"></select></div>
+      <div class="field full"><label>Nhà cung cấp <span class="lbl-hint">chọn một hoặc nhiều</span></label>
+        <div class="tags" id="a-nccTags"><select id="a-ncc" onchange="aAddNcc()"></select></div></div>
       <div class="field"><label>Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
       <div class="field"><label>Ngày</label><input type="date" id="a-date"></div>
       <div class="field"><label>Mức độ quan tâm</label><select id="a-pot"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
       <div class="field full"><label>Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Vd: Giới thiệu giải pháp thay thế CMC, chốt lịch gửi mẫu…"></textarea></div>
       <div class="field full"><label>Hành động</label><input id="a-next" placeholder="Vd: Gửi mẫu 200g tuần sau"></div>
+      <div class="field full"><label>Người liên quan <span class="lbl-hint">hoạt động sẽ vào kế hoạch tuần &amp; báo cáo của họ</span></label>
+        <div class="tags" id="a-relTags"><select id="a-rel" onchange="aAddRel()"></select></div></div>
       <div class="field full"><label>Gắn vào dự án đang chạy</label><select id="a-proj"></select></div>
       <div class="field full att-box" id="a-attach"></div>
       </div>

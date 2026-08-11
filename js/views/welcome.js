@@ -376,12 +376,12 @@ function wcRenderFoot(mode){
   const note = mode === 'start' ? 'Đặt lịch xong, việc sẽ hiện ở dải bảy ngày phía trên.'
     : mode === 'mid' ? 'Bấm "Hoàn thành" khi xong việc để báo cáo cuối tuần tính đúng.'
     : 'Báo cáo là ảnh chụp số liệu tại thời điểm gửi.';
-  /* Quản lý (nhìn toàn đội) KHÔNG soạn báo cáo — họ đọc báo cáo của đội. */
-  const isLead = !!(me && cap(me.role).scope === 'all');
+  /* Chỉ vai trò thực thi mới soạn báo cáo; quản lý đọc báo cáo của đội. */
+  const canCompose = (typeof rpCanCompose === 'function') && rpCanCompose();
   const main = mode === 'end'
-    ? (isLead
-        ? `<button class="wc-btn pri" onclick="wcGo('reports')">Xem báo cáo đội</button>`
-        : `<button class="wc-btn pri" onclick="wcOpenReports()">Soạn báo cáo tuần</button>`)
+    ? (canCompose
+        ? `<button class="wc-btn pri" onclick="wcOpenReports()">Soạn báo cáo tuần</button>`
+        : `<button class="wc-btn pri" onclick="wcGo('reports')">Xem báo cáo đội</button>`)
     : `<button class="wc-btn pri" onclick="wcGo('funnel')">Vào Sales Funnel</button>`;
   const extra = (mode === 'start' && wcCanAct())
     ? `<button class="wc-btn" onclick="wcSchedule()">Ghi hoạt động mới</button>` : '';

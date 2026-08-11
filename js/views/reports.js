@@ -7,6 +7,10 @@ let rpFilterPic = '';
 const RP_COLORS = ['#01426A','#0E7490','#B45309','#6D28D9','#0D9488','#DB2777','#157F3C'];
 
 function rpIsLead(){ return !!(me && cap(me.role).scope === 'all'); }
+/* Ai được TỰ SOẠN báo cáo tuần: chỉ vai trò thực thi (sales, R&D, sale support)
+   và phải có tên PIC để gắn báo cáo. Quản lý/giám đốc/super admin ĐỌC báo cáo
+   của đội, KHÔNG tự soạn — dùng quyền dương nên vai trò lạ cũng không lọt vào. */
+function rpCanCompose(){ return !!(me && capReport(me.role) && me.pic); }
 
 /* Báo cáo ĐÃ GỬI lấy từ SharePoint (REPORTS). Khi chưa đăng nhập được Graph thì
    lùi về localStorage để vẫn xem được bản cũ trên máy này. */
@@ -43,19 +47,27 @@ window.renderReports = renderReports;
 
 function rpRenderTools(list){
   const box = document.getElementById('rpTools');
+  /* Hai công cụ độc lập, ghép theo quyền:
+       · Soạn báo cáo — vai trò thực thi (sales/R&D/sale support) VÀ nay cả quản lý.
+       · Lọc theo sales — vai trò nhìn toàn đội (quản lý/giám đốc/admin).
+     Quản lý có CẢ HAI: tự soạn báo cáo của mình và đọc/lọc báo cáo của đội. Vai
+     trò lạ không có công cụ nào. */
+  let html = '';
+  if(rpCanCompose()){
+    html += `<button class="btn-primary" onclick="openReportComposer()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Soạn báo cáo tuần</button>`;
+  }
   if(rpIsLead()){
     const src = (window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && typeof REPORTS!=='undefined')
       ? REPORTS : (window.LS ? LS.allReports() : []);
     const pics = Array.from(new Set(src.map(r => picKey(r.pic)))).sort();
-    box.innerHTML = `<select class="ck-sel" aria-label="Lọc theo sales" onchange="rpSetPic(this.value)">
+    html += `<select class="ck-sel" aria-label="Lọc theo sales" onchange="rpSetPic(this.value)">
       <option value="">Tất cả sales</option>
       ${pics.map(p => `<option value="${ckEsc(p)}"${picKey(rpFilterPic)===p?' selected':''}>${ckEsc(picLabel(p))}</option>`).join('')}
     </select>`;
-  } else {
-    box.innerHTML = `<button class="btn-primary" onclick="openReportComposer()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-      Soạn báo cáo tuần</button>`;
   }
+  box.innerHTML = html;
 }
 function rpSetPic(v){ rpFilterPic = v; rpSel = null; renderReports(); }
 window.rpSetPic = rpSetPic;
@@ -71,8 +83,8 @@ function rpRenderList(list){
   if(!list.length && !rpDraft){
     box.innerHTML = `<div class="ck-empty">
       <b>Chưa có báo cáo nào</b>
-      <p>${rpIsLead() ? 'Báo cáo do sales gửi sẽ hiện ở đây.' : 'Soạn báo cáo tuần để gửi cho quản lý.'}</p>
-      ${rpIsLead() ? '' : '<button class="ck-chip" onclick="openReportComposer()">Soạn báo cáo tuần</button>'}
+      <p>${rpCanCompose() ? 'Soạn báo cáo tuần để gửi cho quản lý.' : 'Báo cáo do sales gửi sẽ hiện ở đây.'}</p>
+      ${rpCanCompose() ? '<button class="ck-chip" onclick="openReportComposer()">Soạn báo cáo tuần</button>' : ''}
     </div>`;
     return;
   }
@@ -103,9 +115,14 @@ function rpSelect(id){
 window.rpSelect = rpSelect;
 
 function openReportComposer(){
-  /* Chốt chặn: quản lý/giám đốc/admin đọc báo cáo của đội, không tự soạn. */
-  if(rpIsLead()){ toast('Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.'); go('reports'); renderReports(); return; }
-  if(!(me && me.pic)){ toast('Chỉ tài khoản sales mới soạn được báo cáo tuần.'); return; }
+  /* Chốt chặn: chỉ vai trò thực thi mới tự soạn. Quản lý/giám đốc/admin đọc báo
+     cáo của đội. Dùng quyền dương capReport nên kín cả vai trò lạ. */
+  if(!rpCanCompose()){
+    toast(me && cap(me.role).scope === 'all'
+      ? 'Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.'
+      : 'Chỉ tài khoản sales mới soạn được báo cáo tuần.');
+    go('reports'); renderReports(); return;
+  }
   rpDraft = buildReport(me.pic, todayISO());
   rpSel = 'draft';
   go('reports');
@@ -123,8 +140,8 @@ function rpRenderPanel(list){
   if(!r){
     box.innerHTML = `<div class="ck-empty">
       <b>Chọn một báo cáo để đọc</b>
-      <p>${rpIsLead() ? 'Bấm một dòng bên trái để xem chi tiết tuần làm việc của sales.'
-                      : 'Hoặc soạn báo cáo mới cho tuần này.'}</p>
+      <p>${rpCanCompose() ? 'Hoặc soạn báo cáo mới cho tuần này.'
+                          : 'Bấm một dòng bên trái để xem chi tiết tuần làm việc của sales.'}</p>
     </div>`;
     return;
   }

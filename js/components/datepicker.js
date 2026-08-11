@@ -93,7 +93,12 @@
         "</div>";
 
       pop.querySelectorAll(".dp-mv").forEach(function (b) {
-        b.onclick = function () {
+        b.onclick = function (e) {
+          /* Đổi tháng vẽ lại innerHTML của popup, gỡ luôn nút vừa bấm khỏi DOM.
+             Sự kiện click nổi lên document lúc đó thấy target "không nằm trong
+             popup" nên tưởng bấm ra ngoài và đóng lịch — chặn nổi bọt ở đây để
+             lịch ở nguyên khi lật qua tháng mới. */
+          if (e) { e.preventDefault(); e.stopPropagation(); }
           view.m += +b.dataset.mv;
           if (view.m < 0) { view.m = 11; view.y--; }
           if (view.m > 11) { view.m = 0; view.y++; }

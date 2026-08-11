@@ -72,7 +72,9 @@ function myScope(pic, kind){
   });
   var ids = {}; records.forEach(function(r){ ids[r.id] = 1; });
   var acts = ACTIVITIES.filter(function(a){
-    return mine(a.pic) || (a.projectId && ids[a.projectId]);
+    /* Người liên quan được thêm vào một hoạt động → hoạt động đó vào kế hoạch tuần
+       và báo cáo của họ, y như hoạt động do chính họ ghi. */
+    return mine(a.pic) || (a.related||[]).some(mine) || (a.projectId && ids[a.projectId]);
   });
   return { key:K, records:records, acts:acts };
 }

@@ -18,7 +18,9 @@ function renderActs(){
        không có nghĩa được thấy dự án — nên chỉ hiện nút mở khi thật sự có quyền,
        còn lại là một nhãn câm, không lộ tên sản phẩm. */
     const prAll=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
-    const pr=prAll && (typeof ownsRecord!=='function' || !me || ownsRecord(prAll, me)) ? prAll : null;
+    const canSeePr = typeof ownsRecord!=='function' || !me
+      || (typeof canViewAll==='function' && canViewAll(me)) || ownsRecord(prAll, me);
+    const pr=prAll && canSeePr ? prAll : null;
     const u=USERS.find(x=>x.pic===a.pic);
     /* Nút trong hàng phải chặn click để không đồng thời mở chi tiết hoạt động. */
     const link=!pr && prAll
@@ -61,7 +63,9 @@ function canDelAct(a){
 function actCreateAllowed(name){
   if(!me) return false;
   const c = cap(me.role);
-  if(c.admin || c.scope==='all') return true;
+  /* Quản lý/admin (scope all) và R&D (viewAll) tạo được hoạt động với BẤT KỲ khách
+     hàng nào, kể cả khách do sales khác quản lý. */
+  if(c.admin || c.scope==='all' || (typeof canViewAll==='function' && canViewAll(me))) return true;
   const owner = (typeof customerOwnerOf==='function') ? customerOwnerOf(name) : '';
   if(!owner) return true;
   return typeof ownsCustomer==='function' && ownsCustomer(name, me);
@@ -69,7 +73,9 @@ function actCreateAllowed(name){
 function openActEdit(id){
   var a = ACTIVITIES.find(function(x){ return x.id === id; });
   if(!a) return;
-  openActForm({ editId: id, customer: a.customer, ncc: a.ncc, type: a.type, date: a.date,
+  openActForm({ editId: id, customer: a.customer, ncc: a.ncc,
+    nccs: (a.nccs && a.nccs.length) ? a.nccs : (a.ncc ? [a.ncc] : []),
+    related: a.related || [], type: a.type, date: a.date,
     potential: a.potential, note: a.note === '(không có nội dung)' ? '' : a.note,
     next: a.next === '—' ? '' : a.next, projectId: a.projectId || '' });
 }
@@ -133,6 +139,53 @@ function actApplyGate(){
 window.actApplyGate = actApplyGate;
 
 var aEditId = null;   // id hoạt động đang sửa; null = tạo mới
+var aNccs = [];       // nhà cung cấp đã chọn cho hoạt động (nhiều)
+var aRelated = [];    // người liên quan được thêm vào hoạt động
+
+/* Vẽ chip cho một danh sách đã chọn + nạp lại ô "thêm". Gắn onclick bằng JS (không
+   nhúng tên vào chuỗi HTML) để tên có dấu nháy/ký tự lạ không phá vỡ nút xoá. */
+function aRenderChips(boxId, selId, chosen, options, placeholder, remove, editable){
+  var box=document.getElementById(boxId); if(!box) return;
+  var sel=document.getElementById(selId);
+  box.querySelectorAll('.tag').forEach(function(t){ t.remove(); });
+  chosen.forEach(function(v){
+    var t=document.createElement('span'); t.className='tag';
+    t.appendChild(document.createTextNode(v));
+    if(editable){
+      var b=document.createElement('button'); b.type='button'; b.textContent='×';
+      b.setAttribute('aria-label','Bỏ '+v);
+      b.onclick=function(){ remove(v); };
+      t.appendChild(b);
+    }
+    box.insertBefore(t, sel);
+  });
+  var low=chosen.map(function(x){ return String(x).toLowerCase(); });
+  var rest=options.filter(function(n){ return low.indexOf(String(n).toLowerCase())<0; });
+  sel.innerHTML='<option value="">'+placeholder+'</option>'
+    +rest.map(function(n){ return '<option>'+esc4(n)+'</option>'; }).join('');
+  sel.style.display = editable ? '' : 'none';
+  sel.disabled = !editable;
+}
+function aRenderNcc(editable){
+  aRenderChips('a-nccTags','a-ncc', aNccs,
+    supplierOptions().concat(OTHER_NCC), '+ Thêm nhà cung cấp…', aRmNcc, editable);
+}
+function aAddNcc(){ var v=document.getElementById('a-ncc').value; if(!v) return;
+  if(aNccs.map(function(x){return String(x).toLowerCase();}).indexOf(v.toLowerCase())<0) aNccs.push(v);
+  aRenderNcc(true); }
+function aRmNcc(v){ aNccs=aNccs.filter(function(x){ return x!==v; }); aRenderNcc(true); }
+window.aAddNcc=aAddNcc; window.aRmNcc=aRmNcc;
+
+function aRenderRel(editable){
+  var mine=me&&(me.pic||me.name);
+  var opts=(typeof ALL_PICS!=='undefined'?ALL_PICS:[]).filter(function(p){ return p!==mine; });
+  aRenderChips('a-relTags','a-rel', aRelated, opts, '+ Thêm người liên quan…', aRmRel, editable);
+}
+function aAddRel(){ var v=document.getElementById('a-rel').value; if(!v) return;
+  if(aRelated.indexOf(v)<0) aRelated.push(v); aRenderRel(true); }
+function aRmRel(v){ aRelated=aRelated.filter(function(x){ return x!==v; }); aRenderRel(true); }
+window.aAddRel=aAddRel; window.aRmRel=aRmRel;
+
 function openActForm(prefill, origin){
   const p = prefill && typeof prefill === 'object' ? prefill : {};
   srcAct=null;
@@ -160,10 +213,12 @@ function openActForm(prefill, origin){
   });
   const dc = document.getElementById('dl-cust-all');
   if(dc) dc.innerHTML = custList.slice(0,2000).map(n=>`<option value="${esc4(n)}"></option>`).join('');
-  /* Nhà cung cấp: ĐỦ danh sách từ list Suppliers + lựa chọn "Khác" cho hoạt động chung. */
-  const nccOpts = supplierOptions().concat(OTHER_NCC);
-  document.getElementById('a-ncc').innerHTML =
-    nccOpts.map(n=>`<option${n===ncc?' selected':''}>${esc4(n)}</option>`).join('');
+  /* Nhà cung cấp: cho chọn NHIỀU nhà cung cấp dưới dạng chip. Khi sửa ưu tiên
+     mảng nccs của hoạt động; nếu chỉ có một ncc thì khởi tạo từ nó; hoạt động mới
+     mặc định lấy NCC đang dùng của form (bỏ qua "Khác"). */
+  aNccs = (p.nccs && p.nccs.length) ? p.nccs.slice()
+        : (ncc && ncc!==OTHER_NCC ? [ncc] : []);
+  aRenderNcc(editable);
   document.getElementById('a-date').value = p.date || isoOf(TODAY);
   document.getElementById('a-cust').value = p.customer || '';
   document.getElementById('a-note').value = p.note || '';
@@ -178,8 +233,12 @@ function openActForm(prefill, origin){
     : mine;
   document.getElementById('a-proj').innerHTML='<option value="">— Chưa gắn dự án nào —</option>'
     +list.slice(0,200).map(r=>`<option value="${r.id}"${r.id===p.projectId?' selected':''}>${r.customer} · ${r.product}</option>`).join('');
-  /* Chế độ sửa: khoá các ô khi không có quyền, đổi nhãn nút Lưu, hiện nút Xoá. */
-  ['a-cust','a-ncc','a-type','a-date','a-pot','a-note','a-next','a-proj'].forEach(function(id){
+  /* Người liên quan: thêm ai vào thì hoạt động này vào kế hoạch tuần & báo cáo của họ. */
+  aRelated = (p.related && p.related.length) ? p.related.slice() : [];
+  aRenderRel(editable);
+  /* Chế độ sửa: khoá các ô khi không có quyền, đổi nhãn nút Lưu, hiện nút Xoá.
+     a-ncc và a-rel do aRenderNcc/aRenderRel tự bật/tắt theo editable. */
+  ['a-cust','a-type','a-date','a-pot','a-note','a-next','a-proj'].forEach(function(id){
     const el=document.getElementById(id); if(el) el.disabled = !editable;
   });
   const saveBtn=document.getElementById('a-save');
@@ -245,22 +304,34 @@ window.deleteAct = deleteAct;
 function saveAct(){
   const g=id=>document.getElementById(id).value.trim();
   if(!g('a-cust')){toast('Nhập tên khách hàng.');return;}
-  const ncc=g('a-ncc')||OTHER_NCC;
+  /* Nhà cung cấp CHÍNH = chip đầu tiên (giữ nguyên logic lọc/quy trình theo ncc);
+     cả danh sách lưu ở nccs. */
+  const nccList = aNccs.slice();
+  const ncc = nccList[0] || OTHER_NCC;
+  const relList = aRelated.slice();
 
   /* ----- Chế độ SỬA: cập nhật tại chỗ hoạt động đang có ----- */
   if(aEditId){
     const a=ACTIVITIES.find(function(x){return x.id===aEditId;});
     if(!a){ aEditId=null; closeActForm(); return; }
     if(!canEditAct(a)){ toast('Bạn không có quyền sửa hoạt động này.'); return; }
-    a.customer=g('a-cust'); a.ncc=ncc; a.type=g('a-type'); a.date=g('a-date');
+    const relAdded=relList.filter(function(x){ return (a.related||[]).indexOf(x)<0; });
+    a.customer=g('a-cust'); a.ncc=ncc; a.nccs=nccList; a.related=relList;
+    a.type=g('a-type'); a.date=g('a-date');
     a.note=g('a-note')||'(không có nội dung)'; a.next=g('a-next')||'—';
     a.potential=g('a-pot'); a.projectId=g('a-proj')||null;
     if(window.LS && LS.updateAct) LS.updateAct(a);
+    if(relAdded.length && typeof notifyPlain==='function')
+      notifyPlain('đã thêm bạn vào hoạt động với <b>'+esc4(a.customer)+'</b> ('+actType(a.type)
+        +', '+new Date(a.date).toLocaleDateString('vi-VN')+') — đã vào kế hoạch tuần của bạn', relAdded);
     /* Đồng bộ các trường vô hướng lên SharePoint (nếu đã có spId + quyền ghi).
        Đổi khách/NCC/dự án cần tra lookup id nên chỉ lưu cục bộ, không đẩy ở đây. */
     if(window.FISG_STORE && FISG_STORE.updateActivity && FISG_STORE.canWrite && FISG_STORE.canWrite() && a.spId){
+      /* Người liên quan và trọn danh sách NCC là text ngăn ";" nên đẩy thẳng được
+         khi sửa (join rỗng = xoá hết, đúng khi người dùng bỏ hết chip). */
       FISG_STORE.updateActivity(a.spId, { ActivityType:a.type, ActivityDate:a.date,
-        Content:a.note, NextStep:a.next, PotentialLevel:a.potential })
+        Content:a.note, NextStep:a.next, PotentialLevel:a.potential,
+        RelatedPeople:(a.related||[]).join('; '), SupplierList:(a.nccs||[]).join('; ') })
         .catch(function(e){ console.warn('[activities] chưa cập nhật được lên SharePoint', e&&(e.message||e)); });
     }
     aEditId=null;
@@ -272,10 +343,15 @@ function saveAct(){
 
   /* ----- Chế độ TẠO MỚI ----- */
   const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
-    ncc:ncc,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
+    ncc:ncc,nccs:nccList,related:relList,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
     next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};
   ACTIVITIES.unshift(a);
   LS.addAct(a);
+  /* Người liên quan được thêm: hoạt động này đã nằm trên kế hoạch tuần & báo cáo
+     của họ — báo cho họ biết. */
+  if(relList.length && typeof notifyPlain==='function')
+    notifyPlain('đã thêm bạn vào hoạt động với <b>'+esc4(a.customer)+'</b> ('+actType(a.type)
+      +', '+new Date(a.date).toLocaleDateString('vi-VN')+') — đã vào kế hoạch tuần của bạn', relList);
   if(!LISTS.customers.includes(a.customer))LISTS.customers.push(a.customer);
   /* NCC mới gõ tay được ghi nhớ cho phiên làm việc để lần sau chọn lại từ gợi ý. */
   if(ncc && ncc!==OTHER_NCC && !LISTS.nccs.some(n=>String(n).trim().toLowerCase()===ncc.toLowerCase())){
