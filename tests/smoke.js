@@ -1063,6 +1063,59 @@ Promise.resolve(new JSDOM(HTML,{url:'file://'+ROOT+'/index.html',runScripts:'dan
       throw new Error('bản địa phương vẫn còn kẹt lại');
   });
 
+  // ---- SỬA LOẠT LỖI: weekly support, quản lý không soạn báo cáo, xoá KH, dedup, tìm ----
+  step('Sale Support có menu Kế hoạch tuần (weekly=true)',()=>{
+    if(!E('cap("salesupport").weekly'))throw new Error('salesupport thiếu weekly');
+  });
+  step('Quản lý KHÔNG soạn được báo cáo — chỉ đọc',()=>{
+    E(`loginAs(${ix('duy@f.vn')}); go('reports')`);
+    E('rpSel=null; openReportComposer();');
+    if(E('rpSel')==='draft')throw new Error('lead vẫn mở được bản nháp báo cáo');
+  });
+  await astep('danh bạ GỘP khách trùng tên (không hiện 2 dòng)',async()=>{
+    ITEMS.Customers=[{id:'c1',fields:{Title:'Bao Yen Great'}},
+                     {id:'c2',fields:{Title:'Bao Yen Great',OData__x004f_wn:'Tam'}}];
+    await E('FISG_STORE.loadCustomerDirectory()');
+    const n=E("CUSTOMER_DIR.filter(function(c){return custOwnerKey(c.name)===custOwnerKey('Bao Yen Great')}).length");
+    if(n!==1)throw new Error('còn '+n+' dòng trùng nhau');
+    if(E("customerOwnerOf('Bao Yen Great')")!=='Tam')throw new Error('gộp làm mất chủ sở hữu');
+  });
+  await astep('xoá khách hàng: gỡ dòng list + khỏi danh bạ',async()=>{
+    if(E('typeof FISG_STORE.deleteCustomer')!=='function')throw new Error('thiếu deleteCustomer');
+    ITEMS.Customers=[{id:'cx',fields:{Title:'Xoa Thu Co',OData__x004f_wn:'Duy Che Ngoc'}}];
+    await E('FISG_STORE.loadCustomerDirectory()');
+    (SP.deleted||[]).length=0;
+    await E("FISG_STORE.deleteCustomer(CUSTOMER_DIR.find(function(c){return custOwnerKey(c.name)===custOwnerKey('Xoa Thu Co')}))");
+    if(!(SP.deleted||[]).some(x=>x.list==='Customers'&&String(x.id)==='cx'))throw new Error('không gọi deleteItem trên Customers');
+    if(E("CUSTOMER_DIR.some(function(c){return custOwnerKey(c.name)===custOwnerKey('Xoa Thu Co')})"))throw new Error('còn trong danh bạ');
+  });
+  step('quyền xoá KH: sales xoá của mình, Sale Support KHÔNG xoá',()=>{
+    E(`CUSTOMER_DIR.length=0;
+       Object.keys(CUSTOMER_OWNER).forEach(function(k){delete CUSTOMER_OWNER[k]});
+       [['Khach Cua Ngoc','Phạm Bích Ngọc'],['Khach Cua Tam','Tam']].forEach(function(p){
+         CUSTOMER_DIR.push({name:p[0],owner:p[1],legal:'',spId:'sp-'+p[0].length});
+         CUSTOMER_OWNER[custOwnerKey(p[0])]=p[1];
+       });
+       loginAs(${ix('ngoc@f.vn')}); closeWelcome();`);
+    if(!E("cuCanDelete(cuFind('Khach Cua Ngoc'))"))throw new Error('sales phải xoá được khách của mình');
+    if(E("cuCanDelete(cuFind('Khach Cua Tam'))"))throw new Error('sales KHÔNG được xoá khách người khác');
+    E(`USERS.push({email:'sup2@f.vn',picRaw:null,fullName:'Sup Hai',name:'Sup Hai',pic:'Sup Hai',
+        role:'salesupport',supports:['Phạm Bích Ngọc'],color:'#0E9F6E'});
+       loginAs(USERS.length-1); closeWelcome();`);
+    if(E("cuCanDelete(cuFind('Khach Cua Ngoc'))"))throw new Error('Sale Support KHÔNG được xoá');
+  });
+  step('sales TÌM thấy mọi khách, không tìm thì chỉ của mình',()=>{
+    E(`loginAs(${ix('ngoc@f.vn')}); closeWelcome(); go('customers')`);
+    E("cuSetQuery('')");
+    const own=E("cuRows().map(function(c){return c.name}).join(',')");
+    if(!/Khach Cua Ngoc/.test(own))throw new Error('thiếu khách của mình');
+    if(/Khach Cua Tam/.test(own))throw new Error('chưa tìm mà đã lộ khách người khác');
+    E("cuSetQuery('Khach Cua Tam')");
+    const found=E("cuRows().map(function(c){return c.name}).join(',')");
+    if(!/Khach Cua Tam/.test(found))throw new Error('tìm không ra khách của sales khác: '+found);
+    E("cuSetQuery('')");
+  });
+
   const real=errs.filter(e=>!/createLinearGradient|getContext|offline|Pipelines|chưa đăng nhập/.test(e));
   console.log('\n'+pass+' bước đạt · '+(real.length?'LỖI:\n'+real.join('\n'):'KHÔNG CÓ LỖI RUNTIME'));
 }).catch(e=>console.error('HARNESS',e));

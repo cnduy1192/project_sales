@@ -35,20 +35,31 @@ function cuStats(){
   return { m, key };
 }
 
-/* Danh sách khách trong phạm vi quyền, đã lọc theo sales chọn + ô tìm. */
+/* Khách này có phải "của mình" (được quản lý bởi mình) không. */
+function cuMine(c){
+  return typeof ownsCustomer === 'function' && ownsCustomer(c.name || c, me);
+}
+/* Khách chưa ai quản lý (không có chủ trong danh bạ). */
+function cuUnowned(c){ return !String(c.owner||'').trim(); }
+
+/* Danh sách khách hiển thị:
+   · lead (manager/admin) → cả đội, lọc theo sales đang chọn;
+   · sales KHÔNG tìm       → chỉ khách của mình (mình tạo / mình phụ trách);
+   · sales CÓ tìm          → mọi khách trong data khớp ô tìm, kèm chú thích ai
+     đang quản lý (giải bài "tìm không ra nhưng khi tạo mới lại thấy"). */
 function cuRows(){
   const dir = (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []);
   const q = cuQuery.trim().toLowerCase();
+  const seeAll = cuCanSeeAll();
   return dir.filter(c => {
-    if(!cuCanSeeAll()){
-      if(!ownsCustomer(c.name, me)) return false;          // sales: chỉ của mình
-    } else if(cuFilterOwner){
-      if(picKey(c.owner) !== picKey(cuFilterOwner)) return false;
-    }
     if(q){
       const hay = (c.name + ' ' + (c.legal||'') + ' ' + (c.owner||'')).toLowerCase();
       if(hay.indexOf(q) < 0) return false;
+      if(seeAll && cuFilterOwner && picKey(c.owner) !== picKey(cuFilterOwner)) return false;
+      return true;   // sales: khi tìm thì thấy được mọi khách khớp
     }
+    if(!seeAll) return cuMine(c);                            // sales: chỉ của mình
+    if(cuFilterOwner) return picKey(c.owner) === picKey(cuFilterOwner);
     return true;
   }).sort((a,b) => custLabel(a.name).localeCompare(custLabel(b.name), 'vi'));
 }
@@ -81,27 +92,44 @@ function cuRenderRows(){
     return;
   }
 
+  const seeAll = cuCanSeeAll();
   box.innerHTML = rows.map(c => {
     const s = m[key(c.name)] || { open:0, total:0, lastTouch:null, nccs:new Set() };
     /* Chưa có hoạt động / dự án thì để TRỐNG, không hiện nhãn giữ chỗ. */
     const touch = s.lastTouch ? cuTouch(s.lastTouch) : { text:'', cls:'' };
     const legal = c.legal && custOwnerKey(c.legal) !== custOwnerKey(c.name)
       ? `<span class="cu-legal">${ckEsc(c.legal)}</span>` : '';
+    const mine = seeAll || cuMine(c);
+    const free = cuUnowned(c);
+    /* Được thao tác (ghi dự án/hoạt động) khi khách của mình HOẶC chưa ai quản lý. */
+    const canAct = mine || free;
+
+    /* Cột phụ trách:
+       · lead → luôn hiện tên chủ;
+       · sales → chỉ để chú thích khi đây là khách KHÔNG phải của mình (kết quả tìm). */
+    let ownerCell;
+    if(seeAll) ownerCell = picLabel(c.owner) ? ckEsc(picLabel(c.owner)) : '<span class="cu-dash">—</span>';
+    else if(mine) ownerCell = '<span class="cu-dash">—</span>';
+    else if(free) ownerCell = '<span class="cu-tag cu-tag-free">Chưa ai quản lý</span>';
+    else ownerCell = `<span class="cu-tag"><span>Phụ trách:</span> ${ckEsc(picLabel(c.owner)||'—')}</span>`;
+
+    const actCell = canAct
+      ? `<button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ Dự án</button>
+         <button class="cu-btn ghost" onclick="cuNewAct('${ckAttr(c.name)}')">Ghi hoạt động</button>`
+      : `<span class="cu-foreign">Khách của sales khác</span>`;
+
     return `<div class="cu-row">
       <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="Xem & sửa thông tin khách hàng">
         <b>${ckEsc(custLabel(c.name))}</b>${legal}
       </button>
-      <div class="cu-owner">${cuCanSeeAll() && picLabel(c.owner) ? ckEsc(picLabel(c.owner)) : '<span class="cu-dash">—</span>'}</div>
+      <div class="cu-owner">${ownerCell}</div>
       <div class="cu-num">${s.open
         ? `<span class="cu-pill"><b>${s.open}</b><em>đang chạy</em></span>`
         : '<span class="cu-zero">0</span>'}</div>
       <div class="cu-touch ${touch.cls}">${touch.text
         ? `<span class="cu-chip">${touch.text}</span>`
         : '<span class="cu-dash">—</span>'}</div>
-      <div class="cu-act">
-        <button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ Dự án</button>
-        <button class="cu-btn ghost" onclick="cuNewAct('${ckAttr(c.name)}')">Ghi hoạt động</button>
-      </div>
+      <div class="cu-act">${actCell}</div>
     </div>`;
   }).join('');
 }
@@ -112,6 +140,15 @@ function cuCanEdit(entry){
   if(!me) return false;
   if(myCap().admin) return true;
   return typeof ownsCustomer === 'function' && ownsCustomer(entry && entry.name ? entry.name : entry, me);
+}
+
+/* Ai được XOÁ một khách hàng: theo cờ del của vai trò + sửa được khách này.
+   Áp dụng cho MỌI vai trò có quyền xoá (Sales xoá khách của mình; Manager/Admin
+   xoá cả đội). Sale Support del=false nên không xoá được, đúng chủ trương. */
+function cuCanDelete(entry){
+  if(!me || !entry) return false;
+  if(!cap(me.role).del) return false;
+  return cuCanEdit(entry);
 }
 
 function cuTouch(iso){
@@ -184,6 +221,7 @@ function cuOpenEdit(name){
   /* Bỏ panel "Dự án / Hoạt động của khách hàng" bên phải — modal chỉ còn form. */
   const related = '';
 
+  const canDel = !isNew && cuCanDelete(entry);
   const v = entry || { name:'', legal:'', owner:(me&&(me.pic||me.name))||'', segment:'', region:'', status:'' };
   /* Người phụ trách luôn hiển thị TÊN, không để trống: ưu tiên chủ hiện tại, nếu
      chưa có thì lấy chính người đang đăng nhập. Dùng picLabel để ra tên đầy đủ. */
@@ -217,6 +255,8 @@ function cuOpenEdit(name){
           <label><span class="cu-cap">Trạng thái</span> <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
         </div>
         ${canEdit ? `<div class="cu-form-act">
+          ${canDel ? `<button class="btn-danger cu-del" id="cuf-del" onclick="cuDeleteCustomer()">Xoá khách hàng</button>` : ''}
+          <span class="cu-act-gap"></span>
           <button class="btn-ghost" onclick="cuCloseEdit()">Huỷ</button>
           <button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>
         </div>` : ''}
@@ -264,6 +304,38 @@ function cuSaveCustomer(){
   });
 }
 window.cuSaveCustomer = cuSaveCustomer;
+
+/* Xoá khách hàng khỏi danh bạ. Xác nhận hai lớp nếu khách còn dự án/hoạt động
+   (những bản ghi đó KHÔNG bị xoá theo — chỉ gỡ khách khỏi danh bạ). */
+function cuDeleteCustomer(){
+  const entry = cuEditName ? cuFind(cuEditName) : null;
+  if(!entry){ if(window.toast) toast('Không tìm thấy khách hàng.'); return; }
+  if(!cuCanDelete(entry)){ if(window.toast) toast('Bạn không có quyền xoá khách hàng này.'); return; }
+  const label = custLabel(entry.name);
+  const key = (typeof custOwnerKey === 'function') ? custOwnerKey
+            : (s => String(s||'').trim().toUpperCase());
+  const k = key(entry.name);
+  const used = (typeof RECORDS !== 'undefined' ? RECORDS : []).filter(r => key(r.customer) === k).length
+             + (typeof ACTIVITIES !== 'undefined' ? ACTIVITIES : []).filter(a => key(a.customer) === k).length;
+  const warn = used
+    ? `Khách "${label}" đang gắn với ${used} dự án/hoạt động. Xoá khỏi danh bạ sẽ KHÔNG xoá các bản ghi đó, nhưng khách sẽ biến mất khỏi danh sách. Tiếp tục?`
+    : `Xoá khách hàng "${label}" khỏi danh bạ?`;
+  if(!confirm(warn)) return;
+  if(!window.FISG_STORE || !FISG_STORE.deleteCustomer || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
+    if(window.toast) toast('Chưa đăng nhập Microsoft 365 — không xoá được.');
+    return;
+  }
+  const btn = document.getElementById('cuf-del'); if(btn){ btn.disabled = true; btn.textContent = 'Đang xoá…'; }
+  FISG_STORE.deleteCustomer(entry).then(()=>{
+    if(window.toast) toast('Đã xoá khách hàng ' + label + '.');
+    cuCloseEdit(); renderCustomers();
+  }).catch(e=>{
+    console.warn('[customers] xoá hỏng:', e && (e.message||e));
+    if(window.toast) toast('KHÔNG xoá được trên SharePoint: ' + (e.message||e));
+    if(btn){ btn.disabled = false; btn.textContent = 'Xoá khách hàng'; }
+  });
+}
+window.cuDeleteCustomer = cuDeleteCustomer;
 
 /* Nút "Xem lịch sử" dùng lại ngăn kéo Cockpit. */
 function cuOpen(name){

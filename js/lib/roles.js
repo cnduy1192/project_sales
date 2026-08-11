@@ -21,7 +21,7 @@ var ROLE_DEF = {
   },
   salesupport: {
     label:'Sale Support', scope:'support',
-    edit:true,  close:true,  del:false, admin:false, cockpit:false, weekly:false, weeklyAuto:false,
+    edit:true,  close:true,  del:false, admin:false, cockpit:false, weekly:true,  weeklyAuto:false,
     hint:'Hỗ trợ các sales được chỉ định: thấy và sửa dự án/hoạt động/khách của họ, nhưng KHÔNG xoá'
   },
   rnd: {

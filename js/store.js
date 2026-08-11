@@ -183,13 +183,28 @@
     CUSTOMER_DIR.length = 0;
     Object.keys(CUSTOMER_OWNER).forEach(k => delete CUSTOMER_OWNER[k]);
     Object.keys(CUSTOMER_LEGAL).forEach(k => delete CUSTOMER_LEGAL[k]);
+    /* GỘP TRÙNG: list Customers có thể có nhiều dòng cùng một khách (nhập trùng,
+       tên thương hiệu + tên pháp nhân…). Nếu để nguyên thì datalist khi tạo mới
+       hiện 2 giá trị giống hệt. Gộp theo tên đã chuẩn hoá, ưu tiên bản đã có
+       người phụ trách, điền nốt các trường còn thiếu. */
+    const seen = {};   // key chuẩn hoá -> vị trí trong CUSTOMER_DIR
     items.forEach(c => {
-      CUSTOMER_DIR.push(c);
       const k = key(c.name);
+      if (k && seen[k] !== undefined) {
+        const ex = CUSTOMER_DIR[seen[k]];
+        if (!ex.owner && c.owner) ex.owner = c.owner;
+        if (!ex.legal && c.legal) ex.legal = c.legal;
+        if (!ex.segment && c.segment) ex.segment = c.segment;
+        if (!ex.region && c.region) ex.region = c.region;
+        if (!ex.status && c.status) ex.status = c.status;
+      } else {
+        if (k) seen[k] = CUSTOMER_DIR.length;
+        CUSTOMER_DIR.push(c);
+      }
       if (k && c.owner && !CUSTOMER_OWNER[k]) CUSTOMER_OWNER[k] = c.owner;
       if (k && c.legal && !CUSTOMER_LEGAL[k]) CUSTOMER_LEGAL[k] = c.legal;
     });
-    return items.length;
+    return CUSTOMER_DIR.length;
   }
 
   /* Chủ sở hữu của một khách hàng theo tên. Không có trong danh bạ → '' (khách
@@ -1146,6 +1161,31 @@
     return spId;
   }
 
+  /* Xoá một khách hàng khỏi danh bạ (list Customers). Nhận spId hoặc object có
+     .spId. Chỉ xoá đúng dòng danh bạ — KHÔNG đụng dự án/hoạt động đã gắn tên
+     khách (những bản ghi đó vẫn còn, tránh mất dữ liệu ngoài ý muốn). Quyền do
+     lớp UI kiểm (cờ del + ownsCustomer); ở đây chỉ thực thi. */
+  async function deleteCustomer(target) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const spId = (target && typeof target === "object") ? target.spId : target;
+    if (!spId) throw new Error("thiếu mã dòng khách hàng");
+    await FISG_GRAPH.deleteItem("Customers", spId);
+    const i = CUSTOMER_DIR.findIndex(c => c.spId === spId);
+    if (i >= 0) {
+      const k = (typeof custOwnerKey === "function")
+        ? custOwnerKey(CUSTOMER_DIR[i].name)
+        : String(CUSTOMER_DIR[i].name || "").trim().toUpperCase();
+      CUSTOMER_DIR.splice(i, 1);
+      if (k && !CUSTOMER_DIR.some(c => (typeof custOwnerKey === "function"
+            ? custOwnerKey(c.name) : String(c.name||"").trim().toUpperCase()) === k)) {
+        delete CUSTOMER_OWNER[k]; delete CUSTOMER_LEGAL[k];
+      }
+    }
+    if (window.renderCustomers) try { renderCustomers(); } catch (e) {}
+    if (typeof invalidateCockpit === "function") invalidateCockpit();
+    return true;
+  }
+
   /* Gán / đổi chủ sở hữu một khách hàng. Dùng khi sales tạo KH mới, hoặc admin
      phân công lại. Ghi thẳng lên list Customers để mọi máy cùng thấy. */
   async function setCustomerOwner(name, owner) {
@@ -1670,7 +1710,7 @@
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
-                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer,
+                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer, deleteCustomer,
                         bulkUpsertSuppliers, previewSupplierUpsert,
                         loadReports, sendReportToSP, addReportComment,
                         loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,

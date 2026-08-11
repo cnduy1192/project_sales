@@ -272,11 +272,16 @@
     "Sản phẩm đang chào": "Products offered",
     "Xem toàn bộ lịch sử dự án": "See the full project history",
     // Màn hình Khách hàng của tôi
-    "Khách hàng của tôi": "My Customers", "Phụ trách": "Owner",
+    "Khách hàng của tôi": "My Customers", "Phụ trách": "Owner", "Phụ trách:": "Owner:",
     "Nhà cung cấp": "Supplier", "Dự án": "Projects",
     "Tìm khách hàng": "Search customers", "chưa có dự án": "no project yet",
     "Chưa có hoạt động": "No activity yet", "đang chạy": "in progress",
     "Kế hoạch chưa đánh dấu": "Planned, not marked",
+    "Chưa ai quản lý": "Unassigned", "Khách của sales khác": "Another sales' customer",
+    "Xoá khách hàng": "Delete customer", "Đang xoá…": "Deleting…",
+    // Báo cáo: quản lý không soạn báo cáo
+    "Xem báo cáo đội": "View team reports",
+    "Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.": "Managers only read team reports, they do not write them.",
     // Báo cáo: luồng trao đổi
     "Trao đổi": "Discussion", "Gửi phản hồi": "Send reply",
     "Chưa có phản hồi nào.": "No replies yet.", "Quản lý": "Manager",

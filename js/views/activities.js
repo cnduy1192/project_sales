@@ -148,10 +148,15 @@ function openActForm(prefill, origin){
      phụ trách — nhân viên thấy được, chọn xong dòng owner-note báo khách của ai. */
   const allCust = (typeof CUSTOMER_DIR !== 'undefined' && CUSTOMER_DIR.length)
     ? CUSTOMER_DIR.map(c => c.name) : LISTS.customers;
+  /* Gộp trùng bằng CHÍNH chuẩn hoá của danh bạ (custOwnerKey: bỏ dấu, gom khoảng
+     trắng, hoa/thường) để không lọt 2 dòng "giống hệt" chỉ khác dấu cách. */
+  const nrm = (typeof custOwnerKey === 'function')
+    ? custOwnerKey : (s => String(s||'').trim().toLowerCase());
   const seenC = new Set(); const custList = [];
   allCust.concat(LISTS.customers).forEach(n => {
-    const k = String(n||'').trim(); if(!k || seenC.has(k.toLowerCase())) return;
-    seenC.add(k.toLowerCase()); custList.push(k);
+    const k = String(n||'').trim(); const nk = nrm(k);
+    if(!k || !nk || seenC.has(nk)) return;
+    seenC.add(nk); custList.push(k);
   });
   const dc = document.getElementById('dl-cust-all');
   if(dc) dc.innerHTML = custList.slice(0,2000).map(n=>`<option value="${esc4(n)}"></option>`).join('');

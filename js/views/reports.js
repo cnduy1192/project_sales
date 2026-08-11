@@ -103,6 +103,8 @@ function rpSelect(id){
 window.rpSelect = rpSelect;
 
 function openReportComposer(){
+  /* Chốt chặn: quản lý/giám đốc/admin đọc báo cáo của đội, không tự soạn. */
+  if(rpIsLead()){ toast('Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.'); go('reports'); renderReports(); return; }
   if(!(me && me.pic)){ toast('Chỉ tài khoản sales mới soạn được báo cáo tuần.'); return; }
   rpDraft = buildReport(me.pic, todayISO());
   rpSel = 'draft';

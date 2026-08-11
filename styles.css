@@ -488,7 +488,7 @@ svg{flex:none}
 @keyframes drawerIn{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.modal{animation:none}}
 /* body between the fixed header and footer takes the slack and scrolls */
-.modal>.modal-body,.modal>.detail-grid{flex:1;min-height:0;overflow:auto}
+.modal>.modal-body,.modal>.detail-grid,.modal>.modal-scroll{flex:1;min-height:0;overflow:auto}
 .modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);flex:none}
 .modal-head h3{font-size:16px;font-weight:700}
 .modal-head .mh-sub{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
