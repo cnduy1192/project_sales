@@ -1,22 +1,9 @@
-/* js/views/customer-import.js — nhập / cập nhật list Customers từ Excel, tự động.
- *
- * Chỉ admin. Người dùng chọn file Excel (cả khách cũ lẫn mới), app:
- *   1. đọc mọi sheet có cột Title + (Owner hoặc LegalName),
- *   2. đối chiếu với list Customers ĐANG CÓ (theo tên gọn của Title/LegalName),
- *   3. XEM TRƯỚC: bao nhiêu cập nhật / tạo mới / bỏ qua,
- *   4. bấm chạy → upsert qua chính phiên đăng nhập (FISG_GRAPH), có thanh tiến
- *      độ và báo cáo lỗi từng dòng.
- *
- * Ghi tuần tự theo lô, chạy lại nhiều lần vẫn đúng (khách cũ chỉ cập nhật, không
- * nhân bản). Toàn bộ logic đối chiếu/ghi nằm ở store.js (bulkUpsertCustomers);
- * file này chỉ lo đọc Excel và giao diện. */
 (function () {
   "use strict";
 
-  let rows = null;      // dữ liệu đã parse
+  let rows = null;
   let fileName = "";
 
-  /* ---- đọc Excel bằng SheetJS ---- */
   function headerMap(headerRow) {
     const m = {};
     headerRow.forEach((h, i) => {
@@ -24,7 +11,7 @@
       if (!s) return;
       if (m.title === undefined && (s === "title" || s.indexOf("title") === 0
           || s === "tên khách hàng" || s === "tên" || s.indexOf("tên gọn") === 0)) m.title = i;
-      /* CHỦ SỞ HỮU — khớp chặt để không nuốt nhầm cột "Chủ chọn" của sheet Cần rà. */
+
       else if (m.owner === undefined && (s === "owner" || s.indexOf("người phụ trách") >= 0
           || s.indexOf("chủ sở hữu") >= 0)) m.owner = i;
       else if (m.legal === undefined && (s === "legalname" || s.indexOf("pháp nhân") >= 0)) m.legal = i;
@@ -43,8 +30,7 @@
       const grid = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: "" });
       if (!grid.length) return;
       const map = headerMap(grid[0]);
-      /* Bắt buộc có Title và ít nhất một trong Owner/LegalName — nếu không, đây
-         là sheet phụ (Cần rà, Còn trống) và ta bỏ qua để không ghi rác. */
+
       if (map.title === undefined || (map.owner === undefined && map.legal === undefined)) return;
       const cell = (r, i) => i === undefined ? "" : String(r[i] == null ? "" : r[i]).trim();
       for (let i = 1; i < grid.length; i++) {
@@ -133,7 +119,7 @@
             + rep.errors.slice(0, 40).map(x => "• " + esc(x)).join("<br>");
         }
       }
-      setActions(true, true);   // cho phép chạy lại để dọn nốt phần lỗi
+      setActions(true, true);
     } catch (e) {
       setStatus("Dừng giữa chừng: " + (e.message || e), "err");
       setActions(true, true);
@@ -142,7 +128,6 @@
     }
   }
 
-  /* ---- giao diện ---- */
   function esc(s) { return (window.ckEsc ? ckEsc(s) : String(s == null ? "" : s)); }
   function setStatus(html, kind) {
     const el = document.getElementById("ciStatus");

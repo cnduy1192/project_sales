@@ -1,19 +1,12 @@
-/* js/views/reports.js — mục Báo cáo. Một view, nội dung theo vai trò:
-   sales soạn và xem báo cáo của mình, manager/admin đọc của cả đội. */
-
-let rpSel = null;        // id báo cáo đang mở, hoặc 'draft'
-let rpDraft = null;      // bản nháp chưa gửi
+let rpSel = null;
+let rpDraft = null;
 let rpFilterPic = '';
 const RP_COLORS = ['#01426A','#0E7490','#B45309','#6D28D9','#0D9488','#DB2777','#157F3C'];
 
 function rpIsLead(){ return !!(me && cap(me.role).scope === 'all'); }
-/* Ai được TỰ SOẠN báo cáo tuần: chỉ vai trò thực thi (sales, R&D, sale support)
-   và phải có tên PIC để gắn báo cáo. Quản lý/giám đốc/super admin ĐỌC báo cáo
-   của đội, KHÔNG tự soạn — dùng quyền dương nên vai trò lạ cũng không lọt vào. */
+
 function rpCanCompose(){ return !!(me && capReport(me.role) && me.pic); }
 
-/* Báo cáo ĐÃ GỬI lấy từ SharePoint (REPORTS). Khi chưa đăng nhập được Graph thì
-   lùi về localStorage để vẫn xem được bản cũ trên máy này. */
 function rpSentReports(){
   const useSp = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()
              && typeof REPORTS !== 'undefined';
@@ -23,35 +16,28 @@ function rpSentReports(){
   return all.filter(r => picKey(r.pic) === picKey((me && me.pic) || ''));
 }
 
-/* Ai được viết phản hồi trên một báo cáo: quản lý (nhìn toàn đội) trên MỌI báo
-   cáo; sales trên báo cáo của CHÍNH MÌNH (trao đổi hai chiều). */
 function rpCanComment(r){
   if(!me || !r) return false;
   if(cap(me.role).scope === 'all') return true;
   return picKey(r.pic) === picKey(me.pic || '');
 }
 
-/* ====== ĐIỀU PHỐI ====== */
 function renderReports(){
   const list = rpSentReports();
   rpRenderTools(list);
   rpRenderList(list);
   rpRenderPanel(list);
-  /* Một trang giữa: có báo cáo/nháp đang mở thì ẩn danh sách, hiện tài liệu. */
+
   const grid = document.querySelector('#view-reports .rp-grid');
   const open = !!(rpSel && (rpSel === 'draft' ? rpDraft : list.some(x => x.id === rpSel)));
   if(grid) grid.classList.toggle('has-open', open);
-  if(window.markReportsSeen) markReportsSeen();   // mở mục Báo cáo = đã xem
+  if(window.markReportsSeen) markReportsSeen();
 }
 window.renderReports = renderReports;
 
 function rpRenderTools(list){
   const box = document.getElementById('rpTools');
-  /* Hai công cụ độc lập, ghép theo quyền:
-       · Soạn báo cáo — vai trò thực thi (sales/R&D/sale support) VÀ nay cả quản lý.
-       · Lọc theo sales — vai trò nhìn toàn đội (quản lý/giám đốc/admin).
-     Quản lý có CẢ HAI: tự soạn báo cáo của mình và đọc/lọc báo cáo của đội. Vai
-     trò lạ không có công cụ nào. */
+
   let html = '';
   if(rpCanCompose()){
     html += `<button class="btn-primary" onclick="openReportComposer()">
@@ -98,8 +84,6 @@ function rpRenderList(list){
   }).join('');
 }
 
-/* Bỏ bản nháp đang có nội dung thì phải hỏi — sales gõ nhận xét xong mà mất là
-   mất công thật. */
 function rpDraftDirty(){
   if(!rpDraft) return false;
   const el = document.getElementById('rpNote');
@@ -115,8 +99,7 @@ function rpSelect(id){
 window.rpSelect = rpSelect;
 
 function openReportComposer(){
-  /* Chốt chặn: chỉ vai trò thực thi mới tự soạn. Quản lý/giám đốc/admin đọc báo
-     cáo của đội. Dùng quyền dương capReport nên kín cả vai trò lạ. */
+
   if(!rpCanCompose()){
     toast(me && cap(me.role).scope === 'all'
       ? 'Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.'
@@ -131,7 +114,6 @@ function openReportComposer(){
 }
 window.openReportComposer = openReportComposer;
 
-/* ====== KHUNG CHI TIẾT ====== */
 function rpRenderPanel(list){
   const box = document.getElementById('rpPanel');
   const draft = rpSel === 'draft';
@@ -147,6 +129,7 @@ function rpRenderPanel(list){
   }
 
   const s = r.stats;
+  const hasProj = s.open > 0;
   const listOf = (title, items, render) => `
     <div class="wc-sec">
       <div class="wc-sec-h"><h3>${title}</h3><span>${items.length}</span></div>
@@ -160,24 +143,30 @@ function rpRenderPanel(list){
     <div class="rp-meta">${draft ? 'Bản nháp · số liệu chốt khi bấm gửi'
       : 'Đã gửi ' + ckVN(r.createdAt)}</div>
 
+    <div class="rp-actions">
+      <button class="btn-ghost rp-export" onclick="rpExportExcel('${draft ? 'draft' : ckAttr(r.id)}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+        Xuất Excel</button>
+    </div>
+
     <div class="wc-stats" style="margin-top:16px">
       <div class="wc-stat" style="--sc:var(--wc-done)"><b>${s.done}</b><span>Đã làm</span></div>
-      <div class="wc-stat" style="--sc:var(--wc-miss)"><b>${s.missed}</b><span>Chưa đánh dấu</span></div>
+      <div class="wc-stat" style="--sc:var(--wc-miss)"><b>${s.missed}</b><span>Chưa hoàn thành</span></div>
       <div class="wc-stat" style="--sc:var(--marine)"><b>${s.changes}</b><span>Thay đổi dự án</span></div>
       <div class="wc-stat" style="--sc:var(--overdue)"><b>${s.overdue}</b><span>Quá hạn</span></div>
     </div>
 
-    <div class="rp-charts">
+    <div class="rp-charts${hasProj ? '' : ' rp-charts--single'}">
       <div class="rp-chart">
-        <h4>Hoạt động theo loại</h4>
+        <h4>Phân loại hoạt động</h4>
         <div id="rpChart1"></div><div class="legend" id="rpLeg1"></div>
         <p class="rp-sum" id="rpSum1"></p>
       </div>
-      <div class="rp-chart">
+      ${hasProj ? `<div class="rp-chart">
         <h4>Dự án đang chạy theo giai đoạn</h4>
         <div id="rpChart2"></div><div class="legend" id="rpLeg2"></div>
         <p class="rp-sum" id="rpSum2"></p>
-      </div>
+      </div>` : ''}
     </div>
 
     ${listOf('Hoạt động đã làm', r.doneActs, a => `
@@ -187,7 +176,7 @@ function rpRenderPanel(list){
         <span class="wc-kg">${ckVN(a.date)}</span></div>
         <div class="wc-item-r">${ckEsc(a.note||'—')}</div></div>`)}
 
-    ${r.missedActs.length ? listOf('Kế hoạch chưa đánh dấu', r.missedActs, a => `
+    ${r.missedActs.length ? listOf('Kế hoạch chưa hoàn thành', r.missedActs, a => `
       <div class="wc-item"><div class="wc-item-t">
         <span class="wc-item-n">${ckEsc(a.custLabel)}</span>
         <span class="ck-badge warn">${ckVN(a.date)}</span></div>
@@ -200,7 +189,7 @@ function rpRenderPanel(list){
         <div class="wc-item-r">${ckEsc(c.product||'')}${c.text ? ' — ' + ckEsc(c.text.slice(0,110)) : ''}</div></div>`)}
 
     <div class="rp-field">
-      <label for="rpNote">Nhận xét của ${draft ? 'bạn' : ckEsc(r.picLabel)}</label>
+      <label for="rpNote">Nội dung báo cáo</label>
       ${draft
         ? `<textarea id="rpNote" placeholder="Vd: Tuần này tập trung nhóm DAIRY, hai khách hẹn thử mẫu tuần sau…"></textarea>
            <p class="hint">Nhận xét gửi kèm số liệu ở trên. Số liệu được chốt tại thời điểm gửi.</p>`
@@ -209,13 +198,12 @@ function rpRenderPanel(list){
 
     <div class="att-box" id="rp-attach"></div>
     ${draft ? `<div class="rp-send">
-      <button class="btn-primary" onclick="sendReport()">Gửi cho quản lý</button>
-      <button class="btn-ghost" onclick="rpDiscard()">Bỏ bản nháp</button>
+      <button class="btn-primary" onclick="sendReport()">Gửi</button>
+      <button class="btn-ghost" onclick="rpDiscard()">Huỷ</button>
     </div>` : rpThreadHtml(r)}`;
 
   rpDrawCharts(r);
-  /* Tệp đính kèm: bản NHÁP đính kèm ngay (chờ tải khi Gửi); báo cáo ĐÃ GỬI thì
-     tải thẳng. Tải lên: chủ báo cáo + quản lý. */
+
   if(window.FISG_ATTACH && document.getElementById('rp-attach')){
     FISG_ATTACH.mount('rp-attach', { type:'report',
       id: draft ? '' : r.id,
@@ -224,7 +212,6 @@ function rpRenderPanel(list){
   }
 }
 
-/* ====== LUỒNG PHẢN HỒI ====== */
 function rpThreadHtml(r){
   const cmts = r.comments || [];
   const thread = cmts.length
@@ -267,7 +254,7 @@ function rpPostComment(code){
   }
   const btn = el && el.parentElement.querySelector('button');
   if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
-  /* Hiện ngay trên màn hình để người viết thấy phản hồi của mình, rồi ghi. */
+
   const by = (me && (me.pic || me.name)) || '';
   r.comments = (r.comments || []).concat([{ by:by, role:me.role, at:todayISO(), text:text }]);
   renderReports();
@@ -283,15 +270,14 @@ function rpPostComment(code){
 }
 window.rpPostComment = rpPostComment;
 
-/* ====== BIỂU ĐỒ ======
-   Không mượn donut() của dashboard vì tooltip ở đó ghi cứng đơn vị "dự án". */
 function rpDrawCharts(r){
   const pic = r.pic;
   const data = reportCharts(r, pic);
   rpDonut('rpChart1','rpLeg1','rpSum1', data.actsByType, 'hoạt động',
     'Chưa có hoạt động nào được đánh dấu hoàn thành trong tuần.');
-  rpDonut('rpChart2','rpLeg2','rpSum2', data.openByStage, 'dự án',
-    'Không có dự án nào đang chạy.');
+  if(document.getElementById('rpChart2'))
+    rpDonut('rpChart2','rpLeg2','rpSum2', data.openByStage, 'dự án',
+      'Không có dự án nào đang chạy.');
 }
 
 function rpDonut(elId, legId, sumId, items, unit, emptyMsg){
@@ -307,7 +293,6 @@ function rpDonut(elId, legId, sumId, items, unit, emptyMsg){
   }
   const withColor = items.map((i,k) => Object.assign({}, i, { color: RP_COLORS[k % RP_COLORS.length] }));
 
-  /* Bản tóm tắt bằng chữ: biểu đồ một mình không đọc được bằng trình đọc màn hình. */
   if(sum) sum.textContent = 'Tổng ' + total + ' ' + unit + ': ' +
     withColor.map(i => i.label + ' ' + i.value).join(' · ');
 
@@ -333,7 +318,6 @@ function rpDonut(elId, legId, sumId, items, unit, emptyMsg){
     `<div class="li"><span class="sw" style="background:${i.color}"></span>${ckEsc(i.label)}<b>${i.value}</b><small>${Math.round(100*i.value/total)}%</small></div>`).join('');
 }
 
-/* ====== GỬI ====== */
 function sendReport(){
   if(!rpDraft) return;
   const note = (document.getElementById('rpNote')||{}).value || '';
@@ -343,7 +327,7 @@ function sendReport(){
   rpDraft.createdAt = rpDraft.createdAt || todayISO();
 
   const draft = rpDraft;
-  /* Chụp tệp đính kèm đang chờ TRƯỚC khi gửi; tải sau khi báo cáo có mã. */
+
   const pend = window.FISG_ATTACH ? FISG_ATTACH.takePending('rp-attach') : [];
   if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()){
     const btn = document.querySelector('.rp-send .btn-primary');
@@ -364,7 +348,7 @@ function sendReport(){
     });
     return;
   }
-  /* Không đăng nhập Graph: lùi về localStorage (chỉ máy này thấy). */
+
   const saved = LS.addReport(draft);
   notifyPlain('đã gửi <b>báo cáo tuần ' + saved.weekLabel + '</b>', saved.to);
   rpDraft = null; rpSel = saved.id;
@@ -372,6 +356,50 @@ function sendReport(){
   toast('Đã lưu báo cáo trên máy này (chưa đăng nhập SharePoint nên quản lý chưa nhận được).');
 }
 window.sendReport = sendReport;
+
+function rpExportExcel(code){
+  const r = code === 'draft' ? rpDraft : rpSentReports().find(x => x.id === code);
+  if(!r){ if(window.toast) toast('Không tìm thấy báo cáo để xuất.'); return; }
+  if(typeof XLSX === 'undefined'){ if(window.toast) toast('Thư viện Excel chưa tải xong, thử lại sau giây lát.'); return; }
+  const vn = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleDateString('vi-VN') : (iso || ''); };
+  const s = r.stats || {};
+  const rows = [];
+  const push = (...c) => rows.push(c);
+
+  push('BÁO CÁO TUẦN', r.weekLabel || '');
+  push('Người thực hiện', r.picLabel || r.pic || '');
+  push('Ngày gửi', vn(r.createdAt));
+  push();
+  push('Đã làm', s.done || 0, 'Chưa hoàn thành', s.missed || 0, 'Thay đổi dự án', s.changes || 0, 'Quá hạn', s.overdue || 0);
+  push();
+
+  push('HOẠT ĐỘNG ĐÃ LÀM');
+  push('Ngày', 'Khách hàng', 'Loại', 'Nội dung', 'Next step');
+  (r.doneActs || []).forEach(a => push(vn(a.date), a.custLabel || a.customer || '', a.type || '', a.note || '', a.next || ''));
+  push();
+
+  push('KẾ HOẠCH CHƯA HOÀN THÀNH');
+  push('Ngày', 'Khách hàng', 'Nội dung');
+  (r.missedActs || []).forEach(a => push(vn(a.date), a.custLabel || a.customer || '', a.note || ''));
+  push();
+
+  push('THAY ĐỔI DỰ ÁN');
+  push('Ngày', 'Khách hàng', 'Sản phẩm', 'Nội dung');
+  (r.projectChanges || []).forEach(c => push(vn(c.ts), c.custLabel || '', c.product || '', c.text || ''));
+  push();
+
+  push('NỘI DUNG BÁO CÁO');
+  push(r.note || 'Không có nội dung.');
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 13 }, { wch: 30 }, { wch: 14 }, { wch: 44 }, { wch: 30 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Báo cáo');
+  const safe = String(r.picLabel || r.pic || 'bao-cao').replace(/[^\p{L}\p{N}]+/gu, '_');
+  const wk = String(r.weekLabel || '').replace(/[^\p{L}\p{N}]+/gu, '_');
+  XLSX.writeFile(wb, 'BaoCao_' + safe + '_' + wk + '.xlsx');
+}
+window.rpExportExcel = rpExportExcel;
 
 function rpDiscard(){
   if(rpDraftDirty() && !confirm('Bỏ bản nháp và nội dung đã gõ?')) return;

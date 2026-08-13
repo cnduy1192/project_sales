@@ -1,5 +1,3 @@
-/* js/components/notifications.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== NOTIFICATIONS ====== */
 function recipientsOf(r){
   const set=new Set([r.pic,...(r.related||[])].filter(Boolean));
   set.delete(me.pic||me.name);
@@ -9,19 +7,16 @@ function notify(rec,action){
   NOTIFS.unshift({who:me.pic||me.name,action,to:recipientsOf(rec),at:nowStr()});
   renderNotifs();
 }
-/* Báo cáo tuần không gắn với dự án nào nên không dùng được recipientsOf().
-   Hàm này nhận thẳng danh sách người nhận. */
+
 function notifyPlain(action,to){
   NOTIFS.unshift({who:me.pic||me.name,action,to:(to&&to.length?to:['(chưa có người nhận)']),at:nowStr()});
   renderNotifs();
 }
 function managerNames(){
-  /* Ai nhìn được toàn đội thì nhận báo cáo tuần — gồm cả Director. */
+
   return USERS.filter(u=>cap(u.role).scope==='all').map(u=>u.pic||u.name);
 }
-/* Người nhận báo cáo của MỘT người: line báo cáo được chỉ định (reportsTo) nếu
-   có, còn không thì gửi tất cả quản lý. Super Admin phân "báo cáo cho ai" trong
-   list Người dùng. */
+
 function reportRecipients(u){
   u = u || (typeof me!=='undefined'?me:null);
   if(u && u.reportsTo) return [u.reportsTo];
@@ -29,11 +24,6 @@ function reportRecipients(u){
 }
 window.reportRecipients = reportRecipients;
 
-/* ====== THÔNG BÁO SUY TỪ BÁO CÁO / PHẢN HỒI ======
-   Không cần list Notifications riêng: mỗi lần vào, tính các "sự kiện đáng báo"
-   (báo cáo mới cho quản lý, phản hồi mới cho người liên quan) rồi trừ đi tập
-   ĐÃ XEM lưu cục bộ theo từng người. Mất tập đã-xem (đổi máy) chỉ khiến thông
-   báo cũ hiện lại — vô hại, không phải dữ liệu. */
 var RP_NOTIFS = [];
 
 function _seenKey(){ return 'fisg_notif_seen_' + ((me&&me.email)||'anon'); }
@@ -46,15 +36,13 @@ function _saveSeen(set){
 }
 function _cmtKey(code,c){ return 'C:'+code+':'+picKey(c.by)+':'+(c.at||'')+':'+(c.text||'').slice(0,24); }
 
-/* Mọi sự kiện đáng báo cho `me`, kèm khoá định danh để so với tập đã xem. */
 function _notifCandidates(){
   if(typeof REPORTS==='undefined' || !me) return [];
   const lead = cap(me.role).scope==='all';
   const meKey = picKey(me.pic||me.name);
   const out = [];
   REPORTS.forEach(r=>{
-    /* Quản lý: báo cáo mới do sales gửi. Nếu báo cáo có line nhận cụ thể
-       (report.to) thì CHỈ người trong đó được báo; không có thì mọi quản lý. */
+
     const addressed = (r.to||[]).filter(Boolean);
     const forLead = lead && picKey(r.pic)!==meKey
       && (addressed.length===0 || addressed.some(t=>picKey(t)===meKey));
@@ -62,10 +50,9 @@ function _notifCandidates(){
       out.push({ key:'R:'+r.id, who:r.pic, action:'đã gửi <b>báo cáo tuần '+r.weekLabel+'</b>',
                  at:r.createdAt, report:r.id });
     (r.comments||[]).forEach(c=>{
-      if(picKey(c.by)===meKey) return;               // mình viết thì không tự báo mình
+      if(picKey(c.by)===meKey) return;
       const cLead = c.role && cap(c.role).scope==='all';
-      /* Sales: phản hồi trên báo cáo CỦA MÌNH. Quản lý: phản hồi của sales
-         (trả lời trên luồng) — để biết mà theo tiếp. */
+
       const forMe = lead ? !cLead : (picKey(r.pic)===meKey);
       if(forMe)
         out.push({ key:_cmtKey(r.id,c), who:c.by,
@@ -78,8 +65,6 @@ function _notifCandidates(){
   return out;
 }
 
-/* Tính lại danh sách thông báo chưa xem. Gọi sau đăng nhập và sau mỗi lần
-   REPORTS đổi. */
 function refreshNotifs(){
   const seen = _seenSet();
   RP_NOTIFS = _notifCandidates().filter(n=>!seen.has(n.key));
@@ -87,8 +72,6 @@ function refreshNotifs(){
 }
 window.refreshNotifs = refreshNotifs;
 
-/* Đánh dấu đã xem MỌI thông báo báo cáo/phản hồi hiện có. Gọi khi mở mục Báo
-   cáo — người dùng đã nhìn thấy rồi. */
 function markReportsSeen(){
   const seen = _seenSet();
   _notifCandidates().forEach(n=>seen.add(n.key));
@@ -98,7 +81,6 @@ function markReportsSeen(){
 }
 window.markReportsSeen = markReportsSeen;
 
-/* Bấm vào một thông báo báo cáo → mở đúng báo cáo đó. */
 function openReportNotif(code){
   document.getElementById('notifPanel').classList.remove('open');
   if(window.go){ go('reports'); }

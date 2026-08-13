@@ -1,5 +1,3 @@
-/* js/views/ai.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== AI ASSISTANT (Gemini qua Cloudflare Worker gateway) ====== */
 let AI_URL = '', AI_HIST = [], AI_BUSY = false;
 try{ AI_URL = localStorage.getItem('fisg_ai_url')||''; }catch(e){}
 function initAI(){
@@ -43,7 +41,7 @@ function aiTyping(){
 function aiUntype(){const e=document.getElementById('aiTypingEl');if(e)e.remove();}
 function aiQuick(t){document.getElementById('aiText').value=t;aiSend();}
 function aiQuickFill(t){const i=document.getElementById('aiText');i.value=t;i.focus();i.setSelectionRange(t.indexOf('30%'),t.indexOf('30%')+3);}
-/* -- dữ liệu realtime gửi kèm cho AI: toàn bộ pipeline -- */
+
 function aiContext(){
   const rows=RECORDS;
   const prog=rows.filter(r=>r.status==='IN PROGRESS');
@@ -77,7 +75,7 @@ async function aiSend(){
   aiUntype(); AI_HIST.push({role:'model',text:ans});
   aiAppend('bot',aiMd(ans)); AI_BUSY=false;
 }
-/* -- chế độ cục bộ: phân tích trực tiếp trên dữ liệu khi chưa có gateway -- */
+
 function aiLocal(q){
   const ql=q.toLowerCase();
   const prog=RECORDS.filter(r=>r.status==='IN PROGRESS');

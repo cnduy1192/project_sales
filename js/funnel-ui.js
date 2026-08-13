@@ -1,7 +1,3 @@
-/* js/funnel-ui.js — Bảng Sales Funnel (nạp CUỐI).
- * 1) Xuất Excel chuyển vào menu hồ sơ (kèm Đăng xuất)   3) Hover card + thanh trượt %
- * 2) Nút "Thêm dự án" dạt phải                          4) Hai phím trạng thái dựng đứng bên trái
- */
 (function () {
   "use strict";
 
@@ -14,7 +10,6 @@
   let active = "run";
   try { active = localStorage.getItem("fisg_funnel_key") || "run"; } catch (e) {}
 
-  /* ---------- 1. Xuất Excel (CSV thật) trong menu hồ sơ ---------- */
   function rows() {
     if (typeof window.visible === "function") { try { return visible(); } catch (e) {} }
     return (typeof RECORDS !== "undefined" && RECORDS) || [];
@@ -59,13 +54,12 @@
       if (w) w.classList.remove("open");
     };
     if (out) out.parentNode.insertBefore(b, out); else menu.appendChild(b);
-    // gỡ nút cũ trên thanh công cụ
+
     document.querySelectorAll('#view-funnel .topbar button').forEach(x => {
       if (/Xuất Excel/i.test(x.textContent)) x.remove();
     });
   }
 
-  /* ---------- 4. Hai phím trạng thái bên trái ---------- */
   function buildRail() {
     const view = document.getElementById("view-funnel");
     const groups = document.getElementById("groups");
@@ -122,7 +116,7 @@
       b.setAttribute("aria-selected", on ? "true" : "false");
       b.tabIndex = on ? 0 : -1;
     });
-    // đếm số dự án mỗi trạng thái
+
     const data = rows();
     const nRun = data.filter(r => r.status === "IN PROGRESS").length;
     const nClosed = data.length - nRun;
@@ -132,7 +126,6 @@
     };
     setNum("run", nRun); setNum("closed", nClosed);
 
-    // chỉ hiện đúng khối trạng thái đang chọn
     const majors = [...document.querySelectorAll("#groups .major")];
     if (!majors.length) return;
     let shown = 0;
@@ -143,15 +136,14 @@
       m.style.display = on ? "" : "none";
       if (on) {
         shown++;
-        m.classList.remove("collapsed");                       // mở sẵn để thấy các cấp bên trong
+        m.classList.remove("collapsed");
         if (typeof collapsed !== "undefined") collapsed["major-" + (k.id === "run" ? "run" : "closed")] = false;
       }
     });
-    // trạng thái rỗng: vẫn hiện khối "không có dự án"
+
     if (!shown) majors.forEach(m => { m.style.display = ""; });
   }
 
-  /* ---------- 3. Thanh trượt % (oninput cập nhật ngay) ---------- */
   function slider(selectId) {
     const sel = document.getElementById(selectId);
     if (!sel || sel.dataset.sliderReady) return;
@@ -168,18 +160,18 @@
     const range = wrap.querySelector(".pb-range"), out = wrap.querySelector(".pb-val");
 
     const pushToSelect = v => {
-      // chọn mốc gần nhất có trong danh sách gốc để dữ liệu vẫn hợp lệ
+
       const opts = [...sel.options].map(o => parseInt(o.value || o.textContent, 10)).filter(n => !isNaN(n));
       if (!opts.length) return;
       const near = opts.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, opts[0]);
       sel.value = [...sel.options].find(o => parseInt(o.value || o.textContent, 10) === near).value;
     };
-    range.addEventListener("input", () => {           // cập nhật ngay khi kéo
+    range.addEventListener("input", () => {
       out.textContent = range.value + "%";
       pushToSelect(+range.value);
     });
     range.addEventListener("change", () => sel.dispatchEvent(new Event("change", { bubbles: true })));
-    // đồng bộ ngược khi code khác đổi select (vd đổi giai đoạn)
+
     const sync = () => {
       const v = parseInt(sel.value, 10);
       if (!isNaN(v)) { range.value = v; out.textContent = v + "%"; }
@@ -206,7 +198,6 @@
     range.addEventListener("change", () => { if (window.setProb) setProb(+range.value); });
   }
 
-  /* ---------- gắn vào vòng đời ---------- */
   function afterRender() { applyKey(); }
   function wrap(name, fn) {
     const o = window[name];

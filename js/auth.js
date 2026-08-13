@@ -1,5 +1,3 @@
-/* js/auth.js — Đăng nhập Microsoft 365 bằng MSAL (browser SPA, classic script).
- * Nối vào nút .ms-btn có sẵn ở màn đăng nhập. Sau khi đăng nhập -> gọi store tải Graph. */
 (function () {
   const CFG = window.FISG_CFG;
   let app = null, account = null, initPromise = null;
@@ -18,7 +16,6 @@
     return app;
   }
 
-  // MSAL v3 BẮT BUỘC await initialize() trước mọi API khác — bọc 1 lần duy nhất
   async function ready() {
     const a = build();
     if (!a) return null;
@@ -26,7 +23,7 @@
     await initPromise;
     return a;
   }
-  function init() { return build(); }   // giữ tương thích chỗ gọi cũ
+  function init() { return build(); }
 
   async function getToken(scopes) {
     const a = await ready();
@@ -42,7 +39,7 @@
 
   async function signIn() {
     let a = await ready();
-    // MSAL tải async từ CDN — nếu click sớm, chờ tối đa 3s rồi thử lại
+
     for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = await ready(); }
     if (!a) {
       if (window.toast) toast("Chưa tải được MSAL. Tải lại trang (F5); nếu vẫn lỗi, kiểm tra mạng/chặn CDN.");
@@ -64,10 +61,9 @@
     }
   }
 
-  // đưa tài khoản MS vào luồng đăng nhập sẵn có (tái dùng loginAs của core.js)
   async function enter(acc) {
     const email = (acc.username || "").toLowerCase();
-    // Tài khoản KHÁCH -> vào màn nhập KEY, không vào app nội bộ
+
     const guests = (CFG.GUEST_EMAILS || []).map(e => String(e).toLowerCase());
     if (guests.includes(email) && window.FISG_GUEST) {
       let idx = USERS.findIndex(u => (u.email || "").toLowerCase() === email);
@@ -80,8 +76,7 @@
       await FISG_GUEST.afterLogin(email);
       return;
     }
-    /* Phân quyền là của SharePoint, không phải của code. Đọc list Users trước khi
-       vào app để biết người này là sales nào và vai trò gì. */
+
     if (!window.FISG_STORE) { toast("Thiếu js/store.js — không tải được dữ liệu."); return; }
     const p = await FISG_STORE.profileFor(email, acc.name || acc.username);
     if (!p.user) {
@@ -90,7 +85,7 @@
       return;
     }
     loginAs(p.index);
-    await FISG_STORE.syncFromGraph();   // đổ dữ liệu thật vào toàn bộ màn hình
+    await FISG_STORE.syncFromGraph();
   }
 
   async function handleRedirect() {
@@ -107,7 +102,7 @@
 
   function boot() {
     const btn = document.querySelector(".ms-btn");
-    if (btn) btn.onclick = signIn;             // ghi đè toast demo bằng đăng nhập thật
+    if (btn) btn.onclick = signIn;
     handleRedirect().then(acc => { if (acc) enter(acc); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

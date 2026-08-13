@@ -1,11 +1,8 @@
-/* js/graph.js — Microsoft Graph REST client tối giản (classic script).
- * Đọc/ghi SharePoint List. Tự retry khi 429. Ghi lookup/person bằng hậu tố ...LookupId. */
 (function () {
   const CFG = window.FISG_CFG;
   const BASE = "https://graph.microsoft.com/v1.0";
   let siteId = null;
 
-  // scopes: tuỳ chọn — dùng cho quyền bổ sung (vd GroupMember.Read.All) qua incremental consent
   async function api(path, opts, scopes) {
     const token = await FISG_AUTH.getToken(scopes || CFG.scopes);
     const url = path.startsWith("http") ? path : BASE + path;
@@ -30,7 +27,6 @@
     return siteId;
   }
 
-  // đọc toàn bộ item 1 list (tự phân trang), kèm $expand=fields
   async function listItems(listName, selectExpand) {
     const sid = await getSiteId();
     let next = "/sites/" + sid + "/lists/" + encodeURIComponent(listName) +
@@ -44,7 +40,6 @@
     return out;
   }
 
-  // {internal: display} của 1 list (cache) — để map khi internal name bị SharePoint mã hoá
   const colCache = {};
   async function columns(listName) {
     if (colCache[listName]) return colCache[listName];
@@ -73,8 +68,6 @@
       { method: "DELETE" });
   }
 
-  /* Tra một người trên thư mục O365 theo email. Cần quyền User.ReadBasic.All —
-     xin thêm bằng incremental consent, không nhét vào scope đăng nhập ban đầu. */
   async function lookupPerson(email) {
     const mail = String(email || "").trim();
     if (!mail) return null;
@@ -88,9 +81,6 @@
     } catch (e) { return null; }
   }
 
-  /* ==================== TỆP ĐÍNH KÈM (Document Library) ====================
-     Dùng drive MẶC ĐỊNH của site (thư viện "Documents"). Scope Sites.ReadWrite.All
-     đã đủ. Tên thư mục/tệp phải sạch ký tự cấm của SharePoint. */
   async function driveId() {
     if (driveId._v) return driveId._v;
     const sid = await getSiteId();
@@ -99,7 +89,6 @@
     return d.id;
   }
 
-  /* Bỏ ký tự SharePoint cấm trong tên thư mục/tệp; gom khoảng trắng. */
   function cleanSeg(s) {
     return String(s == null ? "" : s)
       .replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim()
@@ -109,7 +98,6 @@
     return path.split("/").filter(Boolean).map(encodeURIComponent).join("/");
   }
 
-  /* Tạo dần từng cấp thư mục. Idempotent: đã có thì Graph trả về dòng cũ. */
   async function ensureFolder(path) {
     const drv = await driveId();
     const segs = String(path || "").split("/").map(cleanSeg).filter(Boolean);
@@ -121,7 +109,7 @@
           { method: "POST", body: JSON.stringify(body) });
         parent = created.id;
       } catch (e) {
-        /* 409 = đã tồn tại → lấy id của nó rồi đi tiếp. */
+
         const found = await api("/drives/" + drv + "/items/" + parent
           + "/children?$filter=" + encodeURIComponent("name eq '" + seg.replace(/'/g, "''") + "'")
           + "&$select=id,name").catch(() => null);
@@ -130,11 +118,9 @@
         parent = hit.id;
       }
     }
-    return parent;                       // id thư mục cuối
+    return parent;
   }
 
-  /* Tải một tệp lên thư mục theo ĐƯỜNG DẪN. ≤4MB dùng PUT thẳng; lớn hơn dùng
-     upload session theo mảnh. Trả về driveItem {id, webUrl, name, size}. */
   async function uploadFile(folderPath, fileName, blob) {
     const drv = await driveId();
     const name = cleanSeg(fileName);
@@ -149,7 +135,6 @@
       return res.json();
     }
 
-    /* >4MB: upload session, đẩy từng mảnh 3.2MB. */
     const sess = await api("/drives/" + drv + "/root:/" + full + ":/createUploadSession",
       { method: "POST", body: JSON.stringify({ item: { "@microsoft.graph.conflictBehavior": "replace" } }) });
     const url = sess.uploadUrl;

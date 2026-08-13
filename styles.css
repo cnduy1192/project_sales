@@ -14,7 +14,7 @@
   --primary:#1E3A8A; --primary-border:#C9D5F0; --primary-soft:#EEF2FB;
   --text:#16181D; --text-2:#4C5364; --text-3:#697082;
   --glass-border:#E4E6EC;
-  /* Marine blue on pearl white — sidebar identity, echoed by the timeline trunk */
+
   --marine:#01426A; --marine-deep:#012A46; --marine-2:#0A5C8F; --marine-3:#2E7DAE;
   --marine-ink:#0B2436; --marine-mute:#4A5F70; --marine-label:#2E6389;
   --marine-soft:rgba(1,66,106,.06); --marine-line:rgba(1,66,106,.14);
@@ -35,12 +35,10 @@ svg{flex:none}
 
 .glass{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
 
-/* Geometric display face carries headings, nav and figures; Inter stays for prose. */
 .logo,.nav-item,.nav-label,.sidebar-user b,.topbar h2,.card h4,.kpi .k-value,
 .ins-head h3,.tly-year,.seg-cell .sc-n,.ls-opt,.modal-head h3,.login-card h1{
   font-family:var(--font-display)}
 
-/* ---------- LOGIN ---------- */
 #login{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg)}
 .login-card{border-radius:14px;padding:40px 36px;width:404px;max-width:94vw}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em}
@@ -59,17 +57,15 @@ svg{flex:none}
 .badge-admin{margin-left:auto;font-size:10px;font-weight:700;background:var(--accent);color:#fff;border-radius:20px;padding:2.5px 9px}
 .badge-mgr{margin-left:auto;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:2.5px 9px}
 
-/* ---------- SHELL ---------- */
 #app{display:none;min-height:100dvh}
 .shell{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:100dvh;
   transition:grid-template-columns .34s cubic-bezier(.4,0,.2,1)}
 .shell.side-min{grid-template-columns:var(--side-w-min) 1fr}
 
-/* ---------- SIDEBAR: pearl white field, marine blue rail ---------- */
 .sidebar{position:sticky;top:0;height:100dvh;min-width:0;
   padding:16px 12px;display:flex;flex-direction:column;gap:2px;
   color:var(--marine-ink);background:var(--pearl);border-right:1px solid var(--marine-line)}
-/* marine bloom drifting up from the base */
+
 .sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:
     radial-gradient(78% 32% at 18% 104%,rgba(1,66,106,.20),transparent 72%),
@@ -86,7 +82,7 @@ svg{flex:none}
 
 .side-head{display:flex;align-items:center;gap:8px;padding:2px 2px 18px;min-height:44px}
 .sidebar .logo{font-size:15.5px;color:var(--marine-ink);min-width:0;flex:1;letter-spacing:-.015em}
-/* two offset squares, straight from the reference swatch */
+
 .sidebar .logo-mark{position:relative;border-radius:9px;color:#fff;
   background:linear-gradient(140deg,var(--marine-2),var(--marine) 52%,var(--marine-deep));
   box-shadow:0 6px 16px rgba(1,66,106,.26)}
@@ -99,9 +95,8 @@ svg{flex:none}
 .side-toggle:hover{color:#fff;background:var(--marine);border-color:var(--marine)}
 .side-toggle:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 
-/* the rail: one marine hairline the nav hangs off */
 .side-nav{position:relative;display:flex;flex-direction:column;gap:3px;min-width:0;
-  /* keeps the selected pill clear of the sidebar edge */
+
   padding-right:10px}
 .side-nav::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:1.5px;border-radius:2px;
   background:linear-gradient(180deg,transparent,var(--marine-line) 12%,rgba(1,66,106,.26) 55%,transparent)}
@@ -114,7 +109,7 @@ svg{flex:none}
 .nav-item svg{flex:none;transition:stroke .18s,transform .24s cubic-bezier(.34,1.3,.5,1)}
 .nav-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   transition:opacity .18s ease,transform .28s cubic-bezier(.4,0,.2,1)}
-/* the node clipping onto the rail */
+
 .nav-item::before{content:'';position:absolute;left:1.5px;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;
   background:var(--pearl);border:1.5px solid rgba(1,66,106,.32);
   transition:border-color .2s,background .2s,box-shadow .24s,transform .24s cubic-bezier(.34,1.3,.5,1)}
@@ -124,7 +119,6 @@ svg{flex:none}
 .nav-item:hover svg{transform:translateX(1px)}
 .nav-item:focus-visible{outline:2px solid var(--marine);outline-offset:-2px}
 
-/* selected: marine gradient pill with one sheen sweep */
 .nav-item.active{color:#fff;font-weight:600;
   background-image:
     linear-gradient(102deg,transparent 24%,rgba(255,255,255,.26) 44%,transparent 64%),
@@ -135,7 +129,7 @@ svg{flex:none}
   animation:pillSweep .68s cubic-bezier(.4,0,.2,1) both}
 @keyframes pillSweep{from{background-position:-46% 0,0 0}to{background-position:132% 0,0 0}}
 .nav-item.active svg{stroke:#fff}
-/* solid white dot — no ring, so nothing can mismatch the pill behind it */
+
 .nav-item.active::before{background:#fff;border-color:#fff;box-shadow:none;transform:scale(1)}
 
 .sidebar-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:11px 10px;min-width:0;border-radius:12px;
@@ -146,7 +140,6 @@ svg{flex:none}
   overflow:hidden;text-overflow:ellipsis}
 .sidebar-user small{color:#5A6E80;font-size:11.5px}
 
-/* ---------- COLLAPSED STATE ---------- */
 .side-min .sidebar{padding-left:14px;padding-right:14px;align-items:center}
 .side-min .side-head{flex-direction:column;gap:12px;padding-bottom:14px;min-height:0}
 .side-min .sidebar .logo{flex:none;justify-content:center;gap:0}
@@ -159,7 +152,7 @@ svg{flex:none}
 .side-min .nav-item::before{left:50%;margin-left:-4px;top:auto;bottom:3px;margin-top:0}
 .side-min .side-nav::before{left:50%;margin-left:-.75px}
 .side-min .sidebar-user{justify-content:center}
-/* label becomes a floating pill on hover */
+
 .side-min .nav-item:hover .nav-t,.side-min .nav-item:focus-visible .nav-t{
   opacity:1;width:auto;transform:none;pointer-events:none;
   position:absolute;left:calc(100% + 12px);top:50%;margin-top:-15px;z-index:90;
@@ -168,7 +161,6 @@ svg{flex:none}
   box-shadow:0 10px 26px rgba(11,36,54,.30)}
 .main{padding:18px 26px 60px;min-width:0}
 
-/* ---------- GLOBAL HEADER ---------- */
 .gheader{display:flex;align-items:center;gap:12px;border-radius:var(--r);padding:10px 16px;margin-bottom:18px;position:relative;z-index:60}
 .gheader .hi{font-weight:700;font-size:15px;letter-spacing:-.01em}
 .gheader .hi small{display:block;font-weight:500;font-size:11.5px;color:var(--ink-3)}
@@ -187,7 +179,6 @@ svg{flex:none}
 .notif .n-via{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:600;border-radius:5px;padding:1.5px 6px;background:var(--accent-soft);color:var(--accent);margin-top:4px}
 .notif small{display:block;color:var(--ink-3);font-size:11px;margin-top:3px}
 
-/* ---------- HEADERS / BUTTONS ---------- */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
 .topbar h2{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;font-weight:600;border-radius:8px;padding:9.5px 15px;transition:background .15s;font-size:13.5px}
@@ -197,7 +188,6 @@ svg{flex:none}
 .btn-danger{display:inline-flex;align-items:center;gap:7px;background:var(--lost);color:#fff;font-weight:600;border-radius:8px;padding:9.5px 15px;font-size:13.5px;transition:background .15s}
 .btn-danger:hover{background:#9C1339}
 
-/* ---------- PILLS ---------- */
 .pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:20px;padding:3px 9px;white-space:nowrap;border:1px solid transparent}
 .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
 .p-won{background:var(--won-bg);color:var(--won);border-color:var(--won-bd)}
@@ -207,7 +197,6 @@ svg{flex:none}
 .p-st{background:var(--st-bg);color:var(--st)} .p-oa{background:var(--oa-bg);color:var(--oa)}
 .p-over{background:var(--overdue-bg);color:var(--overdue)}
 
-/* ---------- KPI ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
 .kpi{border-radius:var(--r);padding:15px 17px}
 .kpi .k-label{color:var(--ink-3);font-size:12px;font-weight:600}
@@ -216,7 +205,6 @@ svg{flex:none}
 .trend-down{color:var(--overdue);font-weight:600}
 .trend-up{color:var(--won);font-weight:600}
 
-/* ---------- CHART CARDS ---------- */
 .dash-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .card{border-radius:var(--r);padding:18px}
 .card h4{font-size:13.5px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
@@ -231,7 +219,7 @@ svg{flex:none}
 .legend .li .sw{width:9px;height:9px;border-radius:2.5px;flex:none}
 .legend .li b{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink)}
 .legend .li small{color:var(--ink-3);font-variant-numeric:tabular-nums;width:40px;text-align:right}
-/* 13 segments make a long legend — keep the card height stable */
+
 #legSeg{max-height:172px;overflow:auto;padding-right:2px}
 .hbar{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer;border-radius:6px;padding:2px 4px;transition:background .12s}
 .hbar:hover{background:var(--accent-soft)}
@@ -240,7 +228,6 @@ svg{flex:none}
 .hbar .hb-fill{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:7px;color:#fff;font-size:10.5px;font-weight:600;min-width:24px}
 .hbar .hb-extra{flex:none;font-size:11.5px;color:var(--ink-3);width:74px;text-align:right;font-variant-numeric:tabular-nums}
 
-/* ---------- INSIGHT SEARCH ---------- */
 .ins-wrap{position:relative}
 .ins-search{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:9px 13px;transition:border-color .15s}
 .ins-search:focus-within{border-color:var(--accent);background:#fff}
@@ -266,28 +253,20 @@ svg{flex:none}
 .ins-stat b{color:var(--ink);font-variant-numeric:tabular-nums}
 .ins-empty{color:var(--ink-3);padding:24px 6px;text-align:center;font-size:13px}
 
-/* ---------- TIMELINE TREE (trunk = years, branches = projects) ---------- */
-/* One rail axis drives every mark: trunk, year knot, point and branch tick all
-   derive their x from --rail, so nothing can drift out of centre. */
 .tlt{--gut:30px;--rail:9px;--dot:12px;--knot:12px;--axis:17px;--kaxis:15px;--stroke:2px;
-  /* Mark sizes are even and the axes are whole pixels, so every edge lands on a
-     device pixel — half-pixel boxes anti-alias unevenly and read as off-centre. */
+
   position:relative;margin-top:14px;max-height:440px;overflow:auto;
-  /* overflow clips at the padding box: the year knot's halo is a rotated 20px square,
-     reaching 14.2px left of the rail, so the gutter must clear it. */
+
   padding:2px 2px 2px 10px}
-/* Trunk is drawn per year block, so it stays unbroken however far the list scrolls.
-   Blocks butt together and each carries its slice of the global fade. */
+
 .tly{position:relative;padding-left:var(--gut)}
 .tly::before{content:'';position:absolute;left:calc(var(--rail) - 1px);top:0;bottom:0;width:2px;border-radius:2px;
   background:linear-gradient(180deg,var(--f0,rgba(1,66,106,.5)),var(--f1,rgba(1,66,106,.1)))}
-/* the trunk begins at the first knot's centre, not above it */
+
 .tly:first-child::before{top:var(--kaxis)}
 .tly:last-child::before{bottom:14px}
 .tly-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding:6px 0 8px;position:relative}
-/* the year knot sits on the trunk */
-/* Marks are opaque and centred on the rail, so the trunk is cut cleanly at their
-   outline — it never draws across a shape — and resumes from the opposite edge. */
+
 .tly-head::before{content:'';position:absolute;
   top:calc(var(--kaxis) - var(--knot) / 2);
   left:calc(var(--rail) - var(--gut) - var(--knot) / 2);width:var(--knot);height:var(--knot);border-radius:4px;
@@ -303,8 +282,7 @@ svg{flex:none}
 .tly-body{display:flex;flex-direction:column;gap:3px;padding-bottom:14px}
 .tl-item{position:relative;display:block;width:100%;text-align:left;padding:7px 10px 9px 16px;
   cursor:pointer;border-radius:9px;transition:background .14s,box-shadow .14s}
-/* The branch leaves from the point's right edge, on the point's own centre line, and
-   runs to the row — collinear with the centre, touching the outline, crossing nothing. */
+
 .tl-item::before{content:'';position:absolute;height:2px;border-radius:0 2px 2px 0;
   left:calc(var(--rail) - var(--gut) + var(--dot) / 2);
   width:calc(var(--gut) - var(--rail) - var(--dot) / 2);
@@ -323,7 +301,6 @@ svg{flex:none}
 .tl-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink-3)}
 .tl-note{font-size:12px;color:var(--text-3);margin-top:3px}
 
-/* ---------- LANGUAGE SWITCH ---------- */
 .lang-switch{position:relative;display:flex;align-items:center;gap:0;flex:none;
   height:34px;padding:3px 3px 3px 9px;border-radius:20px;
   background:var(--bg);border:1px solid var(--line);transition:border-color .16s,box-shadow .16s}
@@ -344,13 +321,11 @@ svg{flex:none}
 .ls-opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.ls-thumb{transition:none}}
 
-/* ---------- NCC TABS ---------- */
 .ncc-tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px}
 .ncc-tab{padding:6.5px 14px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--ink-2);transition:all .14s}
 .ncc-tab:hover{color:var(--accent)}
 .ncc-tab.on{background:var(--surface);color:var(--accent);box-shadow:var(--shadow)}
 
-/* ---------- SEGMENT DRILL ---------- */
 .drill-head{display:flex;align-items:center;gap:7px;font-size:12px;margin-bottom:10px;color:var(--ink-3)}
 .drill-head button{font-weight:600;color:var(--accent);font-size:12px}
 .drill-head b{color:var(--ink)}
@@ -365,7 +340,6 @@ svg{flex:none}
 .seg-cell .sc-bar{height:3px;border-radius:2px;margin-top:8px;background:var(--line-2);overflow:hidden}
 .seg-cell .sc-bar i{display:block;height:100%;border-radius:2px}
 
-/* ---------- ACTIVITIES ---------- */
 .act-row{display:grid;grid-template-columns:130px minmax(150px,1.2fr) 108px minmax(180px,1.6fr) 96px 150px;gap:10px;
   align-items:center;padding:10px 16px;border-bottom:1px solid var(--line-2);transition:background .1s;min-height:46px}
 .act-row:last-child{border-bottom:none}
@@ -383,7 +357,7 @@ svg{flex:none}
 .act-new:hover{filter:brightness(.96)}
 .pot{font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px}
 .pot-Hot,.pot-High{background:var(--lost-bg);color:var(--lost)} .pot-Warm,.pot-Medium{background:var(--prog-bg);color:var(--prog)} .pot-Cold,.pot-Low{background:var(--accent-soft);color:var(--accent)}
-/* note under the customer field: who manages the selected customer */
+
 .owner-note{margin-top:6px;font-size:11.5px;line-height:1.45;color:var(--ink-2);
   background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
 .owner-note b{color:var(--ink);font-weight:700}
@@ -396,7 +370,6 @@ svg{flex:none}
 .linked-item:last-child{border-bottom:none}
 .linked-item b{color:var(--ink);font-size:11.5px}
 
-/* ---------- FUNNEL SPINE (signature) ---------- */
 .spine{border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
 .spine-top{display:flex;align-items:center;gap:10px;margin-bottom:11px}
 .spine-top b{font-size:13px;font-weight:700}
@@ -418,13 +391,11 @@ svg{flex:none}
 .spine.filtered .spine-step.on{opacity:1}
 .spine-step.on .spine-chev{box-shadow:inset 0 0 0 2.5px rgba(255,255,255,.85)}
 
-/* ---------- FILTERS ---------- */
 .filters{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px}
 .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 13px;font-weight:500;color:var(--ink-2);transition:all .12s;font-size:12.5px}
 .chip:hover{border-color:var(--accent);color:var(--accent)}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 
-/* ---------- NESTED GROUPS ---------- */
 .major{border-radius:var(--r);margin-bottom:12px;overflow:hidden}
 .major-head{display:flex;align-items:center;gap:11px;padding:12px 16px;background:var(--bg);cursor:pointer;user-select:none}
 .major:not(.collapsed) .major-head{border-bottom:1px solid var(--line)}
@@ -445,7 +416,6 @@ svg{flex:none}
 .collapsed .g-toggle svg{transform:rotate(-90deg)}
 .g-toggle svg{transition:transform .18s}
 
-/* ---------- ROWS ---------- */
 .thead{display:grid;grid-template-columns:minmax(165px,1.3fr) minmax(105px,.9fr) minmax(115px,.95fr) 122px 78px 92px 92px 84px;gap:10px;padding:7px 16px 7px 24px;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line-2);background:#FBFCFD}
 .row{display:grid;grid-template-columns:minmax(165px,1.3fr) minmax(105px,.9fr) minmax(115px,.95fr) 122px 78px 92px 92px 84px;gap:10px;align-items:center;padding:9px 16px 9px 24px;border-bottom:1px solid var(--line-2);transition:background .1s;cursor:pointer;min-height:44px}
 .row:last-child{border-bottom:none}
@@ -472,10 +442,6 @@ svg{flex:none}
 .row:hover .close-btn{opacity:1}
 .close-btn:hover{background:var(--lost-bg)}
 
-/* ---------- MODALS (centred) ----------
-   Dialogs sit in the middle of the screen over a dimmed page. Each is a flex
-   column capped at the viewport height, so a tall form keeps its header and
-   footer fixed while the body scrolls inside. */
 .overlay{position:fixed;inset:0;background:rgba(16,24,40,.45);display:none;
   align-items:center;justify-content:center;padding:4vh 16px;z-index:900;backdrop-filter:blur(3px)}
 .overlay.open{display:flex}
@@ -487,16 +453,12 @@ svg{flex:none}
 @keyframes modalIn{from{transform:translateY(10px) scale(.99);opacity:0}to{transform:none;opacity:1}}
 @keyframes drawerIn{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.modal{animation:none}}
-/* body between the fixed header and footer takes the slack and scrolls */
+
 .modal>.modal-body,.modal>.detail-grid,.modal>.modal-scroll{flex:1;min-height:0;overflow:auto}
 .modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--line);flex:none}
 .modal-head h3{font-size:16px;font-weight:700}
 .modal-head .mh-sub{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
 
-/* Chip đường về — đặt TRÊN tiêu đề vì nó là câu mở đầu của một mạch:
-   "‹ Hoạt động khách hàng / BIBICA — P-0231". Nó nói cho người dùng biết đóng
-   modal này sẽ rơi về đâu, thứ mà nút X không nói được. Ẩn hẳn khi không có
-   lớp dưới, không hiện một nút vô nghĩa. */
 .mh-back{
   display:none;align-items:center;gap:5px;margin-bottom:9px;
   padding:5px 12px 5px 8px;border-radius:20px;max-width:min(360px,58vw);
@@ -522,10 +484,9 @@ svg{flex:none}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .field input:disabled,.field select:disabled{background:var(--bg);color:var(--ink-3);cursor:not-allowed}
 
-/* ---------- CUSTOM DATE PICKER ---------- */
 .dp-wrap{position:relative;display:flex;align-items:center}
 .dp-wrap input[type=date]{flex:1;width:100%;padding-right:38px;cursor:pointer}
-/* hide the browser's own calendar button so only our picker shows */
+
 .dp-wrap input[type=date]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none}
 .dp-wrap input[type=date]::-webkit-inner-spin-button{display:none}
 .dp-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;
@@ -574,15 +535,11 @@ datalist{display:none}
 .result-opt b{font-size:13.5px}
 .result-opt small{display:block;color:var(--ink-3);font-size:11.5px}
 
-/* ---------- DETAIL ---------- */
 .detail-grid{padding:20px 24px;display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:stretch}
 @media (max-width:760px){.detail-grid{grid-template-columns:1fr}}
 .d-col h5{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
 .d-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
-/* ---------- PROJECT CHAT ----------
-   A room of its own: enclosed surface, sticky header, scrolling transcript and a
-   pinned composer. It stretches to the height of the details column beside it. */
 .d-chat-col{display:flex;min-width:0}
 .chat{display:flex;flex-direction:column;flex:1;min-height:400px;min-width:0;
   background:var(--bg);border:1px solid var(--line);border-radius:12px;overflow:hidden}
@@ -594,7 +551,6 @@ datalist{display:none}
 .comments{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;
   overflow:auto;padding:14px}
 
-/* Incoming on the left, your own on the right — side alone tells you who spoke. */
 .cmt{display:flex;gap:8px;align-items:flex-end;max-width:84%}
 .cmt.me{margin-left:auto;flex-direction:row-reverse}
 .cmt .avatar{margin-bottom:2px}
@@ -622,7 +578,6 @@ datalist{display:none}
 .d-empty{color:var(--ink-3);font-size:12.5px;padding:10px 0}
 .comments .d-empty{margin:auto;text-align:center;max-width:32ch}
 
-/* ---------- USERS ---------- */
 .role-actions{display:flex;gap:6px}
 .mini-btn{font-size:11.5px;font-weight:600;border-radius:6px;padding:5px 10px;border:1px solid var(--line);background:#fff;color:var(--ink-2);transition:all .12s}
 .mini-btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -630,7 +585,6 @@ datalist{display:none}
 
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-weight:500;border-radius:9px;padding:11px 18px;box-shadow:var(--shadow-lg);display:none;z-index:1100;font-size:13px;max-width:min(560px,90vw)}
 
-/* ---------- LINE CHART TOOLTIP ---------- */
 .lc-tip{position:fixed;z-index:1000;display:none;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow-lg);padding:11px 13px;width:360px;pointer-events:none}
 .lc-tip .lt-head{font-size:11.5px;font-weight:700;margin-bottom:7px;color:var(--accent)}
 .lc-tip .lt-row{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-2);padding:3px 0;border-bottom:1px solid var(--line-2)}
@@ -641,7 +595,6 @@ datalist{display:none}
 .lc-tip .lt-st{font-size:9px;font-weight:700;letter-spacing:.03em;width:74px;text-align:right;white-space:nowrap}
 .lc-tip .lt-more{font-size:11px;color:var(--ink-3);padding-top:5px;text-align:center}
 
-/* ---------- AI ASSISTANT ---------- */
 .ai-fab{position:fixed;right:24px;bottom:24px;width:52px;height:52px;border-radius:50%;z-index:760;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);transition:transform .18s,background .18s}
 .ai-fab:hover{transform:scale(1.06);background:var(--accent-hover)}
 .ai-fab .ai-spark{position:absolute;top:5px;right:6px;width:11px;height:11px;color:#8FD3FF;animation:aiSpark 2.4s ease-in-out infinite}

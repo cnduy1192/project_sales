@@ -1,8 +1,3 @@
-/* js/extras.js — Ba chức năng mở rộng (nạp CUỐI).
- * 1) Thêm nhà cung cấp — chọn mô hình pipeline của NCC đang có để áp dụng
- * 2) Click hoạt động khách hàng -> bảng chi tiết toàn bộ dữ liệu của khách đó
- * 3) Biểu đồ tỷ trọng Segment trong Dashboard
- */
 (function () {
   "use strict";
   const esc = s => String(s == null ? "" : s)
@@ -13,7 +8,6 @@
   const EXTRA_COLORS = ["#B45309", "#0B4F9E", "#DB2777", "#059669", "#9333EA"];
   const colorOf = (n, i) => NCC_COLOR[n] || EXTRA_COLORS[i % EXTRA_COLORS.length];
 
-  /* ================= 1. THÊM NHÀ CUNG CẤP ================= */
   const LS_KEY = "fisg_custom_nccs";
   const loadCustom = () => { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } };
   const saveCustom = a => { try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch (e) {} };
@@ -21,14 +15,11 @@
   const normNcc = n => String(n == null ? "" : n).trim();
   const keyNcc = n => normNcc(n).toLowerCase();
 
-  /* NCCS aliases LISTS.nccs, so the array is repaired in place — never reassigned —
-     and duplicates are matched case-insensitively after trimming. A supplier stored
-     in localStorage under a differently-cased name used to slip past includes(). */
   function dedupeNccs() {
     if (typeof LISTS === "undefined" || !Array.isArray(LISTS.nccs)) return;
-    /* config.js owns the in-place repair of the list; extras only cleans its own store */
+
     if (window.dedupeNccs) window.dedupeNccs();
-    /* drop the stored entries that caused it, so the duplicate cannot come back */
+
     const custom = loadCustom(), kept = new Set(), keep = [];
     custom.forEach(x => {
       const k = keyNcc(x && x.name);
@@ -150,7 +141,6 @@
     };
   }
 
-  /* ================= 2. CHI TIẾT KHÁCH HÀNG TỪ HOẠT ĐỘNG ================= */
   function customerModal(cust) {
     let ov = document.getElementById("custOv");
     if (!ov) {
@@ -166,11 +156,6 @@
     }
     ov.classList.add("open");
 
-    /* Popup này đọc thẳng RECORDS/ACTIVITIES nên trước đây phơi luôn dự án và
-       hoạt động của sales khác trên cùng khách hàng — kể cả PIC và trạng thái
-       thắng/thua. Phải đi qua đúng bộ lọc quyền như mọi bảng khác: sales chỉ
-       thấy phần của mình, hoặc phần mình là người liên quan. Ẩn im lặng, không
-       ghi "còn N dự án bị ẩn" — con số đó cũng là thông tin. */
     const allR = typeof RECORDS !== "undefined" ? RECORDS : [];
     const allA = typeof ACTIVITIES !== "undefined" ? ACTIVITIES : [];
     const meNow = typeof me !== "undefined" ? me : null;
@@ -230,7 +215,7 @@
     if (!box || box.dataset.custReady) return;
     box.dataset.custReady = "1";
     box.addEventListener("click", e => {
-      if (e.target.closest("button")) return;              // nút Tạo dự án / mở dự án giữ nguyên
+      if (e.target.closest("button")) return;
       const row = e.target.closest(".act-row");
       if (!row) return;
       const name = (row.querySelector("b") || {}).textContent;
@@ -239,7 +224,6 @@
     box.classList.add("act-clickable");
   }
 
-  /* ================= 3. BIỂU ĐỒ TỶ TRỌNG SEGMENT ================= */
   function segCard() {
     const grid = document.querySelector("#view-dash .dash-grid");
     if (!grid || document.getElementById("segShareBox")) return;
@@ -267,13 +251,12 @@
     }
     try {
       donut("segShareBox", "segShareLeg", items, lbl => {
-        if (typeof segDrill !== "undefined") { /* để nguyên bộ lọc hiện tại */ }
+        if (typeof segDrill !== "undefined") {  }
         if (window.toast) toast(lbl + ": " + by[lbl] + " dự án");
       });
     } catch (e) { console.warn("[extras] segment chart:", e.message); }
   }
 
-  /* ================= gắn vào vòng đời ================= */
   function wrap(name, fn) {
     const o = window[name];
     if (typeof o !== "function") return;

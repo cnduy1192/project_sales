@@ -1,22 +1,11 @@
-/* js/lib/insights.js — lớp dữ liệu suy diễn cho Manager Cockpit.
-   Quy tắc của file này: không đụng DOM, không đọc biến lọc toàn cục (nccFilter,
-   stageFilter…). Mọi đầu vào đi qua đối số hàm, nhờ vậy gọi thẳng trong console
-   để kiểm thử được. Nạp dạng classic script như phần còn lại của dự án. */
-
-/* ====== CHUẨN HOÁ KHOÁ ======
-   330 chuỗi tên khách hàng trong RECORDS chỉ còn 298 sau khi chuẩn hoá:
-   'Bibica' và 'BIBICA' là một khách. Không gộp thì lịch sử bị xé đôi. */
 function custKey(s){ return String(s==null?'':s).trim().toUpperCase(); }
 function picKey(s){ return String(s==null?'':s).trim().toUpperCase(); }
 
 let _labels = null;
 
-/* Nhãn hiển thị là cách viết xuất hiện nhiều lần nhất trong nhóm; hoà thì lấy
-   chuỗi đầu theo bảng chữ cái để kết quả ổn định giữa các lần chạy. */
 function _buildLabels(){
   const tallyC = {}, tallyP = {};
-  /* Cắt khoảng trắng thừa ngay ở nhãn: dữ liệu có 'LOF ' và 'FARINA ' với dấu
-     cách đuôi, để nguyên thì hiển thị lệch. */
+
   const bump = (map, raw) => {
     const k = custKey(raw); if(!k) return;
     const disp = String(raw).trim();
@@ -34,16 +23,12 @@ function _buildLabels(){
   };
   _labels = { cust: pick(tallyC), pic: pick(tallyP) };
 }
-/* Sau khi đổi tên PIC, nhãn hiển thị phải dựng lại — nhưng _labels là biến cục
-   bộ của file này nên phải mở một cửa cho store.js gọi vào. */
+
 function resetPicLabels(){ _labels = null; }
 window.resetPicLabels = resetPicLabels;
 function custLabel(k){ if(!_labels) _buildLabels(); const key=custKey(k); return _labels.cust[key] || key; }
 function picLabel(k){ if(!_labels) _buildLabels(); const key=picKey(k); return _labels.pic[key] || key; }
 
-/* ====== NGÀY THÁNG ======
-   Toàn bộ dữ liệu dùng chuỗi 'YYYY-MM-DD' nên so sánh chuỗi là đủ và tránh
-   được lệch múi giờ của Date. */
 function isoOf(d){
   const dt = (d instanceof Date) ? d : new Date(d);
   return isNaN(dt) ? null
@@ -53,7 +38,6 @@ function todayISO(){ return isoOf(TODAY); }
 function shiftISO(n){ const d = new Date(TODAY.getTime()); d.setDate(d.getDate()+n); return isoOf(d); }
 function daysSince(iso){ return iso ? Math.round((TODAY - new Date(iso)) / 86400000) : Infinity; }
 
-/* Dữ liệu cũ có thể mang 'DD/MM/YYYY HH:MM' do nowStr() sinh ra. */
 function normDate(v){
   if(!v) return null;
   const s = String(v).trim();
@@ -62,9 +46,6 @@ function normDate(v){
   return m ? m[3]+'-'+m[2]+'-'+m[1] : null;
 }
 
-/* Dự án đóng không có trường ngày đóng trong dữ liệu gốc. Từ nay confirmClose()
-   ghi closedAt; bản ghi cũ phải suy đoán, và sự kiện suy đoán mang cờ inferred
-   để giao diện đánh dấu '~'. */
 function closeStamp(r){
   const explicit = normDate(r.closedAt);
   if(explicit) return { ts: explicit, inferred:false };
@@ -74,8 +55,6 @@ function closeStamp(r){
   return c ? { ts:c, inferred:true } : null;
 }
 
-/* ====== PHẠM VI THEO QUYỀN ======
-   Khác visible(): cố ý KHÔNG lọc theo nccFilter — cockpit gộp cả ba NCC. */
 function cockpitScope(){
   if(typeof scopeRecords !== 'function')
     return { records: RECORDS.slice(), acts: ACTIVITIES.slice() };
@@ -83,7 +62,6 @@ function cockpitScope(){
   return { records, acts: scopeActs(ACTIVITIES, typeof me !== 'undefined' ? me : null, records) };
 }
 
-/* ====== DÒNG SỰ KIỆN ====== */
 const EVENT_KINDS = ['act','update','new','close'];
 
 function _rawEvents(days){
@@ -130,7 +108,6 @@ function _rawEvents(days){
     }
   });
 
-  /* Mới nhất lên trước; cùng ngày thì đóng dự án đứng trên vì manager quan tâm nhất. */
   const rank = { close:0, new:1, act:2, update:3 };
   out.sort((a,b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : rank[a.kind] - rank[b.kind]));
   return out;
@@ -147,14 +124,6 @@ function filterEvents(list, opts){
 }
 function buildEvents(days, opts){ return filterEvents(_cachedEvents(days), opts); }
 
-/* ====== VIỆC SẮP TỚI ======
-   Dòng thời gian cố ý chỉ nhìn LẠI: from = hôm nay - N ngày, to = hôm nay. Nên
-   hoạt động sales đã lên lịch cho ngày mai không hiện ở đâu trên Tổng quan, và
-   quản lý tưởng đội không làm gì. Đây là phần nhìn TỚI, tách hẳn ra để không lẫn
-   việc dự định với việc đã làm.
-
-   Chỉ hoạt động — dự án không có "ngày sẽ xảy ra", ngày đóng dự kiến đã có ô
-   riêng trên Dashboard. */
 function buildUpcoming(days, opts){
   const from = todayISO(), to = shiftISO(Math.abs(days || 7));
   const { records, acts } = cockpitScope();
@@ -162,7 +131,7 @@ function buildUpcoming(days, opts){
   const out = [];
   acts.forEach(a => {
     const ts = normDate(a.date);
-    if(!ts || ts <= from || ts > to) return;          // > hôm nay: chưa xảy ra
+    if(!ts || ts <= from || ts > to) return;
     const proj = a.projectId ? byId[a.projectId] : null;
     out.push({
       ts, kind:'act', ncc:a.ncc, custKey:custKey(a.customer), custLabel:custLabel(a.customer),
@@ -172,11 +141,10 @@ function buildUpcoming(days, opts){
       text: a.note || '', next: a.next || '', status:null, inferred:false, upcoming:true
     });
   });
-  out.sort((a,b) => a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0);   // gần nhất trước
+  out.sort((a,b) => a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0);
   return filterEvents(out, opts);
 }
 
-/* ====== CHỈ MỤC KHÁCH HÀNG ====== */
 function _rawCustomerIndex(){
   const { records, acts } = cockpitScope();
   const idx = new Map();
@@ -226,9 +194,6 @@ function buildCustomerIndex(opts){
   return out;
 }
 
-/* ====== TÍN HIỆU ======
-   'Quá hạn' và 'im lặng' cố ý không đổi theo cửa sổ 7/14/30 ngày — chúng là
-   trạng thái tính đến hôm nay, không phải hoạt động trong kỳ. */
 const SILENT_DAYS = 30;
 
 function buildSignals(days){
@@ -251,9 +216,6 @@ function buildSignals(days){
   };
 }
 
-/* ====== BỘ NHỚ ĐỆM ======
-   Dựng lười theo days. Bộ lọc trong trang áp lên kết quả đã đệm nên đổi chip
-   không kích hoạt tính lại. */
 let _evCache = {}, _idxCache = null;
 function _cachedEvents(days){
   const k = String(Math.abs(days||7));
@@ -267,8 +229,6 @@ function _cachedIndex(){
 function invalidateCockpit(){ _evCache = {}; _idxCache = null; _labels = null; }
 window.invalidateCockpit = invalidateCockpit;
 
-/* ====== KIỂM THỬ ======
-   Chạy cockpitAssert() trong console sau khi đăng nhập. */
 function cockpitAssert(){
   const out = [];
   const keys = new Set();
@@ -286,8 +246,6 @@ function cockpitAssert(){
   const expect = cockpitScope().records.filter(r => r.status === 'IN PROGRESS').length;
   out.push(['tổng dự án đang chạy', open + ' / ' + expect, open === expect]);
 
-  /* Sales thấy khách hàng qua hai đường: dự án họ phụ trách/tham gia, hoặc hoạt
-     động chính họ ghi. Cả hai đều hợp lệ. */
   let scoped = true;
   if(typeof me !== 'undefined' && me && cap(me.role).scope === 'own-pic'){
     const mine = picKey(me.pic);

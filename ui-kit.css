@@ -1,13 +1,7 @@
-/* ui-kit.css — lớp giao diện bổ sung (profile menu, định danh màu NCC, dải trạng thái,
-   nút xoá nhanh ô tìm kiếm, nút lên đầu trang). Nạp SAU styles.css. */
-
-/* ---------- 1. Bỏ khối thông tin người đăng nhập ở sidebar ---------- */
 .sidebar-user { display: none !important; }
 
-/* chú thích do JS ghi lại sau khi render -> ẩn bằng CSS cho chắc */
 #segHint { display: none !important; }
 
-/* ---------- 2. Avatar + menu hồ sơ ở header ---------- */
 .profile-wrap { position: relative; display: flex; align-items: center; }
 .profile-btn {
   display: flex; align-items: center; gap: 7px; padding: 3px 3px 3px 4px;
@@ -42,7 +36,6 @@
 .profile-act:hover { background: var(--lost-bg); }
 .profile-act:focus-visible { outline: 2px solid var(--lost); outline-offset: -2px; }
 
-/* ---------- 3. Định danh màu 3 NCC (signature) ---------- */
 .ncc-tab { display: inline-flex; align-items: center; gap: 7px; position: relative; }
 .ncc-tab::before {
   content: ""; width: 8px; height: 8px; border-radius: 50%;
@@ -55,22 +48,18 @@
 }
 .ncc-tab.on::before { box-shadow: 0 0 0 3px var(--ncc-soft, transparent); }
 
-/* Tab "Tất cả": chấm ba màu của ba NCC gộp lại, để mắt hiểu ngay đây không phải
-   một nhà cung cấp thứ tư mà là chế độ gộp. */
 .ncc-tab-all::before {
   background: conic-gradient(#1E3A8A 0 33.3%, #0D9488 0 66.6%, #7C3AED 0);
 }
 .ncc-tab-all { font-weight: 650; }
 .ncc-tabs { flex-wrap: wrap; }
 
-/* rail màu NCC trên mỗi dòng dự án */
 .row { position: relative; }
 .row::before {
   content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
   border-radius: 0 3px 3px 0; background: var(--row-ncc, transparent);
 }
 
-/* ---------- 4. Dải trạng thái nổi bật (Đang chạy / Đã đóng + mốc thời gian) ---------- */
 .major-head {
   border-left: 4px solid var(--major, var(--line));
   background: linear-gradient(90deg, var(--major-soft, var(--bg)) 0%, var(--bg) 62%);
@@ -82,13 +71,12 @@
 .sub-head[data-sub] { border-left-color: var(--sub, transparent); }
 .sub-head .s-title { font-size: 13px; }
 
-/* đếm số dự án trong từng mốc thời gian */
 .sub-count {
   margin-left: 8px; padding: 1.5px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
   background: var(--sub-soft, var(--line-2)); color: var(--sub, var(--ink-2));
   border: 1px solid var(--sub-border, transparent);
 }
-/* Quá hạn: mốc duy nhất được phép "hét" */
+
 .sub-head[data-sub="overdue"] {
   background: var(--overdue-bg);
   border-left-color: var(--overdue);
@@ -98,7 +86,6 @@
   background: var(--overdue); color: #fff; border-color: var(--overdue);
 }
 
-/* ---------- 5. Nút xoá nhanh trong ô tìm kiếm ---------- */
 .has-clear { position: relative; }
 .clear-x {
   position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
@@ -113,7 +100,6 @@
 .gsearch.has-clear input, .ins-wrap.has-clear input { padding-right: 28px; }
 .ins-wrap .clear-x { right: 11px; }
 
-/* ---------- 6. Nút lên đầu trang ---------- */
 #toTop {
   position: fixed; right: 22px; bottom: 22px; z-index: 800;
   width: 42px; height: 42px; border-radius: 50%;

@@ -1,16 +1,9 @@
-/* js/i18n.js — Song ngữ EN/VI ở tầng hiển thị (classic script, scope toàn cục).
- * VI là ngôn ngữ nguồn trong code; EN là ngôn ngữ hiển thị mặc định — mỗi lần tải
- * trang đều bắt đầu ở EN, người dùng có thể gạt sang VI trong phiên làm việc.
- * Loại trừ #aiMsgs (báo cáo tuần & output chatbot là NỘI DUNG, giữ tiếng Việt).
- */
 (function () {
-  /* EN is the primary display language: no stored preference is read at boot. */
-  let LANG = 'en';
-  try { localStorage.removeItem('fisg_lang'); } catch (e) {}
+  let LANG = 'vi';
+  try { const s = localStorage.getItem('fisg_lang'); if (s === 'en' || s === 'vi') LANG = s; } catch (e) {}
 
-  // ---- từ điển VI -> EN (chrome tĩnh + nhãn động + từ vựng cố định) ----
   const DICT = {
-    // đăng nhập / nav
+
     "Đăng nhập bằng tài khoản công ty": "Sign in with your company account",
     "Đăng nhập bằng Microsoft 365": "Sign in with Microsoft 365",
     "Demo — đăng nhập nhanh theo vai trò": "Demo — quick sign-in by role",
@@ -19,8 +12,7 @@
     "Thông báo": "Notifications", "Xuất Excel": "Export Excel",
     "Thêm dự án": "Add Project", "Phân bố giai đoạn": "Stage Distribution",
     "Bỏ lọc giai đoạn": "Clear stage filter", "Tất cả": "All",
-    /* Bảng chào tuần: "Hoàn thành" là NÚT (hành động), "Đã làm" là NHÃN
-       (trạng thái) — dịch khác nhau cho khỏi lẫn. */
+
     "Hoàn thành": "Mark done", "Hoàn tác": "Undo", "Đã làm": "Done",
     "Đã làm trong tuần": "Done this week",
     "Đang làm hôm nay": "Doing today",
@@ -42,7 +34,7 @@
     "Funnel theo giai đoạn (đang chạy)": "Funnel by stage (in progress)",
     "Top sản phẩm theo tiềm năng KG": "Top products by potential KG",
     "Nhân viên": "Staff", "Vai trò": "Role", "Thao tác": "Actions",
-    // form dự án
+
     "Thêm dự án mới": "Add new project", "Khách hàng": "Customer",
     "Sản phẩm": "Product", "Ứng dụng của khách hàng": "Customer application",
     "Nhà cung cấp": "Supplier", "Nhóm ngành": "Segment group",
@@ -53,7 +45,7 @@
     "Tiềm năng năm sau (KG)": "Potential next year (KG)",
     "Người liên quan đến dự án": "People related to project",
     "Cập nhật tình hình": "Status update", "Huỷ": "Cancel", "Lưu dự án": "Save project",
-    // chi tiết
+
     "Thông tin & tiến độ": "Info & progress", "Sản phẩm": "Product", "Ứng dụng": "Application",
     "Giai đoạn": "Stage", "KG năm nay": "KG this year", "KG năm sau": "KG next year",
     "Hoạt động khách hàng liên quan": "Related customer activities",
@@ -62,7 +54,7 @@
     "Lưu thay đổi & thông báo": "Save changes & notify",
     "WON — chốt được đơn": "WON — deal closed", "LOST — dừng theo đuổi": "LOST — stop pursuing",
     "Lý do / ghi chú": "Reason / notes", "Xác nhận đóng & thông báo": "Confirm close & notify",
-    // hoạt động / kế hoạch làm việc
+
     "Kế hoạch làm việc": "Work plan", "Tạo hoạt động": "Create activity",
     "Nhập hoặc chọn khách hàng…": "Type or pick a customer…",
     "Ghi kế hoạch tuần": "Log in weekly plan", "Ghi hoạt động khách hàng": "Log customer activity",
@@ -87,7 +79,7 @@
     "Tất cả báo cáo": "All reports", "Gửi cho quản lý": "Send to manager",
     "Bỏ bản nháp": "Discard draft", "Soạn báo cáo tuần": "Compose weekly report",
     "Tổng hợp theo % tiến độ": "Summary by progress %",
-    // nhãn động
+
     "(chưa có người liên quan)": "(no related people)", "(không có nội dung)": "(no content)",
     "KHÁCH HÀNG": "CUSTOMER", "SẢN PHẨM": "PRODUCT",
     "Chưa có hoạt động nào gắn vào dự án này.": "No activities linked to this project.",
@@ -115,7 +107,7 @@
     "Vui lòng nhập lý do đóng dự án.": "Please enter the reason for closing.",
     "Chưa có URL → chatbot chạy chế độ phân tích cục bộ trên dữ liệu pipeline. Deploy Worker theo file":
       "No URL → chatbot runs local analysis mode on pipeline data. Deploy the Worker per the file",
-    // chia sẻ cho khách
+
     "Chia sẻ": "Share", "Chia sẻ dự án cho khách": "Share projects with a guest",
     "Khách xem chia sẻ": "Guest access", "Nhập mã chia sẻ": "Enter share code",
     "Mã do nhân viên FI SAIGON cung cấp.": "Ask your FI SAIGON contact for the code.",
@@ -134,7 +126,7 @@
     "Toàn bộ dự án của tất cả nhà cung cấp": "All projects of all suppliers",
     "Mã không đúng.": "Invalid code.", "Mã này đã bị thu hồi.": "This code has been revoked.",
     "Chế độ khách: chỉ xem, không chỉnh sửa.": "Guest mode: view only, no editing.",
-    // nhãn của ui-kit (menu hồ sơ, nút xoá tìm kiếm, lên đầu trang)
+
     "Đăng xuất": "Sign out", "Tài khoản": "Account", "Lên đầu trang": "Back to top",
     "Xoá nội dung tìm": "Clear search", "Lọc nhanh funnel": "Quick filter",
     "Tìm khách hàng, sản phẩm, phân khúc, sales, giai đoạn":
@@ -145,8 +137,7 @@
     "click segment để xem lịch sử dự án": "click a segment to see project history",
     "Không có dự án đang chạy nào ở đúng tiến độ": "No in-progress projects on track",
     "Nhập lý do": "Enter reason", "Không có kết quả": "No results",
-    // từ vựng cố định (trạng thái / nhóm chuẩn)
-    // donut phân khúc / timeline dạng cây / sidebar
+
     "Tỷ trọng phân khúc": "Segment share",
     "click một lát để xem lịch sử dự án": "click a slice to see project history",
     "click một lát để mở segment bên trong": "click a slice to open the segments inside",
@@ -162,10 +153,6 @@
     "Không thể hiển thị biểu đồ. Vui lòng thử lại.": "Chart unavailable. Please try again.",
     "Không có dự án nào (trong phạm vi quyền xem của bạn).": "No projects within your access scope.",
 
-    /* ---- Bổ sung sau đợt dò bằng tests/i18n-scan.js ----
-       DICT được kiểm TRƯỚC RULES, nên mọi câu dưới đây vừa để dịch, vừa để chặn
-       RULES cắt lẻ giữa câu ("Dự án đã đóng" từng ra "Dự án đã closed"). */
-    // Tổng quan
     "Tổng quan": "Overview", "Điều hành": "Management",
     "Hoạt động trong kỳ": "Activities this period",
     "Dự án đã đóng": "Closed projects", "Dự án quá hạn": "Overdue projects",
@@ -191,7 +178,7 @@
     "Ngày mai": "Tomorrow", "Ngày kia": "Day after tomorrow",
     "Xem dự án và hoạt động của mọi nhà cung cấp": "See projects and activities from every supplier",
     "Sản phẩm đang chào": "Products offered", "Xem toàn bộ lịch sử": "See full history",
-    // Kế hoạch tuần
+
     "Kế hoạch tuần": "Weekly plan", "Đầu tuần": "Start of week", "Giữa tuần": "Mid-week",
     "Cuối tuần": "End of week", "Bám việc đã lên lịch": "Stay on scheduled work",
     "Lên kế hoạch cho tuần": "Plan the week", "Chốt lại tuần": "Wrap up the week",
@@ -200,6 +187,9 @@
     "Đã lên kế hoạch — còn lại trong tuần": "Planned — rest of week",
     "Đã làm trong tuần": "Done this week", "Hoạt động đã làm": "Activities done",
     "Thay đổi dự án": "Project changes", "Ghi hoạt động mới": "Log a new activity",
+    "Phân loại hoạt động": "Activity breakdown", "Chưa hoàn thành": "Not completed",
+    "Kế hoạch chưa hoàn thành": "Unfinished plans", "Nội dung báo cáo": "Report content",
+    "— Chưa giao —": "— Unassigned —",
     "Không có việc nào bị bỏ quên.": "Nothing has been forgotten.",
     "Hôm nay chưa có việc nào trên lịch.": "Nothing on the calendar for today.",
     "Chưa đặt lịch việc nào cho những ngày còn lại.": "Nothing scheduled for the remaining days.",
@@ -218,7 +208,7 @@
     "Đang xem thử chế độ giữa tuần. Bấm để xem chế độ tiếp theo.":
       "Previewing mid-week mode. Click to see the next mode.",
     "xem thử": "preview", "Việc đáng làm nhất": "Most worth doing",
-    // Báo cáo
+
     "Báo cáo": "Reports", "Soạn báo cáo tuần": "Write weekly report",
     "Chưa có báo cáo nào": "No reports yet",
     "Báo cáo do sales gửi sẽ hiện ở đây.": "Reports sent by sales will appear here.",
@@ -233,7 +223,7 @@
     "Bản nháp · số liệu chốt khi bấm gửi": "Draft · figures fixed on send",
     "Bỏ bản nháp": "Discard draft", "chưa gửi": "not sent",
     "Không có dự án nào đổi trạng thái tuần này": "No project changed status this week",
-    // Quản trị người dùng
+
     "Thêm người dùng": "Add user", "Tên đầy đủ (O365)": "Full name (O365)",
     "Tên PIC như trong dữ liệu": "PIC name as written in the data",
     "Chỉ điền khi cột PIC trong list Projects ghi tên tắt.":
@@ -245,7 +235,7 @@
     "Lưu lên SharePoint": "Save to SharePoint", "Chưa đọc được list": "Could not read list",
     "Sửa": "Edit", "Cập nhật": "Update", "Sales phụ trách": "Sales owner",
     "Tra O365": "Look up in O365",
-    // Chung
+
     "Thêm nhà cung cấp": "Add supplier", "Mở dự án": "Open project",
     "Quay lại Sales Funnel": "Back to Sales Funnel",
     "Quay lại Hoạt động khách hàng": "Back to Customer Activities",
@@ -271,7 +261,7 @@
     "— ví dụ": "— example", "bạn": "you", "Khác": "Other",
     "Sản phẩm đang chào": "Products offered",
     "Xem toàn bộ lịch sử dự án": "See the full project history",
-    // Màn hình Khách hàng của tôi
+
     "Khách hàng của tôi": "My Customers", "Phụ trách": "Owner", "Phụ trách:": "Owner:",
     "Nhà cung cấp": "Supplier", "Dự án": "Projects",
     "Tìm khách hàng": "Search customers", "chưa có dự án": "no project yet",
@@ -279,14 +269,14 @@
     "Kế hoạch chưa đánh dấu": "Planned, not marked",
     "Chưa ai quản lý": "Unassigned", "Khách của sales khác": "Another sales' customer",
     "Xoá khách hàng": "Delete customer", "Đang xoá…": "Deleting…",
-    // Báo cáo: quản lý không soạn báo cáo
+
     "Xem báo cáo đội": "View team reports",
     "Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.": "Managers only read team reports, they do not write them.",
-    // Báo cáo: luồng trao đổi
+
     "Trao đổi": "Discussion", "Gửi phản hồi": "Send reply",
     "Chưa có phản hồi nào.": "No replies yet.", "Quản lý": "Manager",
     "Trả lời quản lý…": "Reply to manager…", "Nhập nội dung phản hồi.": "Enter a reply.",
-    // Phân quyền: line báo cáo + Sale Support
+
     "Báo cáo cho": "Reports to", "Hỗ trợ các sales": "Supports sales",
     "Tìm sales…": "Search sales…",
     "— Tất cả quản lý —": "— All managers —",
@@ -308,7 +298,7 @@
     "Chưa có dự án nào.": "No projects yet.", "Chưa có hoạt động nào.": "No activity yet.",
     "Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.":
       "You can only view this customer. Only the owner or an admin can edit.",
-    // Tệp đính kèm
+
     "Tệp đính kèm": "Attachments", "Chưa có tệp đính kèm.": "No attachments yet.",
     "+ Đính kèm tệp": "+ Attach file", "Xoá tệp": "Delete file", "Bỏ tệp": "Remove file",
     "chờ tải khi lưu": "will upload on save",
@@ -338,8 +328,7 @@
       "Previewing mid-week mode. Click for the next mode.",
     "Chưa có list Users trên SharePoint — thay đổi ở đây sẽ mất khi tải lại trang. Tạo list rồi đăng nhập lại để lưu được.":
       "No Users list on SharePoint — changes here are lost on reload. Create the list and sign in again to save.",
-    /* Câu trên bị <b> cắt làm đôi nên text node chỉ còn phần đuôi — liệt kê cả
-       phần đuôi, vì bộ dịch làm việc trên từng text node chứ không trên câu. */
+
     "trên SharePoint — thay đổi ở đây sẽ mất khi tải lại trang. Tạo list rồi đăng nhập lại để lưu được.":
       "on SharePoint — changes here are lost on reload. Create the list and sign in again to save.",
     "Đang chạy": "In Progress", "Thắng": "Won", "Thua": "Lost",
@@ -349,16 +338,8 @@
     "ĐANG CHẠY": "IN PROGRESS", "THẮNG": "WON", "THUA": "LOST",
   };
 
-  // ---- luật regex cho chuỗi có nội suy số (áp khi không khớp nguyên câu) ----
-  /* Luật regex cho chuỗi có nội suy (số, ngày, tên người) — CHỈ áp khi không
-     khớp nguyên câu trong DICT.
-
-     Thứ tự quan trọng: mẫu DÀI đứng trước mẫu ngắn. Trước đây [/đóng/g] và
-     [/dự án/g] nằm gần cuối nhưng vẫn cắt giữa những câu chưa có trong DICT, đẻ
-     ra "Dự án đã closed" và "Tổng 1 projects". Cách chữa gốc là thêm câu vào
-     DICT; các luật dưới đây chỉ dành cho chuỗi KHÔNG THỂ liệt kê hết. */
   const RULES = [
-    // câu có ngày tháng
+
     [/Thứ Hai, ngày /g, "Monday, "], [/Thứ Ba, ngày /g, "Tuesday, "],
     [/Thứ Tư, ngày /g, "Wednesday, "], [/Thứ Năm, ngày /g, "Thursday, "],
     [/Thứ Sáu, ngày /g, "Friday, "], [/Thứ Bảy, ngày /g, "Saturday, "],
@@ -366,10 +347,10 @@
     [/Không có việc ngày /g, "No tasks on "], [/(\d+)\s*việc ngày /g, "$1 task(s) on "],
     [/Đã lên lịch /g, "Scheduled "], [/đóng (\d)/g, "closes $1"],
     [/tuần (\d)/g, "week of $1"],
-    // câu có tên người
+
     [/Xin chào, /g, "Hello, "], [/^Chào /, "Hi "], [/Vai trò của /g, "Role of "],
     [/Người nhận: /g, "Recipient: "], [/theo tên O365/g, "from O365 name"],
-    // câu có số
+
     [/(\d+)\s*tin nhắn/g, "$1 messages"], [/(\d+)\s*sự kiện/g, "$1 events"],
     [/(\d+)\s*khách hàng/g, "$1 customers"], [/Chạm /g, "Touched "],
     [/(\d+)\s*phản hồi/g, "$1 replies"], [/Phản hồi cho /g, "Reply to "],
@@ -388,30 +369,27 @@
     [/Quá hạn — cần xử lý/g, "Overdue — needs action"],
     [/Sản phẩm đang chào/g, "Products offered"], [/Xem toàn bộ lịch sử/g, "See full history"],
     [/· tổng /g, "· total "], [/\+ thắng/g, "+ won"],
-    // chế độ của bảng chào tuần — hay nằm lẫn trong câu hướng dẫn
+
     [/Đầu tuần/g, "Start of week"], [/Giữa tuần/g, "Mid-week"], [/Cuối tuần/g, "End of week"],
     [/Bám việc đã lên lịch/g, "Stay on scheduled work"],
     [/Lên kế hoạch cho tuần/g, "Plan the week"], [/Chốt lại tuần/g, "Wrap up the week"],
     [/Khác/g, "Other"],
-    // nhóm giai đoạn — xuất hiện lẫn trong câu tóm tắt
+
     [/Thử mẫu/g, "Sampling"], [/Tiếp cận/g, "Approach"],
     [/Đàm phán/g, "Negotiation"], [/Hoãn/g, "On hold"],
-    // aria-label ô lịch / thẻ trạng thái (chỉ trình đọc màn hình thấy)
+
     [/Bấm để xem & sửa/g, "Click to view & edit"],
     [/bấm để thêm việc/g, "click to add a task"],
     [/bấm để mở/g, "click to open"], [/bấm để/g, "click to"],
     [/Đang chạy:/g, "In progress:"], [/Chưa đánh dấu:/g, "Not marked:"],
     [/Đã làm:/g, "Done:"], [/Kế hoạch:/g, "Planned:"], [/quá hạn/g, "overdue"],
-    // từ lẻ, để CUỐI vì chúng cắt được giữa câu
+
     [/Tháng /g, "Month "], [/% thắng/g, "% win"], [/Tiến độ dự án/g, "project progress"],
     [/Dự án đang chạy/g, "In-progress projects"], [/[Dd]ự án/g, "project"],
     [/[Hh]oạt động/g, "activity"], [/nhóm ngành/g, "segment groups"],
     [/tiềm năng/g, "potential"], [/đóng/g, "closed"], [/thắng/g, "win"],
   ];
 
-  /* Chuỗi viết trong HTML thường xuống dòng và thụt lề, nên khoá tra phải gom
-     mọi khoảng trắng lại thành một dấu cách. Không có bước này thì câu nhiều
-     dòng không bao giờ khớp DICT dù đã liệt kê đúng. */
   const DICT_FLAT = {};
   Object.keys(DICT).forEach(k => { DICT_FLAT[k.replace(/\s+/g, ' ').trim()] = DICT[k]; });
 
@@ -430,7 +408,7 @@
   function translateTree(root) {
     if (LANG !== 'en') return;
     busy = true;
-    // text nodes
+
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     const nodes = []; let n; while ((n = w.nextNode())) nodes.push(n);
     for (const node of nodes) {
@@ -444,13 +422,7 @@
         node.nodeValue = raw.replace(t, en);
       }
     }
-    /* placeholder / title / aria-label.
 
-       PHẢI tính cả CHÍNH root, không chỉ con cháu. MutationObserver đưa vào đây
-       đúng phần tử vừa được thêm; khi một `box.innerHTML = '<select aria-label=…>'`
-       chạy thì phần tử được thêm CHÍNH LÀ cái mang aria-label, mà
-       querySelectorAll không bao giờ trả về chính nó. Đó là lý do hàng loạt
-       title/aria-label dựng bằng JS không bao giờ được dịch. */
     const els = [];
     if (root.nodeType === 1 && root.hasAttribute &&
         (root.hasAttribute('placeholder') || root.hasAttribute('title') || root.hasAttribute('aria-label')))
@@ -484,9 +456,7 @@
     observer = new MutationObserver(muts => {
       if (LANG !== 'en' || busy) return;
       observer.disconnect();
-      /* Nhãn đặt lại bằng setAttribute trên phần tử CÓ SẴN không sinh mutation
-         childList nào — nút "Quay lại …" đổi nhãn theo nơi xuất phát là ví dụ.
-         Không theo dõi attributes thì những nhãn đó vĩnh viễn ở tiếng Việt. */
+
       for (const m of muts) if (m.type === 'attributes' && m.target) translateTree(m.target);
       for (const m of muts) m.addedNodes.forEach(nd => {
         if (nd.nodeType === 1) translateTree(nd);
@@ -509,13 +479,14 @@
 
   function setLang(l) {
     LANG = (l === 'vi' ? 'vi' : 'en');
+    try { localStorage.setItem('fisg_lang', LANG); } catch (e) {}
     document.documentElement.lang = LANG;
     if (LANG === 'en') { translateTree(document.body); startObserver(); }
     else { if (observer) { observer.disconnect(); observer = null; } restoreVI(); }
     syncSwitch();
   }
   window.setLang = setLang;
-  window.t = translateStr;   // tiện dùng trong view sau này nếu cần
+  window.t = translateStr;
 
   function syncSwitch() {
     const sw = document.getElementById('langSwitch');
@@ -528,7 +499,6 @@
     });
   }
 
-  /* Segmented switch: both languages stay visible, the thumb marks the active one. */
   function injectToggle() {
     const header = document.querySelector('.gheader') || document.body;
     if (document.getElementById('langSwitch')) return;

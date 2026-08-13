@@ -1,7 +1,3 @@
-/* js/charts.js — Lớp biểu đồ cho Dashboard (Chart.js 4.4.0), nạp CUỐI.
- * 1) Bộ theme dùng chung: chữ Plus Jakarta Sans, số dạng tabular, tooltip và lưới tiết chế
- * 2) Biểu đồ mới: sản lượng (KG) theo từng mặt hàng trong Sales Funnel
- */
 (function () {
   "use strict";
 
@@ -12,7 +8,6 @@
   const colorOf = (n, i) => NCC_COLOR[n] || EXTRA[(i || 0) % EXTRA.length];
   const fmtN = n => (Number(n) || 0).toLocaleString("vi-VN");
 
-  /* ---------- 1. Theme dùng chung ---------- */
   function applyTheme() {
     if (!window.Chart) return false;
     const D = Chart.defaults;
@@ -21,19 +16,17 @@
     D.font.weight = 500;
     D.color = INK3;
     D.borderColor = LINE;
-    // gán từng thuộc tính, KHÔNG thay cả object animation của Chart.js
+
     if (D.animation) { D.animation.duration = 620; D.animation.easing = "easeOutQuart"; }
     D.animations = D.animations || {};
     D.datasets = D.datasets || {};
 
     D.plugins = D.plugins || {};
-    // BỎ tooltip: donut đã hiển thị thông tin ngay ở TÂM khi rê chuột, tooltip chỉ lặp lại
-    // và che mất phần tâm. Biểu đồ cột hiển thị số ngay đầu thanh.
+
     if (D.plugins.tooltip) D.plugins.tooltip.enabled = false;
     if (D.plugins.legend) D.plugins.legend.labels = Object.assign(
       D.plugins.legend.labels || {}, { font: { family: FONT, size: 11.5 }, usePointStyle: true, boxWidth: 8, padding: 14 });
 
-    // nét mềm hơn cho line & cột bo góc
     if (D.elements) {
       if (D.elements.line) { D.elements.line.tension = 0.36; D.elements.line.borderWidth = 2.4; }
       if (D.elements.point) { D.elements.point.radius = 0; D.elements.point.hoverRadius = 5; D.elements.point.hitRadius = 12; }
@@ -43,7 +36,6 @@
     return true;
   }
 
-  /* ---------- 2. Sản lượng theo mặt hàng ---------- */
   function ensureCard() {
     const grid = document.querySelector("#view-dash .dash-grid");
     if (!grid || document.getElementById("volBox")) return;
@@ -74,7 +66,6 @@
     const data = ((typeof visible === "function" ? visible() : (window.RECORDS || [])) || [])
       .filter(r => r.status === "IN PROGRESS" || r.status === "WON");
 
-    // gộp KG theo mặt hàng, giữ NCC chiếm ưu thế để tô màu
     const by = {};
     data.forEach(r => {
       const p = r.product || "—";
@@ -141,7 +132,7 @@
         responsive: true, maintainAspectRatio: false,
         animation: { duration: 650, easing: "easeOutQuart" },
         interaction: { mode: "nearest", axis: "y", intersect: false },
-        layout: { padding: { right: 64 } },   // chừa chỗ cho số in ở đầu thanh
+        layout: { padding: { right: 64 } },
         plugins: { legend: { display: false }, tooltip: { enabled: false } },
         scales: {
           x: {
@@ -170,7 +161,6 @@
     }
   }
 
-  /* ---------- gắn vào vòng đời ---------- */
   function wrap(name, fn) {
     const o = window[name];
     if (typeof o !== "function") return;
@@ -181,7 +171,7 @@
       return r;
     };
   }
-  // Chart.js vẽ chữ lên canvas: nếu font web chưa tải xong thì tooltip rơi về font hệ thống.
+
   function repaintWhenFontReady() {
     if (!document.fonts || !document.fonts.ready) return;
     document.fonts.ready.then(() => {
@@ -194,7 +184,7 @@
   }
 
   function boot() {
-    if (!applyTheme()) setTimeout(applyTheme, 400);       // Chart.js tải từ CDN
+    if (!applyTheme()) setTimeout(applyTheme, 400);
     repaintWhenFontReady();
     wrap("renderDash", () => {
       const on = document.querySelector("#volSwitch .vol-tab.on");

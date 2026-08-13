@@ -1,7 +1,3 @@
-/* js/lib/localstore.js — lớp đè bền vững cho việc sales nhập trong phần mềm.
-   Quy tắc: không đụng DOM. Lớp này CỘNG THÊM vào ACTIVITIES chứ không ghi đè,
-   nên khi store.js tráo dữ liệu SharePoint thật vào, việc vừa nhập không mất. */
-
 var LS = (function(){
   var KEY_PREFIX = 'fisg_local_';
   var EMPTY = { v:1, acts:[], done:{}, reports:[] };
@@ -22,7 +18,6 @@ var LS = (function(){
     return KEY_PREFIX + who;
   }
 
-  /* Dữ liệu hỏng không được làm vỡ trang: vá về hình dạng đúng rồi đi tiếp. */
   function normalize(o){
     if(!o || typeof o !== 'object') return JSON.parse(JSON.stringify(EMPTY));
     return {
@@ -49,12 +44,8 @@ var LS = (function(){
     catch(e){ return false; }
   }
 
-  /* Đổi người đăng nhập thì phải đọc lại khoá khác. Nhưng khi trình duyệt chặn
-     lưu trữ, bộ nhớ tạm LÀ dữ liệu duy nhất — xoá nó là mất trắng việc vừa nhập. */
   function reset(){ if(!available()) return; _cache = null; _key = null; }
 
-  /* Nối hoạt động đã lưu vào ACTIVITIES, bỏ qua id đã tồn tại. Gọi được nhiều
-     lần — sau đăng nhập, và sau mỗi lần store.js thay mảng. */
   function mergeActs(){
     var d = load();
     if(!d.acts.length) return 0;
@@ -62,8 +53,7 @@ var LS = (function(){
     ACTIVITIES.forEach(function(a){ have[a.id] = 1; if(a.spId) have['A-' + a.spId] = 1; });
     var added = 0, stale = [];
     d.acts.forEach(function(a){
-      /* Đã lên SharePoint rồi thì bản chính thức tự về với id A-<spId>; nối thêm
-         bản địa phương nữa là ra HAI dòng y hệt nhau trên bảng. */
+
       if(a.spId){ stale.push(a); return; }
       if(!have[a.id]){ ACTIVITIES.unshift(a); added++; }
     });
@@ -86,7 +76,7 @@ var LS = (function(){
     save();
     return a;
   }
-  /* Cập nhật một hoạt động đã lưu trong máy (sửa nội dung). Không có thì bỏ qua. */
+
   function updateAct(a){
     if(!a) return false;
     var d = load(), hit = false;
@@ -95,21 +85,17 @@ var LS = (function(){
     return hit;
   }
 
-  /* Đánh dấu một hoạt động đã lên được SharePoint. Còn nằm trong acts (để lịch
-     sử đánh dấu "đã làm" không đứt), nhưng mergeActs sẽ không nhân bản nữa vì
-     store.js đọc về đúng dòng đó với id A-<spId>. */
   function markSent(id, spId){
     var d = load(), hit = null;
     d.acts.forEach(function(a){ if(a.id === id){ a.spId = spId; a.sentAt = todayISO(); hit = a; } });
     if(hit) save();
     return hit;
   }
-  /* Việc đã nhập nhưng CHƯA lên được SharePoint — chỉ mình người nhập thấy. */
+
   function pendingActs(){
     return load().acts.filter(function(a){ return !a.spId; });
   }
-  /* Đã lên SharePoint rồi thì bản địa phương hết nhiệm vụ: store.js sẽ tải về
-     bản chính thức. Giữ lại cờ "đã làm" theo id mới. */
+
   function dropAct(id, newId){
     var d = load(), i = -1;
     d.acts.forEach(function(a, k){ if(a.id === id) i = k; });
@@ -121,43 +107,26 @@ var LS = (function(){
     return true;
   }
 
-  /* iso = null để gỡ cờ. */
   function markDone(id, iso){
     var d = load();
     if(iso) d.done[id] = iso; else delete d.done[id];
     save();
   }
 
-  /* HOÀN THÀNH LÀ MỘT HÀNH ĐỘNG, KHÔNG PHẢI MỘT PHÉP SUY.
-
-     Luật cũ có thêm một nhánh: ngày ≤ hôm nay thì coi như đã làm. Nó sinh ra cho
-     ~334 bản ghi lịch sử không có cờ, lúc dữ liệu còn nằm trong file demo. Nhưng
-     từ khi hoạt động đọc về từ SharePoint, nhánh đó biến MỌI việc vừa ghi thành
-     "đã hoàn thành" ngay sau khi tải lại trang — người dùng chưa bấm gì cả, mà
-     báo cáo tuần đã tính là xong.
-
-     Nay chỉ một luật: có cờ thì mới xong. Cờ chỉ đặt được bằng nút "Hoàn thành". */
   function isDone(a){
     if(!a) return false;
-    /* Cột "Ngày hoàn thành" trên SharePoint là NGUỒN SỰ THẬT — mọi máy và quản
-       lý cùng đọc một chỗ. Cờ trong máy chỉ là lớp đệm cho lúc mất mạng, hoặc
-       cho khi list chưa kịp thêm cột. */
+
     if(a.doneAt) return true;
     return !!load().done[a.id];
   }
-  /* Ngày hoàn thành để hiển thị: ưu tiên bản trên SharePoint. */
+
   function doneAt(a){
     if(!a) return '';
     return a.doneAt || load().done[a.id] || '';
   }
 
-  /* Bản ghi do người dùng nhập trong phần mềm nhưng chưa lên SharePoint. */
   function isLocal(a){ return !!a && /^AL-/.test(a.id); }
 
-  /* Đã qua ngày mà chưa ai bấm hoàn thành. Trước đây chỉ xét bản ghi tạo trong
-     phần mềm (isLocal) vì dữ liệu nhập sẵn không phân biệt được kế hoạch với
-     thực tế. Nay mọi hoạt động đều do người dùng tạo và đều có cờ riêng, nên
-     luật áp cho tất cả. Việc CỦA HÔM NAY chưa tính là bỏ quên — ngày vẫn còn. */
   function isMissed(a){
     if(!a || isDone(a)) return false;
     var iso = normDate(a.date);
@@ -179,8 +148,6 @@ var LS = (function(){
     return 'R-' + String(n+1).padStart(4,'0');
   }
 
-  /* Báo cáo lưu theo khoá của người gửi, nên manager đọc phải quét mọi khoá
-     fisg_local_*. Bản thật dùng SharePoint List thì đây chỉ còn là một truy vấn. */
   function allReports(){
     if(!available()) return load().reports.slice();
     var out = [];

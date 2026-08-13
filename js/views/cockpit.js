@@ -1,16 +1,11 @@
-/* js/views/cockpit.js — Tổng quan điều hành (Manager Cockpit).
-   File này chỉ dựng HTML và bắt sự kiện. Mọi phép gộp/tính toán nằm ở
-   js/lib/insights.js. */
-
-/* ====== TRẠNG THÁI TRANG ====== */
-let ckDays = 7;              // cửa sổ thời gian
-let ckNccs = [];             // rỗng = tất cả NCC
-let ckKind = '';             // '' = tất cả loại sự kiện
-let ckPic = '';              // '' = tất cả sales
-let ckSignal = null;         // 'acts' | 'closed' | 'overdue' | 'silent'
+let ckDays = 7;
+let ckNccs = [];
+let ckKind = '';
+let ckPic = '';
+let ckSignal = null;
 let ckQuery = '';
 let ckSort = { by:'lastTouch', dir:-1 };
-let ckCust = null;           // custKey đang mở trong ngăn kéo
+let ckCust = null;
 let ckLastFocus = null;
 
 const CK_PERIODS = [7, 14, 30];
@@ -25,8 +20,7 @@ const CK_KIND = {
 function ckEsc(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-/* Chuỗi nhúng vào onclick="fn('…')" phải qua hai lớp: thoát cho literal JS
-   trước, rồi thoát HTML. Dữ liệu có "Food O'Farm" — thiếu bước này là vỡ handler. */
+
 function ckAttr(s){ return ckEsc(String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
 
 function ckVN(iso){ return iso ? iso.slice(8,10)+'/'+iso.slice(5,7)+'/'+iso.slice(0,4) : '—'; }
@@ -43,7 +37,6 @@ function ckKindMeta(e){
     : { label:'Thua',  c:'var(--lost)', bg:'var(--lost-bg)' };
 }
 
-/* ====== ĐIỀU PHỐI ====== */
 function renderCockpit(){
   const sig = buildSignals(ckDays);
   ckRenderHead();
@@ -54,7 +47,6 @@ function renderCockpit(){
 }
 window.renderCockpit = renderCockpit;
 
-/* Gọi sau mọi thao tác ghi dữ liệu: xoá đệm và vẽ lại nếu trang đang mở. */
 function cockpitRefresh(){
   if(typeof invalidateCockpit === 'function') invalidateCockpit();
   const sec = document.getElementById('view-cockpit');
@@ -62,7 +54,6 @@ function cockpitRefresh(){
 }
 window.cockpitRefresh = cockpitRefresh;
 
-/* ====== ĐẦU TRANG ====== */
 function ckRenderHead(){
   document.getElementById('ckRange').innerHTML =
     'Kỳ đang xem: <b>' + ckVN(shiftISO(-ckDays)) + ' – ' + ckVN(todayISO()) + '</b>';
@@ -72,12 +63,9 @@ function ckRenderHead(){
 function ckSetDays(d){ ckDays = d; renderCockpit(); }
 window.ckSetDays = ckSetDays;
 
-/* ====== DẢI TÍN HIỆU ====== */
 function ckRenderSignals(sig){
   const closed = sig.closedWon + sig.closedLost;
-  /* Bốn ô chỉ còn nhãn và con số. Phần giải thích chuyển vào tooltip: đọc lướt
-     một dải KPI mà mỗi ô kèm hai dòng chữ nhỏ thì mắt phải làm việc gấp đôi để
-     lấy đúng bốn con số. Ai cần định nghĩa thì rê chuột. */
+
   const cards = [
     { id:'acts', k:'Hoạt động trong kỳ', v:sig.acts, c:'var(--ck-act)',
       s:'Cuộc gọi, ghé thăm, email và cập nhật tiến độ trong kỳ đang xem' },
@@ -98,7 +86,6 @@ function ckRenderSignals(sig){
 function ckToggleSignal(id){ ckSignal = (ckSignal === id) ? null : id; renderCockpit(); }
 window.ckToggleSignal = ckToggleSignal;
 
-/* ====== BỘ LỌC SUY RA TỪ TÍN HIỆU ====== */
 function ckFeedOpts(){
   const o = { nccs: ckNccs.length ? ckNccs : null, pic: ckPic || null, kinds: null };
   if(ckKind) o.kinds = [ckKind];
@@ -106,15 +93,13 @@ function ckFeedOpts(){
   if(ckSignal === 'closed') o.kinds = ['close'];
   return o;
 }
-/* Hai tín hiệu 'quá hạn' và 'im lặng' là trạng thái của khách hàng, không phải
-   loại sự kiện — nên chúng lọc theo tập khách hàng thay vì theo kind. */
+
 function ckCustGate(sig){
   if(ckSignal === 'overdue') return k => sig.overdueCust.has(k);
   if(ckSignal === 'silent')  return k => sig.silentCust.has(k);
   return null;
 }
 
-/* ====== DÒNG THỜI GIAN ====== */
 function ckRenderFeed(sig){
   const gate = ckCustGate(sig);
   let evs = buildEvents(ckDays, ckFeedOpts());
@@ -153,17 +138,12 @@ function ckRenderFeed(sig){
   }).join('');
 }
 
-/* ====== SẮP TỚI ======
-   Dòng thời gian chỉ nhìn lại quá khứ, nên việc sales đã lên lịch cho ngày mai
-   không xuất hiện ở đâu — quản lý tưởng đội không có kế hoạch gì. Khối này nhìn
-   tới 7 ngày, dùng chung bộ lọc NCC / loại / sales với dòng thời gian. */
 const CK_UP_DAYS = 7;
 function ckRenderUpcoming(){
   const box = document.getElementById('ckUp');
   const panel = document.getElementById('ckUpPanel');
   if(!box) return;
-  /* Bộ lọc "loại sự kiện" chỉ có nghĩa với quá khứ: sắp tới toàn là hoạt động.
-     Chọn Dự án mới / Đóng dự án thì khối này rỗng chứ không nên bịa ra gì. */
+
   const o = ckFeedOpts();
   const hidden = o.kinds && o.kinds.length && o.kinds.indexOf('act') < 0;
   const evs = hidden ? [] : buildUpcoming(CK_UP_DAYS, { nccs:o.nccs, pic:o.pic });
@@ -185,9 +165,9 @@ function ckRenderUpcoming(){
       <div class="ck-day-b">${d.items.map(ckEventRow).join('')}</div>
     </div>`).join('');
 }
-/* Ngày mai / Ngày kia rồi mới đến thứ — đọc nhanh hơn ngày tháng. */
+
 function ckUpLabel(iso){
-  const d = daysSince(iso);           // âm vì nằm ở tương lai
+  const d = daysSince(iso);
   if(d === -1) return 'Ngày mai';
   if(d === -2) return 'Ngày kia';
   return ckDayLabel(iso);
@@ -240,7 +220,6 @@ function ckSetKind(v){ ckKind = v; if(ckSignal==='acts'||ckSignal==='closed') ck
 function ckSetPic(v){ ckPic = v; renderCockpit(); }
 window.ckToggleNcc = ckToggleNcc; window.ckSetKind = ckSetKind; window.ckSetPic = ckSetPic;
 
-/* ====== BẢNG KHÁCH HÀNG ====== */
 const CK_COLS = [
   { id:'label',     label:'Khách hàng' },
   { id:'sales',     label:'Sales phụ trách', cls:'hide-sm' },
@@ -295,11 +274,6 @@ function ckSetOf(set, labelFn){
     : ckEsc(arr.slice(0,2).join(', ')) + ' <span class="ck-more">+' + (arr.length-2) + '</span>';
 }
 
-/* Thanh im lặng: độ dài = đã bao lâu chưa ai chạm vào khách này (0–60 ngày),
-   màu = mức đáng lo. Ba trường hợp trước đây bị gộp sai thành "đỏ, đầy vạch":
-     · chưa có hoạt động nào  → không có dữ liệu, không phải "rất tệ"
-     · hoạt động ở TƯƠNG LAI  → đã đặt lịch, là chuyện tốt; trước hiện "-136 ngày trước"
-     · đã lâu không chạm      → mới thật sự đáng lo */
 function ckQuiet(lastTouch){
   if(!lastTouch) return { text:'Chưa có', pct:0, color:'var(--line)', title:'Chưa ghi nhận hoạt động nào' };
   const d = daysSince(lastTouch);
@@ -346,7 +320,6 @@ function ckSetSort(by){
 }
 window.ckSetSort = ckSetSort;
 
-/* Tìm nhanh chỉ ẩn/hiện dòng đã dựng — không dựng lại 298 dòng mỗi phím gõ. */
 function ckSetQuery(v){ ckQuery = String(v||'').trim().toLowerCase(); ckApplyQuery(); }
 function ckApplyQuery(){
   const rows = document.querySelectorAll('#ckRows .ck-row');
@@ -359,7 +332,6 @@ function ckApplyQuery(){
 }
 window.ckSetQuery = ckSetQuery;
 
-/* ====== NGĂN KÉO KHÁCH HÀNG ====== */
 function openCustomer(key){
   const p = _cachedIndex().get(custKey(key));
   if(!p) return;
@@ -436,9 +408,6 @@ function closeCustomer(){
 }
 window.closeCustomer = closeCustomer;
 
-/* Timeline đầy đủ dùng lại ô tra cứu sẵn có ở Dashboard. Ô đó lọc qua visible()
-   nên vẫn chịu nccFilter — chuyển sang NCC có nhiều dự án nhất của khách này
-   trước khi nhảy, và nói rõ cho người dùng biết. */
 function ckOpenHistory(){
   const p = _cachedIndex().get(ckCust);
   if(!p) return;
@@ -456,7 +425,6 @@ function ckOpenHistory(){
 }
 window.ckOpenHistory = ckOpenHistory;
 
-/* Esc đóng ngăn kéo; Tab bị giữ lại bên trong khi ngăn kéo mở. */
 document.addEventListener('keydown', e => {
   const dr = document.getElementById('ckDrawer');
   if(!dr || !dr.classList.contains('open')) return;

@@ -1,14 +1,7 @@
-/* js/views/supplier-import.js — nhập TÊN nhà cung cấp vào list Suppliers.
- *
- * Chỉ Super Admin. Chọn file Excel (một cột tên NCC) → xem trước → cập nhật:
- * tên chưa có thì tạo, tên đã có thì bỏ qua. Chạy lại an toàn. Toàn bộ logic ghi
- * nằm ở store.js (bulkUpsertSuppliers); file này chỉ lo đọc Excel và giao diện. */
 (function () {
   "use strict";
   let names = null, fileName = "";
 
-  /* Lấy tên NCC từ workbook: ưu tiên cột tiêu đề Title/Supplier/Nhà cung cấp;
-     không có tiêu đề rõ thì lấy cột đầu tiên. Bỏ dòng trống và tiêu đề. */
   function parseWorkbook(wb) {
     const out = [];
     (wb.SheetNames || []).forEach(sn => {
@@ -24,7 +17,7 @@
         if (v) out.push(v);
       }
     });
-    /* bỏ trùng trong file, giữ thứ tự */
+
     const seen = {}, uniq = [];
     out.forEach(n => { const k = n.toUpperCase(); if (!seen[k]) { seen[k] = 1; uniq.push(n); } });
     return uniq;
@@ -93,7 +86,7 @@
   function render() {
     const host = document.getElementById("siBox");
     if (!host) return;
-    if (!(window.myCap && myCap().admin)) { host.innerHTML = ""; return; }   // chỉ Super Admin
+    if (!(window.myCap && myCap().admin)) { host.innerHTML = ""; return; }
     host.innerHTML = `
       <div class="ci-card glass">
         <div class="ci-head"><div>

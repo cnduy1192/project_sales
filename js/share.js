@@ -1,5 +1,3 @@
-/* js/share.js — Chia sẻ dự án cho khách bằng KEY ID (phía nhân viên).
- * Lưu bản ghi vào list SharePoint `Shares`. Không dùng cho chế độ khách (xem guest.js). */
 (function () {
   "use strict";
   const LIST = () => (window.FISG_CFG && FISG_CFG.SHARES_LIST) || "Shares";
@@ -11,7 +9,6 @@
   const isoDay = d => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
   const viDay = s => s ? new Date(s).toLocaleDateString("vi-VN") : "—";
 
-  /* ---------- Nguồn sổ mã: ưu tiên Worker (không cần list SharePoint) ---------- */
   async function fetchShares() {
     try {
       const w = await workerList();
@@ -37,12 +34,11 @@
     });
   }
 
-  /* ---------- Dự phòng: list SharePoint (nếu có) ---------- */
   async function fetchSharesFromSP() {
     if (!live()) return [];
     let items = [];
     try { items = await FISG_GRAPH.listItems(LIST()); }
-    catch (e) { return []; }        // chưa có list Shares -> coi như sổ rỗng, KHÔNG báo lỗi
+    catch (e) { return []; }
     const supMap = {};
     try {
       (await FISG_GRAPH.listItems("Suppliers")).forEach(s => {
@@ -81,29 +77,24 @@
   }
 
   async function revoke(spId, key) {
-    if (key) await workerDelete(key);                       // xoá dữ liệu khách đang xem
+    if (key) await workerDelete(key);
     if (spId && live()) {
       try { await FISG_GRAPH.updateItem(LIST(), spId, { IsActive: false }); } catch (e) {}
     }
     return true;
   }
 
-  /* ---------- Cloudflare Worker: khách xem KHÔNG cần đăng nhập ---------- */
   const workerUrl = () => String((window.FISG_CFG && FISG_CFG.SHARE_WORKER_URL) || "").replace(/\/+$/, "");
   const WKEY = "fisg_share_write_key";
   const writeKey = () => { try { return localStorage.getItem(WKEY) || ""; } catch (e) { return ""; } };
   function setWriteKey(v) { try { localStorage.setItem(WKEY, v || ""); } catch (e) {} }
 
-  /* Dự án người đang đăng nhập được phép thấy. Link chia sẻ là trang CÔNG KHAI,
-     nên đây là chỗ rò rỉ nặng nhất nếu lấy thẳng RECORDS: một sales bấm chia sẻ
-     là đẩy nguyên funnel của cả công ty lên một URL ai cũng mở được. */
   function myRecords() {
     const all = (typeof RECORDS !== "undefined" ? RECORDS : []);
     if (typeof scopeRecords !== "function") return all;
     return scopeRecords(all, typeof me !== "undefined" ? me : null);
   }
 
-  // Bản chụp: dữ liệu đủ để app hiển thị mà không cần SharePoint
   function buildSnapshot(scope, ncc, codes) {
     const recs = myRecords().filter(r => {
       if (scope === "Tất cả NCC") return true;
@@ -149,7 +140,6 @@
     return d;
   }
 
-  // hỏi mã ghi (1 lần/máy), theo đúng kiểu cấu hình gateway AI sẵn có
   async function ensureWriteKey() {
     if (writeKey()) return true;
     const v = window.prompt(
@@ -170,7 +160,6 @@
     return String(Date.now()).slice(-6);
   }
 
-  /* ---------- Modal chia sẻ ---------- */
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
   function ensureModal() {
@@ -196,7 +185,7 @@
   }
 
   async function open() {
-    // Chia sẻ chạy qua Share Gateway (Worker), không phụ thuộc SharePoint.
+
     if (!workerUrl() && !live()) {
       if (window.toast) toast("Chưa cấu hình SHARE_WORKER_URL trong js/sp-config.js.");
       return;
@@ -212,10 +201,10 @@
     body.innerHTML = '<div class="share-loading">Đang chuẩn bị…</div>';
 
     const key = await genKey();
-    /* Đủ nhà cung cấp từ list Suppliers để chia sẻ được cả NCC mới. */
+
     const nccs = (typeof supplierOptions === "function")
       ? supplierOptions() : (typeof NCCS !== "undefined" ? NCCS : []).slice();
-    /* Link chia sẻ luôn theo một NCC cụ thể — "Tất cả" không phải phạm vi hợp lệ. */
+
     const cur = (typeof formNcc === "function" && formNcc())
       || (typeof nccFilter !== "undefined" && nccFilter) || nccs[0] || "";
     const exp = new Date(); exp.setDate(exp.getDate() + 30);
@@ -303,7 +292,7 @@
           msg.textContent = "KEY này đang được dùng. Chọn mã khác."; msg.className = "sh-hint err";
           $("shSave").disabled = false; return;
         }
-        // 1) đẩy bản chụp lên Worker -> khách xem KHÔNG cần đăng nhập
+
         if (!(await ensureWriteKey())) {
           msg.textContent = "Cần mã ghi để tạo link cho khách."; msg.className = "sh-hint err";
           $("shSave").disabled = false; return;
@@ -311,7 +300,7 @@
         msg.textContent = "Đang đẩy dữ liệu cho khách…";
         await workerPut(k, buildSnapshot(scope, ncc, codes), expiry,
           { scope, ncc, note: $("shNote").value.trim(), count: codes.length });
-        // 2) (tuỳ chọn) ghi thêm vào list SharePoint nếu có — Worker đã tự giữ sổ quản lý
+
         if (live()) {
           try {
             await createShare({ key: k, ncc, scope, codes, expiry, note: $("shNote").value.trim() });
@@ -361,7 +350,6 @@
 
   window.FISG_SHARE_NET = { workerGet, workerPut, workerDelete, buildSnapshot, setWriteKey };
 
-  /* ---------- Bảng quản lý share (màn Quản trị) ---------- */
   async function renderManager() {
     const host = document.getElementById("view-users");
     if (!host) return;
@@ -404,7 +392,6 @@
     }
   }
 
-  /* ---------- Nút Chia sẻ trên thanh công cụ ---------- */
   function addButton() {
     const bar = document.querySelector("#view-funnel .topbar");
     if (!bar || document.getElementById("btnShare")) return;

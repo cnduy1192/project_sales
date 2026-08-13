@@ -1,5 +1,3 @@
-/* js/views/funnel.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== RENDER FUNNEL ====== */
 function setF(f){filter=f;document.querySelectorAll('.chip[data-f]').forEach(c=>c.classList.toggle('on',c.dataset.f===f));render();}
 function fmt(n){return (n||0).toLocaleString('vi-VN')}
 function stageShort(s){return (s||'').replace('SHARED BUSINESS GOAL','SHARED GOAL').replace('BUILDING A SOLUTION','BUILDING').replace('SOLUTION TESTING','TESTING').replace('OFFER & AGREEMENT','OFFER').replace('QUOTED / PO','QUOTED/PO').replace('TEST PASSED','PASSED')}
@@ -80,7 +78,6 @@ function render(){
   if(!box.children.length) box.innerHTML=`<div class="major glass"><div class="empty"><b>Không có dự án nào</b>Thử đổi bộ lọc, hoặc bấm "Thêm dự án" để tạo mới.</div></div>`;
 }
 
-/* ====== % QUICK EDIT POPOVER ====== */
 function openProbPop(id,ev){
   probRecId=id;
   const r=RECORDS.find(x=>x.id===id);
@@ -102,7 +99,6 @@ function setProb(p){
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.prob-pop')&&!e.target.closest('.prob-btn'))document.getElementById('probPop').classList.remove('open');});
 
-/* ====== CLOSE PROJECT ====== */
 function openCloseModal(id){
   const r=RECORDS.find(x=>x.id===id); if(!r||!canClose(r)){toast('Chỉ người tạo dự án (PIC) hoặc Manager mới có quyền đóng dự án.');return;}
   closeRecId=id; closeResult=null;
@@ -110,9 +106,7 @@ function openCloseModal(id){
   document.getElementById('c-won').classList.remove('sel');
   document.getElementById('c-lost').classList.remove('sel');
   document.getElementById('c-reason').value='';
-  /* Modal này mở được từ hai nơi: từ trong modal dự án, hoặc thẳng từ dòng trên
-     bảng funnel. Chỉ tháo lớp dự án khi lớp đó thật sự đang mở.
-     `base` giữ nơi xuất phát sâu hơn, để sau khi đóng dự án xong về thẳng đó. */
+
   var dov = document.getElementById('dov');
   if(dov.classList.contains('open')){
     var back = NAV.back(function(){ dov.classList.remove('open'); });
@@ -135,19 +129,18 @@ function confirmClose(){
   if(!closeResult){toast('Chọn kết quả Thắng hoặc Thua.');return;}
   if(!reason){toast('Vui lòng nhập lý do đóng dự án.');return;}
   r.status=closeResult; r.prob=closeResult==='WON'?1:0;
-  /* Cockpit cần biết dự án đóng NGÀY nào; bản ghi cũ phải suy đoán từ update cuối. */
+
   r.closedAt=isoOf(TODAY);
   r.comments.push({by:me.pic||me.name,at:nowStr(),text:`[Đóng dự án — ${STATUS_VI[closeResult]}] ${reason}`});
   notify(r,`đã đóng dự án <b>${r.customer} · ${r.product}</b> — kết quả: <b>${STATUS_VI[closeResult]}</b>. Lý do: ${reason.slice(0,60)}${reason.length>60?'…':''}`);
-  /* Đã đóng dự án xong thì bỏ qua modal dự án, về thẳng nơi xuất phát. */
+
   document.getElementById('cov').classList.remove('open'); closeRecId=null;
   var layer = NAV.popRaw();
   if(layer && layer.base && typeof layer.base.restore === 'function') layer.base.restore();
   render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast(`Đã đóng ${r.id} (${STATUS_VI[closeResult]}). Thông báo gửi qua Email & Teams đến: ${recipientsOf(r).join(', ')}.`);
-  /* Đóng dự án là thay đổi lớn nhất trong vòng đời một dự án — không được phép
-     chỉ tồn tại trên màn hình của người bấm nút. */
+
   if(typeof pushProjectPatch==='function')
     pushProjectPatch(r, {
       Status: 'Closed', Result: closeResult,

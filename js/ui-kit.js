@@ -1,16 +1,9 @@
-/* js/ui-kit.js — lớp giao diện bổ sung, nạp CUỐI CÙNG (classic script).
- * 1) Đổi tên NCC "Kimica-Navido" -> "Kimica"      5) Nút xoá nhanh trong ô tìm kiếm
- * 2) Menu hồ sơ + Đăng xuất ở header             6) Nút lên đầu trang
- * 3) Định danh màu 3 NCC (tab + rail từng dòng)  7) Bỏ chú thích hướng dẫn
- * 4) Dải trạng thái Đang chạy / Đã đóng + mốc thời gian
- */
 (function () {
   "use strict";
 
-  /* ---------- 1. Đổi tên NCC ---------- */
   const OLD_NCC = "Kimica-Navido", NEW_NCC = "Kimica";
   function renameNcc() {
-    // LƯU Ý: RECORDS/LISTS/me khai báo bằng const/let -> KHÔNG nằm trên window, phải gọi trực tiếp
+
     try {
       if (typeof LISTS !== "undefined" && LISTS) {
         if (Array.isArray(LISTS.nccs))
@@ -26,7 +19,7 @@
       if (typeof ACTIVITIES !== "undefined")
         ACTIVITIES.forEach(a => { if (a.ncc === OLD_NCC) a.ncc = NEW_NCC; });
       if (typeof nccFilter !== "undefined" && nccFilter === OLD_NCC) nccFilter = NEW_NCC;
-      // tab đã render trước đó -> đổi nhãn hiển thị
+
       document.querySelectorAll('.ncc-tab[data-ncc="' + OLD_NCC + '"]').forEach(t => {
         t.dataset.ncc = NEW_NCC;
         t.textContent = NEW_NCC;
@@ -37,12 +30,11 @@
 
   window.FISG_RENAME_NCC = renameNcc;
 
-  /* ---------- 3. Bảng màu định danh NCC ---------- */
   const NCC_COLOR = { "Roquette": "#1E3A8A", "IFF": "#0D9488", "Kimica": "#7C3AED" };
   const FALLBACK = ["#B45309", "#0B4F9E", "#DB2777"];
   const ALL_TAB = typeof ALL_NCC !== "undefined" ? ALL_NCC : "*";
   function colorOf(ncc, i) {
-    if (ncc === ALL_TAB) return "#334155";        // xám mực: không thuộc NCC nào
+    if (ncc === ALL_TAB) return "#334155";
     return NCC_COLOR[ncc] || FALLBACK[(i || 0) % FALLBACK.length];
   }
   function tint(hex, a) {
@@ -51,7 +43,7 @@
   }
 
   function paintTabs() {
-    let k = 0;                                     // tab "Tất cả" không chiếm màu dự phòng
+    let k = 0;
     document.querySelectorAll(".ncc-tab").forEach(t => {
       const isAll = t.dataset.ncc === ALL_TAB;
       const c = colorOf(t.dataset.ncc, isAll ? 0 : k++);
@@ -71,7 +63,6 @@
     });
   }
 
-  /* ---------- 4. Dải trạng thái + đếm theo mốc thời gian ---------- */
   const SUB_COLOR = {
     overdue: "#DC2626", thisq: "#B45309", nextq: "#B45309",
     thisyear: "#1E3A8A", later: "#697082",
@@ -90,7 +81,7 @@
     document.querySelectorAll(".sub").forEach(sEl => {
       const head = sEl.querySelector(".sub-head");
       if (!head) return;
-      // suy ra mốc từ hàm collapse: collapsed['sub-<id>']
+
       const m = (head.getAttribute("onclick") || "").match(/collapsed\['sub-([^']+)'\]/);
       const id = m && m[1];
       if (!id) return;
@@ -99,7 +90,7 @@
       head.style.setProperty("--sub", c);
       head.style.setProperty("--sub-soft", tint(c, .12));
       head.style.setProperty("--sub-border", tint(c, .3));
-      // gắn số lượng cạnh tiêu đề (một lần)
+
       const t = head.querySelector(".s-title");
       if (t && !t.querySelector(".sub-count")) {
         const n = sEl.querySelectorAll(".row").length;
@@ -112,7 +103,6 @@
     });
   }
 
-  /* ---------- 2. Menu hồ sơ + Đăng xuất ---------- */
   function signOut() {
     try { localStorage.removeItem("fisg_lang"); } catch (e) {}
     const done = () => location.reload();
@@ -136,7 +126,7 @@
     btn.setAttribute("aria-haspopup", "menu");
     btn.setAttribute("aria-expanded", "false");
     btn.setAttribute("aria-label", "Tài khoản");
-    // TỰ dựng avatar riêng (không di chuyển #hAvatar để tránh hỏng layout/handler sẵn có)
+
     btn.innerHTML =
       '<span class="avatar" id="pfAv" style="width:34px;height:34px;font-size:12px"></span>' +
       '<svg class="chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -189,7 +179,6 @@
     fill();
   }
 
-  /* ---------- 5. Nút xoá nhanh trong ô tìm kiếm ---------- */
   function addClears() {
     const targets = [
       { sel: "#q", box: ".gsearch", after: () => window.render && render() },
@@ -222,7 +211,6 @@
     });
   }
 
-  /* ---------- 6. Nút lên đầu trang ---------- */
   function scroller() {
     const main = document.querySelector(".main");
     if (main && main.scrollHeight > main.clientHeight + 40) return main;
@@ -253,7 +241,6 @@
     onScroll();
   }
 
-  /* ---------- 7. Bỏ chú thích hướng dẫn ---------- */
   const HINTS = [
     "di chuột lên điểm để xem chi tiết", "click để lọc funnel",
     "click một nhóm để xem 13 segment bên trong", "click để xem chi tiết",
@@ -264,10 +251,10 @@
     document.querySelectorAll(".card small, .cardhead small, small, .ins-wrap p").forEach(el => {
       const t = (el.textContent || "").trim();
       if (!HINTS.some(h => t === h || t.startsWith(h))) return;
-      if (el.id) el.style.display = "none";      // có id -> code khác còn dùng, chỉ ẩn
+      if (el.id) el.style.display = "none";
       else el.remove();
     });
-    // #segHint bị code dashboard gán textContent -> ẩn, KHÔNG xoá (xoá sẽ gây lỗi null)
+
     const seg = document.getElementById("segHint");
     if (seg) seg.style.display = "none";
     const ins = document.getElementById("insQ");
@@ -276,29 +263,22 @@
     if (q) q.placeholder = "Lọc nhanh funnel";
   }
 
-  /* ---------- A. Thay tên tắt PIC bằng TÊN THẬT trên O365 ----------
-   * Đối chiếu qua "User Information List" của site (chỉ cần quyền Sites.ReadWrite.All đã có),
-   * không cần thêm quyền User.Read.All. */
-  /* Tên tắt PIC → email, dựng từ list Users trên SharePoint. Trước đây bảng này
-     ghi cứng 12 người; thêm sales mới là phải sửa code. */
   function picEmailMap() {
     const m = {};
     if (typeof USERS !== "undefined")
       USERS.forEach(u => { if (u.pic && u.email) m[u.pic] = String(u.email).toLowerCase(); });
     return m;
   }
-  let PIC_FULL = {};        // tên tắt -> tên đầy đủ O365
-  let PEOPLE = [];          // [{name, mail}] nguồn cho ô "Người liên quan / tham gia"
+  let PIC_FULL = {};
+  let PEOPLE = [];
   const SCOPE_GROUP = ["GroupMember.Read.All"];
   const SCOPE_USER = ["User.ReadBasic.All"];
 
-  // Gom danh bạ từ nhiều nguồn, nguồn nào chạy được thì dùng.
   async function fetchDirectory() {
-    const out = [];         // [{name, mail}]
+    const out = [];
     const notes = [];
     const gid = window.FISG_CFG && FISG_CFG.RELATED_GROUP_ID;
 
-    // (1) Thành viên group O365 — cho cả tên đầy đủ lẫn danh sách chọn
     if (gid) {
       for (const path of ["/groups/" + gid + "/transitiveMembers?$select=displayName,mail,userPrincipalName&$top=200",
                           "/groups/" + gid + "/members?$select=displayName,mail,userPrincipalName&$top=200"]) {
@@ -312,7 +292,6 @@
       }
     } else notes.push("chưa điền RELATED_GROUP_ID trong js/sp-config.js");
 
-    // (2) Danh bạ người dùng của site (không cần quyền thêm)
     try {
       const sid = await FISG_GRAPH.getSiteId();
       const d = await FISG_GRAPH.api("/sites/" + sid + "/lists/" +
@@ -324,7 +303,6 @@
       });
     } catch (e) { notes.push("site users: " + (e.message || e).slice(0, 90)); }
 
-    // (3) Tra thẳng từng email PIC (nếu 1+2 chưa đủ)
     const missing = Object.values(picEmailMap()).filter(
       m => !out.some(u => u.mail === m.toLowerCase()));
     if (missing.length) {
@@ -336,7 +314,6 @@
       }
     }
 
-    // khử trùng theo email
     const seen = {}, uniq = [];
     out.forEach(u => { if (u.mail && !seen[u.mail]) { seen[u.mail] = 1; uniq.push(u); } });
     return { people: uniq, notes };
@@ -354,8 +331,6 @@
     const byMail = {};
     people.forEach(u => { byMail[u.mail] = u.name; });
 
-    /* Chỉ dựng bảng bổ sung rồi giao cho store — đổi tên PIC là việc của MỘT
-       nơi duy nhất (js/store.js), nếu không hai chỗ cùng sửa sẽ lệch nhau. */
     PIC_FULL = {};
     const PIC_EMAIL = picEmailMap();
     Object.keys(PIC_EMAIL).forEach(short => {
@@ -369,20 +344,14 @@
     return true;
   }
 
-  /* ---------- B. Ô chọn người liên quan; danh sách lấy từ group O365 ---------- */
-  /* Chỉ dọn Ô CHỌN của form THÊM DỰ ÁN, KHÔNG đụng dữ liệu. Bản cũ xoá
-     r.related của mọi dự án mỗi lần render và xoá dRelated NGAY SAU openDetail
-     — hồi còn dữ liệu demo thì vô hại, nhưng nay cột "Người liên quan" là thật:
-     nó là căn cứ để Sales được xem dự án của đồng nghiệp, và lưu dự án sau khi
-     mở chi tiết sẽ ghi đè bằng mảng rỗng. */
   function clearRelated() {
     if (typeof related !== "undefined") related = [];
     document.querySelectorAll("#relTags .tag").forEach(t => t.remove());
-    // danh sách chọn: để TRỐNG cho tới khi lấy được danh bạ O365
+
     if (!PEOPLE.length && typeof ALL_PICS !== "undefined") ALL_PICS.length = 0;
     if (window.rebuildRel) try { rebuildRel(); } catch (e) {}
   }
-  // Đổ danh bạ O365 (đã lấy ở fetchDirectory) vào ô chọn người liên quan/tham gia
+
   function applyPeopleSource() {
     if (typeof ALL_PICS === "undefined") return;
     ALL_PICS.length = 0;
@@ -393,7 +362,6 @@
       try { dRenderRel(true); } catch (e) {}
   }
 
-  // Chẩn đoán: gõ FISG_PEOPLE() trong Console
   window.FISG_PEOPLE = async function () {
     const r = await fetchDirectory();
     console.log("Số người lấy được:", r.people.length);
@@ -403,14 +371,13 @@
     return r;
   };
 
-  /* ---------- C. Segment phải đủ 13 giá trị (không lấy theo Nhóm ngành) ---------- */
   function fixSegmentField() {
     const seg = document.getElementById("f-seg");
     if (!seg || typeof LISTS === "undefined" || !LISTS.segments) return;
     const keep = seg.value;
     seg.innerHTML = LISTS.segments.map(s => `<option>${s}</option>`).join("");
     if (keep && LISTS.segments.includes(keep)) seg.value = keep;
-    // chọn Segment -> tự set Nhóm ngành tương ứng (giữ dữ liệu nhất quán)
+
     if (!seg.dataset.syncGrp) {
       seg.dataset.syncGrp = "1";
       seg.addEventListener("change", () => {
@@ -421,7 +388,6 @@
     }
   }
 
-  /* ---------- gắn vào vòng đời app ---------- */
   function afterRender() { paintRows(); paintStatus(); }
   function wrap(name, fn) {
     const orig = window[name];
@@ -446,15 +412,15 @@
     wrap("loginAs", () => {
       safe(renameNcc); safe(paintTabs); safe(buildProfile);
       safe(addClears); safe(stripHints); safe(clearRelated); safe(afterRender);
-      // đảm bảo menu hồ sơ luôn dựng được kể cả khi header render muộn
+
       setTimeout(() => safe(buildProfile), 300);
     });
     wrap("buildForm", fixSegmentField);
-    wrap("onFormGroup", fixSegmentField);   // chặn việc lọc segment theo Nhóm ngành
+    wrap("onFormGroup", fixSegmentField);
     wrap("openForm", () => { safe(addClears); safe(fixSegmentField); });
     wrap("openActForm", addClears);
     wrap("openDetail", clearRelated);
-    // dữ liệu SharePoint tải sau -> đổi tên + tô lại
+
     if (window.FISG_STORE && FISG_STORE.syncFromGraph) {
       const s = FISG_STORE.syncFromGraph;
       FISG_STORE.syncFromGraph = async function () {
@@ -462,7 +428,7 @@
         safe(renameNcc);
         safe(clearRelated);
         try { await loadRealNames(); } catch (e) { console.warn("[ui-kit] tên O365:", e); }
-        safe(applyPeopleSource);                        // người liên quan <- danh bạ O365
+        safe(applyPeopleSource);
         if (window.render) render();
         if (window.renderActs) try { renderActs(); } catch (e) {}
         safe(paintTabs); safe(afterRender); safe(buildProfile);

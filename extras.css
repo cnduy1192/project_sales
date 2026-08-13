@@ -1,6 +1,3 @@
-/* extras.css — Thêm nhà cung cấp · Chi tiết khách hàng · Tỷ trọng Segment */
-
-/* ---------- khung modal dùng chung ---------- */
 .x-ov {
   position: fixed; inset: 0; z-index: 1000; display: none;
   align-items: center; justify-content: center; padding: 4vh 16px;
@@ -43,9 +40,7 @@
 .x-msg { margin-top: 12px; font-size: 12px; color: var(--ink-3); line-height: 1.55; }
 .x-msg.err { color: var(--lost); font-weight: 600; }
 .x-empty { padding: 16px; text-align: center; font-size: 12.5px; color: var(--ink-3); }
-/* ---------- cặp nút hành động ----------
-   Chuẩn: cao 44px (vùng chạm), một CTA chính duy nhất, phản hồi nhấn bằng scale
-   (không đổi kích thước bố cục), chuyển động 180ms, viền focus rõ cho bàn phím. */
+
 .x-actions {
   display: flex; justify-content: flex-end; gap: 10px;
   margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line-2);
@@ -62,14 +57,12 @@
 .x-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .x-btn:disabled { opacity: .5; cursor: default; pointer-events: none; }
 
-/* phụ — lối thoát, phải thấy rõ nhưng không tranh với hành động chính */
 .x-btn.ghost {
   background: var(--surface); color: var(--ink-2);
   border: 1px solid var(--line);
 }
 .x-btn.ghost:hover { background: var(--bg); border-color: var(--ink-3); color: var(--ink); }
 
-/* chính — CTA duy nhất của bảng */
 .x-btn.primary {
   background: var(--accent); color: #fff; border: 1px solid var(--accent);
   box-shadow: 0 1px 2px rgba(16,24,40,.10), 0 6px 14px -8px rgba(30,58,138,.55);
@@ -80,7 +73,6 @@
 }
 .x-btn.primary:active { box-shadow: 0 1px 2px rgba(16,24,40,.14); }
 
-/* ---------- 1. nút + và thẻ mô hình pipeline ---------- */
 .ncc-add {
   width: 28px; height: 28px; flex: none; margin-left: 6px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
@@ -119,7 +111,6 @@
   display: flex; align-items: center; justify-content: center; font-size: 8.5px; font-style: normal;
 }
 
-/* ---------- 2. chi tiết khách hàng ---------- */
 .act-clickable .act-row { cursor: pointer; transition: background .14s; }
 .act-clickable .act-row:hover { background: var(--bg); }
 
@@ -165,7 +156,6 @@
 .tl-note { display: block; margin-top: 3px; color: var(--ink-2); }
 .tl-next { display: block; margin-top: 2px; font-size: 11.5px; color: var(--accent); }
 
-/* ---------- 3. biểu đồ segment ---------- */
 #segShareBox { min-height: 190px; }
 
 @media (max-width: 720px) {
@@ -182,16 +172,12 @@
   .x-btn { width: 100%; }
 }
 
-/* Hoạt động đã nhập nhưng chưa lên SharePoint — chỉ người nhập thấy, nên đánh
-   dấu rõ chứ không để im lặng như một bản ghi bình thường. */
 .act-pending{
   display:inline-block; margin-left:6px; padding:1px 7px; border-radius:20px;
   font-size:10.5px; font-weight:700; letter-spacing:.01em; vertical-align:1px;
   color:#92400E; background:#FEF3C7; border:1px solid #FDE68A;
 }
 
-/* Dự án gắn với hoạt động của mình nhưng do sales khác phụ trách: hiện nhãn câm,
-   không phải nút — thấy hoạt động không có nghĩa được mở dự án. */
 .act-link.muted{
   cursor:default; color:var(--text-3); background:var(--bg);
   border:1px dashed var(--line); box-shadow:none;

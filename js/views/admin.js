@@ -1,9 +1,3 @@
-/* js/views/admin.js — Người dùng & phân quyền.
-   Đây là nơi duy nhất người quản trị chạm vào phân quyền, nên mọi thay đổi phải
-   đi thẳng lên list Users trên SharePoint. Không ghi được thì phải nói ra chứ
-   không âm thầm sửa trong bộ nhớ rồi mất khi tải lại. */
-
-/* Danh sách vai trò lấy thẳng từ bảng năng lực — thêm vai trò chỉ sửa roles.js. */
 const ROLES = ROLE_ORDER.map(function(id){
   return { id:id, label:ROLE_DEF[id].label, hint:ROLE_DEF[id].hint };
 });
@@ -19,7 +13,6 @@ function admListName(){
   return (window.FISG_STORE && FISG_STORE.usersListName) ? FISG_STORE.usersListName() : 'Users';
 }
 
-/* ====== BẢNG ====== */
 function buildUsers(){
   const tools = document.getElementById('admTools');
   if(tools){
@@ -79,13 +72,11 @@ function buildUsers(){
     </div>`;
   }).join('');
 
-  /* Công cụ nhập từ Excel — chỉ Super Admin, dựng ở cuối màn. */
   if(window.FISG_CUSTOMER_IMPORT) try { FISG_CUSTOMER_IMPORT.render(); } catch(e){}
   if(window.FISG_SUPPLIER_IMPORT) try { FISG_SUPPLIER_IMPORT.render(); } catch(e){}
 }
 window.buildUsers = buildUsers;
 
-/* Dòng phụ dưới tên: nói rõ đang đổi tên nào thành tên nào. */
 function admPicLine(u){
   const al = splitAliases(u.picRaw).filter(function(x){
     return !u.fullName || picKey(x) !== picKey(u.fullName); });
@@ -97,11 +88,10 @@ function admPicLine(u){
   return 'PIC lấy theo tên O365 khi đăng nhập';
 }
 
-/* ====== ĐỔI VAI TRÒ NGAY TRÊN BẢNG ====== */
 async function setRole(idx, role){
   const u = USERS[idx]; if(!u || admBusy) return;
   const self = me && (u.email||'').toLowerCase() === (me.email||'').toLowerCase();
-  /* Tự hạ quyền chính mình là đường một chiều: mất luôn màn hình này. */
+
   if(self && !cap(role).admin
      && !confirm('Bạn đang tự hạ quyền của mình xuống ' + roleVI(role)
                  + '. Sau khi lưu bạn sẽ không vào được màn hình phân quyền nữa. Tiếp tục?')){
@@ -116,7 +106,6 @@ async function setRole(idx, role){
 }
 window.setRole = setRole;
 
-/* Ghi lên SharePoint; hỏng thì hoàn tác trong bộ nhớ để màn hình không nói dối. */
 async function admPersist(u, okMsg, rollback){
   if(!admCanWrite()){
     toast('Chưa nối được list ' + admListName() + ' — thay đổi chỉ nằm trong phiên này.');
@@ -136,7 +125,6 @@ async function admPersist(u, okMsg, rollback){
   }
 }
 
-/* ====== XOÁ ====== */
 async function removeUser(idx){
   const u = USERS[idx]; if(!u) return;
   if(!confirm('Xoá ' + (u.name || u.email) + ' khỏi danh sách phân quyền?\n\n'
@@ -154,7 +142,6 @@ async function removeUser(idx){
 }
 window.removeUser = removeUser;
 
-/* ====== FORM THÊM / SỬA ====== */
 let admEditIdx = -1;
 
 function openUserForm(idx){
@@ -165,20 +152,19 @@ function openUserForm(idx){
   document.getElementById('u-title').textContent = u ? 'Sửa người dùng' : 'Thêm người dùng';
   const mail = document.getElementById('u-mail');
   mail.value = u ? (u.email || '') : '';
-  mail.disabled = !!u;                 // email là khoá đối chiếu, không sửa
+  mail.disabled = !!u;
   document.getElementById('u-name').value = u ? (u.fullName || u.name || '') : '';
   document.getElementById('u-pic').value  = u ? (u.picRaw || '') : '';
   document.getElementById('u-role').innerHTML =
     ROLES.map(r => `<option value="${r.id}"${u && u.role===r.id?' selected':''}>${r.label}</option>`).join('');
 
-  /* Line báo cáo: chọn trong số người nhìn toàn đội (manager/director/admin). */
   const leads = USERS.filter(x => cap(x.role).scope === 'all');
   const rsel = document.getElementById('u-reports');
   if(rsel){
     rsel.innerHTML = '<option value="">— Tất cả quản lý —</option>' +
       leads.map(l => `<option value="${admEsc(l.pic||l.name)}"${u && sameName(u.reportsTo, l.pic||l.name)?' selected':''}>${admEsc(l.name||l.pic)}</option>`).join('');
   }
-  /* Ô chọn sales để hỗ trợ (chỉ hiện với Sale Support). */
+
   const sq = document.getElementById('u-spsearch'); if(sq) sq.value = '';
   admBuildSupports(u ? (u.supports||[]) : []);
 
@@ -188,8 +174,6 @@ function openUserForm(idx){
   document.getElementById(u ? 'u-pic' : 'u-mail').focus();
 }
 
-/* Danh sách sales để tick — nguồn: những user vai trò sales, cộng mọi tên PIC
-   xuất hiện trong dữ liệu (LISTS.pics) để không sót ai. */
 function admBuildSupports(picked){
   const box = document.getElementById('u-supports'); if(!box) return;
   const set = {}; const names = [];
@@ -197,7 +181,7 @@ function admBuildSupports(picked){
   (typeof LISTS!=='undefined'?LISTS.pics:[]).forEach(n => { if(n && !set[picKey(n)]){ set[picKey(n)]=1; names.push(n); } });
   names.sort((a,b)=>a.localeCompare(b,'vi'));
   const on = {}; (picked||[]).forEach(p => on[picKey(p)] = 1);
-  /* Danh sách dọc: tên bên trái, dấu tick bên phải — cả dòng bấm được. */
+
   box.innerHTML = names.map(n => {
     const sel = !!on[picKey(n)];
     return `<label class="u-sprow${sel?' on':''}" data-name="${admEsc(n)}">
@@ -217,13 +201,13 @@ function closeUserForm(){
 window.closeUserForm = closeUserForm;
 
 function admRoleHint(){
-  /* Ô "Hỗ trợ sales" chỉ có nghĩa với Sale Support. */
+
   const r = document.getElementById('u-role').value;
   const sf = document.getElementById('u-supportsF');
   if(sf) sf.style.display = (r === 'salesupport') ? '' : 'none';
 }
 window.admRoleHint = admRoleHint;
-/* Lọc danh sách sales theo ô tìm, giữ trạng thái tick. */
+
 function admFilterSupports(q){
   const s = (q||'').trim().toLowerCase();
   document.querySelectorAll('#u-supports .u-sprow').forEach(function(row){
@@ -232,8 +216,6 @@ function admFilterSupports(q){
 }
 window.admFilterSupports = admFilterSupports;
 
-/* Tra O365 theo email. Tên hiển thị lấy về CHÍNH LÀ giá trị mà cột PIC (kiểu
-   Person) trong list Projects trả về — nên điền thẳng vào PICName là khớp. */
 async function lookupUserEmail(){
   const mail = document.getElementById('u-mail').value.trim();
   const box = document.getElementById('u-found');
@@ -268,7 +250,7 @@ async function saveUserForm(){
 
   const role = g('u-role');
   const reportsTo = g('u-reports') || null;
-  /* Danh sách sales được hỗ trợ chỉ lưu khi vai trò là Sale Support. */
+
   const supports = role === 'salesupport'
     ? [...document.querySelectorAll('#u-supports input:checked')].map(x => x.value.trim()).filter(Boolean)
     : [];

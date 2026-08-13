@@ -1,20 +1,6 @@
-/* js/views/attachments.js — khu "Tệp đính kèm" dùng chung cho hoạt động & báo cáo.
- *
- * FISG_ATTACH.mount(hostId, {type, id, ctx, canUpload, onChange}):
- *   type   : 'activity' | 'report'
- *   id     : spId hoạt động / mã báo cáo. RỖNG = bản ghi CHƯA lưu → chế độ CHỜ:
- *            file được giữ tạm ở client, xem/xoá trước, và chỉ TẢI LÊN khi bấm
- *            Lưu/Gửi (lúc đó gọi FISG_ATTACH.flush).
- *   ctx    : { pic, date, customer }  (customer rỗng cho báo cáo)
- *   canUpload : có được đính kèm không (theo quyền của màn gọi)
- *
- * FISG_ATTACH.flush(hostId, {id, ctx}) — tải nốt các file đang CHỜ sau khi bản
- *   ghi đã có id. Trả về Promise.
- *
- * Toàn bộ logic ghi nằm ở store.js; file này chỉ lo giao diện + hàng đợi. */
 (function () {
   "use strict";
-  var REG = {};                 // hostId -> {type,id,ctx,canUpload,onChange,pending:[File]}
+  var REG = {};
 
   function fmtSize(n) {
     n = Number(n) || 0;
@@ -24,7 +10,6 @@
   }
   function extOf(name) { var m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toUpperCase() : "?"; }
 
-  /* Người tải HOẶC quản lý/admin mới xoá được file ĐÃ LƯU. */
   function canDel(a) {
     if (typeof me === "undefined" || !me) return false;
     if (myCap().admin || cap(me.role).scope === "all") return true;
@@ -47,7 +32,6 @@
         + del + '</div>';
     }).join("");
 
-    /* File đang CHỜ (chưa tải) — đánh dấu rõ + cho gỡ trước khi lưu. */
     var pendHtml = (r.pending || []).map(function (f, i) {
       return '<div class="att-item att-pend"><span class="att-link">'
         + '<span class="att-ext">' + ckEsc(extOf(f.name)) + '</span>'
@@ -89,10 +73,8 @@
     var bad = (window.FISG_STORE && FISG_STORE.attValidate) ? FISG_STORE.attValidate(file) : "";
     if (bad) { say(host, "err", "Không đính kèm được: " + bad); return; }
 
-    /* Bản ghi CHƯA có id → xếp vào hàng chờ, tải khi Lưu. */
     if (!r.id) { r.pending.push(file); render(host); say(host, "", "Sẽ tải lên khi bạn bấm Lưu."); return; }
 
-    /* Đã có id → tải ngay. */
     say(host, "", "Đang tải " + file.name + "…");
     FISG_STORE.uploadAttachment(r.type, r.id, r.ctx, file).then(function () {
       render(host); say(host, "ok", "Đã đính kèm " + file.name + ".");
@@ -116,8 +98,6 @@
     }).catch(function (e) { if (window.toast) toast("Không xoá được: " + (e && (e.message || e))); });
   }
 
-  /* Tải nốt các file đang CHỜ sau khi bản ghi đã lưu và có id. Gọi từ luồng lưu
-     hoạt động / gửi báo cáo. Lỗi từng file được báo, không nuốt. */
   function flush(host, info) {
     var r = REG[host];
     if (!r || !r.pending || !r.pending.length) return Promise.resolve(0);
@@ -143,19 +123,14 @@
     });
   }
 
-  /* Có file đang chờ ở host này không (để luồng lưu biết cần flush). */
   function hasPending(host) { var r = REG[host]; return !!(r && r.pending && r.pending.length); }
 
-  /* Lấy RA và xoá khỏi hàng chờ NGAY (đồng bộ) — luồng lưu chụp file trước khi
-     form đóng/mở lại, tránh mất file do mount reset pending giữa chừng. */
   function takePending(host) {
     var r = REG[host]; if (!r) return [];
     var files = r.pending || []; r.pending = []; try { render(host); } catch (e) {}
     return files;
   }
 
-  /* Tải một MẢNG file cho một bản ghi đã có id (dùng sau khi lưu hoạt động/gửi
-     báo cáo). Tuần tự, lỗi từng file được báo. */
   function uploadFiles(type, id, ctx, files) {
     if (!files || !files.length || !id) return Promise.resolve(0);
     var done = 0, errs = [];

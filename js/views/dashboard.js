@@ -1,8 +1,6 @@
-/* js/views/dashboard.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== CHART.JS HELPERS ====== */
 const CHARTS={};
 if(window.Chart){Chart.defaults.font.family="'Outfit','Plus Jakarta Sans',system-ui,sans-serif";Chart.defaults.color='#697082';}
-/* Always destroy the previous canvas instance before a dashboard panel is redrawn. */
+
 function dc(id){
   const chart=CHARTS[id];
   if(!chart)return;
@@ -11,7 +9,7 @@ function dc(id){
 }
 function rc(id,chart){
   CHARTS[id]=chart;
-  /* A supplier switch changes the grid width synchronously; resize after layout settles. */
+
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(CHARTS[id]!==chart)return;
     try{chart.resize();chart.update('none');}catch(e){console.warn('[charts] resize '+id,e);}
@@ -95,14 +93,14 @@ function lineChart(elId, labels, values){
   cv.onmouseleave=hideLcTip;
   }catch(e){chartError(elId,'line-box',e);}
 }
-/* ====== DASHBOARD ====== */
+
 function statusClick(label){
-  /* Keep the dashboard stable: chart clicks must not navigate away and unmount every chart. */
+
   if(window.toast) toast(label + ': xem chi tiết qua tooltip hoặc tra cứu trong Dashboard.');
 }
 function segClick(label){showInsight('seg', label);}
 function picClick(label){showInsight('pic', label);}
-/* ====== SEGMENT SHARE DONUT (drill: 3 nhóm ngành -> 13 segment) ====== */
+
 var donutSegDrill=null;
 function segDonutClick(label){
   if(!donutSegDrill&&SEG_TREE[label]){donutSegDrill=label;showInsight('grp',label);return;}
@@ -180,7 +178,6 @@ function renderDash(){
   if(INSIGHT)renderInsight();
 }
 
-/* ====== SEGMENT DRILL-DOWN ====== */
 function segStats(rows,pred){
   const rs=rows.filter(pred);
   const won=rs.filter(r=>r.status==='WON').length, lost=rs.filter(r=>r.status==='LOST').length;
@@ -216,8 +213,6 @@ function renderSegGrid(rows){
   }
 }
 
-
-/* ====== LINE CHART TOOLTIP ====== */
 const ST_SHORT={'WON':'WON','LOST':'LOST','IN PROGRESS':'IN PROGRESS'};
 const ST_COL={'WON':'#15803D','LOST':'#BE1240','IN PROGRESS':'#C2620A'};
 function lcTipAt(i,x,y){
@@ -235,7 +230,6 @@ function lcTipAt(i,x,y){
 }
 function hideLcTip(){document.getElementById('lcTip').style.display='none';}
 
-/* ====== INSIGHT SEARCH (chi tiết & lịch sử) ====== */
 function insSuggest(){
   const q=document.getElementById('insQ').value.trim().toLowerCase();
   const box=document.getElementById('insSug');
@@ -256,12 +250,10 @@ document.addEventListener('click',e=>{if(!e.target.closest('.ins-wrap'))document
 const INS_TAG={kh:'<span class="t t-kh">KHÁCH HÀNG</span>',prod:'<span class="t t-prod">SẢN PHẨM</span>',
   grp:'<span class="t t-grp">NHÓM NGÀNH</span>',seg:'<span class="t t-seg">SEGMENT</span>',
   stage:'<span class="t t-stage">BOP STAGE</span>',pic:'<span class="t t-pic">SALES</span>'};
-/* Tên khách hàng trong dữ liệu có cả 'Bibica' lẫn 'BIBICA'. So khớp nguyên văn
-   sẽ bỏ sót nửa lịch sử, nên khoá khách hàng đi qua custKey(). */
+
 const INS_MATCH={kh:(k)=>r=>custKey(r.customer)===custKey(k),prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
   seg:(k)=>r=>r.segment===k,
-  /* Ở chế độ Tất cả, ô tra cứu gợi ý NHÓM giai đoạn chứ không phải tên giai đoạn
-     của riêng một NCC — so bằng tên gốc sẽ luôn ra 0 dự án. */
+
   stage:(k)=>r=>atStage(r,k),pic:(k)=>r=>r.pic===k};
 function showInsight(type,key){
   INSIGHT={type,key};
@@ -272,7 +264,7 @@ function showInsight(type,key){
   go('dash'); renderInsight();
   document.getElementById('insResult').scrollIntoView({behavior:'smooth',block:'center'});
 }
-/* Clearing the search must also drop the timeline it produced. */
+
 function clearInsight(){
   INSIGHT=null;
   const input=document.getElementById('insQ');
@@ -285,7 +277,7 @@ function clearInsight(){
 window.clearInsight=clearInsight;
 const D_VI=d=>d?new Date(d).toLocaleDateString('vi-VN'):'—';
 const TL_FADE_TOP=.62, TL_FADE_END=.10;
-/* Timeline groups projects under the year their closing date falls in, newest year first. */
+
 function insYear(r){return r.closing?String(new Date(r.closing).getFullYear()):null;}
 function renderInsight(){
   const {type,key}=INSIGHT;
@@ -302,7 +294,7 @@ function renderInsight(){
   const years=Object.keys(buckets).filter(y=>y!=='—').sort((a,b)=>b-a);
   if(buckets['—'])years.push('—');
   const thisYear=String(TODAY.getFullYear());
-  /* The trunk fades from the newest project down to the last one, so depth reads as age. */
+
   const steps=Math.max(1,ps.length-1);
   const fade=i=>'rgba(1,66,106,'+(TL_FADE_TOP-(TL_FADE_TOP-TL_FADE_END)*(Math.min(i,steps)/steps)).toFixed(3)+')';
   let seen=0;

@@ -1,8 +1,3 @@
-/* share.css — Giao diện Chia sẻ (nhân viên) & Chế độ khách (chỉ xem).
-   Ngôn ngữ hình ảnh: giữ nguyên console navy của app; điểm nhấn duy nhất là KEY ID
-   — hiển thị như một con dấu: chữ số giãn cách rộng, nền navy đậm, đọc/đọc lại qua điện thoại được. */
-
-/* ================= 1. Nút Chia sẻ ================= */
 .btn-share {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 14px; border-radius: 8px; cursor: pointer;
@@ -12,7 +7,6 @@
 .btn-share:hover { background: #E3EAF9; border-color: var(--accent); }
 .btn-share:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* ================= 2. Modal chia sẻ ================= */
 .share-ov {
   position: fixed; inset: 0; z-index: 1000; display: none;
   align-items: center; justify-content: center; padding: 20px;
@@ -46,7 +40,6 @@
 }
 .sh-f select:focus, .sh-f input:focus { outline: none; border-color: var(--accent); }
 
-/* danh sách chọn dự án */
 .sh-picker { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .sh-picker-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -89,7 +82,6 @@
 .sh-btn.primary:disabled { opacity: .6; cursor: default; }
 .sh-btn.ghost:hover { border-color: var(--ink-3); }
 
-/* ---- màn hình kết quả: KEY như con dấu ---- */
 .sh-done { text-align: center; padding: 8px 4px 4px; }
 .sh-done-ico {
   width: 46px; height: 46px; margin: 0 auto 12px; border-radius: 50%;
@@ -107,7 +99,6 @@
 .sh-done-d { margin-top: 14px; font-size: 12.5px; color: var(--ink-3); line-height: 1.65; }
 .sh-done .sh-btn.ghost { margin-top: 16px; }
 
-/* ================= 3. Bảng quản lý mã ================= */
 .share-mgr { margin-top: 18px; padding: 16px 18px; border-radius: var(--r); }
 .share-mgr h4 { font-size: 13.5px; font-weight: 700; margin-bottom: 12px; }
 .sh-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -120,7 +111,6 @@
 .sh-table tr:last-child td { border-bottom: none; }
 .sh-table td b { font-variant-numeric: tabular-nums; letter-spacing: .08em; }
 
-/* ================= 4. Màn nhập KEY của khách ================= */
 .guest-gate {
   position: fixed; inset: 0; z-index: 1100; display: flex;
   align-items: center; justify-content: center; padding: 20px; background: var(--bg);
@@ -155,7 +145,6 @@
   font-size: 12.5px; color: var(--ink-3); text-decoration: underline;
 }
 
-/* ================= 5. Băng chế độ khách ================= */
 .guest-bar {
   position: sticky; top: 0; z-index: 950;
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -174,7 +163,6 @@
 }
 .gb-out:hover { background: rgba(255, 255, 255, .12); }
 
-/* ================= 6. Khoá giao diện ở chế độ khách ================= */
 body.guest-mode #btnAdd, body.guest-mode #btnShare,
 body.guest-mode .close-btn, body.guest-mode .prob-btn:not(.locked),
 body.guest-mode #ai, body.guest-mode .ai-fab, body.guest-mode #aiPanel,
@@ -188,7 +176,6 @@ body.guest-mode [onclick*="openActForm"], body.guest-mode [onclick*="createProje
 body.guest-mode .row { cursor: pointer; }
 body.guest-mode .prob-btn.locked { pointer-events: none; }
 
-/* ================= 7. Nút "Khách xem chia sẻ" ở màn đăng nhập ================= */
 .guest-btn {
   width: 100%; margin-top: 10px; padding: 11px 14px;
   display: flex; align-items: center; justify-content: center; gap: 8px;

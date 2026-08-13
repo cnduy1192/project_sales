@@ -1,11 +1,6 @@
-/* js/views/welcome.js — màn hình chào tuần của sales.
-   Chỉ dựng HTML và bắt sự kiện; mọi phép tính nằm ở js/lib/weekly.js.
-   Dùng lại ckEsc/ckAttr của cockpit.js để thoát chuỗi. */
-
-let wcModeOverride = null;   // công tắc xem trước; null = theo ngày thật
+let wcModeOverride = null;
 let wcLastFocus = null;
 
-/* Ba chế độ suy từ thứ trong tuần. Màu và câu mô tả nói rõ việc của hôm nay. */
 const WC_MODES = [
   { id:'start', label:'Đầu tuần',  sub:'Lên kế hoạch cho tuần',
     c:'var(--marine)',  bg:'var(--marine-soft)', bd:'var(--marine-line)',
@@ -23,15 +18,13 @@ const WC_DAY_ABBR = ['CN','T2','T3','T4','T5','T6','T7'];
 function wcMode(){ return wcModeOverride || dayMode(todayISO()); }
 function wcCanAct(){ return !!(me && me.pic && myCap().edit); }
 
-/* ====== MỞ / ĐÓNG ====== */
 function openWelcome(){
   wcLastFocus = document.activeElement;
   renderWelcome();
   document.getElementById('wcBd').classList.add('open');
   const m = document.getElementById('wcModal');
   m.classList.add('open');
-  /* Đặt tiêu điểm vào chính hộp thoại: bàn phím và trình đọc màn hình vào đúng
-     chỗ, mà không vẽ khung sáng quanh nút đóng ngay khi vừa mở. */
+
   m.focus();
 }
 window.openWelcome = openWelcome;
@@ -51,7 +44,6 @@ function wcIsOpen(){
 function welcomeRefresh(){ if(wcIsOpen()) renderWelcome(); }
 window.welcomeRefresh = welcomeRefresh;
 
-/* Mỗi ngày một lần cho mỗi người. Mục sidebar mở lại không ghi cờ. */
 function wcSeenKey(){ return 'fisg_wc_seen_' + ((me && me.email) || 'anon'); }
 function wcMaybeAutoOpen(){
   if(!me || !myCap().weeklyAuto) return;
@@ -66,8 +58,6 @@ window.wcMaybeAutoOpen = wcMaybeAutoOpen;
 function wcSetMode(m){ wcModeOverride = m; renderWelcome(); }
 window.wcSetMode = wcSetMode;
 
-/* Ngày thật quyết định chế độ. Nút chip chỉ để xem thử hai chế độ còn lại —
-   quay hết một vòng là trở về đúng chế độ của hôm nay. */
 function wcCycleMode(){
   const real = dayMode(todayISO());
   const order = WC_MODES.map(function(m){ return m.id; });
@@ -79,7 +69,6 @@ window.wcCycleMode = wcCycleMode;
 function wcRealMode(){ wcModeOverride = null; renderWelcome(); }
 window.wcRealMode = wcRealMode;
 
-/* ====== DỰNG ====== */
 function renderWelcome(){
   const pic = (me && me.pic) || '';
   const mw = buildMyWeek(pic, todayISO());
@@ -105,7 +94,6 @@ function renderWelcome(){
 }
 window.renderWelcome = renderWelcome;
 
-/* ---- Chip chế độ tuần ---- */
 function wcRenderModeChip(mode){
   const m = wcModeMeta(mode);
   const preview = !!wcModeOverride;
@@ -123,7 +111,6 @@ function wcRenderModeChip(mode){
     ' — ' + m.sub + '. Bấm để chuyển chế độ xem thử.');
 }
 
-/* ---- Dải bảy ngày ---- */
 function wcRenderWeek(mw){
   const T = todayISO();
   const bucket = {};
@@ -157,8 +144,6 @@ function wcRenderWeek(mw){
   document.getElementById('wcWeek').innerHTML = html;
 }
 
-/* Bấm một ngày trong lịch: mở menu nhỏ để tạo nhanh việc CHO ĐÚNG NGÀY đó —
-   ghi kế hoạch tuần hoặc mở dự án mới, ngày được điền sẵn. */
 function wcDayMenu(ev, iso){
   ev.preventDefault(); ev.stopPropagation();
   wcCloseDayMenu();
@@ -177,7 +162,7 @@ function wcDayMenu(ev, iso){
   const pw = pop.offsetWidth, ph = pop.offsetHeight;
   let left = Math.min(r.left, innerWidth - pw - 10);
   let top = r.bottom + 6;
-  if(top + ph > innerHeight - 10) top = r.top - ph - 6;   // flip above if it would overflow
+  if(top + ph > innerHeight - 10) top = r.top - ph - 6;
   pop.style.left = Math.max(10, left) + 'px';
   pop.style.top = Math.max(10, top) + 'px';
   pop.querySelector('[data-act="log"]').onclick = () => { wcCloseDayMenu(); wcQuickLog(iso); };
@@ -187,7 +172,6 @@ function wcDayMenu(ev, iso){
 function wcCloseDayMenu(){ const p = document.getElementById('wcDayPop'); if(p) p.remove(); }
 window.wcDayMenu = wcDayMenu;
 
-/* Từ lịch, đi thẳng vào form — welcome đóng lại để form (drawer phải) chiếm trọn. */
 function wcQuickLog(iso){
   closeWelcome();
   if(typeof openActForm === 'function') openActForm({ date: iso });
@@ -202,7 +186,6 @@ function wcQuickProject(iso){
 }
 window.wcQuickLog = wcQuickLog; window.wcQuickProject = wcQuickProject;
 
-/* ---- Dải số ---- */
 function wcRenderStats(mw){
   const cards = [
     { v: mw.stats.done,    k:'Đã làm',        c:'var(--wc-done)', go:'done' },
@@ -216,7 +199,7 @@ function wcRenderStats(mw){
        aria-label="${ckEsc(c.k)}: ${c.v} — bấm để mở">
        <b>${c.v}</b><span>${c.k}</span></button>`).join('');
 }
-/* Mỗi thẻ số đưa thẳng tới nơi làm việc tương ứng, đóng màn chào lại. */
+
 function wcStatClick(kind){
   closeWelcome();
   if(kind === 'overdue' || kind === 'open'){
@@ -229,7 +212,6 @@ function wcStatClick(kind){
 }
 window.wcStatClick = wcStatClick;
 
-/* ---- Khối chung ---- */
 function wcSection(title, count, items, extra){
   return `<section class="wc-sec">
     <div class="wc-sec-h"><h3>${title}</h3><span>${count}</span>${extra ? `<em>${extra}</em>` : ''}</div>
@@ -241,7 +223,6 @@ function wcEmpty(msg, btnLabel, btnCall){
     btnLabel ? `<button class="ck-chip" onclick="${btnCall}">${btnLabel}</button>` : ''}</div>`;
 }
 
-/* ---- Dòng gợi ý ---- */
 function wcSuggestRow(s){
   const acts = wcCanAct() ? `<div class="wc-acts">
     <button class="wc-btn pri" onclick="wcSchedule('${ckAttr(s.custKey)}','${s.projectId||''}','${ckAttr(s.ncc||'')}')">Đặt lịch</button>
@@ -260,7 +241,6 @@ function wcSuggestRow(s){
   </div>`;
 }
 
-/* ---- Dòng hoạt động ---- */
 function wcActRow(a, action){
   let btn = '';
   if(wcCanAct() && action === 'done')
@@ -282,7 +262,6 @@ function wcActRow(a, action){
   </div>`;
 }
 
-/* ---- Dòng thay đổi dự án ---- */
 function wcChangeRow(c){
   const m = c.kind === 'close'
     ? (c.status === 'WON' ? { l:'Thắng', v:'var(--won)', b:'var(--won-bg)' } : { l:'Thua', v:'var(--lost)', b:'var(--lost-bg)' })
@@ -299,7 +278,6 @@ function wcChangeRow(c){
   </div>`;
 }
 
-/* ====== BA CHẾ ĐỘ ====== */
 function wcBodyStart(mw){
   const sg = suggestWork(mw.pic, 5);
   const booked = mw.today.concat(mw.planned);
@@ -315,9 +293,7 @@ function wcBodyStart(mw){
 }
 
 function wcBodyMid(mw){
-  /* Khối "Cập nhật hoạt động" LUÔN hiện, kể cả tuần trống — đây là việc chính
-     của giữa tuần, không phải phần thưởng khi có sẵn dữ liệu. Ba nhóm bám đúng
-     ba trạng thái một việc có thể ở: đã lên kế hoạch · đang làm · đã làm. */
+
   const doing = mw.today.filter(function(a){ return !LS.isDone(a); });
   const doneToday = mw.today.filter(LS.isDone);
   const done = doneToday.concat(mw.done);
@@ -347,8 +323,6 @@ function wcBodyMid(mw){
         : ''),
     total ? 'bấm "Hoàn thành" để báo cáo cuối tuần tính đúng' : '');
 
-  /* Tuần trống thì gợi ý thêm việc — nhưng ĐẶT DƯỚI khối cập nhật, không thay
-     thế nó, để chỗ ghi nhận công việc luôn ở cùng một vị trí. */
   if(total) return board;
   const sg = suggestWork(mw.pic, 3);
   return board + (sg.length
@@ -371,12 +345,11 @@ function wcBodyEnd(mw){
                                      'Mở Sales Funnel', 'wcGo(\'funnel\')'));
 }
 
-/* ====== CHÂN ====== */
 function wcRenderFoot(mode){
   const note = mode === 'start' ? 'Đặt lịch xong, việc sẽ hiện ở dải bảy ngày phía trên.'
     : mode === 'mid' ? 'Bấm "Hoàn thành" khi xong việc để báo cáo cuối tuần tính đúng.'
     : 'Báo cáo là ảnh chụp số liệu tại thời điểm gửi.';
-  /* Chỉ vai trò thực thi mới soạn báo cáo; quản lý đọc báo cáo của đội. */
+
   const canCompose = (typeof rpCanCompose === 'function') && rpCanCompose();
   const main = mode === 'end'
     ? (canCompose
@@ -390,9 +363,6 @@ function wcRenderFoot(mode){
      <span class="grow"><button class="wc-btn" onclick="closeWelcome()">Để sau</button>${extra}${main}</span>`;
 }
 
-/* ====== HÀNH ĐỘNG ====== */
-/* Ngày mặc định khi đặt lịch là ngày làm việc kế tiếp — đây là lên lịch, không
-   phải ghi lại việc vừa làm. */
 function wcNextWorkday(){
   const w = thisWeek();
   const d = new Date(todayISO());
@@ -417,8 +387,6 @@ function wcSchedule(custKey, projectId, ncc){
 }
 window.wcSchedule = wcSchedule;
 
-/* Không tự đóng popup nữa — NAV.enter() nhận ra popup đang mở, che nó đi và
-   ghi đường về, nên đóng modal con là popup hiện lại. */
 function wcOpenProject(id){ openDetail(id); }
 window.wcOpenProject = wcOpenProject;
 
@@ -431,8 +399,7 @@ window.wcOpenReports = wcOpenReports;
 function wcMarkDone(id, on){
   const iso = on ? todayISO() : null;
   const a = ACTIVITIES.find(x => x.id === id);
-  /* Đổi trên màn hình trước, ghi lên SharePoint sau — bấm xong là thấy ngay.
-     Nhưng đây là dữ liệu dùng chung, nên ghi hỏng thì phải nói, không im. */
+
   LS.markDone(id, iso);
   if(a) a.doneAt = iso || '';
   renderWelcome();
@@ -453,10 +420,9 @@ function wcMarkDone(id, on){
 }
 window.wcMarkDone = wcMarkDone;
 
-/* ====== BÀN PHÍM ====== */
 document.addEventListener('keydown', e => {
   if(!wcIsOpen()) return;
-  /* Modal dự án mở đè lên thì để nó xử lý phím trước. */
+
   if(document.querySelector('.overlay.open')) return;
   if(e.key === 'Escape'){ e.preventDefault(); closeWelcome(); return; }
   if(e.key !== 'Tab') return;

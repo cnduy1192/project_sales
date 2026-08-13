@@ -1,8 +1,5 @@
-/* js/views/activities.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== ACTIVITIES ↔ PROJECTS (2 chiều) ====== */
 function setAF(f){actFilter=f;document.querySelectorAll('.chip[data-af]').forEach(c=>c.classList.toggle('on',c.dataset.af===f));renderActs();}
-/* Hoạt động của một dự án — vẫn phải qua bộ lọc quyền: sales không được đọc
-   ghi chú của sales khác trên dự án mình không liên quan. */
+
 function actsOfProject(id){
   return scopeActs(ACTIVITIES.filter(a=>a.projectId===id), me, scopeRecords(RECORDS, me));
 }
@@ -14,15 +11,13 @@ function renderActs(){
   rows=rows.slice(0,120);
   if(!rows.length){box.innerHTML='<div class="empty"><b>Chưa có hoạt động nào</b>Bấm "Ghi hoạt động" để bắt đầu.</div>';return;}
   box.innerHTML=rows.map(a=>{
-    /* Hoạt động của mình có thể gắn vào dự án của sales khác. Thấy hoạt động
-       không có nghĩa được thấy dự án — nên chỉ hiện nút mở khi thật sự có quyền,
-       còn lại là một nhãn câm, không lộ tên sản phẩm. */
+
     const prAll=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
     const canSeePr = typeof ownsRecord!=='function' || !me
       || (typeof canViewAll==='function' && canViewAll(me)) || ownsRecord(prAll, me);
     const pr=prAll && canSeePr ? prAll : null;
     const u=USERS.find(x=>x.pic===a.pic);
-    /* Nút trong hàng phải chặn click để không đồng thời mở chi tiết hoạt động. */
+
     const link=!pr && prAll
       ? `<span class="act-link muted" title="Dự án do sales khác phụ trách">Dự án khác</span>`
       : pr
@@ -40,8 +35,7 @@ function renderActs(){
       <div><span class="pot pot-${potLabel(a.potential)}">${potLabel(a.potential)}</span></div>
       <div>${link}</div></div>`;}).join('');
 }
-/* Ai được SỬA một hoạt động — đi qua lớp quyền: admin/quản lý toàn quyền; sales
-   hoạt động của mình; Sale Support hoạt động của sales mình hỗ trợ. */
+
 function _actProjIds(){
   const ids={}; (typeof scopeRecords==='function'?scopeRecords(RECORDS,me):RECORDS)
     .forEach(function(r){ ids[r.id]=1; }); return ids;
@@ -53,18 +47,16 @@ function canEditAct(a){
   if(c.admin || c.scope==='all') return true;
   return ownsActivity(a, me, _actProjIds());
 }
-/* Ai được XOÁ — khác sửa: Sale Support sửa được nhưng KHÔNG xoá (cap.del=false). */
+
 function canDelAct(a){
   if(!a || !me || !cap(me.role).del) return false;
   return canEditAct(a);
 }
-/* Được TẠO hoạt động cho khách này không: admin/quản lý luôn được; còn lại chỉ
-   khi khách CHƯA có người quản lý, HOẶC khách là của mình / sales mình hỗ trợ. */
+
 function actCreateAllowed(name){
   if(!me) return false;
   const c = cap(me.role);
-  /* Quản lý/admin (scope all) và R&D (viewAll) tạo được hoạt động với BẤT KỲ khách
-     hàng nào, kể cả khách do sales khác quản lý. */
+
   if(c.admin || c.scope==='all' || (typeof canViewAll==='function' && canViewAll(me))) return true;
   const owner = (typeof customerOwnerOf==='function') ? customerOwnerOf(name) : '';
   if(!owner) return true;
@@ -80,19 +72,14 @@ function openActEdit(id){
     next: a.next === '—' ? '' : a.next, projectId: a.projectId || '' });
 }
 window.openActEdit = openActEdit;
-/* prefill là tuỳ chọn — gọi openActForm() không tham số thì hành vi y như trước.
-   Màn hình chào tuần truyền sẵn khách hàng, NCC, ngày và dự án vào đây. */
-/* Nhãn cũ Hot/Warm/Cold vẫn nằm trong dữ liệu SharePoint và các activity đã lưu,
-   nên ánh xạ sang High/Medium/Low khi hiển thị và khi nạp vào form. */
+
 const POT_MAP = { Hot:'High', Warm:'Medium', Cold:'Low' };
 function potLabel(v){ return POT_MAP[v] || v || ''; }
 window.potLabel = potLabel;
-/* Loại hoạt động: Seminar cũ gộp về Exhibition; các giá trị lạ giữ nguyên. */
+
 const ACT_TYPE_MAP = { Seminar:'Exhibition', 'Khác':'Call' };
 function actType(v){ return ACT_TYPE_MAP[v] || v || 'Call'; }
 
-/* Một khách hàng có thể được nhiều sales tương tác, nhưng chỉ một người là chủ
-   quản lý (Owner trên list Customers). Khi chọn khách, cho biết ai đang quản lý. */
 function onActCustomer(){
   const name = (document.getElementById('a-cust').value || '').trim();
   const box = document.getElementById('a-owner');
@@ -102,8 +89,7 @@ function onActCustomer(){
   const mine = owner && me && (owner === (me.pic || me.name));
   box.hidden = false;
   box.className = 'owner-note' + (mine ? ' me' : (owner ? '' : ' none'));
-  /* Chỉ nêu khách này của ai. Tên chủ đặt CUỐI câu (trong <b>) để phần chữ còn
-     lại là một text-node liền mạch, dịch EN không bị cắt ngang bởi tên riêng. */
+
   box.innerHTML = !owner
     ? 'Khách hàng chưa có người tiếp quản.'
     : mine
@@ -113,9 +99,6 @@ function onActCustomer(){
 }
 window.onActCustomer = onActCustomer;
 
-/* Khi TẠO MỚI và khách do người khác quản lý → ẩn các trường tạo hoạt động,
-   chỉ mở khi khách của mình hoặc chưa ai quản lý. Lúc SỬA thì để nguyên (quyền
-   đã xử lý ở openActForm). */
 function actApplyGate(){
   const editing = !!aEditId;
   const fields = document.getElementById('a-fields');
@@ -138,12 +121,10 @@ function actApplyGate(){
 }
 window.actApplyGate = actApplyGate;
 
-var aEditId = null;   // id hoạt động đang sửa; null = tạo mới
-var aNccs = [];       // nhà cung cấp đã chọn cho hoạt động (nhiều)
-var aRelated = [];    // người liên quan được thêm vào hoạt động
+var aEditId = null;
+var aNccs = [];
+var aRelated = [];
 
-/* Vẽ chip cho một danh sách đã chọn + nạp lại ô "thêm". Gắn onclick bằng JS (không
-   nhúng tên vào chuỗi HTML) để tên có dấu nháy/ký tự lạ không phá vỡ nút xoá. */
 function aRenderChips(boxId, selId, chosen, options, placeholder, remove, editable){
   var box=document.getElementById(boxId); if(!box) return;
   var sel=document.getElementById(selId);
@@ -197,12 +178,10 @@ function openActForm(prefill, origin){
     p.title || (editing ? 'Chi tiết hoạt động' : 'Kế hoạch làm việc');
   document.getElementById('a-sub').innerHTML = p.sub ? esc4(p.sub) : '';
   const ncc = p.ncc || formNcc();
-  /* Danh bạ khách hàng: hiện TOÀN BỘ khách của phần mềm, kể cả khách do sales khác
-     phụ trách — nhân viên thấy được, chọn xong dòng owner-note báo khách của ai. */
+
   const allCust = (typeof CUSTOMER_DIR !== 'undefined' && CUSTOMER_DIR.length)
     ? CUSTOMER_DIR.map(c => c.name) : LISTS.customers;
-  /* Gộp trùng bằng CHÍNH chuẩn hoá của danh bạ (custOwnerKey: bỏ dấu, gom khoảng
-     trắng, hoa/thường) để không lọt 2 dòng "giống hệt" chỉ khác dấu cách. */
+
   const nrm = (typeof custOwnerKey === 'function')
     ? custOwnerKey : (s => String(s||'').trim().toLowerCase());
   const seenC = new Set(); const custList = [];
@@ -213,9 +192,7 @@ function openActForm(prefill, origin){
   });
   const dc = document.getElementById('dl-cust-all');
   if(dc) dc.innerHTML = custList.slice(0,2000).map(n=>`<option value="${esc4(n)}"></option>`).join('');
-  /* Nhà cung cấp: cho chọn NHIỀU nhà cung cấp dưới dạng chip. Khi sửa ưu tiên
-     mảng nccs của hoạt động; nếu chỉ có một ncc thì khởi tạo từ nó; hoạt động mới
-     mặc định lấy NCC đang dùng của form (bỏ qua "Khác"). */
+
   aNccs = (p.nccs && p.nccs.length) ? p.nccs.slice()
         : (ncc && ncc!==OTHER_NCC ? [ncc] : []);
   aRenderNcc(editable);
@@ -227,17 +204,16 @@ function openActForm(prefill, origin){
   document.getElementById('a-pot').value = p.potential ? potLabel(p.potential) : 'High';
   onActCustomer();
   const mine=visible().filter(r=>r.status==='IN PROGRESS');
-  /* Dự án gợi ý có thể nằm ngoài nccFilter hiện tại, nên chèn thêm nếu thiếu. */
+
   const list = p.projectId && !mine.some(r=>r.id===p.projectId)
     ? [RECORDS.find(r=>r.id===p.projectId)].filter(Boolean).concat(mine)
     : mine;
   document.getElementById('a-proj').innerHTML='<option value="">— Chưa gắn dự án nào —</option>'
     +list.slice(0,200).map(r=>`<option value="${r.id}"${r.id===p.projectId?' selected':''}>${r.customer} · ${r.product}</option>`).join('');
-  /* Người liên quan: thêm ai vào thì hoạt động này vào kế hoạch tuần & báo cáo của họ. */
+
   aRelated = (p.related && p.related.length) ? p.related.slice() : [];
   aRenderRel(editable);
-  /* Chế độ sửa: khoá các ô khi không có quyền, đổi nhãn nút Lưu, hiện nút Xoá.
-     a-ncc và a-rel do aRenderNcc/aRenderRel tự bật/tắt theo editable. */
+
   ['a-cust','a-type','a-date','a-pot','a-note','a-next','a-proj'].forEach(function(id){
     const el=document.getElementById(id); if(el) el.disabled = !editable;
   });
@@ -248,15 +224,14 @@ function openActForm(prefill, origin){
   const cur0 = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
   if(delBtn) delBtn.style.display = (editing && canDelAct(cur0)) ? 'inline-flex' : 'none';
   actApplyGate();
-  /* Tệp đính kèm: đính kèm được NGAY khi đang tạo. Hoạt động mới chưa có bản ghi
-     nên file xếp hàng chờ, tự tải lên khi bấm Lưu (xem pushAct). */
+
   const abox=document.getElementById('a-attach');
   if(abox && window.FISG_ATTACH){
     const cur = editing ? ACTIVITIES.find(function(x){return x.id===aEditId;}) : null;
     abox.style.display='';
     FISG_ATTACH.mount('a-attach', {
       type:'activity',
-      id: cur && cur.spId ? cur.spId : '',            // rỗng = chờ tải khi lưu
+      id: cur && cur.spId ? cur.spId : '',
       ctx:{ pic:(cur&&cur.pic)||(me&&(me.pic||me.name)), date:(cur&&cur.date), customer:(cur&&cur.customer) },
       canUpload: editable,
       onChange:function(){ renderActs(); } });
@@ -269,7 +244,7 @@ function closeActForm(){
   aEditId = null;
   NAV.back(function(){ document.getElementById('aov').classList.remove('open'); });
 }
-/* Xoá một hoạt động: chỉ chủ hoạt động hoặc quản lý; có xác nhận vì không hoàn tác. */
+
 function deleteAct(){
   const id = aEditId; if(!id) return;
   const a = ACTIVITIES.find(function(x){return x.id===id;});
@@ -283,13 +258,12 @@ function deleteAct(){
 
   const onSP = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite();
   if(a.spId && onSP){
-    /* Xoá trên SharePoint mới là xoá thật. Hỏng thì phải nói — nếu không người
-       dùng tưởng đã xoá, tải lại trang thấy nó quay về. */
+
     FISG_STORE.deleteActivity(a).then(function(){
       toast('Đã xoá hoạt động.');
     }).catch(function(e){
       console.warn('[activities] xoá trên SharePoint hỏng:', e&&(e.message||e));
-      /* Trả lại vào danh sách để trạng thái khớp SharePoint. */
+
       if(ACTIVITIES.indexOf(a)<0) ACTIVITIES.unshift(a);
       renderActs(); render(); cockpitRefresh();
       toast('CHƯA xoá được trên SharePoint: '+(e.message||e)+'. Hoạt động vẫn còn.');
@@ -297,20 +271,18 @@ function deleteAct(){
   } else if(a.spId && !onSP){
     toast('Đã bỏ khỏi màn hình, nhưng CHƯA đăng nhập SharePoint nên chưa xoá thật — tải lại trang sẽ thấy lại.');
   } else {
-    toast('Đã xoá hoạt động.');   // bản ghi nội bộ, chưa từng lên SharePoint
+    toast('Đã xoá hoạt động.');
   }
 }
 window.deleteAct = deleteAct;
 function saveAct(){
   const g=id=>document.getElementById(id).value.trim();
   if(!g('a-cust')){toast('Nhập tên khách hàng.');return;}
-  /* Nhà cung cấp CHÍNH = chip đầu tiên (giữ nguyên logic lọc/quy trình theo ncc);
-     cả danh sách lưu ở nccs. */
+
   const nccList = aNccs.slice();
   const ncc = nccList[0] || OTHER_NCC;
   const relList = aRelated.slice();
 
-  /* ----- Chế độ SỬA: cập nhật tại chỗ hoạt động đang có ----- */
   if(aEditId){
     const a=ACTIVITIES.find(function(x){return x.id===aEditId;});
     if(!a){ aEditId=null; closeActForm(); return; }
@@ -324,11 +296,9 @@ function saveAct(){
     if(relAdded.length && typeof notifyPlain==='function')
       notifyPlain('đã thêm bạn vào hoạt động với <b>'+esc4(a.customer)+'</b> ('+actType(a.type)
         +', '+new Date(a.date).toLocaleDateString('vi-VN')+') — đã vào kế hoạch tuần của bạn', relAdded);
-    /* Đồng bộ các trường vô hướng lên SharePoint (nếu đã có spId + quyền ghi).
-       Đổi khách/NCC/dự án cần tra lookup id nên chỉ lưu cục bộ, không đẩy ở đây. */
+
     if(window.FISG_STORE && FISG_STORE.updateActivity && FISG_STORE.canWrite && FISG_STORE.canWrite() && a.spId){
-      /* Người liên quan và trọn danh sách NCC là text ngăn ";" nên đẩy thẳng được
-         khi sửa (join rỗng = xoá hết, đúng khi người dùng bỏ hết chip). */
+
       FISG_STORE.updateActivity(a.spId, { ActivityType:a.type, ActivityDate:a.date,
         Content:a.note, NextStep:a.next, PotentialLevel:a.potential,
         RelatedPeople:(a.related||[]).join('; '), SupplierList:(a.nccs||[]).join('; ') })
@@ -341,19 +311,17 @@ function saveAct(){
     return;
   }
 
-  /* ----- Chế độ TẠO MỚI ----- */
   const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
     ncc:ncc,nccs:nccList,related:relList,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
     next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};
   ACTIVITIES.unshift(a);
   LS.addAct(a);
-  /* Người liên quan được thêm: hoạt động này đã nằm trên kế hoạch tuần & báo cáo
-     của họ — báo cho họ biết. */
+
   if(relList.length && typeof notifyPlain==='function')
     notifyPlain('đã thêm bạn vào hoạt động với <b>'+esc4(a.customer)+'</b> ('+actType(a.type)
       +', '+new Date(a.date).toLocaleDateString('vi-VN')+') — đã vào kế hoạch tuần của bạn', relList);
   if(!LISTS.customers.includes(a.customer))LISTS.customers.push(a.customer);
-  /* NCC mới gõ tay được ghi nhớ cho phiên làm việc để lần sau chọn lại từ gợi ý. */
+
   if(ncc && ncc!==OTHER_NCC && !LISTS.nccs.some(n=>String(n).trim().toLowerCase()===ncc.toLowerCase())){
     LISTS.nccs.push(ncc); if(window.dedupeNccs) dedupeNccs();
   }
@@ -362,15 +330,12 @@ function saveAct(){
     if(pr){pr.comments.push({by:a.pic,at:a.date,text:'['+a.type+'] '+a.note+' → '+a.next});
       notify(pr,`đã ghi hoạt động vào <b>${pr.customer} · ${pr.product}</b>: ${a.note}`);}
   }
-  /* Chụp các tệp đang chờ TRƯỚC khi đóng form (form đóng/mở lại sẽ reset hàng
-     chờ). Tải lên sau khi hoạt động có id trên SharePoint. */
+
   const pend = window.FISG_ATTACH ? FISG_ATTACH.takePending('a-attach') : [];
   closeActForm(); renderActs(); render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
   toast('Đã lưu hoạt động'+(a.projectId?' và gắn vào dự án — đã thông báo người liên quan.':'. Có thể tạo dự án từ hoạt động này bất cứ lúc nào.'));
-  /* Hiện lên màn hình trước, đẩy lên SharePoint sau — nhập liệu không phải chờ
-     mạng. Nhưng nếu đẩy hỏng thì PHẢI nói, vì lúc đó chỉ mình người nhập thấy
-     việc này, quản lý không thấy gì cả. */
+
   pushAct(a, pend);
 }
 function pushAct(a, pend){
@@ -379,12 +344,10 @@ function pushAct(a, pend){
     return;
   }
   FISG_STORE.createActivity(a).then(spId=>{
-    /* Tải nốt tệp đính kèm đã chọn lúc tạo. */
+
     if(pend && pend.length && window.FISG_ATTACH)
       FISG_ATTACH.uploadFiles('activity', spId, { pic:a.pic, date:a.date, customer:a.customer }, pend);
-    /* Đổi luôn sang id của SharePoint và bỏ bản địa phương. Bản trước chỉ đánh
-       dấu đã gửi mà vẫn giữ bản AL-, nên lần đăng nhập sau bảng hiện HAI dòng:
-       một bản SharePoint và một bản còn kẹt trong máy. */
+
     const oldId = a.id;
     LS.markSent(oldId, spId);
     a.spId = spId; a.id = 'A-' + spId;
@@ -398,8 +361,7 @@ function pushAct(a, pend){
       + 'Phần mềm sẽ tự thử lại ở lần đăng nhập sau.');
   });
 }
-/* Việc đã nhập nhưng chưa lên SharePoint: chỉ mình người nhập thấy, nên phải
-   nhìn ra được ngay trên bảng chứ không im lặng. */
+
 function actPending(a){
   return !!(window.LS && LS.isLocal && LS.isLocal(a) && !a.spId
             && window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite());

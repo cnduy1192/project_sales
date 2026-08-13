@@ -1,11 +1,3 @@
-/* funnel.css — Bảng Sales Funnel.
-   Ý tưởng: trạng thái là thứ người dùng chuyển liên tục, nên nó rời khỏi nội dung và trở thành
-   hai phím điều khiển dựng đứng bên trái — luôn nhìn thấy, luôn bấm được, cuộn theo trang.
-   Nội dung bên phải chỉ hiển thị đúng một trạng thái, chia cấp: mốc thời gian → dự án. */
-
-/* ---------- bố cục: thẻ folder tab bên trái, gắn liền bảng nội dung ----------
-   Ẩn dụ: hai tab của một tập hồ sơ. Tab đang mở dùng đúng nền của bảng và ăn sang
-   bảng 1px để mất đường nối — cảm giác tab và bảng là một tờ; tab kia lùi lại phía sau. */
 .fn-wrap { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 0; align-items: start; }
 .fn-rail { position: sticky; top: 14px; margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
 
@@ -15,19 +7,18 @@
   font-family: inherit; text-align: left;
   border: 1px solid var(--line); border-right: none;
   border-radius: 12px 0 0 12px;
-  /* The colour rail lives inside the tab, so its height and rounded cap always match the button. */
+
   background: linear-gradient(90deg, var(--key-bd) 0 3px, var(--bg) 3px); color: var(--ink-3);
-  box-shadow: inset -6px 0 8px -8px rgba(16,24,40,.16);     /* bóng nhẹ: tab nằm sau bảng */
+  box-shadow: inset -6px 0 8px -8px rgba(16,24,40,.16);
   transition: background .18s, color .18s, border-color .18s, transform .18s, box-shadow .18s;
 }
-/* The rail is painted by the background, avoiding a pseudo-element that can drift outside the tab. */
+
 .fn-key::before {
   content: none;
 }
 .fn-key:hover { background: linear-gradient(90deg, var(--key) 0 3px, var(--surface) 3px); color: var(--ink-2); transform: translateX(-2px); }
 .fn-key:focus-visible { outline: 2px solid var(--key); outline-offset: 2px; z-index: 4; }
 
-/* tab đang mở: cùng nền với bảng, ăn sang 1px để liền mạch */
 .fn-key.on {
   background: linear-gradient(90deg, var(--key) 0 4px, var(--surface) 4px); color: var(--key);
   border-color: var(--line); margin-right: -1px; padding-right: 9px;
@@ -46,7 +37,6 @@
 }
 .fn-key-sub { display: none; }
 
-/* ---------- hiệu ứng hover cho thẻ & dòng ---------- */
 #groups .major { transition: box-shadow .18s; }
 #groups .sub-head { transition: background .14s, border-color .14s; }
 #groups .row {
@@ -59,7 +49,6 @@
 }
 #groups .row:focus-within { background: var(--bg); }
 
-/* ---------- thanh trượt % ---------- */
 .pb-wrap { display: flex; align-items: center; gap: 10px; }
 .pb-range {
   flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 999px;
@@ -82,16 +71,13 @@
 }
 .pb-hidden { display: none !important; }
 
-/* thanh trượt trong popover % ở funnel */
 .prob-pop .pb-wrap { min-width: 210px; padding: 4px 2px 2px; }
 
-/* ---------- thanh công cụ: tiêu đề trái · Chia sẻ · Thêm dự án ngoài cùng phải ---------- */
 #view-funnel .topbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 #view-funnel .topbar h2 { margin-right: auto; }
 #view-funnel .topbar .btn-share { order: 1; }
-#view-funnel .topbar > div { order: 2; }        /* nhóm chứa "Thêm dự án" */
+#view-funnel .topbar > div { order: 2; }
 
-/* ---------- mục Xuất Excel trong menu hồ sơ ---------- */
 .profile-act.neutral { color: var(--ink-2); }
 .profile-act.neutral:hover { background: var(--bg); }
 

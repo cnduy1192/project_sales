@@ -1,9 +1,6 @@
-/* js/guest.js — Chế độ KHÁCH (chỉ xem) bằng KEY ID.
- * Khách đăng nhập bằng tài khoản O365 dành riêng -> nhập KEY -> chỉ xem đúng phạm vi được chia sẻ.
- * Khoá ghi 2 lớp: ẩn nút bằng CSS (body.guest-mode) + ghi đè hàm ghi thành no-op. */
 (function () {
   "use strict";
-  let STATE = null;              // {key, ncc, scope, codes[], expiry, note}
+  let STATE = null;
   let wrongs = 0, lockUntil = 0;
 
   const cfg = () => window.FISG_CFG || {};
@@ -13,7 +10,6 @@
 
   window.FISG_IS_GUEST = () => !!STATE;
 
-  /* ---------- Màn nhập KEY ---------- */
   function screen() {
     let el = document.getElementById("guestGate");
     if (el) return el;
@@ -61,8 +57,6 @@
     } catch (e) { if (go) go.disabled = false; }
   }
 
-  /* Mở bằng KEY — KHÔNG cần đăng nhập: lấy bản chụp từ Share Gateway (Cloudflare Worker).
-     Nếu đang đăng nhập nội bộ thì vẫn cho phép tra qua SharePoint (dự phòng). */
   async function openWithKey(k) {
     const hasWorker = !!(window.FISG_CFG && FISG_CFG.SHARE_WORKER_URL);
     const loggedIn = !!(window.FISG_AUTH && FISG_AUTH.account && FISG_AUTH.account());
@@ -70,7 +64,7 @@
       msg("Chưa cấu hình máy chủ chia sẻ. Báo lại FI SAIGON.", true);
       return false;
     }
-    // (1) đường chính: Worker công khai
+
     if (hasWorker) try {
       const d = await FISG_SHARE_NET.workerGet(k);
       const meta = d.meta || {};
@@ -87,9 +81,9 @@
       if (e.status !== 404 && !/HTTP|Chưa cấu hình/.test(e.message || "")) {
         msg("Không kết nối được máy chủ chia sẻ.", true); return false;
       }
-      // 404 -> thử tiếp cách 2
+
     }
-    // (2) dự phòng: đang đăng nhập nội bộ thì tra thẳng list Shares
+
     if (window.FISG_AUTH && FISG_AUTH.account && FISG_AUTH.account()) {
       try {
         const list = await FISG_SHARE.fetchShares();
@@ -109,7 +103,6 @@
     return false;
   }
 
-  // nạp bản chụp vào bộ nhớ app (khách không có SharePoint)
   function loadSnapshot(data) {
     const recs = data.records || [];
     if (typeof RECORDS !== "undefined") {
@@ -133,7 +126,6 @@
     applyGuest();
   }
 
-  /* ---------- Áp chế độ khách ---------- */
   function filterData() {
     if (!STATE) return;
     const keep = r => {
@@ -146,7 +138,7 @@
       const kept = RECORDS.filter(keep);
       RECORDS.length = 0; kept.forEach(r => RECORDS.push(r));
     }
-    if (typeof ACTIVITIES !== "undefined") ACTIVITIES.length = 0;   // khách không xem hoạt động
+    if (typeof ACTIVITIES !== "undefined") ACTIVITIES.length = 0;
     if (typeof nccFilter !== "undefined" && STATE.ncc) nccFilter = STATE.ncc;
   }
 
@@ -177,7 +169,7 @@
 
   function applyGuest() {
     document.body.classList.add("guest-mode");
-    // đảm bảo có "người dùng hiện tại" (nếu vào thẳng chế độ khách mà chưa qua loginAs)
+
     try {
       if (typeof me === "undefined" || !me)
         me = { name: "Khách", email: "", role: "guest", pic: null, color: "#6D28D9" };
@@ -188,7 +180,7 @@
     filterData();
     lockWrites();
     banner();
-    // ẩn module nội bộ
+
     ["acts", "users"].forEach(v => {
       const n = document.querySelector('.nav-item[data-view="' + v + '"]');
       if (n) n.style.display = "none";
@@ -202,7 +194,6 @@
     if (window.toast) toast("Đang xem ở chế độ khách — chỉ xem.");
   }
 
-  /* ---------- Nhận diện khách sau khi đăng nhập ---------- */
   async function afterLogin(email) {
     if (!isGuestEmail(email)) return false;
     const app = document.getElementById("app");
@@ -214,7 +205,6 @@
   }
   window.FISG_GUEST = { afterLogin, applyGuest, state: () => STATE, screen };
 
-  /* ---------- Nút "Khách xem chia sẻ" ở màn đăng nhập ---------- */
   function addLoginButton() {
     const card = document.querySelector("#login .login-card");
     const msBtn = document.querySelector(".ms-btn");
@@ -224,11 +214,10 @@
     b.innerHTML =
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>' +
       ' Khách xem chia sẻ';
-    b.onclick = () => screen();          // mở thẳng popup nhập KEY — KHÔNG đăng nhập
+    b.onclick = () => screen();
     msBtn.parentNode.insertBefore(b, msBtn.nextSibling);
   }
 
-  // link dạng ...?key=123456 -> mở sẵn popup và điền mã
   function fromUrl() {
     let k = "";
     try { k = new URLSearchParams(location.search).get("key") || ""; } catch (e) {}

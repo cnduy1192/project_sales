@@ -1,19 +1,8 @@
-/* cockpit.css — Tổng quan điều hành.
-   Kế thừa token của styles.css: marine trên nền ngọc trai, Outfit cho tiêu đề,
-   Inter cho nội dung. Không đặt màu mới ngoài bảng đã có.
-
-   Hai yếu tố nhận diện của trang:
-   1. Trục dọc marine chạy suốt dòng thời gian, nối tiếp ngôn ngữ "thân cây"
-      đã dùng ở timeline Dashboard — trang mới thuộc cùng một họ.
-   2. Thanh im lặng ở bảng khách hàng: khoảng thời gian bặt tin hiện thành
-      hình khối, manager quét mắt là thấy khách nào nguội mà không cần đọc số. */
-
 :root{
   --ck-act:#0E7490; --ck-update:#0A5C8F; --ck-new:#1E3A8A;
   --ck-gap:18px;
 }
 
-/* ---------- ĐẦU TRANG ---------- */
 .ck-top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:4px}
 .ck-range{font-size:12.5px;color:var(--text-3);margin:-2px 0 16px;font-variant-numeric:tabular-nums}
 .ck-range b{color:var(--marine-label);font-weight:600}
@@ -26,7 +15,6 @@
 .ck-period button[aria-pressed="true"]{background:var(--marine);color:#fff}
 .ck-period button:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 
-/* ---------- DẢI TÍN HIỆU ---------- */
 .ck-signals{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--ck-gap);margin-bottom:var(--ck-gap)}
 .ck-sig{
   position:relative;text-align:left;padding:15px 18px;border-radius:var(--r);
@@ -41,9 +29,7 @@
 .ck-sig-k{display:block;font-size:11px;font-weight:600;letter-spacing:.055em;text-transform:uppercase;color:var(--text-3)}
 .ck-sig-v{display:block;font-family:var(--font-display);font-size:29px;font-weight:700;line-height:1.15;letter-spacing:-.02em;margin:8px 0 0;color:var(--sig,var(--marine));font-variant-numeric:tabular-nums}
 .ck-sig-v small{font-size:14px;font-weight:600;color:var(--text-3);margin-left:5px;letter-spacing:0}
-/* .ck-sig-s đã bỏ: phần giải thích chuyển vào title, dải KPI chỉ còn nhãn + số. */
 
-/* ---------- KHUNG CHUNG ---------- */
 .ck-panel{border-radius:var(--r);margin-bottom:var(--ck-gap);overflow:hidden}
 .ck-head{
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -67,7 +53,6 @@
   color:var(--text-2);background:var(--surface)}
 .ck-sel:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 
-/* ---------- DÒNG THỜI GIAN ---------- */
 .ck-feed{max-height:min(58dvh,560px);overflow-y:auto;padding:6px 0 10px}
 .ck-day{padding:0 18px}
 .ck-day-h{
@@ -77,7 +62,6 @@
 .ck-day-h span{font-size:11.5px;color:var(--text-3);font-variant-numeric:tabular-nums}
 .ck-day-h em{margin-left:auto;font-style:normal;font-size:11px;color:var(--text-3);font-variant-numeric:tabular-nums}
 
-/* Trục dọc marine: nhạt dần về cuối kỳ, cùng ngữ pháp với timeline Dashboard. */
 .ck-day-b{position:relative;padding-left:20px}
 .ck-day-b::before{
   content:'';position:absolute;left:5px;top:4px;bottom:4px;width:1.5px;border-radius:2px;
@@ -106,7 +90,6 @@
 .ck-meta.dot::before{content:'·';margin-right:6px;color:var(--line)}
 .ck-approx{cursor:help;border-bottom:1px dotted var(--text-3)}
 
-/* ---------- BẢNG KHÁCH HÀNG ---------- */
 .ck-search{position:relative;display:flex;align-items:center}
 .ck-search svg{position:absolute;left:10px;color:var(--text-3);pointer-events:none}
 .ck-search input{
@@ -138,13 +121,11 @@
 .ck-row .num{font-variant-numeric:tabular-nums;font-weight:600;color:var(--marine-ink);font-size:12.5px}
 .ck-more{color:var(--text-3);font-weight:600}
 
-/* Thanh im lặng — bao lâu rồi chưa ai chạm vào khách này. */
 .ck-quiet{display:flex;flex-direction:column;gap:4px;min-width:0}
 .ck-quiet-t{font-size:11.5px;color:var(--text-2);font-variant-numeric:tabular-nums;white-space:nowrap}
 .ck-quiet-b{height:3px;border-radius:2px;background:var(--line-2);overflow:hidden}
 .ck-quiet-b i{display:block;height:100%;border-radius:2px;background:var(--qc,var(--marine-2))}
 
-/* ---------- NGĂN KÉO KHÁCH HÀNG ---------- */
 .ck-bd{
   position:fixed;inset:0;background:rgba(11,36,54,.34);opacity:0;pointer-events:none;
   transition:opacity .18s ease-out;z-index:840}
@@ -207,13 +188,11 @@
 .ck-link:hover{background:var(--marine-soft);border-color:var(--marine)}
 .ck-link:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 
-/* ---------- TRỐNG ---------- */
 .ck-empty{padding:44px 24px;text-align:center;color:var(--text-3)}
 .ck-empty b{display:block;font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--text-2);margin-bottom:6px}
 .ck-empty p{font-size:12.5px;max-width:38ch;margin:0 auto 15px}
 .ck-empty .ck-chip{background:var(--marine-soft);border-color:var(--marine-line);color:var(--marine)}
 
-/* ---------- CO GIÃN ---------- */
 @media (max-width:1180px){
   .ck-grid{grid-template-columns:minmax(150px,2fr) 1.2fr .8fr .8fr 1.1fr}
   .ck-grid>.hide-md{display:none}
@@ -231,10 +210,6 @@
   .ck-sig:hover{transform:none}
 }
 
-/* ---------- Sắp tới ----------
-   Việc chưa xảy ra phải nhìn khác việc đã xảy ra, nếu không quản lý đọc kế hoạch
-   thành thành tích. Đường thời gian đứt nét và chấm rỗng là đủ — không thêm màu
-   mới, vì màu ở đây đã dành cho loại sự kiện. */
 .ck-day-up .ck-day-b::before{
   background:none;
   border-left:1.5px dashed rgba(1,66,106,.34);

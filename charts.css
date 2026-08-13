@@ -1,13 +1,8 @@
-/* charts.css — Biểu đồ Dashboard.
-   Plus Jakarta Sans giúp số liệu gọn, có nhịp và dễ quét nhanh. */
-
 .card canvas { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
-/* KHÔNG ép width/height cho canvas: Chart.js tự gán kích thước px theo khung chứa.
-   Ép 100% !important sẽ đè lên inline style của Chart.js -> canvas mất kích thước, vẽ ra trắng. */
+
 .donut-box canvas, .line-box canvas, .vol-box canvas { display: block; max-width: 100%; }
 .donut-box { isolation: isolate; }
-/* Tâm donut là nơi DUY NHẤT hiển thị chi tiết (đã bỏ tooltip):
-   rê chuột vào một phần -> tâm đổi sang số và nhãn của phần đó. */
+
 .donut-center {
   position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center; pointer-events: none; text-align: center;
@@ -23,7 +18,6 @@
   line-height: 1.25; max-width: 100%; overflow-wrap: break-word;
 }
 
-/* Dashboard cards behave like quiet instrument panels: elevation only appears on intent. */
 #view-dash .card {
   transition: transform .2s ease-out, box-shadow .2s ease-out, border-color .2s ease-out;
 }
@@ -33,7 +27,6 @@
 }
 #view-dash .card:has(canvas:hover) { border-color: color-mix(in srgb, var(--accent) 28%, var(--line)); }
 
-/* ---------- card sản lượng theo mặt hàng ---------- */
 .vol-card {
   display: grid; grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "heading switch" "chart chart";
@@ -53,7 +46,6 @@
 }
 .vol-state.show { display: flex; }
 
-/* chuyển năm — segmented control nhỏ, đặt góc phải card */
 .vol-switch {
   grid-area: switch; position: static;
   display: inline-flex; gap: 2px; padding: 3px;

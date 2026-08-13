@@ -1,16 +1,9 @@
-/* js/lib/weekly.js — tuần làm việc của MỘT sales.
-   Hàm thuần, không đụng DOM, không đọc biến lọc toàn cục. Dùng lại helper của
-   insights.js: custKey, custLabel, picKey, picLabel, normDate, isoOf, shiftISO,
-   daysSince, closeStamp. */
-
 var WD_VI = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
 
-/* ====== MỐC TUẦN ======
-   Thứ Hai → Chủ Nhật. Tính bằng số học ngày nên tuần vắt qua giao thừa vẫn đúng. */
 function weekBounds(iso){
   var d = new Date(normDate(iso) || todayISO());
-  var dow = d.getDay();                 // 0 = Chủ Nhật
-  var back = (dow === 0) ? 6 : dow - 1; // Chủ Nhật lùi 6, không phải 0
+  var dow = d.getDay();
+  var back = (dow === 0) ? 6 : dow - 1;
   var s = new Date(d.getTime()); s.setDate(s.getDate() - back);
   var e = new Date(s.getTime()); e.setDate(e.getDate() + 6);
   var start = isoOf(s), end = isoOf(e);
@@ -21,10 +14,6 @@ function weekBounds(iso){
 }
 function thisWeek(){ return weekBounds(todayISO()); }
 
-/* Quy tắc tuần làm việc:
-     Thứ Hai              → đầu tuần,  lập kế hoạch
-     Thứ Ba – thứ Năm     → giữa tuần, bám việc đã lên lịch
-     Thứ Sáu – Chủ Nhật   → cuối tuần, nhìn lại và báo cáo */
 function dayMode(iso){
   var dow = new Date(normDate(iso) || todayISO()).getDay();
   if(dow === 1) return 'start';
@@ -32,17 +21,12 @@ function dayMode(iso){
   return 'end';
 }
 function dayLabelVI(iso){ return WD_VI[new Date(normDate(iso)).getDay()]; }
-/* "Thứ Sáu, ngày 31/07/2026" — câu người Việt đọc được, không phải mã ngày. */
+
 function dayStampVI(iso){
   var d = normDate(iso) || todayISO();
   return dayLabelVI(d) + ', ngày ' + d.slice(8,10) + '/' + d.slice(5,7) + '/' + d.slice(0,4);
 }
 
-/* ====== PHẠM VI CỦA MỘT NGƯỜI ======
-   Tuần luôn là góc nhìn CÁ NHÂN, kể cả với người có quyền xem toàn đội — nên
-   phạm vi 'all' thu về 'own-pic'. R&D bám cột "R&D phụ trách" thay vì cột PIC. */
-/* Tìm hồ sơ người dùng theo BẤT KỲ tên nào của họ — "Ngoc", "Bich Ngoc" hay
-   "Phạm Bích Ngọc" đều phải ra cùng một người. */
 function userByName(pic){
   var K = picKey(pic);
   if(!K || typeof USERS === 'undefined') return null;
@@ -72,16 +56,12 @@ function myScope(pic, kind){
   });
   var ids = {}; records.forEach(function(r){ ids[r.id] = 1; });
   var acts = ACTIVITIES.filter(function(a){
-    /* Người liên quan được thêm vào một hoạt động → hoạt động đó vào kế hoạch tuần
-       và báo cáo của họ, y như hoạt động do chính họ ghi. */
+
     return mine(a.pic) || (a.related||[]).some(mine) || (a.projectId && ids[a.projectId]);
   });
   return { key:K, records:records, acts:acts };
 }
 
-/* Lần chạm gần nhất của từng khách hàng, tính trong phạm vi của sales này.
-   Không mượn buildCustomerIndex() vì hàm đó suy phạm vi từ biến `me`, còn ở đây
-   pic là tham số — manager xem thử tuần của người khác vẫn phải ra đúng số. */
 function lastTouchMap(scope){
   var m = {};
   var bump = function(k, iso){ if(iso && (!m[k] || iso > m[k])) m[k] = iso; };
@@ -93,7 +73,6 @@ function lastTouchMap(scope){
   return m;
 }
 
-/* ====== TUẦN CỦA TÔI ====== */
 function buildMyWeek(pic, weekStart){
   var w = weekBounds(weekStart || todayISO());
   var scope = myScope(pic);
@@ -152,9 +131,6 @@ function buildMyWeek(pic, weekStart){
   };
 }
 
-/* ====== LUẬT XẾP HẠNG VIỆC NÊN LÀM ======
-   Cho điểm rồi lấy top N. Không dùng ngưỡng nhị phân: updates[] của dữ liệu hiện
-   tại dừng ở 01/06/2026 nên mọi ngưỡng "quá 30 ngày" đều gắn cờ 100% dự án. */
 var SUGGEST_LIMIT = 5;
 
 function suggestWork(pic, limit){
@@ -205,7 +181,6 @@ function suggestWork(pic, limit){
     });
   });
 
-  /* Khách đã có việc trong lịch tuần này thì không đề xuất lại. */
   var booked = {};
   scope.acts.forEach(function(a){
     var iso = normDate(a.date);
@@ -221,8 +196,6 @@ function suggestWork(pic, limit){
     .slice(0, limit);
 }
 
-/* ====== BÁO CÁO ======
-   Ảnh chụp tại thời điểm gửi, không tính lại khi đọc. */
 function buildReport(pic, weekStart){
   var mw = buildMyWeek(pic, weekStart);
   var lite = function(a){
@@ -244,7 +217,6 @@ function buildReport(pic, weekStart){
   };
 }
 
-/* Phân bố cho biểu đồ. Tách khỏi lớp vẽ để test được bằng số. */
 function reportCharts(report, pic){
   var byType = {};
   report.doneActs.forEach(function(a){ byType[a.type||'Khác'] = (byType[a.type||'Khác']||0) + 1; });
@@ -262,8 +234,6 @@ function reportCharts(report, pic){
   };
 }
 
-/* ====== KIỂM THỬ ======
-   Chạy weeklyAssert() trong console sau khi đăng nhập. */
 function weeklyAssert(pic){
   pic = pic || (me && me.pic) || 'Thu';
   var out = [];
@@ -272,10 +242,10 @@ function weeklyAssert(pic){
   var a = weekBounds('2026-07-07');
   t('mốc tuần thứ Ba', a.start === '2026-07-06' && a.end === '2026-07-12', a.start+' → '+a.end);
 
-  var b = weekBounds('2027-01-01');   // thứ Sáu, vắt qua giao thừa
+  var b = weekBounds('2027-01-01');
   t('mốc tuần qua giao thừa', b.start === '2026-12-28' && b.end === '2027-01-03', b.start+' → '+b.end);
 
-  var c = weekBounds('2026-07-12');   // Chủ Nhật
+  var c = weekBounds('2026-07-12');
   t('Chủ Nhật thuộc tuần trước đó', c.start === '2026-07-06', c.start+' → '+c.end);
 
   var modes = ['2026-07-06','2026-07-07','2026-07-08','2026-07-09','2026-07-10','2026-07-11','2026-07-12'].map(dayMode);

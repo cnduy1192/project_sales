@@ -1,14 +1,12 @@
-/* js/views/detail.js — tách từ index.html gốc. Nạp dạng classic script (scope toàn cục). */
-/* ====== FORM (thêm mới) ====== */
 function probOptions(sel,val){
   document.getElementById(sel).innerHTML=PROB_OPTS.map(p=>`<option value="${p}"${p===val?' selected':''}>${p}%</option>`).join('');
 }
 function buildForm(){
   const dl=(id,arr)=>document.getElementById(id).innerHTML=arr.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');
   dl('dl-cust',LISTS.customers); dl('dl-prod',LISTS.products); dl('dl-app',LISTS.applications);
-  /* Form ghi dữ liệu nên không có "Tất cả": lấy NCC đang xem, hoặc NCC đầu. */
+
   const fn=formNcc();
-  /* Ô chọn NCC lấy ĐỦ nhà cung cấp từ list Suppliers, không chỉ 3 NCC chính. */
+
   document.getElementById('f-ncc').innerHTML=supplierOptions().map(n=>`<option${n===fn?' selected':''}>${n}</option>`).join('');
   document.getElementById('f-grp').innerHTML=SEG_GROUPS.map(g=>`<option>${g}</option>`).join('');
   onFormGroup();
@@ -53,8 +51,7 @@ function saveForm(){
   if(!LISTS.customers.includes(g('f-cust'))){LISTS.customers.push(g('f-cust'));synced.push('SF_Customers');}
   if(!LISTS.products.includes(g('f-prod'))){LISTS.products.push(g('f-prod'));synced.push('SF_Products');}
   if(!LISTS.applications.includes(g('f-app'))){LISTS.applications.push(g('f-app'));synced.push('SF_Applications');}
-  /* Id cũ sinh theo RECORDS.length nên đụng ngay id có sẵn. Tiền tố PL- đánh dấu
-     "chưa có trên SharePoint"; đẩy lên xong sẽ đổi thành P-<id thật>. */
+
   const rec={id:'PL-'+Date.now().toString(36).toUpperCase(),ncc:g('f-ncc'),group:g('f-grp'),
     segment:g('f-seg'),application:g('f-app'),product:g('f-prod'),customer:g('f-cust'),
     created:g('f-created'),closing:g('f-closing'),stage:g('f-stage'),status:'IN PROGRESS',boptype:g('f-type'),
@@ -72,8 +69,7 @@ function saveForm(){
   toast('Đã tạo dự án cho '+rec.customer+' — đang lưu lên SharePoint…');
   pushProject(rec);
 }
-/* Đẩy dự án mới lên SharePoint. Trước bản này dự án tạo trong app chỉ nằm trong
-   bộ nhớ trình duyệt: tải lại trang là mất, và không ai khác nhìn thấy. */
+
 function pushProject(rec){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
     toast('Chưa đăng nhập Microsoft 365 — dự án này chỉ nằm trên máy bạn và sẽ mất khi tải lại trang.');
@@ -82,8 +78,7 @@ function pushProject(rec){
   FISG_STORE.createProject(rec).then(spId=>{
     const oldId=rec.id;
     rec.spId=spId; rec.id='P-'+spId;
-    /* Hoạt động vừa gắn vào dự án phải trỏ theo id mới — cả trên màn hình lẫn
-       trên SharePoint, nếu không lần tải sau nó lại rời khỏi dự án. */
+
     ACTIVITIES.forEach(a=>{
       if(a.projectId!==oldId) return;
       a.projectId=rec.id;
@@ -101,13 +96,9 @@ function pushProject(rec){
   });
 }
 
-/* ====== DETAIL MODAL ====== */
 function openDetail(id, origin){
   const rec=RECORDS.find(r=>r.id===id); if(!rec)return;
-  /* Chốt chặn cuối: dù đường dẫn nào gọi tới (bảng, popup khách hàng, link cũ),
-     dự án ngoài phạm vi quyền cũng không được mở ra. */
-  /* R&D (viewAll) và quản lý xem được mọi dự án — chỉ chặn khi KHÔNG xem-tất-cả
-     và cũng không sở hữu dự án. */
+
   if(typeof ownsRecord==='function' && me
      && !(typeof canViewAll==='function' && canViewAll(me)) && !ownsRecord(rec, me)){
     toast('Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.');
@@ -147,7 +138,7 @@ function dRenderActs(){
 }
 function attachAct(){
   const pr=curRec;
-  /* Hoạt động này mở TỪ dự án, nên đường về phải là dự án — không phải bảng chủ. */
+
   const back=NAV.top();
   document.getElementById('dov').classList.remove('open');
   NAV.popRaw();
@@ -180,7 +171,7 @@ function dRenderComments(){
   if(count)count.textContent=n?n+' tin nhắn':'';
   if(!n){
     box.innerHTML='<div class="d-empty">'+(curRec.desc?('Ghi chú từ Excel: “'+curRec.desc+'”'):'Chưa có trao đổi nào.')+'</div>';return;}
-  /* Your own messages sit on the right; everyone else on the left. */
+
   const mine=me&&(me.pic||me.name);
   box.innerHTML=curRec.comments.map(c=>{
     const u=USERS.find(x=>(x.pic||x.name)===c.by);
@@ -225,8 +216,7 @@ function saveDetail(){
   }
   closeDetail(); render(); cockpitRefresh();
 }
-/* Ghi thay đổi lên SharePoint + một dòng nhật ký. Lỗi thì nói thẳng, vì bản trên
-   màn hình đã đổi rồi mà bản thật thì chưa. */
+
 function pushProjectPatch(rec, patch, note){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
   if(!rec.spId){
@@ -244,7 +234,7 @@ function pushProjectPatch(rec, patch, note){
 function closeDetail(){
   NAV.back(function(){ document.getElementById('dov').classList.remove('open'); });
 }
-/* Lưu xong là hành động dứt điểm: bỏ lớp trung gian, về thẳng nơi xuất phát. */
+
 function closeDetailDone(){
   document.getElementById('dov').classList.remove('open');
   var o=NAV.back(function(){});

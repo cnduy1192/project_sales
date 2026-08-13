@@ -1,6 +1,3 @@
-/* js/login-ui.js — Dựng lại màn đăng nhập (nạp CUỐI CÙNG).
- * Không tạo mới nút .ms-btn / #roleRow — DI CHUYỂN node có sẵn để giữ nguyên handler
- * do auth.js và config.js đã gắn. Nút khách đổi nhãn thành "Guest". */
 (function () {
   "use strict";
 
@@ -21,10 +18,10 @@
   function build() {
     const login = document.getElementById("login");
     if (!login || login.dataset.rebuilt) return;
-    void counts;                     // giữ hàm cho lần dùng sau, không hiển thị số liệu ở cửa
+    void counts;
     const msBtn = login.querySelector(".ms-btn");
     const roleRow = login.querySelector("#roleRow");
-    if (!msBtn || !roleRow) return;              // chưa sẵn sàng, thử lại sau
+    if (!msBtn || !roleRow) return;
     const guestBtn = login.querySelector("#btnGuest");
 
     const shell = document.createElement("div");
@@ -47,12 +44,11 @@
     login.appendChild(shell);
     const actions = shell.querySelector("#lgActions");
 
-    actions.appendChild(msBtn);                                   // giữ handler đăng nhập MS
+    actions.appendChild(msBtn);
     const or = document.createElement("div");
     or.className = "lg-or"; or.textContent = "hoặc";
     actions.appendChild(or);
 
-    // nút Guest: đổi nhãn, giữ nguyên hành vi (mở popup nhập mã)
     const g = guestBtn || document.createElement("button");
     if (!guestBtn) {
       g.id = "btnGuest"; g.type = "button"; g.className = "guest-btn";
@@ -66,8 +62,6 @@
       '<svg class="lg-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     actions.appendChild(g);
 
-    /* Không còn đăng nhập nhanh theo vai trò — mọi tài khoản đến từ Microsoft 365,
-       phân quyền đọc từ list Users. Giữ node #roleRow (ẩn) vì vài chỗ còn tham chiếu. */
     if (roleRow) { roleRow.style.display = "none"; shell.appendChild(roleRow); }
     if (card) card.remove();
     login.dataset.rebuilt = "1";
@@ -75,7 +69,7 @@
 
   function boot() {
     build();
-    setTimeout(build, 300);      // phòng khi guest.js gắn nút muộn hơn
+    setTimeout(build, 300);
     setTimeout(build, 900);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

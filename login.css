@@ -1,14 +1,9 @@
-/* login.css — Màn đăng nhập.
-   Bảng trái: chỉ tên công ty, slogan và tên sản phẩm — chữ ít, khoảng trống nhiều.
-   Bảng phải: ba lối vào; Guest là khối tím, điểm màu duy nhất trên nền trắng. */
-
 .login-shell {
   position: fixed; inset: 0; display: grid;
   grid-template-columns: minmax(0, 44%) minmax(0, 56%);
   background: var(--surface);
 }
 
-/* ---------- Trái: bảng thương hiệu ---------- */
 .lg-brand {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column; justify-content: space-between;
@@ -36,7 +31,6 @@
   font-size: 46px; line-height: 1.03; font-weight: 800; letter-spacing: -.038em;
 }
 
-/* ---------- Phải: ba lối vào ---------- */
 .lg-pane {
   display: flex; flex-direction: column; justify-content: center;
   padding: 44px 8vw; max-width: 620px;
@@ -44,7 +38,6 @@
 .lg-h2 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; }
 .lg-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
 
-/* nút Microsoft — lối chính */
 .login-shell .ms-btn {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
   padding: 13px 16px; border-radius: 11px; cursor: pointer;
@@ -55,8 +48,6 @@
 .login-shell .ms-btn:hover { background: #000; border-color: #000; }
 .login-shell .ms-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-/* nút Guest — điểm nhấn duy nhất trên nền trắng.
-   Tím = màu của chế độ khách trong app, nên nổi bật mà vẫn đúng ngôn ngữ hệ thống. */
 .login-shell .guest-btn {
   position: relative; width: 100%; margin: 0; padding: 13px 16px 13px 18px;
   display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 12px;
@@ -88,7 +79,6 @@
 }
 .lg-or::before, .lg-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-/* khối demo — yên tĩnh, không cạnh tranh với hai lối trên */
 .lg-demo { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--line-2); }
 .lg-demo-h {
   font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);

@@ -1,21 +1,8 @@
-/* js/views/customers.js — màn hình "Khách hàng của tôi" (classic script).
- *
- * Danh bạ khách hàng đọc từ list Customers (CUSTOMER_DIR), lọc theo CHỦ SỞ HỮU:
- *   · sales           → chỉ khách của mình
- *   · manager/director/admin → cả đội, lọc thêm theo từng sales
- *
- * Đây là điểm khác biệt so với Cockpit/Funnel: khách CHƯA CÓ dự án nào vẫn hiện,
- * vì nguồn là danh bạ chứ không phải suy từ dự án. */
-
-let cuFilterOwner = '';   // manager lọc theo một sales; rỗng = cả đội
+let cuFilterOwner = '';
 let cuQuery = '';
 
-/* Xem cả danh bạ khách hàng của đội: quản lý/giám đốc/admin (scope 'all') và R&D
-   (viewAll). Dùng canViewAll để không bỏ sót vai trò được cấp quyền xem rộng. */
 function cuCanSeeAll(){ return !!(me && (typeof canViewAll==='function' ? canViewAll(me) : cap(me.role).scope === 'all')); }
 
-/* Gom số liệu nhanh cho mỗi khách: dự án đang chạy, hoạt động gần nhất. Join
-   theo custOwnerKey nên khớp dù tên trong dự án còn tiền tố "Công ty…". */
 function cuStats(){
   const key = (typeof custOwnerKey === 'function') ? custOwnerKey
             : (s => String(s||'').trim().toUpperCase());
@@ -37,18 +24,12 @@ function cuStats(){
   return { m, key };
 }
 
-/* Khách này có phải "của mình" (được quản lý bởi mình) không. */
 function cuMine(c){
   return typeof ownsCustomer === 'function' && ownsCustomer(c.name || c, me);
 }
-/* Khách chưa ai quản lý (không có chủ trong danh bạ). */
+
 function cuUnowned(c){ return !String(c.owner||'').trim(); }
 
-/* Danh sách khách hiển thị:
-   · lead (manager/admin) → cả đội, lọc theo sales đang chọn;
-   · sales KHÔNG tìm       → chỉ khách của mình (mình tạo / mình phụ trách);
-   · sales CÓ tìm          → mọi khách trong data khớp ô tìm, kèm chú thích ai
-     đang quản lý (giải bài "tìm không ra nhưng khi tạo mới lại thấy"). */
 function cuRows(){
   const dir = (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []);
   const q = cuQuery.trim().toLowerCase();
@@ -58,9 +39,9 @@ function cuRows(){
       const hay = (c.name + ' ' + (c.legal||'') + ' ' + (c.owner||'')).toLowerCase();
       if(hay.indexOf(q) < 0) return false;
       if(seeAll && cuFilterOwner && picKey(c.owner) !== picKey(cuFilterOwner)) return false;
-      return true;   // sales: khi tìm thì thấy được mọi khách khớp
+      return true;
     }
-    if(!seeAll) return cuMine(c);                            // sales: chỉ của mình
+    if(!seeAll) return cuMine(c);
     if(cuFilterOwner) return picKey(c.owner) === picKey(cuFilterOwner);
     return true;
   }).sort((a,b) => custLabel(a.name).localeCompare(custLabel(b.name), 'vi'));
@@ -68,13 +49,11 @@ function cuRows(){
 
 function renderCustomers(){
   const rows = cuRows();
-  cuRenderTools(rows.length);   /* rebuilds the toolbar (search box included) */
+  cuRenderTools(rows.length);
   cuRenderRows();
 }
 window.renderCustomers = renderCustomers;
 
-/* Chỉ vẽ lại danh sách + cập nhật số đếm, KHÔNG đụng vào ô tìm — nhờ vậy con trỏ
-   không bị nhảy khi đang gõ. Dùng cho mỗi lần gõ vào ô tìm khách hàng. */
 function cuRenderRows(){
   const box = document.getElementById('cuRows');
   if(!box) return;
@@ -97,18 +76,15 @@ function cuRenderRows(){
   const seeAll = cuCanSeeAll();
   box.innerHTML = rows.map(c => {
     const s = m[key(c.name)] || { open:0, total:0, lastTouch:null, nccs:new Set() };
-    /* Chưa có hoạt động / dự án thì để TRỐNG, không hiện nhãn giữ chỗ. */
+
     const touch = s.lastTouch ? cuTouch(s.lastTouch) : { text:'', cls:'' };
     const legal = c.legal && custOwnerKey(c.legal) !== custOwnerKey(c.name)
       ? `<span class="cu-legal">${ckEsc(c.legal)}</span>` : '';
     const mine = seeAll || cuMine(c);
     const free = cuUnowned(c);
-    /* Được thao tác (ghi dự án/hoạt động) khi khách của mình HOẶC chưa ai quản lý. */
+
     const canAct = mine || free;
 
-    /* Cột phụ trách:
-       · lead → luôn hiện tên chủ;
-       · sales → chỉ để chú thích khi đây là khách KHÔNG phải của mình (kết quả tìm). */
     let ownerCell;
     if(seeAll) ownerCell = picLabel(c.owner) ? ckEsc(picLabel(c.owner)) : '<span class="cu-dash">—</span>';
     else if(mine) ownerCell = '<span class="cu-dash">—</span>';
@@ -137,16 +113,12 @@ function cuRenderRows(){
 }
 window.cuRenderRows = cuRenderRows;
 
-/* Ai được sửa một khách hàng: admin toàn quyền; sales chỉ khách của chính mình. */
 function cuCanEdit(entry){
   if(!me) return false;
   if(myCap().admin) return true;
   return typeof ownsCustomer === 'function' && ownsCustomer(entry && entry.name ? entry.name : entry, me);
 }
 
-/* Ai được XOÁ một khách hàng: theo cờ del của vai trò + sửa được khách này.
-   Áp dụng cho MỌI vai trò có quyền xoá (Sales xoá khách của mình; Manager/Admin
-   xoá cả đội). Sale Support del=false nên không xoá được, đúng chủ trương. */
 function cuCanDelete(entry){
   if(!me || !entry) return false;
   if(!cap(me.role).del) return false;
@@ -188,15 +160,11 @@ function cuRenderTools(count){
 function cuSetOwner(v){ cuFilterOwner = v; renderCustomers(); }
 function cuSetQuery(v){
   cuQuery = v;
-  /* Chỉ vẽ lại danh sách + số đếm; ô tìm giữ nguyên node nên con trỏ không nhảy. */
+
   cuRenderRows();
 }
 window.cuSetOwner = cuSetOwner; window.cuSetQuery = cuSetQuery;
 
-/* ====== XEM & SỬA THÔNG TIN KHÁCH HÀNG ======
-   name rỗng → tạo mới. Có name → mở khách đang có: hiện thông tin liên quan
-   (dự án, hoạt động — trong phạm vi quyền) + form sửa. Không có quyền sửa thì
-   các ô khoá lại, chỉ xem. */
 let cuEditName = null;
 
 function cuFind(name){
@@ -204,6 +172,22 @@ function cuFind(name){
             : (s => String(s||'').trim().toUpperCase());
   const k = key(name);
   return (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []).find(c => key(c.name) === k) || null;
+}
+
+function cuDefaultOwner(){
+  if(!me) return '';
+  const c = (typeof cap==='function') ? cap(me.role) : {};
+  const sup = (typeof supportsList==='function') ? supportsList(me) : [];
+  if(c.scope === 'support' && sup.length === 1) return sup[0];
+  return me.pic || me.name || '';
+}
+window.cuDefaultOwner = cuDefaultOwner;
+
+function cuReadOwner(){
+  const el = document.getElementById('cuf-owner');
+  if(!el) return '';
+  if(el.tagName === 'SELECT' || el.tagName === 'INPUT') return (el.value||'').trim();
+  return (el.dataset && el.dataset.val) || '';
 }
 
 function cuOpenEdit(name){
@@ -220,22 +204,29 @@ function cuOpenEdit(name){
     ov.addEventListener('click', e => { if(e.target === ov) cuCloseEdit(); });
   }
 
-  /* Bỏ panel "Dự án / Hoạt động của khách hàng" bên phải — modal chỉ còn form. */
   const related = '';
 
   const canDel = !isNew && cuCanDelete(entry);
-  const v = entry || { name:'', legal:'', owner:(me&&(me.pic||me.name))||'', segment:'', region:'', status:'' };
-  /* Người phụ trách luôn hiển thị TÊN, không để trống: ưu tiên chủ hiện tại, nếu
-     chưa có thì lấy chính người đang đăng nhập. Dùng picLabel để ra tên đầy đủ. */
+  const v = entry || { name:'', legal:'', owner:cuDefaultOwner(), segment:'', region:'', status:'' };
   const ownerName = (typeof picLabel==='function'
     ? (picLabel(v.owner) || picLabel(me&&(me.pic||me.name)))
     : (v.owner || (me&&(me.pic||me.name)))) || '—';
-  /* Ô chủ sở hữu: admin chọn tự do; sales khoá về chính mình nhưng vẫn thấy rõ tên. */
-  const ownerField = (myCap().admin && canEdit)
-    ? `<input id="cuf-owner" list="cuf-pics" value="${ckEsc(v.owner||ownerName)}">
-       <datalist id="cuf-pics">${(typeof LISTS!=='undefined'?LISTS.pics:[]).map(p=>`<option value="${ckEsc(p)}">`).join('')}</datalist>`
-    : `<div class="cu-static" id="cuf-owner" data-val="${ckEsc(v.owner||(me&&(me.pic||me.name))||'')}">
+
+  const supports = (typeof supportsList==='function' && me) ? supportsList(me) : [];
+  const isSupport = !!(me && typeof cap==='function' && cap(me.role).scope === 'support');
+  const pk = (typeof picKey==='function') ? picKey : (s=>String(s||'').trim().toLowerCase());
+  const optionsFor = (arr) => ['<option value="">— Chưa giao —</option>'].concat(
+    (arr||[]).map(p=>`<option value="${ckEsc(p)}"${pk(p)===pk(v.owner)?' selected':''}>${ckEsc(picLabel?picLabel(p):p)}</option>`)).join('');
+
+  let ownerField;
+  if(myCap().admin && canEdit){
+    ownerField = `<select id="cuf-owner" class="cu-owner-sel">${optionsFor((typeof LISTS!=='undefined'?LISTS.pics:[]))}</select>`;
+  } else if(isNew && isSupport && canEdit && supports.length > 1){
+    ownerField = `<select id="cuf-owner" class="cu-owner-sel">${supports.map(p=>`<option value="${ckEsc(p)}"${pk(p)===pk(v.owner)?' selected':''}>${ckEsc(picLabel?picLabel(p):p)}</option>`).join('')}</select>`;
+  } else {
+    ownerField = `<div class="cu-static" id="cuf-owner" data-val="${ckEsc(v.owner||(me&&(me.pic||me.name))||'')}">
          <span class="cu-avatar">${ckEsc((ownerName||'?').slice(0,2).toUpperCase())}</span>${ckEsc(ownerName)}</div>`;
+  }
 
   const dis = canEdit ? '' : 'disabled';
   ov.innerHTML = `<div class="cu-modal glass" role="dialog" aria-modal="true">
@@ -284,11 +275,8 @@ function cuSaveCustomer(){
   const title = g('cuf-title');
   if(!title){ if(window.toast) toast('Nhập tên khách hàng.'); return; }
   const entry = cuEditName ? cuFind(cuEditName) : null;
-  /* Chủ sở hữu: admin đổi tự do; người khác thì GIỮ NGUYÊN chủ khi sửa (không tự
-     nhận về mình — Sale Support sửa hộ chứ không cướp khách), chỉ khi TẠO MỚI
-     mới mặc định về chính mình. */
-  const owner = myCap().admin ? g('cuf-owner')
-    : (entry ? (entry.owner || '') : ((me&&(me.pic||me.name))||''));
+  const owner = myCap().admin ? cuReadOwner()
+    : (entry ? (entry.owner || '') : (cuReadOwner() || cuDefaultOwner()));
   const row = { spId: entry ? entry.spId : null, title: title, legal: g('cuf-legal'),
                 owner: owner, segment: g('cuf-seg'), region: g('cuf-region'), status: g('cuf-status') };
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
@@ -307,8 +295,6 @@ function cuSaveCustomer(){
 }
 window.cuSaveCustomer = cuSaveCustomer;
 
-/* Xoá khách hàng khỏi danh bạ. Xác nhận hai lớp nếu khách còn dự án/hoạt động
-   (những bản ghi đó KHÔNG bị xoá theo — chỉ gỡ khách khỏi danh bạ). */
 function cuDeleteCustomer(){
   const entry = cuEditName ? cuFind(cuEditName) : null;
   if(!entry){ if(window.toast) toast('Không tìm thấy khách hàng.'); return; }
@@ -339,7 +325,6 @@ function cuDeleteCustomer(){
 }
 window.cuDeleteCustomer = cuDeleteCustomer;
 
-/* Nút "Xem lịch sử" dùng lại ngăn kéo Cockpit. */
 function cuOpen(name){
   const k = (typeof custKey === 'function') ? custKey(name) : name;
   if(window.openCustomer) openCustomer(k);

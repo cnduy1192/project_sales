@@ -1,10 +1,3 @@
-/* js/components/datepicker.js — Lịch chọn ngày tuỳ chỉnh (classic script).
- *
- * Thay bộ chọn ngày mặc định của trình duyệt bằng một lịch theo tông marine của
- * app. Giữ NGUYÊN <input type="date"> để mọi chỗ đọc .value (ISO yyyy-mm-dd) và
- * logic form không đổi — chỉ ẩn biểu tượng lịch gốc và gắn một popup của riêng ta.
- * Nâng cấp một lần khi tải trang; các ô ngày đều nằm sẵn trong HTML tĩnh.
- */
 (function () {
   "use strict";
   var DOW = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -23,7 +16,7 @@
   }
   function todayParts() { var t = new Date(); return { y: t.getFullYear(), m: t.getMonth(), d: t.getDate() }; }
 
-  var openPop = null;   // popup đang mở (chỉ một)
+  var openPop = null;
   function closePop() { if (openPop) { openPop.remove(); openPop = null; document.removeEventListener("keydown", onEsc, true); } }
   function onEsc(e) { if (e.key === "Escape") { closePop(); } }
 
@@ -45,7 +38,7 @@
       '<path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
     wrap.appendChild(btn);
 
-    var view = null;  // {y,m} tháng đang xem
+    var view = null;
 
     function open() {
       if (openPop && openPop._input === input) { closePop(); return; }
@@ -65,7 +58,7 @@
 
     function render(pop, sel) {
       var first = new Date(view.y, view.m, 1);
-      var startDow = (first.getDay() + 6) % 7;            // Mon = 0
+      var startDow = (first.getDay() + 6) % 7;
       var days = new Date(view.y, view.m + 1, 0).getDate();
       var t = todayParts();
       var cells = "";
@@ -94,10 +87,7 @@
 
       pop.querySelectorAll(".dp-mv").forEach(function (b) {
         b.onclick = function (e) {
-          /* Đổi tháng vẽ lại innerHTML của popup, gỡ luôn nút vừa bấm khỏi DOM.
-             Sự kiện click nổi lên document lúc đó thấy target "không nằm trong
-             popup" nên tưởng bấm ra ngoài và đóng lịch — chặn nổi bọt ở đây để
-             lịch ở nguyên khi lật qua tháng mới. */
+
           if (e) { e.preventDefault(); e.stopPropagation(); }
           view.m += +b.dataset.mv;
           if (view.m < 0) { view.m = 11; view.y--; }
@@ -123,7 +113,7 @@
     }
 
     btn.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); open(); });
-    /* Mở lịch của ta thay cho bộ chọn gốc khi bấm vào chính ô ngày. */
+
     input.addEventListener("mousedown", function (e) { e.preventDefault(); });
     input.addEventListener("focus", open);
   }
