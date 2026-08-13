@@ -173,6 +173,19 @@
         <button class="chip on" data-af="ALL" onclick="setAF('ALL')">Tất cả</button>
         <button class="chip" data-af="LINKED" onclick="setAF('LINKED')">Đã gắn dự án</button>
         <button class="chip" data-af="FREE" onclick="setAF('FREE')">Chưa có dự án</button>
+        <div class="act-tools" id="actTools" hidden>
+          <div class="act-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="actSearch" type="search" placeholder="Sale, Khách hàng" oninput="setActSearch(this.value)" aria-label="Tìm theo sale hoặc khách hàng">
+          </div>
+          <div class="act-sort" role="group" aria-label="Sắp xếp theo ngày">
+            <span class="act-sort-lbl">Ngày</span>
+            <button type="button" class="act-sort-ar on" id="actSortDesc" onclick="setActSort('desc')" title="Gần nhất trước" aria-label="Gần nhất trước">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
+            <button type="button" class="act-sort-ar" id="actSortAsc" onclick="setActSort('asc')" title="Xa nhất trước" aria-label="Xa nhất trước">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+          </div>
+        </div>
       </div>
       <div class="major glass"><div id="actRows"></div></div>
     </section>
@@ -273,7 +286,7 @@
       <div class="field full"><label>Người liên quan đến dự án</label>
         <div class="tags" id="relTags"><select id="f-rel" onchange="addRel()"></select></div></div>
       <div class="field full"><label>Cập nhật tình hình</label>
-        <textarea id="f-desc" rows="3" placeholder="Vd: Khách đang thử mẫu, chờ phản hồi tuần sau…"></textarea></div>
+        <textarea id="f-desc" rows="3" placeholder="Cập nhật tình hình…"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeForm()">Huỷ</button>
@@ -355,7 +368,7 @@
         </div>
       </div>
       <div class="field"><label>Lý do / ghi chú <span class="req">*</span></label>
-        <textarea id="c-reason" rows="3" placeholder="Vd: Giá cao hơn đối thủ, khách chọn Cargill…"></textarea></div>
+        <textarea id="c-reason" rows="3" placeholder="Lý do đóng dự án…"></textarea></div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeCloseModal()">Huỷ</button>
@@ -381,8 +394,8 @@
       <div class="field"><label>Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
       <div class="field"><label>Ngày</label><input type="date" id="a-date"></div>
       <div class="field"><label>Mức độ quan tâm</label><select id="a-pot"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
-      <div class="field full"><label>Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Vd: Giới thiệu giải pháp thay thế CMC, chốt lịch gửi mẫu…"></textarea></div>
-      <div class="field full"><label>Hành động</label><input id="a-next" placeholder="Vd: Gửi mẫu 200g tuần sau"></div>
+      <div class="field full"><label>Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Mục tiêu buổi làm việc…"></textarea></div>
+      <div class="field full"><label>Hành động</label><input id="a-next" placeholder="Bước tiếp theo…"></div>
       <div class="field full"><label>Người liên quan <span class="lbl-hint">hoạt động sẽ vào kế hoạch tuần &amp; báo cáo của họ</span></label>
         <div class="tags" id="a-relTags"><select id="a-rel" onchange="aAddRel()"></select></div></div>
       <div class="field full"><label>Gắn vào dự án đang chạy</label><select id="a-proj"></select></div>

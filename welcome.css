@@ -189,8 +189,10 @@
   letter-spacing:-.02em;text-wrap:balance}
 .rp-meta{font-size:12px;color:var(--text-3);margin-top:4px;font-variant-numeric:tabular-nums}
 .rp-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 4px}
-.rp-charts--single{grid-template-columns:minmax(0,440px);justify-content:center}
-.rp-charts--single .rp-chart{margin:0 auto;width:100%}
+.rp-charts--single{grid-template-columns:1fr}
+.rp-charts--single .rp-chart{display:flex;flex-direction:column;align-items:center;text-align:center;width:100%}
+.rp-charts--single .rp-chart h4{align-self:stretch;text-align:center}
+.rp-charts--single .rp-chart .legend{flex:none;width:auto;min-width:0;max-width:520px;align-items:center}
 .rp-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .rp-export{display:inline-flex;align-items:center;gap:7px}
 .rp-chart{border:1px solid var(--line-2);border-radius:10px;padding:13px}

@@ -160,12 +160,10 @@ function rpRenderPanel(list){
       <div class="rp-chart">
         <h4>Phân loại hoạt động</h4>
         <div id="rpChart1"></div><div class="legend" id="rpLeg1"></div>
-        <p class="rp-sum" id="rpSum1"></p>
       </div>
       ${hasProj ? `<div class="rp-chart">
         <h4>Dự án đang chạy theo giai đoạn</h4>
         <div id="rpChart2"></div><div class="legend" id="rpLeg2"></div>
-        <p class="rp-sum" id="rpSum2"></p>
       </div>` : ''}
     </div>
 
@@ -191,8 +189,7 @@ function rpRenderPanel(list){
     <div class="rp-field">
       <label for="rpNote">Nội dung báo cáo</label>
       ${draft
-        ? `<textarea id="rpNote" placeholder="Vd: Tuần này tập trung nhóm DAIRY, hai khách hẹn thử mẫu tuần sau…"></textarea>
-           <p class="hint">Nhận xét gửi kèm số liệu ở trên. Số liệu được chốt tại thời điểm gửi.</p>`
+        ? `<textarea id="rpNote" placeholder="Nội dung báo cáo tuần…"></textarea>`
         : `<div class="rp-sum" style="font-size:13px;color:var(--text-2)">${ckEsc(r.note || 'Không có nhận xét.')}</div>`}
     </div>
 

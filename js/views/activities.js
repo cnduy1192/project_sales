@@ -3,11 +3,35 @@ function setAF(f){actFilter=f;document.querySelectorAll('.chip[data-af]').forEac
 function actsOfProject(id){
   return scopeActs(ACTIVITIES.filter(a=>a.projectId===id), me, scopeRecords(RECORDS, me));
 }
+var actSearch='';
+var actSort='desc';
+function actToolsAllowed(){ return !!(me && (me.role==='manager' || me.role==='superadmin')); }
+function actSyncTools(){
+  const tools=document.getElementById('actTools');
+  if(tools) tools.hidden=!actToolsAllowed();
+  const d=document.getElementById('actSortDesc'), a=document.getElementById('actSortAsc');
+  if(d) d.classList.toggle('on', actSort==='desc');
+  if(a) a.classList.toggle('on', actSort==='asc');
+}
+function setActSearch(v){ actSearch=String(v||'').trim().toLowerCase(); renderActs(); }
+function setActSort(dir){ actSort=(dir==='asc'?'asc':'desc'); actSyncTools(); renderActs(); }
+window.setActSearch=setActSearch; window.setActSort=setActSort;
 function renderActs(){
   const box=document.getElementById('actRows'); if(!box)return;
+  actSyncTools();
   let rows=visibleActs();
   if(actFilter==='LINKED')rows=rows.filter(a=>a.projectId);
   if(actFilter==='FREE')rows=rows.filter(a=>!a.projectId);
+  if(actToolsAllowed() && actSearch){
+    rows=rows.filter(a=>{
+      const hay=((a.customer||'')+' '+(a.pic||'')+' '+(typeof picLabel==='function'?picLabel(a.pic):'')).toLowerCase();
+      return hay.indexOf(actSearch)>=0;
+    });
+  }
+  rows=rows.slice().sort((x,y)=>{
+    const dx=+new Date(x.date)||0, dy=+new Date(y.date)||0;
+    return actSort==='asc' ? dx-dy : dy-dx;
+  });
   rows=rows.slice(0,120);
   if(!rows.length){box.innerHTML='<div class="empty"><b>Chưa có hoạt động nào</b>Bấm "Ghi hoạt động" để bắt đầu.</div>';return;}
   box.innerHTML=rows.map(a=>{

@@ -238,7 +238,7 @@ function cuOpenEdit(name){
       <div class="cu-form">
         ${!canEdit ? '<div class="cu-readonly">Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.</div>' : ''}
         <label><span class="cu-cap">Tên hiển thị <span class="req">*</span></span>
-          <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="VD: Acecook" ${dis}></label>
+          <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="Tên khách hàng…" ${dis}></label>
         <label><span class="cu-cap">Tên pháp nhân</span>
           <input id="cuf-legal" value="${ckEsc(v.legal||'')}" placeholder="Tên đầy đủ trên giấy phép" ${dis}></label>
         <label><span class="cu-cap">Người phụ trách</span> ${ownerField}</label>
