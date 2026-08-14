@@ -811,7 +811,7 @@
       try { snap = JSON.parse(txtOf(gr, f, "StatsJson") || "{}"); } catch (e) { snap = {}; }
       const pic = txt(f.PICName) || txtOf(gr, f, "PICName");
       REPORTS.push({
-        id: code, spId: it.id, pic: pic,
+        id: String(it.id), code: code, spId: it.id, pic: pic,
         picLabel: (typeof picLabel === "function") ? picLabel(pic) : pic,
         weekLabel: txtOf(gr, f, "WeekLabel") || (snap.weekLabel || ""),
         createdAt: (txtOf(gr, f, "ReportDate") || "").slice(0, 10) || snap.createdAt || "",
@@ -846,9 +846,9 @@
     set("StatsJson", JSON.stringify(snap));
     set("Recipients", (report.to || []).join(", "));
     warnMissing("Reports", miss);
-    await FISG_GRAPH.createItem("Reports", f);
+    const it = await FISG_GRAPH.createItem("Reports", f);
     try { await loadReports(); } catch (e) {}
-    return code;
+    return String(it.id);
   }
 
   async function addReportComment(reportCode, text, by, role) {

@@ -64,6 +64,12 @@
 .wc-week{
   display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:18px 0 0;
   border:1px solid var(--line-2);border-radius:10px;padding:10px;background:var(--pearl-2)}
+.wc-nextwk{margin-top:14px}
+.wc-nextwk .wc-week{margin-top:7px}
+.wc-nextwk-h{display:flex;gap:8px;align-items:baseline;margin:0 2px;
+  font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text-3)}
+.wc-nextwk-h span{font-size:12px;font-weight:600;color:var(--marine-label);text-transform:none;letter-spacing:0;
+  font-variant-numeric:tabular-nums}
 .wc-day{
   display:block;width:100%;font:inherit;cursor:pointer;
   text-align:center;padding:7px 4px 8px;border-radius:8px;background:transparent;

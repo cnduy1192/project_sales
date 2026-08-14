@@ -253,9 +253,10 @@ function rpPostComment(code){
   if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
 
   const by = (me && (me.pic || me.name)) || '';
+  const linkCode = r.code || r.id;
   r.comments = (r.comments || []).concat([{ by:by, role:me.role, at:todayISO(), text:text }]);
   renderReports();
-  FISG_STORE.addReportComment(code, text, by, me.role).then(()=>{
+  FISG_STORE.addReportComment(linkCode, text, by, me.role).then(()=>{
     if(window.refreshNotifs) refreshNotifs();
     renderReports();
     toast('Đã gửi phản hồi.');
@@ -320,7 +321,7 @@ function sendReport(){
   const note = (document.getElementById('rpNote')||{}).value || '';
   rpDraft.note = note.trim();
   rpDraft.to = (window.reportRecipients ? reportRecipients(me) : managerNames());
-  if(!rpDraft.id) rpDraft.id = (window.LS && LS.nextReportId) ? LS.nextReportId() : ('R-'+Date.now().toString(36).toUpperCase());
+  if(!rpDraft.id) rpDraft.id = 'R-' + Date.now().toString(36).toUpperCase() + '-' + Math.floor(Math.random()*46656).toString(36).toUpperCase();
   rpDraft.createdAt = rpDraft.createdAt || todayISO();
 
   const draft = rpDraft;
@@ -329,12 +330,12 @@ function sendReport(){
   if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite()){
     const btn = document.querySelector('.rp-send .btn-primary');
     if(btn){ btn.disabled = true; btn.textContent = 'Đang gửi…'; }
-    FISG_STORE.sendReportToSP(draft).then(code=>{
+    FISG_STORE.sendReportToSP(draft).then(newId=>{
       if(pend.length && window.FISG_ATTACH)
-        FISG_ATTACH.uploadFiles('report', code, { pic:draft.pic, date:draft.createdAt }, pend)
+        FISG_ATTACH.uploadFiles('report', newId, { pic:draft.pic, date:draft.createdAt }, pend)
           .then(function(){ if(window.loadAttachments) return FISG_STORE.loadAttachments(); })
           .then(function(){ renderReports(); });
-      rpDraft = null; rpSel = code;
+      rpDraft = null; rpSel = newId;
       if(window.refreshNotifs) refreshNotifs();
       renderReports();
       toast('Đã gửi báo cáo tuần ' + draft.weekLabel + '.');

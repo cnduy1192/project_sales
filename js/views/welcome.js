@@ -82,6 +82,7 @@ function renderWelcome(){
   wcRenderModeChip(mode);
 
   wcRenderWeek(mw);
+  wcRenderNextWeek(pic);
   wcRenderStats(mw);
 
   const body = document.getElementById('wcBody');
@@ -111,7 +112,7 @@ function wcRenderModeChip(mode){
     ' — ' + m.sub + '. Bấm để chuyển chế độ xem thử.');
 }
 
-function wcRenderWeek(mw){
+function wcWeekStripHtml(mw){
   const T = todayISO();
   const bucket = {};
   const put = (a, cls) => {
@@ -141,7 +142,19 @@ function wcRenderWeek(mw){
         dots.length > 5 ? `<i class="wc-kg">+${dots.length-5}</i>` : ''}</span>
     </button>`;
   }
-  document.getElementById('wcWeek').innerHTML = html;
+  return html;
+}
+function wcRenderWeek(mw){
+  document.getElementById('wcWeek').innerHTML = wcWeekStripHtml(mw);
+}
+function wcRenderNextWeek(pic){
+  const box = document.getElementById('wcWeekNext'); if(!box) return;
+  const cur = thisWeek();
+  const d = new Date(cur.start); d.setDate(d.getDate() + 7);
+  const mw2 = buildMyWeek(pic, isoOf(d));
+  box.innerHTML = wcWeekStripHtml(mw2);
+  const lbl = document.getElementById('wcNextLabel');
+  if(lbl) lbl.textContent = ' ' + mw2.label;
 }
 
 function wcDayMenu(ev, iso){

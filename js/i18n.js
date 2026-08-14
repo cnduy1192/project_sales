@@ -191,6 +191,7 @@
     "Kế hoạch chưa hoàn thành": "Unfinished plans", "Nội dung báo cáo": "Report content",
     "— Chưa giao —": "— Unassigned —",
     "Sale, Khách hàng": "Sales, Customer", "Gần nhất trước": "Newest first", "Xa nhất trước": "Oldest first",
+    "Tuần kế tiếp": "Next week",
     "Nội dung báo cáo tuần…": "Weekly report content…", "Tên khách hàng…": "Customer name…",
     "Cập nhật tình hình…": "Status update…", "Lý do đóng dự án…": "Reason for closing…",
     "Mục tiêu buổi làm việc…": "Meeting objective…", "Bước tiếp theo…": "Next step…",
