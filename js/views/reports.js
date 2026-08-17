@@ -190,7 +190,7 @@ function rpRenderPanel(list){
       <label for="rpNote">Nội dung báo cáo</label>
       ${draft
         ? `<textarea id="rpNote" placeholder="Nội dung báo cáo tuần…"></textarea>`
-        : `<div class="rp-sum" style="font-size:13px;color:var(--text-2)">${ckEsc(r.note || 'Không có nhận xét.')}</div>`}
+        : `<div class="rp-note-body">${ckEsc(r.note || 'Không có nội dung.')}</div>`}
     </div>
 
     <div class="att-box" id="rp-attach"></div>
