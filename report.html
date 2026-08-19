@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Báo cáo tuần — Quản lý · FI SAIGON</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="report.css" />
+</head>
+<body>
+  <div class="rpx" id="rpxRoot">
+    <!-- Thanh trên -->
+    <header class="rpx-top">
+      <div class="rpx-brand">
+        <span class="rpx-logo">FS</span>
+        <div class="rpx-title">
+          <b>Báo cáo tuần — Toàn đội</b>
+          <small>FI SAIGON JSC · Trang dành cho quản lý</small>
+        </div>
+      </div>
+      <div class="rpx-user" id="rpxUser" hidden>
+        <div class="rpx-user-meta">
+          <b id="rpxUserName">—</b>
+          <small id="rpxUserRole">—</small>
+        </div>
+        <button class="rpx-btn-ghost" id="rpxSignOut" type="button">Đăng xuất</button>
+      </div>
+    </header>
+
+    <!-- Các trạng thái toàn trang -->
+    <main class="rpx-main">
+      <!-- Đang tải -->
+      <section class="rpx-state" id="rpxLoading">
+        <div class="rpx-spin" aria-hidden="true"></div>
+        <p id="rpxLoadingMsg">Đang tải…</p>
+      </section>
+
+      <!-- Cần đăng nhập -->
+      <section class="rpx-state" id="rpxSignin" hidden>
+        <div class="rpx-state-card">
+          <h1>Đăng nhập để xem báo cáo</h1>
+          <p>Trang này dành cho cấp quản lý trở lên. Đăng nhập bằng tài khoản
+             Microsoft 365 của công ty để tiếp tục.</p>
+          <button class="rpx-btn-primary" id="rpxSignIn" type="button">
+            Đăng nhập Microsoft
+          </button>
+          <p class="rpx-hint" id="rpxSigninHint"></p>
+        </div>
+      </section>
+
+      <!-- Không có quyền -->
+      <section class="rpx-state" id="rpxDenied" hidden>
+        <div class="rpx-state-card">
+          <h1>Bạn không có quyền xem trang này</h1>
+          <p id="rpxDeniedMsg">Trang báo cáo toàn đội chỉ dành cho Manager, Director
+             hoặc Super Admin.</p>
+          <button class="rpx-btn-ghost" id="rpxDeniedSignOut" type="button">
+            Đăng nhập tài khoản khác
+          </button>
+        </div>
+      </section>
+
+      <!-- Nội dung chính -->
+      <section class="rpx-portal" id="rpxPortal" hidden>
+        <!-- Cột trái -->
+        <aside class="rpx-list-col">
+          <div class="rpx-filters">
+            <label class="rpx-field">
+              <span>Sales</span>
+              <select id="rpxFilterPic"><option value="">Tất cả sales</option></select>
+            </label>
+            <label class="rpx-field">
+              <span>Tuần</span>
+              <select id="rpxFilterWeek"><option value="">Tất cả tuần</option></select>
+            </label>
+          </div>
+          <div class="rpx-list" id="rpxList" role="list"></div>
+        </aside>
+
+        <!-- Cột phải -->
+        <div class="rpx-detail" id="rpxDetail"></div>
+      </section>
+    </main>
+
+    <footer class="rpx-foot">
+      <span>FI SAIGON — Sales Funnel · Báo cáo tuần</span>
+    </footer>
+  </div>
+
+  <!-- Thư viện ngoài -->
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Module tái dùng của app (không sửa) -->
+  <script src="js/sp-config.js"></script>
+  <script src="js/lib/roles.js"></script>
+  <script src="js/graph.js"></script>
+
+  <!-- Riêng cho trang này -->
+  <script src="js/report/report-auth.js"></script>
+  <script src="js/report/report-page.js"></script>
+</body>
+</html>
