@@ -827,10 +827,23 @@
     return REPORTS.length;
   }
 
+  // Sinh mã báo cáo tăng dần dựa trên list Reports trên SharePoint (không dựa vào
+  // localStorage — vì bản gửi lên SP không lưu local nên LS.nextReportId luôn ra R-0001).
+  function nextReportCode() {
+    let n = 0;
+    (REPORTS || []).forEach(r => {
+      const m = /^R-0*(\d+)$/.exec(r.code || r.id || "");
+      if (m) n = Math.max(n, +m[1]);
+    });
+    return "R-" + String(n + 1).padStart(4, "0");
+  }
+
   async function sendReportToSP(report) {
     if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
     const get = await schemaOf("Reports");
-    const code = report.id || ("R-" + Date.now().toString(36).toUpperCase());
+    // Lấy danh sách mới nhất rồi sinh mã kế tiếp để tránh trùng (R-0001, R-0002, …).
+    try { await loadReports(); } catch (e) {}
+    const code = nextReportCode();
     const snap = {
       weekLabel: report.weekLabel, createdAt: report.createdAt || todayISO(),
       stats: report.stats, doneActs: report.doneActs || [],

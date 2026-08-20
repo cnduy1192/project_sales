@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Báo cáo tuần — Quản lý · FI SAIGON</title>
+  <title>Báo cáo tuần · FI SAIGON</title>
   <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="report.css" />
 </head>
 <body>
@@ -12,10 +15,10 @@
     <!-- Thanh trên -->
     <header class="rpx-top">
       <div class="rpx-brand">
-        <span class="rpx-logo">FS</span>
+        <span class="rpx-logo">FIS</span>
         <div class="rpx-title">
-          <b>Báo cáo tuần — Toàn đội</b>
-          <small>FI SAIGON JSC · Trang dành cho quản lý</small>
+          <b>Báo cáo tuần</b>
+          <small>FI SAIGON JSC</small>
         </div>
       </div>
       <div class="rpx-user" id="rpxUser" hidden>
@@ -38,9 +41,7 @@
       <!-- Cần đăng nhập -->
       <section class="rpx-state" id="rpxSignin" hidden>
         <div class="rpx-state-card">
-          <h1>Đăng nhập để xem báo cáo</h1>
-          <p>Trang này dành cho cấp quản lý trở lên. Đăng nhập bằng tài khoản
-             Microsoft 365 của công ty để tiếp tục.</p>
+          <h1>Đăng nhập để xem báo cáo</h1>      
           <button class="rpx-btn-primary" id="rpxSignIn" type="button">
             Đăng nhập Microsoft
           </button>
@@ -52,8 +53,7 @@
       <section class="rpx-state" id="rpxDenied" hidden>
         <div class="rpx-state-card">
           <h1>Bạn không có quyền xem trang này</h1>
-          <p id="rpxDeniedMsg">Trang báo cáo toàn đội chỉ dành cho Manager, Director
-             hoặc Super Admin.</p>
+          <p id="rpxDeniedMsg">Liên hệ với Administrator.</p>
           <button class="rpx-btn-ghost" id="rpxDeniedSignOut" type="button">
             Đăng nhập tài khoản khác
           </button>
@@ -62,6 +62,8 @@
 
       <!-- Nội dung chính -->
       <section class="rpx-portal" id="rpxPortal" hidden>
+        <!-- Dải tóm tắt nộp báo cáo tuần này (span cả 2 cột) -->
+        <div class="rpx-summary" id="rpxSummary" hidden></div>
         <!-- Cột trái -->
         <aside class="rpx-list-col">
           <div class="rpx-filters">
@@ -87,9 +89,9 @@
     </footer>
   </div>
 
-  <!-- Thư viện ngoài -->
-  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Thư viện ngoài (giống app chính: jsdelivr + fallback unpkg) -->
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/@azure/msal-browser@3/lib/msal-browser.min.js';document.head.appendChild(s);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <!-- Module tái dùng của app (không sửa) -->

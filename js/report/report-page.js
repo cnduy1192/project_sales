@@ -12,8 +12,11 @@
                       AuthorRole: "Vai trò", CommentDate: "Ngày", Content: "Nội dung" },
     Users: { Email: "Email", PICName: "Tên PIC", Role: "Vai trò",
              FullName: "Tên đầy đủ", ReportsTo: "Báo cáo cho", Supports: "Hỗ trợ sales" },
+    Attachments: { ParentType: "Loại", ParentId: "Mã tham chiếu", FileName: "Tên tệp",
+                   FileType: "Định dạng", Size: "Kích thước", WebUrl: "Đường dẫn",
+                   PICName: "Người tải", UploadDate: "Ngày tải" },
   };
-  const DONUT = ['#01426A', '#0E7490', '#B45309', '#6D28D9', '#0D9488', '#DB2777', '#157F3C'];
+  const DONUT = ['#1E3A8A', '#0E7490', '#F59E0B', '#7C3AED', '#0D9488', '#DB2777', '#B45309', '#059669'];
 
   /* ---------- Tiện ích ---------- */
   function esc(s) {
@@ -39,6 +42,16 @@
   }
   function firstAlias(s) {
     return String(s == null ? "" : s).split(/[,;|]/).map(x => x.trim()).filter(Boolean)[0] || "";
+  }
+  function fmtSize(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + " B";
+    if (n < 1048576) return Math.round(n / 1024) + " KB";
+    return (n / 1048576).toFixed(1) + " MB";
+  }
+  function extOf(name, type) {
+    if (type) return String(type).toUpperCase();
+    const m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toUpperCase() : "TỆP";
   }
   function roleKey(raw) {
     const r = (typeof roleFromText === "function" && roleFromText(raw)) || "";
@@ -69,8 +82,20 @@
   }
 
   /* ---------- Trạng thái ---------- */
-  const S = { me: null, reports: [], filterPic: "", filterWeek: "", selId: null };
+  const S = { me: null, users: [], reports: [], attachments: [], filterPic: "", filterWeek: "",
+              selUid: null, expanded: new Set() };
   let chart = null;
+
+  /* Nhãn tuần theo lịch (Thứ Hai → Chủ Nhật), khớp định dạng của app: "17/08 – 23/08/2026". */
+  function weekLabelOf(d) {
+    const dow = d.getDay(), back = dow === 0 ? 6 : dow - 1;
+    const s = new Date(d); s.setDate(s.getDate() - back);
+    const e = new Date(s); e.setDate(e.getDate() + 6);
+    const p = n => String(n).padStart(2, "0");
+    return p(s.getDate()) + "/" + p(s.getMonth() + 1) + " – " +
+           p(e.getDate()) + "/" + p(e.getMonth() + 1) + "/" + e.getFullYear();
+  }
+  const CURRENT_WEEK = weekLabelOf(new Date());
 
   /* ---------- Chuyển trạng thái toàn trang ---------- */
   const PANES = ["rpxLoading", "rpxSignin", "rpxDenied", "rpxPortal"];
@@ -122,21 +147,23 @@
     if (r) r.textContent = roleVI(me.role);
   }
 
-  /* ---------- Tra Users để biết vai trò người đăng nhập ---------- */
+  /* ---------- Tra Users: giữ toàn bộ danh bạ + tìm người đăng nhập ---------- */
   async function resolveMe(account) {
     const mail = String((account && account.username) || "").toLowerCase();
     const [cols, items] = await Promise.all([
       FISG_GRAPH.columns("Users"), FISG_GRAPH.listItems("Users"),
     ]);
     const g = makeGetter(cols, LABELS.Users);
-    for (const it of items) {
+    S.users = items.map(it => {
       const f = it.fields || {};
       const email = (g(f, "Email") || txt(f.Title)).toLowerCase();
-      if (email !== mail) continue;
-      const pic = g(f, "FullName") || firstAlias(g(f, "PICName")) || (account && account.name) || email;
-      return { email, pic, role: roleKey(g(f, "Role")), name: (account && account.name) || pic };
-    }
-    return null;
+      const pic = g(f, "FullName") || firstAlias(g(f, "PICName")) || email;
+      return { email, pic, role: roleKey(g(f, "Role")) };
+    }).filter(u => u.email);
+    const meRow = S.users.find(u => u.email === mail);
+    if (!meRow) return null;
+    return { email: meRow.email, pic: (account && account.name) || meRow.pic,
+             role: meRow.role, name: (account && account.name) || meRow.pic };
   }
 
   /* ---------- Đọc Reports + ReportComments ---------- */
@@ -167,6 +194,24 @@
     Object.keys(byCode).forEach(k =>
       byCode[k].sort((a, b) => (a.at || "").localeCompare(b.at || "")));
 
+    // Tệp đính kèm (không bắt buộc — nếu thiếu list thì bỏ qua).
+    try {
+      const [aCols, aItems] = await Promise.all([
+        FISG_GRAPH.columns("Attachments"), FISG_GRAPH.listItems("Attachments"),
+      ]);
+      const ga = makeGetter(aCols, LABELS.Attachments);
+      S.attachments = aItems.map(it => {
+        const f = it.fields || {};
+        return {
+          parentType: ga(f, "ParentType"), parentId: ga(f, "ParentId"),
+          fileName: ga(f, "FileName") || txt(f.Title),
+          fileType: ga(f, "FileType"), size: Number(ga(f, "Size")) || 0,
+          webUrl: ga(f, "WebUrl"), by: ga(f, "PICName"),
+          at: (ga(f, "UploadDate") || "").slice(0, 10),
+        };
+      });
+    } catch (e) { S.attachments = []; }
+
     S.reports = rItems.map(it => {
       const f = it.fields || {};
       const code = txt(f.Title);
@@ -174,6 +219,7 @@
       try { snap = JSON.parse(gr(f, "StatsJson") || "{}"); } catch (e) { snap = {}; }
       const pic = gr(f, "PICName") || "";
       return {
+        uid: String(it.id), // khoá duy nhất trên SharePoint — dùng để chọn dòng
         id: code || String(it.id), code: code || String(it.id),
         pic, picLabel: pic,
         weekLabel: gr(f, "WeekLabel") || snap.weekLabel || "",
@@ -190,14 +236,75 @@
   /* ---------- Vào cổng chính ---------- */
   function enterPortal() {
     renderFilters();
-    // Deep-link ?id=
+    // Mặc định mở tuần hiện tại (và tuần có báo cáo mới nhất nếu khác).
+    S.expanded.add(CURRENT_WEEK);
+    if (S.reports[0]) S.expanded.add(S.reports[0].weekLabel);
+    // Deep-link ?id= (khớp theo mã báo cáo, chọn theo khoá duy nhất)
     const want = new URLSearchParams(location.search).get("id");
-    if (want && S.reports.some(r => r.code === want)) S.selId = want;
-    else if (want) toast("Không tìm thấy báo cáo — hiển thị tất cả.");
+    if (want) {
+      const hit = S.reports.find(r => r.code === want);
+      if (hit) { S.selUid = hit.uid; S.expanded.add(hit.weekLabel); }
+      else toast("Không tìm thấy báo cáo — hiển thị tất cả.");
+    }
     show("rpxPortal");
+    wireList();
+    renderSummary();
     renderList();
     renderDetail();
     wireStaticButtons();
+  }
+
+  /* ---------- Tóm tắt nộp báo cáo tuần này ---------- */
+  function fieldTeam() {
+    // Đội cần nộp báo cáo tuần: Sales + R&D (báo cáo lên Manager) và Manager
+    // (báo cáo lên Director). Không tính Sale Support / Director / Super Admin.
+    const KIND = { sales: 1, rnd: 1, manager: 1 };
+    const seen = {}, out = [];
+    S.users.forEach(u => {
+      if (!KIND[u.role] || !u.pic) return;
+      const k = picKey(u.pic);
+      if (!seen[k]) { seen[k] = 1; out.push(u.pic); }
+    });
+    return out;
+  }
+  function renderSummary() {
+    const box = document.getElementById("rpxSummary");
+    if (!box) return;
+    const team = fieldTeam();
+    const submitted = new Set(
+      S.reports.filter(r => r.weekLabel === CURRENT_WEEK).map(r => picKey(r.pic)));
+    const done = team.filter(p => submitted.has(picKey(p)));
+    const miss = team.filter(p => !submitted.has(picKey(p)));
+    const total = team.length;
+    const pct = total ? Math.round((done.length / total) * 100) : 0;
+    if (!total) { box.innerHTML = ""; box.hidden = true; return; }
+    box.hidden = false;
+    const chips = miss.slice(0, 6).map(p => `<span class="rpx-chip">${esc(p)}</span>`).join("") +
+      (miss.length > 6 ? `<span class="rpx-chip more" data-more="1">+${miss.length - 6}</span>` : "");
+    box.innerHTML = `
+      <div class="rpx-sum-head">
+        <div><span class="rpx-sum-k">Gửi báo cáo · tuần ${esc(CURRENT_WEEK)}</span>
+          <b class="rpx-sum-n"><em>${done.length}</em>/${total} đã gửi</b></div>
+        <div class="rpx-sum-badges">
+          <span class="rpx-sum-pill done">${done.length} đã gửi</span>
+          <span class="rpx-sum-pill miss">${miss.length} chưa gửi</span>
+        </div>
+      </div>
+      <div class="rpx-sum-bar"><i style="width:${pct}%"></i></div>
+      ${miss.length ? `<div class="rpx-sum-miss"><span>Chưa gửi:</span>${chips}</div>`
+                    : `<div class="rpx-sum-miss ok">Cả đội đã gửi đủ tuần này.</div>`}`;
+    const more = box.querySelector(".rpx-chip.more");
+    if (more) more.addEventListener("click", () => toast("Chưa gửi: " + miss.join(", ")));
+  }
+
+  function currentGroups(list) {
+    const order = [], map = {};
+    list.forEach(r => {
+      const w = r.weekLabel || "(không rõ tuần)";
+      if (!map[w]) { map[w] = []; order.push(w); }
+      map[w].push(r);
+    });
+    return order.map(w => ({ week: w, items: map[w] }));
   }
 
   function filtered() {
@@ -215,15 +322,25 @@
       selP.innerHTML = '<option value="">Tất cả sales</option>' +
         pics.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
       selP.value = S.filterPic;
-      selP.onchange = () => { S.filterPic = selP.value; S.selId = null; renderList(); renderDetail(); };
+      selP.onchange = () => { S.filterPic = selP.value; S.selUid = null; renderList(); renderDetail(); };
     }
     if (selW) {
       const weeks = Array.from(new Set(S.reports.map(r => r.weekLabel).filter(Boolean)));
       selW.innerHTML = '<option value="">Tất cả tuần</option>' +
         weeks.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("");
       selW.value = S.filterWeek;
-      selW.onchange = () => { S.filterWeek = selW.value; S.selId = null; renderList(); renderDetail(); };
+      selW.onchange = () => { S.filterWeek = selW.value; S.selUid = null; renderList(); renderDetail(); };
     }
+  }
+
+  function rowHtml(r) {
+    const nc = (r.comments || []).length;
+    return `<button class="rpx-row${S.selUid === r.uid ? " on" : ""}" role="listitem"
+      type="button" data-uid="${esc(r.uid)}" title="${esc(r.picLabel)} — ${esc(r.createdAt)}">
+      <span class="rpx-row-name">${esc(r.picLabel)}</span>
+      ${nc ? `<span class="rpx-row-cc" title="${nc} phản hồi">${nc}</span>` : ""}
+      <span class="rpx-row-date">${vn(r.createdAt)}</span>
+    </button>`;
   }
 
   function renderList() {
@@ -234,24 +351,47 @@
         <p>Không có báo cáo khớp bộ lọc hiện tại.</p></div>`;
       return;
     }
-    box.innerHTML = list.map(r => {
-      const nc = (r.comments || []).length;
-      const s = r.stats || {};
-      return `<button class="rpx-row${S.selId === r.code ? " on" : ""}" role="listitem"
-        type="button" data-id="${esc(r.code)}">
-        <b>${esc(r.picLabel)} — tuần ${esc(r.weekLabel)}</b>
-        <span class="rpx-row-w">${vn(r.createdAt)}${nc ? ` · <span class="rpx-cc">${nc} phản hồi</span>` : ""}</span>
-        <span class="rpx-row-s">${s.done || 0} đã làm · ${s.missed || 0} chưa xong · ${s.changes || 0} thay đổi</span>
-      </button>`;
+    // Lọc theo một tuần cụ thể → danh sách phẳng. "Tất cả tuần" → gom nhóm accordion.
+    if (S.filterWeek) { box.innerHTML = list.map(rowHtml).join(""); return; }
+
+    box.innerHTML = currentGroups(list).map(g => {
+      const open = S.expanded.has(g.week);
+      const now = g.week === CURRENT_WEEK;
+      return `<div class="rpx-wk${open ? " open" : ""}${now ? " now" : ""}">
+        <button class="rpx-wk-head" type="button" data-week="${esc(g.week)}" aria-expanded="${open}">
+          <svg class="rpx-wk-chev" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="rpx-wk-label">Tuần ${esc(g.week)}</span>
+          ${now ? '<span class="rpx-wk-now-tag">Tuần này</span>' : ""}
+          <span class="rpx-wk-count">${g.items.length}</span>
+        </button>
+        ${open ? `<div class="rpx-wk-body">${g.items.map(rowHtml).join("")}</div>` : ""}
+      </div>`;
     }).join("");
-    box.querySelectorAll(".rpx-row").forEach(b =>
-      b.addEventListener("click", () => selectReport(b.dataset.id)));
   }
 
-  function selectReport(id) {
-    S.selId = id;
+  let listWired = false;
+  function wireList() {
+    if (listWired) return; listWired = true;
+    const box = document.getElementById("rpxList");
+    box.addEventListener("click", e => {
+      const head = e.target.closest(".rpx-wk-head");
+      if (head) { toggleWeek(head.dataset.week); return; }
+      const row = e.target.closest(".rpx-row");
+      if (row) selectReport(row.dataset.uid);
+    });
+  }
+
+  function toggleWeek(week) {
+    if (S.expanded.has(week)) S.expanded.delete(week); else S.expanded.add(week);
+    renderList();
+  }
+
+  function selectReport(uid) {
+    S.selUid = uid;
+    const r = S.reports.find(x => x.uid === uid);
     const u = new URL(location.href);
-    if (id) u.searchParams.set("id", id); else u.searchParams.delete("id");
+    if (r) u.searchParams.set("id", r.code); else u.searchParams.delete("id");
     history.replaceState(null, "", u);
     renderList();
     renderDetail();
@@ -259,7 +399,7 @@
 
   function renderDetail() {
     const box = document.getElementById("rpxDetail");
-    const r = filtered().find(x => x.code === S.selId) || S.reports.find(x => x.code === S.selId);
+    const r = S.reports.find(x => x.uid === S.selUid);
     if (chart) { try { chart.destroy(); } catch (e) {} chart = null; }
 
     if (!r) {
@@ -275,11 +415,14 @@
       ${items.length ? items.map(render).join("") : '<div class="rpx-muted">Không có mục nào.</div>'}</div>`;
 
     box.innerHTML = `
-      <h2>${esc(r.picLabel)} — tuần ${esc(r.weekLabel)}</h2>
-      <div class="rpx-meta">Đã gửi ${vn(r.createdAt)} · Mã ${esc(r.code)}</div>
-
-      <div class="rpx-actions">
-        <button class="rpx-btn-ghost" id="rpxExport" type="button">Xuất Excel</button>
+      <div class="rpx-detail-head">
+        <div>
+          <h2>${esc(r.picLabel)} — tuần ${esc(r.weekLabel)}</h2>
+          <div class="rpx-meta">Đã gửi ${vn(r.createdAt)} · Mã ${esc(r.code)}</div>
+        </div>
+        <button class="rpx-btn-ghost" id="rpxExport" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          Xuất Excel</button>
       </div>
 
       <div class="rpx-stats">
@@ -319,6 +462,7 @@
         <div class="rpx-note">${esc(r.note || "Không có nội dung.")}</div>
       </div>
 
+      ${attachHtml(r)}
       ${threadHtml(r)}`;
 
     drawChart(r);
@@ -326,6 +470,23 @@
     if (exp) exp.addEventListener("click", () => exportExcel(r));
     const send = document.getElementById("rpxCmtSend");
     if (send) send.addEventListener("click", () => postComment(r));
+  }
+
+  function attachHtml(r) {
+    const list = S.attachments.filter(a =>
+      String(a.parentType).toLowerCase() === "report" && String(a.parentId) === String(r.uid));
+    if (!list.length) return "";
+    return `<div class="rpx-sec">
+      <div class="rpx-sec-h"><h3>Tệp đính kèm</h3><span>${list.length}</span></div>
+      <div class="rpx-att">${list.map(a => `
+        <a class="rpx-att-item" href="${esc(a.webUrl || "#")}" target="_blank" rel="noopener">
+          <span class="rpx-att-ext">${esc(extOf(a.fileName, a.fileType))}</span>
+          <span class="rpx-att-body">
+            <span class="rpx-att-nm">${esc(a.fileName)}</span>
+            <span class="rpx-att-meta">${fmtSize(a.size)}${a.by ? " · " + esc(a.by) : ""}</span>
+          </span>
+        </a>`).join("")}</div>
+    </div>`;
   }
 
   function threadHtml(r) {
