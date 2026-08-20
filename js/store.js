@@ -1406,10 +1406,10 @@
         };
       });
 
-      if (!recs.length) {
-        if (window.toast) toast("SharePoint trả về 0 dự án. Kiểm tra list Projects và quyền truy cập.");
-        return false;
-      }
+      // List Projects trống là hợp lệ (vd. sau khi xoá dữ liệu): KHÔNG dừng ở đây —
+      // vẫn nạp tiếp hoạt động, khách hàng, báo cáo để phần mềm không trắng trơn.
+      if (!recs.length)
+        console.warn("[store] list Projects đang trống — vẫn nạp hoạt động, khách hàng, báo cáo.");
 
       RECORDS.length = 0; recs.forEach(r => RECORDS.push(r));
       ACTIVITIES.length = 0; A.forEach(a => ACTIVITIES.push(a));
