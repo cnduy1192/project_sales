@@ -1,11 +1,11 @@
 var CATALOG = {
 
-  nccs: ["Roquette", "IFF", "Kimica-Navido"],
+  nccs: ["Roquette", "IFF", "Kimica"],
 
   pipelines: {
     "Roquette":      ["SHARED BUSINESS GOAL", "BUILDING A SOLUTION", "SOLUTION TESTING", "OFFER & AGREEMENT"],
     "IFF":           ["LEAD", "SAMPLE SENT", "TESTING", "TEST PASSED", "QUOTED / PO"],
-    "Kimica-Navido": ["LEAD", "SAMPLE SENT", "TESTING", "TEST PASSED", "QUOTED / PO", "POSTPONED"]
+    "Kimica": ["LEAD", "SAMPLE SENT", "TESTING", "TEST PASSED", "QUOTED / PO", "POSTPONED"]
   },
 
   groupOf: {

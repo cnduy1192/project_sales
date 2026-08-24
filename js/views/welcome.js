@@ -58,6 +58,34 @@ window.wcMaybeAutoOpen = wcMaybeAutoOpen;
 function wcSetMode(m){ wcModeOverride = m; renderWelcome(); }
 window.wcSetMode = wcSetMode;
 
+// Thu gọn / mở lại khung lịch để dành chỗ cho danh sách hoạt động.
+function wcCalKey(){ return 'fisg_wc_calmin_' + ((me && me.email) || 'anon'); }
+let wcCalMin = null; // null = chưa nạp; nạp lười theo đúng tài khoản.
+function wcCalMinGet(){
+  if(wcCalMin === null){
+    // Mặc định thu gọn lịch; chỉ mở khi người dùng đã tự chọn mở ('0').
+    try{ wcCalMin = localStorage.getItem(wcCalKey()) !== '0'; }catch(e){ wcCalMin = true; }
+  }
+  return wcCalMin;
+}
+function wcApplyCal(){
+  const cal = document.getElementById('wcCal');
+  const btn = document.getElementById('wcCalToggle');
+  if(!cal || !btn) return;
+  wcCalMinGet();
+  cal.classList.toggle('collapsed', wcCalMin);
+  btn.setAttribute('aria-expanded', wcCalMin ? 'false' : 'true');
+  const lbl = btn.querySelector('span');
+  if(lbl) lbl.textContent = wcCalMin ? 'Hiện lịch tuần' : 'Lịch tuần';
+  btn.setAttribute('title', wcCalMin ? 'Bấm để hiện khung lịch tuần' : 'Bấm để thu gọn khung lịch tuần');
+}
+function wcToggleCal(){
+  wcCalMin = !wcCalMinGet();
+  try{ localStorage.setItem(wcCalKey(), wcCalMin ? '1' : '0'); }catch(e){}
+  wcApplyCal();
+}
+window.wcToggleCal = wcToggleCal;
+
 function wcCycleMode(){
   const real = dayMode(todayISO());
   const order = WC_MODES.map(function(m){ return m.id; });
@@ -84,6 +112,7 @@ function renderWelcome(){
   wcRenderWeek(mw);
   wcRenderNextWeek(pic);
   wcRenderStats(mw);
+  wcApplyCal();
 
   const body = document.getElementById('wcBody');
   body.innerHTML =
@@ -254,6 +283,15 @@ function wcSuggestRow(s){
   </div>`;
 }
 
+// Chọn nút phù hợp cho một hoạt động: đã xong → "Hoàn tác";
+// tới hạn hôm nay hoặc đã qua → "Hoàn thành" ngay; còn ở tương lai → không nút.
+function wcAutoAction(a){
+  if(!wcCanAct()) return null;
+  if(LS.isDone(a)) return 'undo';
+  const d = normDate(a.date);
+  return (d && d <= todayISO()) ? 'done' : null;
+}
+
 function wcActRow(a, action){
   let btn = '';
   if(wcCanAct() && action === 'done')
@@ -300,7 +338,7 @@ function wcBodyStart(mw){
       : wcSection('Việc nên làm tuần này', 0,
           wcEmpty('Không có việc nào nổi lên cần ưu tiên', 'Mở Sales Funnel', 'wcGo(\'funnel\')')))
     + wcSection('Đã có trong lịch tuần này', booked.length,
-        booked.length ? booked.map(a => wcActRow(a, null)).join('')
+        booked.length ? booked.map(a => wcActRow(a, wcAutoAction(a))).join('')
                       : wcEmpty('Tuần này chưa có gì trong lịch',
                           wcCanAct() ? 'Ghi hoạt động mới' : '', 'wcSchedule()'));
 }

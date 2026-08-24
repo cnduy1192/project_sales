@@ -61,8 +61,22 @@
 
 .wc-modal:focus,.wc-modal:focus-visible{outline:none}
 
+/* Thanh thu gọn khung lịch */
+.wc-calbar{display:flex;align-items:center;margin:12px 0 0}
+.wc-cal-toggle{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 11px 5px 8px;border-radius:20px;
+  font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--marine-label);
+  border:1px solid var(--line-2);background:var(--pearl-2);
+  transition:border-color .14s,background .14s,color .14s}
+.wc-cal-toggle:hover{border-color:var(--marine-line);color:var(--marine);background:var(--marine-soft)}
+.wc-cal-toggle:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.wc-cal-chev{flex:none;transition:transform .18s ease}
+.wc-cal.collapsed{display:none}
+.wc-cal-toggle[aria-expanded="false"] .wc-cal-chev{transform:rotate(-90deg)}
+@media (prefers-reduced-motion:reduce){ .wc-cal-chev{transition:none} }
+
 .wc-week{
-  display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:12px 0 0;
+  display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:8px 0 0;
   border:1px solid var(--line-2);border-radius:10px;padding:6px;background:var(--pearl-2)}
 .wc-nextwk{margin-top:9px}
 .wc-nextwk .wc-week{margin-top:5px}
@@ -104,21 +118,25 @@
 .wc-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:7px;font-size:11px;color:var(--text-3)}
 .wc-legend span{display:flex;align-items:center;gap:5px}
 
-.wc-stats{display:flex;gap:10px;flex-wrap:wrap;margin:11px 0 0}
+/* Dãy KPI trạng thái — gom về một dòng gọn: số và nhãn nằm ngang */
+.wc-stats{display:flex;gap:7px;flex-wrap:nowrap;margin:10px 0 0;overflow-x:auto;
+  scrollbar-width:none}
+.wc-stats::-webkit-scrollbar{display:none}
 .wc-stat{
-  flex:1 1 130px;padding:11px 13px;border-radius:9px;border:1px solid var(--line-2);
-  background:var(--surface);text-align:left;cursor:pointer;position:relative;
+  flex:1 1 0;min-width:max-content;display:flex;align-items:baseline;gap:6px;
+  padding:7px 12px 7px 13px;border-radius:8px;border:1px solid var(--line-2);
+  background:var(--surface);text-align:left;cursor:pointer;position:relative;white-space:nowrap;
   transition:border-color .14s,box-shadow .14s,transform .1s}
-.wc-stat::after{content:'';position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:3px;
+.wc-stat::after{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;
   background:var(--sc,var(--marine));opacity:0;transition:opacity .14s}
 .wc-stat:hover{border-color:var(--sc,var(--marine));box-shadow:var(--shadow-md)}
 .wc-stat:hover::after{opacity:1}
 .wc-stat:active{transform:translateY(1px)}
 .wc-stat:focus-visible{outline:2px solid var(--sc,var(--marine));outline-offset:2px}
-.wc-stat b{display:block;font-family:var(--font-display);font-size:21px;font-weight:700;
-  line-height:1.15;color:var(--sc,var(--marine));font-variant-numeric:tabular-nums}
-.wc-stat span{display:block;font-size:11px;font-weight:600;letter-spacing:.04em;
-  text-transform:uppercase;color:var(--text-3);margin-top:3px}
+.wc-stat b{display:inline-block;font-family:var(--font-display);font-size:16px;font-weight:700;
+  line-height:1;color:var(--sc,var(--marine));font-variant-numeric:tabular-nums}
+.wc-stat span{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.02em;
+  text-transform:uppercase;color:var(--text-3)}
 
 .wc-body{flex:1;min-height:0;overflow-y:auto;padding:6px 26px 22px;margin-top:8px}
 .wc-sec{margin-top:20px}

@@ -9,8 +9,14 @@
 
 /* ---------- Login ---------- */
 #sfLogin{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);}
-.sf-login-back{display:inline-block;margin-top:18px;color:var(--marine-2);font-weight:600;font-size:13px;text-decoration:none;}
+.sf-login-back{display:inline-block;margin-top:16px;color:var(--marine-2);font-weight:600;font-size:13px;text-decoration:none;}
 .sf-login-back:hover{text-decoration:underline;}
+.sf-demo-btn{width:100%;margin-top:12px;display:flex;align-items:center;justify-content:center;gap:9px;
+  border:1px dashed var(--marine-line);border-radius:8px;padding:10px;font-weight:600;font-size:13.5px;
+  color:var(--marine-2);background:rgba(1,66,106,.04);transition:all .15s;}
+.sf-demo-btn:hover{border-color:var(--marine-2);background:rgba(1,66,106,.08);}
+.sf-demo-badge{margin-left:10px;font-size:11px;font-weight:700;color:var(--prog);background:var(--prog-bg);
+  border:1px solid var(--prog-bd);padding:4px 11px;border-radius:20px;white-space:nowrap;}
 
 /* ---------- Top bar ---------- */
 .sf-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;

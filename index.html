@@ -497,15 +497,24 @@
     </div>
     <button class="wc-x" onclick="closeWelcome()" aria-label="Đóng màn hình tổng quan tuần">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    <div class="wc-week" id="wcWeek" role="list" aria-label="Bảy ngày trong tuần"></div>
-    <div class="wc-legend">
-      <span><i class="wc-dot done"></i>Đã làm</span>
-      <span><i class="wc-dot plan"></i>Kế hoạch</span>
-      <span><i class="wc-dot miss"></i>Chưa đánh dấu</span>
+    <div class="wc-calbar">
+      <button class="wc-cal-toggle" id="wcCalToggle" onclick="wcToggleCal()"
+        aria-expanded="false" aria-controls="wcCal">
+        <svg class="wc-cal-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        <span>Hiện lịch tuần</span>
+      </button>
     </div>
-    <div class="wc-nextwk">
-      <div class="wc-nextwk-h">Tuần kế tiếp<span id="wcNextLabel"></span></div>
-      <div class="wc-week" id="wcWeekNext" role="list" aria-label="Bảy ngày tuần kế tiếp"></div>
+    <div class="wc-cal collapsed" id="wcCal">
+      <div class="wc-week" id="wcWeek" role="list" aria-label="Bảy ngày trong tuần"></div>
+      <div class="wc-legend">
+        <span><i class="wc-dot done"></i>Đã làm</span>
+        <span><i class="wc-dot plan"></i>Kế hoạch</span>
+        <span><i class="wc-dot miss"></i>Chưa đánh dấu</span>
+      </div>
+      <div class="wc-nextwk">
+        <div class="wc-nextwk-h">Tuần kế tiếp<span id="wcNextLabel"></span></div>
+        <div class="wc-week" id="wcWeekNext" role="list" aria-label="Bảy ngày tuần kế tiếp"></div>
+      </div>
     </div>
     <div class="wc-stats" id="wcStats"></div>
   </div>
