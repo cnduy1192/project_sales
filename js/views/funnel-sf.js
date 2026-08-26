@@ -12,6 +12,7 @@
   var curId = null;                   // record đang mở
   var recTab = "overview";
   var closePick = null;
+  var expanded = {};                  // KH nào đang bung project (cây thư mục)
 
   var PALETTE = ["#01426A", "#0A5C8F", "#0E7490", "#6D28D9", "#B45309", "#157F3C"];
 
@@ -62,7 +63,7 @@
   function loginAs(i) {
     me = USERS[i];
     if (!me) return;
-    if (!nccFilter || isAllNcc()) nccFilter = (NCCS && NCCS[0]) || "";
+    nccFilter = ALL_NCC;   // mặc định xem Tất cả nhà cung cấp
     document.getElementById("sfLogin").style.display = "none";
     document.getElementById("sfApp").style.display = "flex";
     renderUser();
@@ -115,37 +116,28 @@
     if (!me) return;
     var q = searchQ();
     var rows = scoped().filter(function (r) { return r.status === statusFilter; }).filter(function (r) { return matchQ(r, q); });
-    renderStats(scoped().filter(function (r) { return r.status === "IN PROGRESS"; }));
+    renderStats(scopeRecords(RECORDS, me));   // KPI = tổng toàn bộ dự án trong quyền xem (mọi NCC)
 
-    var board = document.getElementById("sfBoard"),
-      list = document.getElementById("sfList"),
-      empty = document.getElementById("sfEmpty");
-
-    var useBoard = viewMode === "board" && statusFilter === "IN PROGRESS";
-    board.hidden = !useBoard;
-    list.hidden = useBoard;
-    empty.hidden = true;
-    var tog = document.getElementById("sfViewToggle");   // Kanban chỉ có nghĩa với dự án đang chạy
-    tog.style.opacity = statusFilter === "IN PROGRESS" ? "" : "0.4";
-    tog.style.pointerEvents = statusFilter === "IN PROGRESS" ? "" : "none";
-
+    var list = document.getElementById("sfList"), empty = document.getElementById("sfEmpty");
     if (!rows.length) {
-      board.hidden = true; list.hidden = true; empty.hidden = false;
+      list.hidden = true; empty.hidden = false;
       empty.innerHTML =
         '<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>' +
         "<b>Không có dự án nào</b><span>Thử đổi nhà cung cấp, bộ lọc trạng thái, hoặc từ khoá tìm kiếm.</span>";
       return;
     }
-    if (useBoard) renderBoard(rows); else renderList(rows);
+    empty.hidden = true; list.hidden = false;
+    renderList(rows);
   }
 
-  function renderStats(open) {
-    var kg = open.reduce(function (s, r) { return s + (r.kgThis || 0); }, 0);
-    var w = open.reduce(function (s, r) { return s + (r.kgThis || 0) * (r.prob || 0); }, 0);
+  // KPI = số lượng dự án theo trạng thái (không còn KG), phủ đều trang
+  function renderStats(all) {
+    var run = all.filter(function (r) { return r.status === "IN PROGRESS"; }).length;
+    var won = all.filter(function (r) { return r.status === "WON"; }).length;
+    var lost = all.filter(function (r) { return r.status === "LOST"; }).length;
+    function node(n, l, cls) { return '<div class="sf-stat ' + cls + '"><b>' + n + '</b><small>' + l + '</small></div>'; }
     document.getElementById("sfStats").innerHTML =
-      '<div class="sf-stat"><b>' + open.length + '</b><small>đang chạy</small></div>' +
-      '<div class="sf-stat"><b>' + fmt(kg) + '</b><small>KG tiềm năng</small></div>' +
-      '<div class="sf-stat"><b>' + fmt(Math.round(w)) + '</b><small>KG trọng số</small></div>';
+      node(run, "Đang chạy", "run") + node(won, "Thắng", "won") + node(lost, "Thua", "lost");
   }
 
   function renderBoard(rows) {
@@ -183,26 +175,77 @@
       "</div></article>";
   }
 
+  function uniq(a) {
+    var s = {}, o = [];
+    (a || []).forEach(function (x) { x = String(x == null ? "" : x).trim(); if (x && !s[x.toLowerCase()]) { s[x.toLowerCase()] = 1; o.push(x); } });
+    return o;
+  }
+  function jsq(s) { return "'" + String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
+  function amountStr(r) { return (r.amount != null && r.amount !== "") ? fmt(r.amount) + " ₫" : "—"; }
+
+  // Trang chủ theo hướng khách hàng: mỗi KH 1 dòng, click để bung project (cây thư mục)
   function renderList(rows) {
-    rows.sort(function (a, b) { return (a.closing || "9999") < (b.closing || "9999") ? -1 : 1; });
     var box = document.getElementById("sfList");
-    var head = '<div class="sf-lrow head"><div>Khách hàng</div><div class="sf-lc-hide">Ứng dụng</div>' +
-      '<div class="sf-lc-hide">Sản phẩm</div><div class="sf-lc-hide">Giai đoạn</div><div>Xác suất</div>' +
-      '<div class="sf-lkg">KG</div><div class="sf-lc-hide">PIC</div></div>';
-    var body = rows.map(function (r) {
-      var h = health(r);
-      return '<div class="sf-lrow" onclick="SF.openRecord(\'' + esc(r.id) + '\')">' +
-        '<div><b>' + esc(r.customer) + '</b><div class="sf-lcell-sub">đóng ' + (r.closing ? viDate(r.closing) : "—") + "</div></div>" +
-        '<div class="sf-lc-hide">' + esc(r.application || "—") + "</div>" +
-        '<div class="sf-lc-hide">' + esc(r.product) + "</div>" +
-        '<div class="sf-lc-hide"><span class="pill ' + stageCls(r.stage) + '"><span class="dot"></span>' + esc(stageShort(r.stage)) + "</span></div>" +
-        "<div>" + probPct(r) + "%</div>" +
-        '<div class="sf-lkg">' + fmt(r.kgThis) + "</div>" +
-        '<div class="sf-lc-hide"><span class="sf-card-av" style="background:' + colorOf(r.pic) + '">' + initials(r.pic || "?") + "</span></div>" +
+    var map = {}, order = [];
+    rows.forEach(function (r) { var k = r.customer || "—"; if (!map[k]) { map[k] = []; order.push(k); } map[k].push(r); });
+    order.sort(function (a, b) { return a.localeCompare(b, "vi"); });
+
+    var head = '<div class="sf-ct-head">' +
+      '<div>Khách hàng</div>' +
+      '<div class="sf-lc-hide">NCC</div>' +
+      '<div class="sf-lc-hide">Nhóm ngành</div>' +
+      '<div class="sf-lc-hide sf-num">Ngày khởi tạo</div>' +
+      '<div class="sf-lc-hide sf-num">Closed date</div>' +
+      '<div>PIC</div></div>';
+
+    var body = order.map(function (k) {
+      var ps = map[k];
+      var nccs = uniq(ps.map(function (r) { return r.ncc; }));
+      var groups = uniq(ps.map(function (r) { return r.group; }));
+      var created = ps.map(function (r) { return r.created; }).filter(Boolean).sort()[0] || "";
+      var closedArr = ps.map(function (r) { return r.closedAt || r.closing || ""; }).filter(Boolean).sort();
+      var closed = closedArr.length ? closedArr[closedArr.length - 1] : "";     // muộn nhất
+      var owner = (typeof customerOwnerOf === "function" && customerOwnerOf(k)) || ps[0].pic || "—";
+      var open = !!expanded[k];
+
+      var parent = '<div class="sf-ct-row' + (open ? " open" : "") + '" role="button" tabindex="0" aria-expanded="' + open + '"' +
+        ' onclick="SF.toggleCustomer(' + jsq(k) + ')"' +
+        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();SF.toggleCustomer(' + jsq(k) + ')}">' +
+        '<div class="sf-ct-cust"><span class="sf-ct-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' +
+          '<b>' + esc(k) + '</b><span class="sf-ct-count">' + ps.length + ' dự án</span></div>' +
+        '<div class="sf-lc-hide">' + esc(nccs.join(", ") || "—") + "</div>" +
+        '<div class="sf-lc-hide">' + esc(groups.join(", ") || "—") + "</div>" +
+        '<div class="sf-lc-hide sf-num">' + (created ? viDate(created) : "—") + "</div>" +
+        '<div class="sf-lc-hide sf-num">' + (closed ? viDate(closed) : "—") + "</div>" +
+        '<div class="sf-ct-pic"><span class="sf-card-av" style="background:' + colorOf(owner) + '" title="' + esc(owner) + '">' + initials(owner) + '</span><span class="sf-ct-pic-n sf-lc-hide">' + esc(owner) + "</span></div>" +
         "</div>";
+
+      return '<div class="sf-ct-group">' + parent + (open ? childTable(ps) : "") + "</div>";
     }).join("");
+
     box.innerHTML = head + body;
   }
+
+  function childTable(ps) {
+    ps = ps.slice().sort(function (a, b) { return (a.closing || "9999") < (b.closing || "9999") ? -1 : 1; });
+    var h = '<div class="sf-cc-head"><div>Project</div><div>NCC</div><div>Nhóm ngành</div><div>Segment</div>' +
+      '<div>Sản phẩm</div><div>Ứng dụng</div><div class="sf-num">Số lượng</div><div class="sf-num">Amount</div></div>';
+    var body = ps.map(function (r) {
+      return '<div class="sf-cc-row" onclick="SF.openRecord(' + jsq(r.id) + ')">' +
+        '<div class="sf-cc-proj"><b>' + esc(r.id) + '</b><span class="pill ' + stageCls(r.stage) + ' sf-cc-stage"><span class="dot"></span>' + esc(stageShort(r.stage)) + "</span></div>" +
+        "<div>" + esc(r.ncc || "—") + "</div>" +
+        "<div>" + esc(r.group || "—") + "</div>" +
+        "<div>" + esc(r.segment || "—") + "</div>" +
+        '<div class="sf-cc-prod">' + esc(r.product || "—") + "</div>" +
+        '<div class="sf-cc-app">' + esc(r.application || "—") + "</div>" +
+        '<div class="sf-num">' + fmt(r.kgThis) + ' <small>KG</small></div>' +
+        '<div class="sf-num">' + amountStr(r) + "</div>" +
+        "</div>";
+    }).join("");
+    return '<div class="sf-cc-wrap">' + h + body + "</div>";
+  }
+
+  function toggleCustomer(k) { expanded[k] = !expanded[k]; render(); }
 
   /* ============================================================
      DRAG & DROP → đổi giai đoạn
@@ -263,7 +306,7 @@
      ============================================================ */
   function openRecord(id) {
     var r = recById(id); if (!r) return;
-    curId = id; recTab = "overview";
+    curId = id; recTab = "timeline";
     buildRecord();
     document.getElementById("sfRecBd").classList.add("open");
     document.getElementById("sfRec").classList.add("open");
@@ -296,21 +339,22 @@
   function highlightsHTML(r, h, stClass) {
     var stLabel = r.status === "WON" ? "Thắng" : r.status === "LOST" ? "Thua" : "Đang chạy";
     return '<div class="sf-hl"><div class="sf-hl-top">' +
-      '<div class="sf-hl-mark">' + initials(r.customer) + "</div>" +
       '<div class="sf-hl-h"><h3 id="sfRecTitle">' + esc(r.customer) + " · " + esc(r.product) + "</h3>" +
       '<div class="sf-hl-pills">' +
         '<span class="sf-hp">' + esc(r.ncc || "—") + "</span>" +
         (r.segment ? '<span class="sf-hp">' + esc(r.segment) + "</span>" : "") +
         (r.application ? '<span class="sf-hp">' + esc(r.application) + "</span>" : "") +
-        '<span class="sf-hp"><span class="sf-stpill ' + stClass + '">' + stLabel + "</span></span>" +
         '<span class="sf-hp">PIC ' + esc(r.pic || "—") + "</span>" +
       "</div></div>" +
-      '<button class="sf-rec-x" onclick="SF.closeRecord()" aria-label="Đóng"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      '<div class="sf-hl-right">' +
+        '<span class="sf-hl-status sf-stpill ' + stClass + '">' + stLabel + "</span>" +
+        '<button class="sf-rec-x" onclick="SF.closeRecord()" aria-label="Đóng"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      "</div>" +
       "</div>" +
       '<div class="sf-hl-metrics">' +
         metric("Tiềm năng " + TODAY.getFullYear(), fmt(r.kgThis) + ' <small>KG</small>') +
         metric("Năm sau", fmt(r.kgNext) + ' <small>KG</small>') +
-        metric("Ngày đóng DK", '<span style="font-size:16px">' + viDate(r.closing) + "</span>") +
+        metric("Ngày đóng DK", viDate(r.closing)) +
         '<div class="sf-metric"><div class="m-l">Xác suất · Sức khỏe</div><div class="m-v">' + probPct(r) + "%</div>" +
           '<div class="sf-health ' + h.cls + '"><i></i>' + h.label + "</div></div>" +
       "</div></div>";
@@ -333,27 +377,53 @@
   }
 
   function tabsHTML(r) {
-    var tabs = [
-      { id: "overview", label: "Tổng quan" },
-      { id: "activity", label: "Hoạt động" },
-      { id: "financial", label: "Tài chính" },
-      { id: "delivery", label: "Giao hàng", lock: r.status !== "WON" }
-    ];
+    var tabs = [{ id: "timeline", label: "Timeline" }, { id: "details", label: "Details" }, { id: "financial", label: "Financials" }];
     return '<div class="sf-rec-tabs">' + tabs.map(function (t) {
-      return '<button class="sf-rec-tab' + (recTab === t.id ? " on" : "") + '" onclick="SF.setTab(\'' + t.id + '\')">' +
-        t.label + (t.lock ? '<span class="lock">🔒</span>' : "") + "</button>";
+      return '<button class="sf-rec-tab' + (recTab === t.id ? " on" : "") + '" onclick="SF.setTab(\'' + t.id + '\')">' + t.label + "</button>";
     }).join("") + "</div>";
   }
   function setTab(t) { recTab = t; buildRecord(); }
 
   function tabBodyHTML(r, editable) {
-    if (recTab === "activity") return activityTab(r);
+    if (recTab === "details") return detailsTab(r, editable);
     if (recTab === "financial") return financialTab(r);
-    if (recTab === "delivery") return deliveryTab(r);
-    return overviewTab(r, editable);
+    return timelineTab(r);
   }
 
-  function overviewTab(r, editable) {
+  // "dd/mm/yyyy [HH:MM]" hoặc "yyyy-mm-dd" → Date (để sắp xếp timeline)
+  function parseWhen(s) {
+    if (!s) return null;
+    s = String(s).trim();
+    var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+    var vn = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (vn) return new Date(+vn[3], +vn[2] - 1, +vn[1], +(vn[4] || 0), +(vn[5] || 0));
+    return null;
+  }
+
+  function timelineTab(r) {
+    var ev = [];
+    if (r.created) ev.push({ d: parseWhen(r.created), tag: "Tạo dự án", who: r.pic, text: "Khởi tạo cơ hội " + r.customer + " · " + r.product, kind: "start" });
+    (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; }).forEach(function (a) {
+      ev.push({ d: parseWhen(a.date), tag: a.type || "Hoạt động", who: a.pic, text: a.note || "", kind: "act" });
+    });
+    (r.comments || []).forEach(function (c) {
+      var isStage = /^\[/.test(c.text || "");
+      ev.push({ d: parseWhen(c.at), at: c.at, tag: isStage ? "Cập nhật" : "Trao đổi", who: c.by, text: c.text || "", kind: isStage ? "stage" : "note" });
+    });
+    if (r.closing) ev.push({ d: parseWhen(r.closing), tag: "Mục tiêu chốt", who: "", text: "Ngày đóng dự kiến", kind: "target" });
+    ev.sort(function (a, b) { return (b.d ? b.d.getTime() : 0) - (a.d ? a.d.getTime() : 0); });
+    var body = ev.length ? ev.map(function (e) {
+      var when = e.d ? e.d.toLocaleDateString("vi-VN") : (e.at || "");
+      return '<div class="sf-tl-item ' + e.kind + '"><span class="sf-tl-dot"></span>' +
+        '<div class="sf-tl-c"><div class="sf-tl-top"><span class="sf-tl-tag">' + esc(e.tag) + '</span><span class="sf-tl-when">' + esc(when) + "</span></div>" +
+        '<div class="sf-tl-text">' + esc(e.text) + (e.who ? ' <span class="sf-tl-who">· ' + esc(e.who) + "</span>" : "") + "</div></div></div>";
+    }).join("") : '<div class="sf-act-empty">Chưa có sự kiện nào.</div>';
+    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Dòng thời gian dự án</div>' +
+      '<div class="sf-timeline">' + body + "</div>";
+  }
+
+  function detailsTab(r, editable) {
     var pipe = pipelineOf(r.ncc);
     var stageOpts = pipe.map(function (s) { return '<option value="' + esc(s) + '"' + (s === r.stage ? " selected" : "") + ">" + esc(stageShort(s)) + "</option>"; }).join("");
     var probOpts = [10, 25, 50, 75, 90, 100].map(function (p) { return '<option value="' + p + '"' + (p === probPct(r) ? " selected" : "") + ">" + p + "%</option>"; }).join("");
@@ -362,7 +432,10 @@
       field("Khách hàng", '<div class="v">' + esc(r.customer) + "</div>") +
       field("Sản phẩm", '<div class="v">' + esc(r.product) + "</div>") +
       field("Ứng dụng", '<div class="v">' + esc(r.application || "—") + "</div>") +
-      field("Nhóm ngành · Segment", '<div class="v">' + esc(r.group || "—") + " · " + esc(r.segment || "—") + "</div>") +
+      (editable
+        ? field("Segment", '<select id="sfSegment" onchange="SF.onSegmentChange()">' + segmentOptions(r.segment) + "</select>") +
+          field("Nhóm ngành <span class=\"lbl-auto\">tự động theo Segment</span>", '<div class="v" id="sfGroupDerived">' + esc(r.group || "—") + "</div>")
+        : field("Nhóm ngành · Segment", '<div class="v">' + esc(r.group || "—") + " · " + esc(r.segment || "—") + "</div>")) +
       field("Loại cơ hội", '<div class="v">' + esc(r.boptype || "—") + "</div>") +
       field("Ngày tạo", '<div class="v">' + viDate(r.created) + "</div>") +
       (editable
@@ -375,36 +448,45 @@
   }
   function field(l, inner) { return '<div class="sf-f"><label>' + l + "</label>" + inner + "</div>"; }
 
-  function activityTab(r) {
-    var acts = (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })
-      .sort(function (a, b) { return (b.date || "") < (a.date || "") ? -1 : 1; });
-    var list = acts.length ? acts.map(function (a) {
-      return '<div class="sf-act"><div class="a-t">' + esc(a.type || "Hoạt động") + " · " + esc(a.customer) + "</div>" +
-        '<div class="a-m">' + viDate(a.date) + " · " + esc(a.pic || "—") + (a.note ? " — " + esc(a.note) : "") + "</div></div>";
-    }).join("") : '<div class="sf-act-empty">Chưa có hoạt động nào gắn với dự án này. Tạo hoạt động trong app chính và gắn dự án để hiện ở đây.</div>';
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Hoạt động khách hàng liên quan</div>' + list;
+  // Danh mục Segment nhóm theo Nhóm ngành (BAKERY / SAVOURY / SWEET …) — chuẩn từ catalog
+  function segmentOptions(cur) {
+    var groups = (typeof SEG_GROUPS !== "undefined" && SEG_GROUPS.length) ? SEG_GROUPS : Object.keys(SEG_TREE || {});
+    var found = false;
+    var html = groups.map(function (g) {
+      var segs = (SEG_TREE && SEG_TREE[g]) || [];
+      return '<optgroup label="' + esc(g) + '">' + segs.map(function (s) {
+        var sel = s === cur; if (sel) found = true;
+        return '<option value="' + esc(s) + '"' + (sel ? " selected" : "") + ">" + esc(s) + "</option>";
+      }).join("") + "</optgroup>";
+    }).join("");
+    if (cur && !found) html = '<option value="' + esc(cur) + '" selected>' + esc(cur) + " (khác)</option>" + html;
+    return html;
+  }
+  // chọn Segment → tự suy ra Nhóm ngành (segment group) để hiển thị
+  function onSegmentChange() {
+    var seg = val("sfSegment");
+    var g = (typeof SEG2GROUP !== "undefined" && SEG2GROUP[seg]) || "—";
+    var el = document.getElementById("sfGroupDerived");
+    if (el) el.textContent = g;
   }
 
   function financialTab(r) {
     var weighted = Math.round((r.kgThis || 0) * (r.prob || 0));
+    var canEd = capEdit(r, me);
+    var amountBlock = canEd
+      ? '<div class="sf-amount-edit"><input type="number" min="0" id="sfAmount" placeholder="Nhập giá trị ước tính…" value="' + (r.amount != null && r.amount !== "" ? r.amount : "") + '">' +
+        '<span class="sf-amount-unit">₫</span><button class="sf-mini-btn" onclick="SF.saveAmount()">Lưu</button></div>' +
+        '<div class="sf-amount-hint">Giá trị ước tính do bạn nhập — lưu tạm trong trình duyệt, sẽ đồng bộ SharePoint ở Phase 2.</div>'
+      : '<div class="sf-fin"><div class="f-l">Giá trị ước tính (Amount)</div><div class="f-v">' + amountStr(r) + "</div></div>";
     return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M7 7h7a3 3 0 010 6H8a3 3 0 000 6h8"/></svg>Tiềm năng sản lượng</div>' +
       '<div class="sf-fin-grid">' +
       '<div class="sf-fin"><div class="f-l">Tiềm năng ' + TODAY.getFullYear() + '</div><div class="f-v">' + fmt(r.kgThis) + ' <small>KG</small></div></div>' +
       '<div class="sf-fin"><div class="f-l">Tiềm năng năm sau</div><div class="f-v">' + fmt(r.kgNext) + ' <small>KG</small></div></div>' +
       '<div class="sf-fin"><div class="f-l">Xác suất thắng</div><div class="f-v">' + probPct(r) + '%</div></div>' +
       '<div class="sf-fin"><div class="f-l">Sản lượng trọng số (KG × %)</div><div class="f-v">' + fmt(weighted) + ' <small>KG</small></div></div>' +
-      "</div>";
-  }
-
-  function deliveryTab(r) {
-    if (r.status !== "WON") {
-      return '<div class="sf-lock-note"><b>Giao hàng mở khoá khi dự án WIN</b>' +
-        "Khi cơ hội được đóng <b>Thắng</b>, không gian giao hàng kiểu Salesforce (Milestone, Project Task Kanban, Gantt, phân bổ nhân sự) sẽ mở ở đây." +
-        '<div class="k">Đây là Phase 2 — cần 4 SharePoint List mới (ProjectTasks, Milestones, ProjectRisks, ResourceAssignments).</div></div>';
-    }
-    return '<div class="sf-lock-note"><b>Sẵn sàng cho Phase 2</b>' +
-      "Dự án đã WIN. Module giao hàng (Milestone · Task Kanban · Gantt · Resource) sẽ được kích hoạt ở Phase 2." +
-      '<div class="k">Xác nhận triển khai Phase 2 để bắt đầu.</div></div>';
+      "</div>" +
+      '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Giá trị ước tính (Amount)</div>' +
+      amountBlock;
   }
 
   function sideHTML(r) {
@@ -419,12 +501,29 @@
     }).join("") : '<div class="sf-side-empty">Chưa có người tham gia.</div>';
 
     var canPost = capEdit(r, me);
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Trao đổi trong dự án</div>' +
+
+    var acts = (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })
+      .sort(function (a, b) { return (b.date || "") < (a.date || "") ? -1 : 1; }).slice(0, 4);
+    var actHTML = acts.map(function (a) {
+      return '<div class="sf-act-line"><span class="al-t">' + esc(a.pic || "—") + " · " + esc(a.type || "Hoạt động") +
+        (a.note ? " — " + esc(a.note) : "") + '</span><span class="al-d">' + viDate(a.date) + "</span></div>";
+    }).join("");
+
+    var risk = (r.risk || "").trim();
+    var riskHTML = risk ? '<div class="sf-risk-text">' + esc(risk) + "</div>"
+      : '<div class="sf-side-empty">Chưa ghi nhận rủi ro.</div>';
+    var riskEdit = canPost
+      ? '<div class="sf-risk-edit"><input id="sfRisk" placeholder="Ghi nhận rủi ro…" value="' + esc(risk) + '"><button class="sf-mini-btn" onclick="SF.saveRisk()">Lưu</button></div>' : "";
+
+    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Hoạt động &amp; trao đổi</div>' +
+      (actHTML || "") +
       '<div class="sf-chat"><div class="sf-cmts" id="sfCmts">' + cmtHTML + "</div>" +
       (canPost ? '<div class="sf-cmt-input"><input id="sfCmt" placeholder="Viết trao đổi… (Enter để gửi)"><button class="sf-send" onclick="SF.postComment()" aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>' : "") +
       "</div>" +
       '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c.8-3.3 3.3-5 6.5-5s5.7 1.7 6.5 5"/></svg>Người tham gia</div>' +
-      '<div class="sf-people">' + people + "</div>";
+      '<div class="sf-people">' + people + "</div>" +
+      '<div class="sf-sec-h danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17.5v.01"/></svg>Rủi ro</div>' +
+      '<div class="sf-risk">' + riskHTML + riskEdit + "</div>";
   }
 
   function footHTML(r, editable) {
@@ -450,11 +549,35 @@
     if (prob != null && +prob !== probPct(r)) { changes.push("[Xác suất] " + probPct(r) + "% → " + prob + "%"); r.prob = +prob / 100; patch.WinProbability = +prob; }
     else if (patch.Stage && STAGE_PROB && STAGE_PROB[stage] != null) { r.prob = STAGE_PROB[stage] / 100; patch.WinProbability = probPct(r); }
     if (closing && closing !== r.closing) { changes.push("[Ngày đóng] " + viDate(r.closing) + " → " + viDate(closing)); r.closing = closing; patch.ClosingDate = closing + "T12:00:00Z"; }
+    var seg = val("sfSegment");
+    if (seg && seg !== r.segment) {
+      var g = (typeof SEG2GROUP !== "undefined" && SEG2GROUP[seg]) || r.group;
+      changes.push("[Segment] " + (r.segment || "—") + " → " + seg + " · Nhóm ngành: " + g);
+      r.segment = seg; r.group = g; patch.Segment = seg; patch.SegmentGroup = g;
+    }
     if (!Object.keys(patch).length) { toast("Chưa có thay đổi nào."); return; }
     buildRecord(); render();
     persist(r, patch, changes.join(" · "), "Đã lưu thay đổi dự án " + r.customer + " · " + r.product + ".", null);
   }
   function val(id) { var e = document.getElementById(id); return e ? e.value : null; }
+
+  function saveRisk() {
+    var r = recById(curId); if (!r) return;
+    if (!capEdit(r, me)) { toast("Bạn không có quyền cập nhật rủi ro."); return; }
+    var v = (val("sfRisk") || "").trim();
+    r.risk = v;
+    buildRecord();
+    toast(v ? "Đã cập nhật rủi ro (lưu tạm trong trình duyệt — cột Rủi ro sẽ đồng bộ ở Phase 2)." : "Đã xoá ghi nhận rủi ro.");
+  }
+
+  function saveAmount() {
+    var r = recById(curId); if (!r) return;
+    if (!capEdit(r, me)) { toast("Bạn không có quyền cập nhật giá trị."); return; }
+    var v = val("sfAmount");
+    r.amount = (v === "" || v == null) ? "" : Math.max(0, Math.round(+v || 0));
+    buildRecord(); render();
+    toast(r.amount === "" ? "Đã xoá giá trị ước tính." : "Đã cập nhật giá trị ước tính (lưu tạm trong trình duyệt).");
+  }
 
   function postComment() {
     var r = recById(curId); if (!r) return;
@@ -528,8 +651,8 @@
   /* ---------- expose ---------- */
   window.SF = {
     render: render, setNcc: setNcc, setStatus: setStatus, setView: setView,
-    openRecord: openRecord, closeRecord: closeRecord, setTab: setTab,
-    moveStage: moveStage, saveRecord: saveRecord, postComment: postComment,
+    openRecord: openRecord, closeRecord: closeRecord, setTab: setTab, toggleCustomer: toggleCustomer,
+    moveStage: moveStage, saveRecord: saveRecord, postComment: postComment, saveRisk: saveRisk, saveAmount: saveAmount, onSegmentChange: onSegmentChange,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose
   };
 })();

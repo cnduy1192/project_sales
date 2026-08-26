@@ -179,7 +179,7 @@
         '<div class="cust-kpi run"><b>' + run + "</b><span>đang chạy</span></div>" +
         '<div class="cust-kpi won"><b>' + won + "</b><span>thắng</span></div>" +
         '<div class="cust-kpi lost"><b>' + lost + "</b><span>thua</span></div>" +
-        '<div class="cust-kpi"><b>' + fmtN(kg) + "</b><span>KG 2026</span></div>" +
+        '<div class="cust-kpi kg"><b>' + fmtN(kg) + "</b><span>KG 2026</span></div>" +
       "</div>" +
       '<div class="x-sec-h">Dự án của khách hàng</div>' +
       (prj.length
@@ -196,8 +196,9 @@
         ? '<ol class="cust-tl">' + acts.slice()
             .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
             .map(a => '<li><span class="tl-d">' + viDay(a.date) + '</span><span class="tl-b">' +
-              '<b>' + esc(a.type) + "</b> · " + esc(a.pic || "—") +
-              '<span class="tl-note">' + esc(a.note) + "</span>" +
+              '<span class="tl-head"><span class="tl-type">' + esc(a.type || '—') + '</span>' +
+              (a.pic ? '<span class="tl-pic">' + esc(a.pic) + '</span>' : '') + '</span>' +
+              (a.note ? '<span class="tl-note">' + esc(a.note) + "</span>" : "") +
               (a.next ? '<span class="tl-next">→ ' + esc(a.next) + "</span>" : "") +
               "</span></li>").join("") + "</ol>"
         : '<div class="x-empty">Chưa có hoạt động nào.</div>');

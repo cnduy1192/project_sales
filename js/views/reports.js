@@ -1,9 +1,15 @@
 let rpSel = null;
 let rpDraft = null;
 let rpFilterPic = '';
+let rpEditing = null; // id báo cáo đã gửi đang được sửa
 const RP_COLORS = ['#01426A','#0E7490','#B45309','#6D28D9','#0D9488','#DB2777','#157F3C'];
 
 function rpIsLead(){ return !!(me && cap(me.role).scope === 'all'); }
+
+// Chỉ tác giả (và có quyền soạn báo cáo) mới được sửa báo cáo đã gửi.
+function rpIsAuthor(r){
+  return !!(r && me && rpCanCompose() && picKey(r.pic) === picKey(me.pic || me.name || ''));
+}
 
 function rpCanCompose(){ return !!(me && capReport(me.role) && me.pic); }
 
@@ -118,6 +124,7 @@ function rpRenderPanel(list){
   const box = document.getElementById('rpPanel');
   const draft = rpSel === 'draft';
   const r = draft ? rpDraft : list.filter(x => x.id === rpSel)[0];
+  const editing = !draft && !!r && rpEditing === r.id && rpIsAuthor(r);
 
   if(!r){
     box.innerHTML = `<div class="ck-empty">
@@ -141,9 +148,12 @@ function rpRenderPanel(list){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Tất cả báo cáo</button>
     <h3>${ckEsc(r.picLabel)} — tuần ${ckEsc(r.weekLabel)}</h3>
     <div class="rp-meta">${draft ? 'Bản nháp · số liệu chốt khi bấm gửi'
-      : 'Đã gửi ' + ckVN(r.createdAt)}</div>
+      : 'Đã gửi ' + ckVN(r.createdAt) + (r.editedAt ? ' · <b>đã sửa</b> ' + ckVN(r.editedAt) : '')}</div>
 
     <div class="rp-actions">
+      ${(!draft && !editing && rpIsAuthor(r)) ? `<button class="btn-ghost rp-edit" onclick="rpEditReport('${ckAttr(r.id)}')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        Sửa báo cáo</button>` : ''}
       <button class="btn-ghost rp-export" onclick="rpExportExcel('${draft ? 'draft' : ckAttr(r.id)}')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
         Xuất Excel</button>
@@ -188,8 +198,8 @@ function rpRenderPanel(list){
 
     <div class="rp-field">
       <label for="rpNote">Nội dung báo cáo</label>
-      ${draft
-        ? `<textarea id="rpNote" placeholder="Nội dung báo cáo tuần…"></textarea>`
+      ${(draft || editing)
+        ? `<textarea id="rpNote" placeholder="Nội dung báo cáo tuần…">${editing ? ckEsc(r.note || '') : ''}</textarea>`
         : `<div class="rp-note-body">${ckEsc(r.note || 'Không có nội dung.')}</div>`}
     </div>
 
@@ -197,7 +207,12 @@ function rpRenderPanel(list){
     ${draft ? `<div class="rp-send">
       <button class="btn-primary" onclick="sendReport()">Gửi</button>
       <button class="btn-ghost" onclick="rpDiscard()">Huỷ</button>
-    </div>` : rpThreadHtml(r)}`;
+    </div>`
+    : editing ? `<div class="rp-send">
+      <button class="btn-primary" onclick="rpSaveReport('${ckAttr(r.id)}')">Lưu thay đổi</button>
+      <button class="btn-ghost" onclick="rpCancelEdit()">Huỷ</button>
+    </div>`
+    : rpThreadHtml(r)}`;
 
   rpDrawCharts(r);
 
@@ -205,7 +220,7 @@ function rpRenderPanel(list){
     FISG_ATTACH.mount('rp-attach', { type:'report',
       id: draft ? '' : r.id,
       ctx:{ pic:r.pic || (me&&(me.pic||me.name)), date:r.createdAt || todayISO() },
-      canUpload: draft ? true : rpCanComment(r) });
+      canUpload: (draft || editing) ? true : rpCanComment(r) });
   }
 }
 
@@ -404,3 +419,45 @@ function rpDiscard(){
   rpDraft = null; rpSel = null; renderReports();
 }
 window.rpDiscard = rpDiscard;
+
+// --- Sửa báo cáo đã gửi (chỉ nội dung + đính kèm) ---
+function rpEditReport(id){
+  const r = rpSentReports().find(x => x.id === id);
+  if(!r){ toast('Không tìm thấy báo cáo.'); return; }
+  if(!rpIsAuthor(r)){ toast('Chỉ người gửi mới sửa được báo cáo này.'); return; }
+  rpEditing = id; rpSel = id;
+  renderReports();
+}
+window.rpEditReport = rpEditReport;
+
+function rpCancelEdit(){ rpEditing = null; renderReports(); }
+window.rpCancelEdit = rpCancelEdit;
+
+function rpSaveReport(id){
+  const r = rpSentReports().find(x => x.id === id);
+  if(!r){ toast('Không tìm thấy báo cáo.'); return; }
+  const note = ((document.getElementById('rpNote')||{}).value || '').trim();
+
+  if(window.FISG_STORE && FISG_STORE.updateReport && FISG_STORE.canWrite && FISG_STORE.canWrite()){
+    const btn = document.querySelector('.rp-send .btn-primary');
+    if(btn){ btn.disabled = true; btn.textContent = 'Đang lưu…'; }
+    FISG_STORE.updateReport(r, note).then(function(){
+      rpEditing = null;
+      if(window.FISG_STORE.loadReports) FISG_STORE.loadReports().then(renderReports).catch(renderReports);
+      else renderReports();
+      toast('Đã cập nhật báo cáo tuần ' + r.weekLabel + '.');
+    }).catch(function(e){
+      console.warn('[reports] sửa báo cáo hỏng:', e && (e.message||e));
+      toast('CHƯA lưu được lên SharePoint: ' + (e && (e.message||e)) + '.');
+      if(btn){ btn.disabled = false; btn.textContent = 'Lưu thay đổi'; }
+    });
+    return;
+  }
+
+  // Ngoại tuyến: lưu trên máy nếu có LS.
+  r.note = note; r.editedAt = todayISO();
+  if(window.LS && LS.updateReport) LS.updateReport(r);
+  rpEditing = null; renderReports();
+  toast('Đã lưu trên máy này (chưa đăng nhập SharePoint nên quản lý chưa thấy bản sửa).');
+}
+window.rpSaveReport = rpSaveReport;

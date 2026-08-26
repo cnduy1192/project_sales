@@ -41,8 +41,21 @@
     ["Kimica-Navido", "Dutch Lady (FrieslandCampina)", "KIMICA Algin", "Sữa tiệt trùng có hạt", "SWEET", "DAIRY", "SAMPLE SENT", "IN PROGRESS", 85000, 120000, "Lan", "2026-06-25", "2026-11-28", ["Khoa"], "Support Ngọc — gửi mẫu alginate độ nhớt cao."],
     ["Kimica-Navido", "Cầu Tre", "Sodium Alginate", "Chả giò đông lạnh", "SAVOURY", "SEAFOOD", "TESTING", "IN PROGRESS", 45000, 70000, "Ngọc", "2026-04-08", "2026-09-30", [], "Test khả năng kết dính nhân."],
     ["Kimica-Navido", "Vinasoy", "KIMICA Algin", "Sữa đậu nành", "SAVOURY", "VEGAN", "POSTPONED", "IN PROGRESS", 50000, 80000, "Hùng", "2026-02-28", "2026-12-20", [], "Khách hoãn do thay đổi kế hoạch sản phẩm 2026."],
-    ["Kimica-Navido", "Bel Vietnam", "Sodium Alginate", "Phô mai chế biến", "SWEET", "DAIRY", "TEST PASSED", "IN PROGRESS", 75000, 100000, "Thu", "2025-12-15", "2026-09-15", ["Khoa"], "Đạt yêu cầu kỹ thuật, chờ duyệt ngân sách."]
+    ["Kimica-Navido", "Bel Vietnam", "Sodium Alginate", "Phô mai chế biến", "SWEET", "DAIRY", "TEST PASSED", "IN PROGRESS", 75000, 100000, "Thu", "2025-12-15", "2026-09-15", ["Khoa"], "Đạt yêu cầu kỹ thuật, chờ duyệt ngân sách."],
+
+    // Cùng khách hàng, nhiều project / nhiều NCC — để minh hoạ gộp dòng khách hàng
+    ["IFF", "Vinamilk", "CREMODAN SE", "Kem ăn", "SWEET", "DAIRY", "SAMPLE SENT", "IN PROGRESS", 95000, 130000, "Thu", "2026-05-01", "2026-10-20", ["Khoa"], "Vinamilk quan tâm chất ổn định cho kem."],
+    ["Roquette", "Acecook Vietnam", "NUTRIOSE FB06", "Mì giảm béo bổ sung xơ", "SAVOURY", "NOODLES", "SHARED BUSINESS GOAL", "IN PROGRESS", 60000, 90000, "Hùng", "2026-07-01", "2027-01-15", [], "Acecook thử hướng mì bổ sung chất xơ."]
   ];
+
+  var RISKS = {
+    "P-1000": "Đối thủ chào CMC giá thấp hơn",
+    "P-1002": "Khách yêu cầu giảm 5% giá để chốt PO cuối năm",
+    "P-1004": "Ngân sách R&D 2027 của khách chưa duyệt",
+    "P-1007": "Thời gian test kéo dài, rủi ro trễ mùa vụ sản xuất",
+    "P-1011": "Điều khoản thanh toán 60 ngày chưa được duyệt",
+    "P-1017": "Khách đang so sánh với alginate Trung Quốc giá rẻ"
+  };
 
   function build() {
     var recs = D.map(function (a, i) {
@@ -55,7 +68,10 @@
         id: "P-" + (1000 + i), spId: null, ncc: a[0], customer: a[1], product: a[2], application: a[3],
         group: a[4], segment: a[5], stage: stage, status: status, boptype: "NEW BUSINESS",
         prob: prob, kgThis: a[8], kgNext: a[9], pic: a[10], rnd: "Khoa", related: a[13] || [],
-        created: a[11], closing: a[12], desc: a[1] + " · " + a[2], comments: cmts
+        created: a[11], closing: a[12], desc: a[1] + " · " + a[2], comments: cmts,
+        risk: RISKS["P-" + (1000 + i)] || "",
+        amount: Math.round((a[8] || 0) * 25000 / 1000) * 1000   // giá trị ước tính mẫu (VND)
+
       };
     });
 

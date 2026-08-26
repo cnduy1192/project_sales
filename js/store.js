@@ -815,6 +815,7 @@
         picLabel: (typeof picLabel === "function") ? picLabel(pic) : pic,
         weekLabel: txtOf(gr, f, "WeekLabel") || (snap.weekLabel || ""),
         createdAt: (txtOf(gr, f, "ReportDate") || "").slice(0, 10) || snap.createdAt || "",
+        editedAt: snap.editedAt || "",
         note: txtOf(gr, f, "Content"),
         stats: snap.stats || { done: 0, missed: 0, changes: 0, overdue: 0 },
         doneActs: snap.doneActs || [], missedActs: snap.missedActs || [],
@@ -862,6 +863,30 @@
     const it = await FISG_GRAPH.createItem("Reports", f);
     try { await loadReports(); } catch (e) {}
     return String(it.id);
+  }
+
+  // Sửa báo cáo đã gửi: chỉ cập nhật nội dung chữ; số liệu giữ nguyên ảnh chụp lúc gửi.
+  // Mốc "đã sửa" được nhét vào StatsJson nên không cần thêm cột SharePoint.
+  async function updateReport(report, note) {
+    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    const spId = report && (report.spId || report.id);
+    if (!spId) throw new Error("thiếu mã báo cáo");
+    const get = await schemaOf("Reports");
+    const editedAt = todayISO();
+    const snap = {
+      weekLabel: report.weekLabel, createdAt: report.createdAt,
+      stats: report.stats, doneActs: report.doneActs || [],
+      missedActs: report.missedActs || [], projectChanges: report.projectChanges || [],
+      editedAt: editedAt,
+    };
+    const f = {}, miss = [];
+    if (!put(f, get, "Content", note || "")) miss.push("Content");
+    if (!put(f, get, "StatsJson", JSON.stringify(snap))) miss.push("StatsJson");
+    warnMissing("Reports", miss);
+    await FISG_GRAPH.updateItem("Reports", spId, f);
+    const r = REPORTS.find(x => String(x.spId) === String(spId) || x.id === report.id);
+    if (r) { r.note = note || ""; r.editedAt = editedAt; }
+    return editedAt;
   }
 
   async function addReportComment(reportCode, text, by, role) {
@@ -1179,6 +1204,24 @@
     put(f, get, "CompletedDate", iso ? spDate(iso) : null);
     await FISG_GRAPH.updateItem("Activities", spId, f);
     return "saved";
+  }
+
+  // Đổi ngày hẹn của một hoạt động (cột "Ngày" / ActivityDate).
+  async function setActivityDate(spId, iso) {
+    if (!canWrite() || !spId) return false;
+    const get = await schemaOf("Activities");
+    const name = get.internal("ActivityDate");
+    if (!name) {
+      console.warn("[store] list Activities thiếu cột \"Ngày\" (ActivityDate) — không đổi được lịch trên SharePoint.");
+      return false;
+    }
+    const f = {};
+    f[name] = spDate(iso);
+    await FISG_GRAPH.updateItem("Activities", spId, f);
+    const a = ACTIVITIES.find(x => x.spId === spId);
+    if (a) a.date = String(iso).slice(0, 10);
+    if (typeof invalidateCockpit === "function") invalidateCockpit();
+    return true;
   }
 
   function spIdOfProject(projectId) {
@@ -1527,9 +1570,9 @@
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer, deleteCustomer,
                         bulkUpsertSuppliers, previewSupplierUpsert,
-                        loadReports, sendReportToSP, addReportComment,
+                        loadReports, sendReportToSP, updateReport, addReportComment,
                         loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,
-                        createActivity, updateActivity, deleteActivity, setActivityDone,
+                        createActivity, updateActivity, deleteActivity, setActivityDone, setActivityDate,
                         createProject, updateProject, addProjectUpdate,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
                         usersListName: USERS_LIST };

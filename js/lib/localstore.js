@@ -139,6 +139,15 @@ var LS = (function(){
     save();
     return r;
   }
+  function updateReport(r){
+    if(!r || !r.id) return false;
+    var d = load();
+    var hit = d.reports.filter(function(x){ return x.id === r.id; })[0];
+    if(!hit) return false;
+    hit.note = r.note; hit.editedAt = r.editedAt;
+    save();
+    return true;
+  }
   function nextReportId(){
     var d = load(), n = 0;
     d.reports.forEach(function(r){
@@ -173,7 +182,7 @@ var LS = (function(){
     mergeActs: mergeActs, nextActId: nextActId, addAct: addAct, updateAct: updateAct,
     markDone: markDone, isDone: isDone, isLocal: isLocal, isMissed: isMissed,
     markSent: markSent, pendingActs: pendingActs, dropAct: dropAct, doneAt: doneAt,
-    addReport: addReport, nextReportId: nextReportId,
+    addReport: addReport, updateReport: updateReport, nextReportId: nextReportId,
     allReports: allReports, reportsFor: reportsFor
   };
 })();

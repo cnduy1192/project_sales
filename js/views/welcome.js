@@ -298,6 +298,11 @@ function wcActRow(a, action){
     btn = `<button class="wc-btn ok" onclick="wcMarkDone('${ckAttr(a.id)}',1)">Hoàn thành</button>`;
   if(wcCanAct() && action === 'undo')
     btn = `<button class="wc-btn" onclick="wcMarkDone('${ckAttr(a.id)}',0)">Hoàn tác</button>`;
+  // "Đổi lịch" hiện trước "Hoàn thành" cho mọi hoạt động chưa hoàn thành.
+  const resched = (wcCanAct() && !LS.isDone(a))
+    ? `<button class="wc-btn resched" onclick="wcReschedule('${ckAttr(a.id)}',event)"
+         aria-label="Đổi lịch hoạt động sang ngày khác">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M14 14l-2.5 2.5"/></svg>Đổi lịch</button>` : '';
   const open = a.projectId
     ? `<button class="wc-btn" onclick="wcOpenProject('${ckAttr(a.projectId)}')">Mở dự án</button>` : '';
   return `<div class="wc-item">
@@ -309,9 +314,62 @@ function wcActRow(a, action){
     </div>
     <div class="wc-item-r">${ckEsc(a.note || '—')}${
       a.next && a.next !== '—' ? ` · <b>Tiếp theo:</b> ${ckEsc(a.next)}` : ''}</div>
-    ${(btn||open) ? `<div class="wc-acts">${btn}${open}</div>` : ''}
+    ${(resched||btn||open) ? `<div class="wc-acts">${resched}${btn}${open}</div>` : ''}
   </div>`;
 }
+
+// Bật lịch nhỏ (dùng lại datepicker) ngay cạnh nút để chọn ngày mới.
+function wcReschedule(id, ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  if(!wcCanAct()){ toast('Chế độ chỉ đọc — không đổi được lịch.'); return; }
+  const a = ACTIVITIES.find(x => x.id === id);
+  if(!a){ toast('Không tìm thấy hoạt động để đổi lịch.'); return; }
+  const anchor = ev && ev.currentTarget;
+  const old = document.getElementById('wcRsWrap'); if(old) old.remove();
+
+  const host = document.createElement('span');
+  host.id = 'wcRsWrap';
+  host.style.cssText = 'position:fixed;z-index:1300;opacity:0;';
+  const input = document.createElement('input');
+  input.type = 'date';
+  input.value = normDate(a.date) || todayISO();
+  host.appendChild(input);
+  document.body.appendChild(host);
+  if(anchor){
+    const r = anchor.getBoundingClientRect();
+    host.style.left = Math.round(r.left) + 'px';
+    host.style.top = Math.round(r.bottom) + 'px';
+  }
+  if(window.FISG_DATEPICKER) FISG_DATEPICKER.scan();
+  input.addEventListener('change', function(){
+    const v = input.value;
+    host.remove();
+    if(v && v !== (normDate(a.date) || '')) wcApplyReschedule(a, v);
+  });
+  setTimeout(function(){ input.focus(); }, 0);
+}
+window.wcReschedule = wcReschedule;
+
+function wcApplyReschedule(a, iso){
+  const prev = normDate(a.date) || '';
+  a.date = iso;
+  renderWelcome();
+  toast('Đã đổi lịch: ' + custLabel(a.customer) + ' → ' + ckVN(iso));
+  if(!a.spId || !window.FISG_STORE || !FISG_STORE.setActivityDate) return;
+  if(!(FISG_STORE.canWrite && FISG_STORE.canWrite())){
+    toast('Đã đổi tạm trên máy này — CHƯA lưu lên SharePoint (chưa đăng nhập Microsoft 365).');
+    return;
+  }
+  FISG_STORE.setActivityDate(a.spId, iso).then(function(ok){
+    if(ok === false){ toast('CHƯA lưu được ngày mới lên SharePoint. Kiểm tra cột "Ngày" của list Activities.'); return; }
+    if(typeof invalidateCockpit === 'function') invalidateCockpit();
+    if(window.renderActs) renderActs();
+  }).catch(function(e){
+    a.date = prev; renderWelcome();
+    toast('Lỗi lưu SharePoint: ' + (e && (e.message||e)) + '. Đã hoàn lại ngày cũ.');
+  });
+}
+window.wcApplyReschedule = wcApplyReschedule;
 
 function wcChangeRow(c){
   const m = c.kind === 'close'

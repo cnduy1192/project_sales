@@ -171,6 +171,8 @@
 .wc-btn.pri:hover{background:var(--marine-deep);border-color:var(--marine-deep);color:#fff}
 .wc-btn.ok{border-color:var(--won-bd);color:var(--won);background:var(--won-bg)}
 .wc-btn.ok:hover{background:var(--won);border-color:var(--won);color:#fff}
+.wc-btn.resched{display:inline-flex;align-items:center;gap:5px}
+.wc-btn.resched svg{flex:none;opacity:.85}
 
 .wc-foot{
   flex:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
