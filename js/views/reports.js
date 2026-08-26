@@ -151,9 +151,6 @@ function rpRenderPanel(list){
       : 'Đã gửi ' + ckVN(r.createdAt) + (r.editedAt ? ' · <b>đã sửa</b> ' + ckVN(r.editedAt) : '')}</div>
 
     <div class="rp-actions">
-      ${(!draft && !editing && rpIsAuthor(r)) ? `<button class="btn-ghost rp-edit" onclick="rpEditReport('${ckAttr(r.id)}')">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-        Sửa báo cáo</button>` : ''}
       <button class="btn-ghost rp-export" onclick="rpExportExcel('${draft ? 'draft' : ckAttr(r.id)}')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
         Xuất Excel</button>
@@ -212,7 +209,11 @@ function rpRenderPanel(list){
       <button class="btn-primary" onclick="rpSaveReport('${ckAttr(r.id)}')">Lưu thay đổi</button>
       <button class="btn-ghost" onclick="rpCancelEdit()">Huỷ</button>
     </div>`
-    : rpThreadHtml(r)}`;
+    : rpThreadHtml(r) + (rpIsAuthor(r) ? `<div class="rp-editbar">
+      <button class="rp-editbtn" onclick="rpEditReport('${ckAttr(r.id)}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        Sửa báo cáo</button>
+    </div>` : '')}`;
 
   rpDrawCharts(r);
 
