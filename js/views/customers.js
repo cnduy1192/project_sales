@@ -121,8 +121,8 @@ function cuCanEdit(entry){
 
 function cuCanDelete(entry){
   if(!me || !entry) return false;
-  if(!cap(me.role).del) return false;
-  return cuCanEdit(entry);
+  // Chỉ Manager / Director / Super Admin được xoá khách hàng (theo vai trò).
+  return typeof capDeleteCustomer === 'function' && capDeleteCustomer(me);
 }
 
 function cuTouch(iso){
@@ -247,11 +247,11 @@ function cuOpenEdit(name){
           <label><span class="cu-cap">Region</span> <input id="cuf-region" value="${ckEsc(v.region||'')}" ${dis}></label>
           <label><span class="cu-cap">Trạng thái</span> <input id="cuf-status" value="${ckEsc(v.status||'')}" placeholder="Active / Prospect" ${dis}></label>
         </div>
-        ${canEdit ? `<div class="cu-form-act">
+        ${(canEdit || canDel) ? `<div class="cu-form-act">
           ${canDel ? `<button class="btn-danger cu-del" id="cuf-del" onclick="cuDeleteCustomer()">Xoá khách hàng</button>` : ''}
           <span class="cu-act-gap"></span>
-          <button class="btn-ghost" onclick="cuCloseEdit()">Huỷ</button>
-          <button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>
+          <button class="btn-ghost" onclick="cuCloseEdit()">${canEdit ? 'Huỷ' : 'Đóng'}</button>
+          ${canEdit ? `<button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>` : ''}
         </div>` : ''}
       </div>
       ${related}
