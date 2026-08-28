@@ -27,6 +27,10 @@ function cuStats(){
 function cuMine(c){
   return typeof ownsCustomer === 'function' && ownsCustomer(c.name || c, me);
 }
+// Team Leader thấy (chỉ đọc) khách của các sale trong team.
+function cuTeamSees(c){
+  return typeof teamSeesCustomer === 'function' && teamSeesCustomer(c.name || c, me);
+}
 
 function cuUnowned(c){ return !String(c.owner||'').trim(); }
 
@@ -41,7 +45,7 @@ function cuRows(){
       if(seeAll && cuFilterOwner && picKey(c.owner) !== picKey(cuFilterOwner)) return false;
       return true;
     }
-    if(!seeAll) return cuMine(c);
+    if(!seeAll) return cuMine(c) || cuTeamSees(c);
     if(cuFilterOwner) return picKey(c.owner) === picKey(cuFilterOwner);
     return true;
   }).sort((a,b) => custLabel(a.name).localeCompare(custLabel(b.name), 'vi'));

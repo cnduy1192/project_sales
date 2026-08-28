@@ -181,7 +181,8 @@
     return o;
   }
   function jsq(s) { return "'" + String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
-  function amountStr(r) { return (r.amount != null && r.amount !== "") ? fmt(r.amount) + " ₫" : "—"; }
+  function groupNum(n) { return (Number(n) || 0).toLocaleString("en-US"); }   // 1,500,000,000
+  function amountStr(r) { return (r.amount != null && r.amount !== "") ? groupNum(r.amount) : "—"; }
 
   // Trang chủ theo hướng khách hàng: mỗi KH 1 dòng, click để bung project (cây thư mục)
   function renderList(rows) {
@@ -325,14 +326,16 @@
     var stClass = r.status === "WON" ? "won" : r.status === "LOST" ? "lost" : "run";
 
     el.innerHTML =
-      highlightsHTML(r, h, stClass) +
-      pathHTML(r, editable) +
-      tabsHTML(r) +
-      '<div class="sf-rec-body">' +
-        '<div class="sf-rec-main">' + tabBodyHTML(r, editable) + "</div>" +
+      '<div class="sf-rec-split">' +
+        '<div class="sf-rec-left">' +
+          highlightsHTML(r, h, stClass) +
+          pathHTML(r, editable) +
+          tabsHTML(r) +
+          '<div class="sf-rec-main">' + tabBodyHTML(r, editable) + "</div>" +
+          footHTML(r, editable) +
+        "</div>" +
         '<aside class="sf-rec-side">' + sideHTML(r) + "</aside>" +
-      "</div>" +
-      footHTML(r, editable);
+      "</div>";
     wireRecord(r, editable);
   }
 
@@ -343,8 +346,6 @@
       '<div class="sf-hl-pills">' +
         '<span class="sf-hp">' + esc(r.ncc || "—") + "</span>" +
         (r.segment ? '<span class="sf-hp">' + esc(r.segment) + "</span>" : "") +
-        (r.application ? '<span class="sf-hp">' + esc(r.application) + "</span>" : "") +
-        '<span class="sf-hp">PIC ' + esc(r.pic || "—") + "</span>" +
       "</div></div>" +
       '<div class="sf-hl-right">' +
         '<span class="sf-hl-status sf-stpill ' + stClass + '">' + stLabel + "</span>" +
@@ -355,8 +356,7 @@
         metric("Tiềm năng " + TODAY.getFullYear(), fmt(r.kgThis) + ' <small>KG</small>') +
         metric("Năm sau", fmt(r.kgNext) + ' <small>KG</small>') +
         metric("Ngày đóng DK", viDate(r.closing)) +
-        '<div class="sf-metric"><div class="m-l">Xác suất · Sức khỏe</div><div class="m-v">' + probPct(r) + "%</div>" +
-          '<div class="sf-health ' + h.cls + '"><i></i>' + h.label + "</div></div>" +
+        metric("Tỷ lệ", probPct(r) + "%") +
       "</div></div>";
   }
   function metric(l, v) { return '<div class="sf-metric"><div class="m-l">' + l + '</div><div class="m-v">' + v + "</div></div>"; }
@@ -404,23 +404,88 @@
   function timelineTab(r) {
     var ev = [];
     if (r.created) ev.push({ d: parseWhen(r.created), tag: "Tạo dự án", who: r.pic, text: "Khởi tạo cơ hội " + r.customer + " · " + r.product, kind: "start" });
+    // Hoạt động khách hàng của Sale/R&D gắn với dự án này
     (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; }).forEach(function (a) {
-      ev.push({ d: parseWhen(a.date), tag: a.type || "Hoạt động", who: a.pic, text: a.note || "", kind: "act" });
-    });
-    (r.comments || []).forEach(function (c) {
-      var isStage = /^\[/.test(c.text || "");
-      ev.push({ d: parseWhen(c.at), at: c.at, tag: isStage ? "Cập nhật" : "Trao đổi", who: c.by, text: c.text || "", kind: isStage ? "stage" : "note" });
+      ev.push({ d: parseWhen(a.date), tag: "Hoạt động", who: a.pic, text: (a.type ? a.type + " — " : "") + (a.note || ""), kind: "act" });
     });
     if (r.closing) ev.push({ d: parseWhen(r.closing), tag: "Mục tiêu chốt", who: "", text: "Ngày đóng dự kiến", kind: "target" });
     ev.sort(function (a, b) { return (b.d ? b.d.getTime() : 0) - (a.d ? a.d.getTime() : 0); });
+    var extSvg = '<svg class="sf-tl-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>';
     var body = ev.length ? ev.map(function (e) {
       var when = e.d ? e.d.toLocaleDateString("vi-VN") : (e.at || "");
-      return '<div class="sf-tl-item ' + e.kind + '"><span class="sf-tl-dot"></span>' +
-        '<div class="sf-tl-c"><div class="sf-tl-top"><span class="sf-tl-tag">' + esc(e.tag) + '</span><span class="sf-tl-when">' + esc(when) + "</span></div>" +
+      var isAct = e.kind === "act";
+      var attrs = isAct ? ' role="link" tabindex="0" title="Mở hoạt động này trên tracker.fisaigon.vn"' +
+        ' onclick="SF.openActivityLink(' + jsq(r.customer) + ')"' +
+        ' onkeydown="if(event.key===\'Enter\'){SF.openActivityLink(' + jsq(r.customer) + ')}"' : "";
+      return '<div class="sf-tl-item ' + e.kind + (isAct ? " link" : "") + '"' + attrs + '><span class="sf-tl-dot"></span>' +
+        '<div class="sf-tl-c"><div class="sf-tl-top"><span class="sf-tl-tag">' + esc(e.tag) + (isAct ? extSvg : "") + '</span><span class="sf-tl-when">' + esc(when) + "</span></div>" +
         '<div class="sf-tl-text">' + esc(e.text) + (e.who ? ' <span class="sf-tl-who">· ' + esc(e.who) + "</span>" : "") + "</div></div></div>";
-    }).join("") : '<div class="sf-act-empty">Chưa có sự kiện nào.</div>';
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Dòng thời gian dự án</div>' +
+    }).join("") : '<div class="sf-act-empty">Chưa có hoạt động nào. Bấm “Cập nhật hoạt động” để thêm bước tiếp theo.</div>';
+    var canAdd = capEdit(r, me);
+    return '<div class="sf-tl-head">' +
+        '<div class="sf-sec-h" style="margin:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Dòng thời gian &amp; hoạt động</div>' +
+        (canAdd ? '<button class="sf-tl-add" onclick="SF.openActForm()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Cập nhật hoạt động</button>' : "") +
+      "</div>" +
       '<div class="sf-timeline">' + body + "</div>";
+  }
+
+  /* mở hoạt động của khách hàng trên tracker chính (index.html = tracker.fisaigon.vn) */
+  function openActivityLink(customer) {
+    var url = "index.html?open=acts&q=" + encodeURIComponent(customer || "");
+    window.open(url, "_blank");
+  }
+
+  /* ---------- Cập nhật hoạt động kế tiếp (sync sang list Activities) ---------- */
+  function openActForm() {
+    var r = recById(curId); if (!r) return;
+    if (!capEdit(r, me)) { toast("Bạn không có quyền thêm hoạt động."); return; }
+    var bd = document.getElementById("sfActBd") || buildActModal();
+    document.getElementById("sfActSub").textContent = r.customer + " · " + (r.ncc || "");
+    document.getElementById("sfAtType").value = "Call";
+    document.getElementById("sfAtDate").value = (typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10));
+    document.getElementById("sfAtNote").value = "";
+    document.getElementById("sfAtNext").value = "";
+    bd.classList.add("open");
+    setTimeout(function () { document.getElementById("sfAtNote").focus(); }, 60);
+  }
+  function buildActModal() {
+    var bd = document.createElement("div");
+    bd.className = "sf-cm-bd"; bd.id = "sfActBd";
+    bd.innerHTML =
+      '<div class="sf-cm sf-act-modal"><div class="sf-cm-h">Cập nhật hoạt động <span id="sfActSub" style="font-weight:400;color:var(--ink-3);font-size:13px"></span></div>' +
+      '<div class="sf-cm-b">' +
+        '<div class="sf-af-row"><label>Loại hoạt động<select id="sfAtType"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></label>' +
+        '<label>Ngày<input type="date" id="sfAtDate"></label></div>' +
+        '<label class="sf-af-full">Nội dung / mục tiêu<textarea id="sfAtNote" rows="2" placeholder="Nội dung buổi làm việc…"></textarea></label>' +
+        '<label class="sf-af-full">Bước tiếp theo<input id="sfAtNext" placeholder="Hành động kế tiếp…"></label>' +
+      "</div>" +
+      '<div class="sf-cm-f"><button class="sf-btn ghost" onclick="SF.closeActForm()">Huỷ</button>' +
+      '<button class="sf-btn primary" onclick="SF.saveActForm()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu &amp; đồng bộ</button></div></div>';
+    bd.addEventListener("click", function (e) { if (e.target === bd) closeActForm(); });
+    document.body.appendChild(bd);
+    return bd;
+  }
+  function closeActForm() { var bd = document.getElementById("sfActBd"); if (bd) bd.classList.remove("open"); }
+  function saveActForm() {
+    var r = recById(curId); if (!r) return;
+    var type = val("sfAtType") || "Call", date = val("sfAtDate") || todayISO();
+    var note = (val("sfAtNote") || "").trim(), next = (val("sfAtNext") || "").trim();
+    if (!note && !next) { toast("Nhập nội dung hoặc bước tiếp theo."); return; }
+    var a = {
+      customer: r.customer, pic: me.pic || me.name, ncc: r.ncc || "", nccs: r.ncc ? [r.ncc] : [],
+      product: r.product, type: type, date: date, note: note, next: next, potential: "Medium",
+      related: [], projectId: r.id, id: "A-tmp" + Date.now(), spId: null
+    };
+    ACTIVITIES.push(a);
+    closeActForm(); buildRecord();
+    var live = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && r.spId;
+    toast(live ? "Đã thêm hoạt động — đang đồng bộ lên tracker…" : "Đã thêm hoạt động (lưu tạm trong trình duyệt).");
+    if (live) {
+      FISG_STORE.createActivity(a).then(function (spId) {
+        a.spId = spId; a.id = "A-" + spId; buildRecord();
+        toast("Đã đồng bộ hoạt động vào Activities trên tracker.");
+      }).catch(function (e) { toast("Chưa đồng bộ được lên SharePoint: " + (e.message || e)); });
+    }
   }
 
   function detailsTab(r, editable) {
@@ -471,28 +536,36 @@
   }
 
   function financialTab(r) {
-    var weighted = Math.round((r.kgThis || 0) * (r.prob || 0));
     var canEd = capEdit(r, me);
+    var total = (r.kgThis || 0) + (r.kgNext || 0);
+    var amt = (r.amount != null && r.amount !== "") ? Number(r.amount) : null;
+    var unit = (amt != null && total > 0) ? Math.round(amt / total) : null;   // đơn giá/kg = giá trị ước tính / tổng tiềm năng
     var amountBlock = canEd
-      ? '<div class="sf-amount-edit"><input type="number" min="0" id="sfAmount" placeholder="Nhập giá trị ước tính…" value="' + (r.amount != null && r.amount !== "" ? r.amount : "") + '">' +
-        '<span class="sf-amount-unit">₫</span><button class="sf-mini-btn" onclick="SF.saveAmount()">Lưu</button></div>' +
-        '<div class="sf-amount-hint">Giá trị ước tính do bạn nhập — lưu tạm trong trình duyệt, sẽ đồng bộ SharePoint ở Phase 2.</div>'
+      ? '<div class="sf-amount-edit"><input type="text" inputmode="numeric" id="sfAmount" placeholder="Nhập giá trị ước tính…" value="' + (amt != null ? groupNum(amt) : "") + '" oninput="SF.fmtAmountInput(this)">' +
+        '<button class="sf-mini-btn" onclick="SF.saveAmount()">Lưu</button></div>'
       : '<div class="sf-fin"><div class="f-l">Giá trị ước tính (Amount)</div><div class="f-v">' + amountStr(r) + "</div></div>";
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M7 7h7a3 3 0 010 6H8a3 3 0 000 6h8"/></svg>Tiềm năng sản lượng</div>' +
+    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Tiềm năng sản lượng</div>' +
       '<div class="sf-fin-grid">' +
       '<div class="sf-fin"><div class="f-l">Tiềm năng ' + TODAY.getFullYear() + '</div><div class="f-v">' + fmt(r.kgThis) + ' <small>KG</small></div></div>' +
       '<div class="sf-fin"><div class="f-l">Tiềm năng năm sau</div><div class="f-v">' + fmt(r.kgNext) + ' <small>KG</small></div></div>' +
       '<div class="sf-fin"><div class="f-l">Xác suất thắng</div><div class="f-v">' + probPct(r) + '%</div></div>' +
-      '<div class="sf-fin"><div class="f-l">Sản lượng trọng số (KG × %)</div><div class="f-v">' + fmt(weighted) + ' <small>KG</small></div></div>' +
+      '<div class="sf-fin"><div class="f-l">Đơn giá / Kg</div><div class="f-v">' + (unit != null ? groupNum(unit) : "—") + '</div></div>' +
       "</div>" +
-      '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Giá trị ước tính (Amount)</div>' +
+      '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h3M8 15h3M14 11v6"/></svg>Giá trị ước tính (Amount)</div>' +
       amountBlock;
+  }
+  // định dạng ô nhập với dấu phẩy khi gõ
+  function fmtAmountInput(el) {
+    var digits = (el.value || "").replace(/[^0-9]/g, "");
+    el.value = digits ? Number(digits).toLocaleString("en-US") : "";
   }
 
   function sideHTML(r) {
     var cmts = (r.comments || []).slice().sort(function (a, b) { return (a.at || "") < (b.at || "") ? -1 : 1; });
     var cmtHTML = cmts.length ? cmts.map(function (c) {
-      return '<div class="sf-cmt"><div class="sf-cmt-head"><span class="sf-cmt-by">' + esc(c.by || "—") + '</span><span class="sf-cmt-at">' + esc(c.at || "") + "</span></div>" +
+      var mine = (typeof isMine === "function") ? isMine(c.by, me)
+        : ((typeof picKey === "function" ? picKey(c.by) : String(c.by || "").toUpperCase()) === (typeof picKey === "function" ? picKey(me && (me.pic || me.name)) : String((me && (me.pic || me.name)) || "").toUpperCase()));
+      return '<div class="sf-cmt' + (mine ? " mine" : "") + '"><div class="sf-cmt-head"><span class="sf-cmt-by">' + esc(c.by || "—") + '</span><span class="sf-cmt-at">' + esc(c.at || "") + "</span></div>" +
         '<div class="sf-cmt-tx">' + esc(c.text || "") + "</div></div>";
     }).join("") : '<div class="sf-cmt-empty">Chưa có trao đổi nào.</div>';
 
@@ -502,21 +575,13 @@
 
     var canPost = capEdit(r, me);
 
-    var acts = (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })
-      .sort(function (a, b) { return (b.date || "") < (a.date || "") ? -1 : 1; }).slice(0, 4);
-    var actHTML = acts.map(function (a) {
-      return '<div class="sf-act-line"><span class="al-t">' + esc(a.pic || "—") + " · " + esc(a.type || "Hoạt động") +
-        (a.note ? " — " + esc(a.note) : "") + '</span><span class="al-d">' + viDate(a.date) + "</span></div>";
-    }).join("");
-
     var risk = (r.risk || "").trim();
     var riskHTML = risk ? '<div class="sf-risk-text">' + esc(risk) + "</div>"
       : '<div class="sf-side-empty">Chưa ghi nhận rủi ro.</div>';
     var riskEdit = canPost
       ? '<div class="sf-risk-edit"><input id="sfRisk" placeholder="Ghi nhận rủi ro…" value="' + esc(risk) + '"><button class="sf-mini-btn" onclick="SF.saveRisk()">Lưu</button></div>' : "";
 
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Hoạt động &amp; trao đổi</div>' +
-      (actHTML || "") +
+    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Trao đổi</div>' +
       '<div class="sf-chat"><div class="sf-cmts" id="sfCmts">' + cmtHTML + "</div>" +
       (canPost ? '<div class="sf-cmt-input"><input id="sfCmt" placeholder="Viết trao đổi… (Enter để gửi)"><button class="sf-send" onclick="SF.postComment()" aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>' : "") +
       "</div>" +
@@ -573,8 +638,8 @@
   function saveAmount() {
     var r = recById(curId); if (!r) return;
     if (!capEdit(r, me)) { toast("Bạn không có quyền cập nhật giá trị."); return; }
-    var v = val("sfAmount");
-    r.amount = (v === "" || v == null) ? "" : Math.max(0, Math.round(+v || 0));
+    var v = (val("sfAmount") || "").replace(/[^0-9]/g, "");
+    r.amount = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
     buildRecord(); render();
     toast(r.amount === "" ? "Đã xoá giá trị ước tính." : "Đã cập nhật giá trị ước tính (lưu tạm trong trình duyệt).");
   }
@@ -653,6 +718,7 @@
     render: render, setNcc: setNcc, setStatus: setStatus, setView: setView,
     openRecord: openRecord, closeRecord: closeRecord, setTab: setTab, toggleCustomer: toggleCustomer,
     moveStage: moveStage, saveRecord: saveRecord, postComment: postComment, saveRisk: saveRisk, saveAmount: saveAmount, onSegmentChange: onSegmentChange,
+    openActivityLink: openActivityLink, openActForm: openActForm, closeActForm: closeActForm, saveActForm: saveActForm, fmtAmountInput: fmtAmountInput,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose
   };
 })();

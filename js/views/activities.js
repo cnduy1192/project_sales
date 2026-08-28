@@ -38,7 +38,8 @@ function renderActs(){
 
     const prAll=a.projectId?RECORDS.find(r=>r.id===a.projectId):null;
     const canSeePr = typeof ownsRecord!=='function' || !me
-      || (typeof canViewAll==='function' && canViewAll(me)) || ownsRecord(prAll, me);
+      || (typeof canViewAll==='function' && canViewAll(me)) || ownsRecord(prAll, me)
+      || (typeof teamSeesRecord==='function' && teamSeesRecord(prAll, me));
     const pr=prAll && canSeePr ? prAll : null;
     const u=USERS.find(x=>x.pic===a.pic);
 

@@ -38,14 +38,19 @@ function _cmtKey(code,c){ return 'C:'+code+':'+picKey(c.by)+':'+(c.at||'')+':'+(
 
 function _notifCandidates(){
   if(typeof REPORTS==='undefined' || !me) return [];
-  const lead = cap(me.role).scope==='all';
+  const isAll = cap(me.role).scope==='all';
+  const isTL = typeof isTeamLead==='function' && isTeamLead(me);
+  const lead = isAll || isTL;
   const meKey = picKey(me.pic||me.name);
+  const inTeam = pic => isTL && typeof teamMemberPic==='function' && teamMemberPic(pic, me);
   const out = [];
   REPORTS.forEach(r=>{
 
     const addressed = (r.to||[]).filter(Boolean);
+    // Manager/Director: nhận báo cáo gửi chung hoặc đích danh. Team Leader: chỉ báo cáo của team.
     const forLead = lead && picKey(r.pic)!==meKey
-      && (addressed.length===0 || addressed.some(t=>picKey(t)===meKey));
+      && (isTL ? addressed.some(t=>picKey(t)===meKey)
+               : (addressed.length===0 || addressed.some(t=>picKey(t)===meKey)));
     if(forLead)
       out.push({ key:'R:'+r.id, who:r.pic, action:'đã gửi <b>báo cáo tuần '+r.weekLabel+'</b>',
                  at:r.createdAt, report:r.id });
@@ -53,7 +58,9 @@ function _notifCandidates(){
       if(picKey(c.by)===meKey) return;
       const cLead = c.role && cap(c.role).scope==='all';
 
-      const forMe = lead ? !cLead : (picKey(r.pic)===meKey);
+      const forMe = isAll ? !cLead
+                  : isTL ? (inTeam(r.pic) && !cLead)
+                  : (picKey(r.pic)===meKey);
       if(forMe)
         out.push({ key:_cmtKey(r.id,c), who:c.by,
                    action:'đã phản hồi <b>báo cáo tuần '+r.weekLabel+'</b>: "'

@@ -19,12 +19,19 @@ function rpSentReports(){
   const all = useSp ? REPORTS.slice() : (window.LS ? LS.allReports() : []);
   if(rpIsLead())
     return all.filter(r => !rpFilterPic || picKey(r.pic) === picKey(rpFilterPic));
+  // Team Leader: đọc báo cáo của mình + của các sale trong team.
+  if(me && typeof isTeamLead === 'function' && isTeamLead(me))
+    return all.filter(r => picKey(r.pic) === picKey(me.pic || me.name || '')
+                        || (typeof teamMemberPic === 'function' && teamMemberPic(r.pic, me)))
+              .filter(r => !rpFilterPic || picKey(r.pic) === picKey(rpFilterPic));
   return all.filter(r => picKey(r.pic) === picKey((me && me.pic) || ''));
 }
 
 function rpCanComment(r){
   if(!me || !r) return false;
   if(cap(me.role).scope === 'all') return true;
+  if(typeof isTeamLead === 'function' && isTeamLead(me)
+     && typeof teamMemberPic === 'function' && teamMemberPic(r.pic, me)) return true;
   return picKey(r.pic) === picKey(me.pic || '');
 }
 

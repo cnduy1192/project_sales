@@ -100,7 +100,8 @@ function openDetail(id, origin){
   const rec=RECORDS.find(r=>r.id===id); if(!rec)return;
 
   if(typeof ownsRecord==='function' && me
-     && !(typeof canViewAll==='function' && canViewAll(me)) && !ownsRecord(rec, me)){
+     && !(typeof canViewAll==='function' && canViewAll(me)) && !ownsRecord(rec, me)
+     && !(typeof teamSeesRecord==='function' && teamSeesRecord(rec, me))){
     toast('Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.');
     return;
   }

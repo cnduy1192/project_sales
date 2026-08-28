@@ -15,6 +15,11 @@ var ROLE_DEF = {
     edit:true,  close:false, del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
     hint:'Thấy toàn bộ khách hàng và dự án; ghi được hoạt động với mọi khách; chỉ sửa dự án mình phụ trách R&D, không đóng dự án; KHÔNG xoá được khách hàng'
   },
+  teamlead: {
+    label:'Team Leader', scope:'team', lead:true,
+    edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    hint:'Trưởng nhóm (cao hơn Sales/Sale Support/R&D, thấp hơn Manager): thấy dự án/hoạt động/khách của các sale báo cáo cho mình ở chế độ CHỈ ĐỌC, đọc báo cáo tuần của team; tự nhập và quản lý việc của chính mình; KHÔNG xoá khách hàng'
+  },
   manager: {
     label:'Manager', scope:'all',
     edit:true,  close:true,  del:true,  delCustomer:true, admin:false, cockpit:true,  weekly:true,  weeklyAuto:false, report:true,
@@ -39,7 +44,7 @@ var ROLE_FALLBACK = {
   hint:'Vai trò không hợp lệ — liên hệ quản trị'
 };
 
-var ROLE_ORDER = ['sales','salesupport','rnd','manager','director','superadmin'];
+var ROLE_ORDER = ['sales','salesupport','rnd','teamlead','manager','director','superadmin'];
 
 function cap(role){ return ROLE_DEF[role] || ROLE_FALLBACK; }
 function myCap(){ return cap(typeof me !== 'undefined' && me ? me.role : null); }
@@ -64,6 +69,8 @@ function roleFromText(s){
     'sale support':'salesupport', 'sales support':'salesupport', 'hỗ trợ':'salesupport',
     'ho tro':'salesupport', 'hỗ trợ sales':'salesupport', 'trợ lý sales':'salesupport',
     'r&d':'rnd', 'rd':'rnd', 'nghiên cứu':'rnd', 'nghien cuu':'rnd',
+    'team leader':'teamlead', 'teamlead':'teamlead', 'team lead':'teamlead', 'leader':'teamlead',
+    'trưởng nhóm':'teamlead', 'truong nhom':'teamlead', 'nhóm trưởng':'teamlead', 'nhom truong':'teamlead',
     'quản lý':'manager', 'quan ly':'manager', 'trưởng phòng':'manager', 'truong phong':'manager',
     'giám đốc':'director', 'giam doc':'director',
     'super admin':'superadmin', 'quản trị':'superadmin', 'quan tri':'superadmin', 'admin':'superadmin'
@@ -136,10 +143,46 @@ function ownsActivity(a, u, projectIds){
   return !!(a.projectId && projectIds && projectIds[a.projectId]);
 }
 
+// ===== Team Leader (scope 'team') =====
+// "Team" của một Team Leader = các user có ô "Báo cáo cho" (reportsTo) trỏ về leader này.
+// Các hàm teamSees* CHỈ dùng cho lớp HIỂN THỊ (xem), không đụng tới quyền sửa/xoá —
+// nên Team Leader thấy dữ liệu của team ở chế độ chỉ đọc, chỉ sửa được việc của chính mình.
+function isTeamLead(u){ return !!(u && cap(u.role).scope === 'team'); }
+function teamMemberPic(pic, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!u || !pic || !isTeamLead(u)) return false;
+  if(isMine(pic, u)) return true;
+  var target = (typeof userByName === 'function') ? userByName(pic) : null;
+  return !!(target && target.reportsTo && sameName(target.reportsTo, u.pic || u.name));
+}
+function teamSeesCustomer(customer, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!u || !customer || !isTeamLead(u)) return false;
+  if(typeof customerOwnerOf !== 'function') return false;
+  return teamMemberPic(customerOwnerOf(customer), u);
+}
+function teamSeesRecord(r, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!r || !isTeamLead(u)) return false;
+  return teamMemberPic(r.pic, u)
+      || (r.related || []).some(function(x){ return teamMemberPic(x, u); })
+      || teamSeesCustomer(r.customer, u);
+}
+function teamSeesActivity(a, u, projectIds){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!a || !isTeamLead(u)) return false;
+  return teamMemberPic(a.pic, u)
+      || (a.related || []).some(function(x){ return teamMemberPic(x, u); })
+      || teamSeesCustomer(a.customer, u)
+      || !!(a.projectId && projectIds && projectIds[a.projectId]);
+}
+
 function scopeRecords(list, u){
   u = u || (typeof me !== 'undefined' ? me : null);
   if(!u) return [];
   if(canViewAll(u)) return list.slice();
+  if(isTeamLead(u))
+    return list.filter(function(r){ return ownsRecord(r, u) || teamSeesRecord(r, u); });
   return list.filter(function(r){ return ownsRecord(r, u); });
 }
 function scopeActs(list, u, records){
@@ -148,6 +191,8 @@ function scopeActs(list, u, records){
   if(canViewAll(u)) return list.slice();
   var ids = {};
   (records || []).forEach(function(r){ ids[r.id] = 1; });
+  if(isTeamLead(u))
+    return list.filter(function(a){ return ownsActivity(a, u, ids) || teamSeesActivity(a, u, ids); });
   return list.filter(function(a){ return ownsActivity(a, u, ids); });
 }
 
@@ -188,4 +233,7 @@ window.coversPic = coversPic; window.supportsList = supportsList;
 window.scopeRecords = scopeRecords; window.scopeActs = scopeActs;
 window.capEdit = capEdit; window.capClose = capClose; window.capDelete = capDelete; window.isKnownRole = isKnownRole;
 window.capDeleteCustomer = capDeleteCustomer;
+window.isTeamLead = isTeamLead; window.teamMemberPic = teamMemberPic;
+window.teamSeesCustomer = teamSeesCustomer; window.teamSeesRecord = teamSeesRecord;
+window.teamSeesActivity = teamSeesActivity;
 window.capReport = capReport; window.roleFromText = roleFromText;

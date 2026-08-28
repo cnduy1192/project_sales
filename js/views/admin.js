@@ -158,7 +158,7 @@ function openUserForm(idx){
   document.getElementById('u-role').innerHTML =
     ROLES.map(r => `<option value="${r.id}"${u && u.role===r.id?' selected':''}>${r.label}</option>`).join('');
 
-  const leads = USERS.filter(x => cap(x.role).scope === 'all');
+  const leads = USERS.filter(x => cap(x.role).scope === 'all' || cap(x.role).lead);
   const rsel = document.getElementById('u-reports');
   if(rsel){
     rsel.innerHTML = '<option value="">— Tất cả quản lý —</option>' +
