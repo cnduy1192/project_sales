@@ -9,8 +9,12 @@
         if (Array.isArray(LISTS.nccs))
           LISTS.nccs.forEach((n, i) => { if (n === OLD_NCC) LISTS.nccs[i] = NEW_NCC; });
         if (LISTS.pipelines && LISTS.pipelines[OLD_NCC]) {
-          LISTS.pipelines[NEW_NCC] = LISTS.pipelines[OLD_NCC];
+          if (!LISTS.pipelines[NEW_NCC]) LISTS.pipelines[NEW_NCC] = LISTS.pipelines[OLD_NCC];
           delete LISTS.pipelines[OLD_NCC];
+        }
+        if (Array.isArray(LISTS.pipelineKeys)) {
+          LISTS.pipelineKeys = LISTS.pipelineKeys.map(k => k === OLD_NCC ? NEW_NCC : k)
+            .filter((k, i, a) => a.indexOf(k) === i);
         }
         if (LISTS.groupOf) Object.keys(LISTS.groupOf).forEach(k => {});
       }

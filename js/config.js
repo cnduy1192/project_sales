@@ -79,7 +79,7 @@ var DEFAULT_PIPELINE = ['SHARED BUSINESS GOAL','BUILDING A SOLUTION','SOLUTION T
 function _nccNorm(s){ return String(s == null ? '' : s).trim().toUpperCase(); }
 function _pipelineKeys(){
   var k = (LISTS.pipelineKeys && LISTS.pipelineKeys.length) ? LISTS.pipelineKeys : Object.keys(PIPELINES);
-  return k.filter(function(x){ return PIPELINES[x] && PIPELINES[x].length; });
+  return k.filter(function(x){ return !/^\d+$/.test(String(x)) && PIPELINES[x] && PIPELINES[x].length; });
 }
 function pipelineKeyOf(ncc){
   var n = _nccNorm(ncc); if(!n) return '';

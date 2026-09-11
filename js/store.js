@@ -216,14 +216,15 @@
 
   async function loadPipelines() {
     try {
-      const [cols, items] = await Promise.all([
-        FISG_GRAPH.columns("Pipelines"), FISG_GRAPH.listItems("Pipelines"),
+      const [cols, items, supMap] = await Promise.all([
+        FISG_GRAPH.columns("Pipelines"), FISG_GRAPH.listItems("Pipelines"), idTitleMap("Suppliers"),
       ]);
       const g = makeGetter("Pipelines", cols);
       const rows = items.map(it => {
         const f = it.fields || {};
         return {
-          ncc: txt(g(f, "Supplier")) || txt(f.SupplierLookupId ? "" : ""),
+          // cột "NCC" có thể là Text hoặc Lookup (Graph chỉ trả <cột>LookupId) → tra tên qua list Suppliers
+          ncc: lookupOf(g, f, "Supplier", supMap).trim(),
           stage: txt(g(f, "Stage")) || txt(f.Title),
           order: Number(g(f, "StageOrder")) || 0,
           group: txt(g(f, "StageGroup")),
@@ -260,8 +261,14 @@
     });
     Object.keys(LISTS.segTree).forEach(k => LISTS.segTree[k].sort((a, b) => a.localeCompare(b, "vi")));
 
-    const pipe = await loadPipelines();
-    if (pipe && pipe.length) {
+    const pipeAll = await loadPipelines();
+    const pipe = (pipeAll || []).filter(p => p.ncc && !/^\d+$/.test(p.ncc));
+    if (pipeAll && pipeAll.length && pipe.length < pipeAll.length)
+      console.warn("[store] list Pipelines: " + (pipeAll.length - pipe.length)
+        + " dòng không xác định được NCC (cột NCC trống / lookup hỏng) — đã bỏ qua.");
+    if (pipe.length) {
+      const catalog = {};
+      Object.keys(LISTS.pipelines).forEach(k => { catalog[k] = LISTS.pipelines[k].slice(); });
       clearObj(LISTS.pipelines);
       const byNcc = {};
       pipe.forEach(p => { (byNcc[p.ncc] = byNcc[p.ncc] || []).push(p); });
@@ -269,7 +276,16 @@
         byNcc[n].sort((a, b) => a.order - b.order);
         LISTS.pipelines[n] = byNcc[n].map(p => p.stage);
       });
-      LISTS.pipelineKeys = Object.keys(byNcc).filter(Boolean);
+      const keys = Object.keys(byNcc);
+      // NCC chuẩn (IFF / Kimica / Roquette) chưa có dòng trong list → dùng pipeline trong catalog.js
+      const norm = s => String(s).trim().toUpperCase();
+      Object.keys(catalog).forEach(k => {
+        const K = norm(k);
+        const covered = keys.some(x => { const X = norm(x); return X === K || X.indexOf(K) === 0 || K.indexOf(X) === 0; });
+        if (!covered) { LISTS.pipelines[k] = catalog[k]; keys.push(k); }
+      });
+      LISTS.pipelineKeys = keys;
+      console.info("[store] pipeline theo NCC:", keys.map(k => k + " (" + LISTS.pipelines[k].length + " stage)").join(", "));
       pipe.forEach(p => {
         if (p.group) LISTS.groupOf[p.stage] = p.group;
         if (!isNaN(p.prob)) LISTS.probOf[p.stage] = p.prob;
