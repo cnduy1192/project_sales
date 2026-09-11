@@ -58,6 +58,7 @@
     me = USERS[i];
     if (!me) return;
     nccFilter = ALL_NCC;   // mặc định xem Tất cả nhà cung cấp
+    applyDeepLink();       // ?ncc=&status=&q=&open= từ menu Sales Funnel ở index.html
     document.getElementById("sfLogin").style.display = "none";
     document.getElementById("sfApp").style.display = "flex";
     renderUser();
@@ -65,6 +66,36 @@
     render();
   }
   window.loginAs = loginAs;
+
+  /* ---------- Deeplink: salesfunnel.html?ncc=…&status=…&q=…&open=<mã dự án> ---------- */
+  var DL = (function () {
+    try {
+      var p = new URLSearchParams(location.search);
+      return { ncc: p.get("ncc") || "", status: p.get("status") || "", q: p.get("q") || "", open: p.get("open") || "" };
+    } catch (e) { return {}; }
+  })();
+  var dlOpened = false;
+  function applyDeepLink() {
+    if (DL.ncc) {
+      var k = DL.ncc.trim().toLowerCase();
+      nccFilter = NCCS.filter(function (n) { return n.toLowerCase() === k; })[0] || DL.ncc.trim();
+    }
+    if (DL.status === "IN PROGRESS" || DL.status === "WON" || DL.status === "LOST") {
+      statusFilter = DL.status;
+      document.querySelectorAll("#sfStatusSeg .sf-seg-b").forEach(function (b) { b.classList.toggle("on", b.dataset.st === statusFilter); });
+    }
+    var qi = document.getElementById("sfQ");
+    if (DL.q && qi) qi.value = DL.q;
+    if (DL.open && !dlOpened) {
+      dlOpened = true;
+      var tries = 0;
+      var iv = setInterval(function () {   // chờ dữ liệu SharePoint về rồi mới mở record
+        tries++;
+        if (recById(DL.open)) { clearInterval(iv); openRecord(DL.open); }
+        else if (tries > 120) { clearInterval(iv); toast("Không tìm thấy dự án " + DL.open + " (hoặc bạn không có quyền xem)."); }
+      }, 300);
+    }
+  }
 
   // auth.js expects these to exist when it renders index chrome — no-op here.
   window.rebuildNccTabs = function () { try { renderNccTabs(); } catch (e) {} };
@@ -499,7 +530,7 @@
 
   /* Chevron path liền mạch (kiểu Salesforce Path) — click để đổi giai đoạn trực tiếp */
   function pathHTML(r, editable) {
-    var pipe = pipelineOf(r.ncc);
+    var pipe = pipelineOf(r.ncc, r.stage);
     var cur = pipe.indexOf(r.stage);
     var closed = r.status !== "IN PROGRESS";
     return '<div class="sf-path" role="group" aria-label="Tiến trình dự án">' + pipe.map(function (s, i) {

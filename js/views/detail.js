@@ -49,7 +49,7 @@ function openDetail(id, origin){
   document.getElementById('d-prod').value=curRec.product;
   document.getElementById('d-app').value=curRec.application;
   document.getElementById('d-type').value=curRec.boptype||'';
-  document.getElementById('d-stage').innerHTML=pipelineOf(curRec.ncc).map(s=>`<option${s===curRec.stage?' selected':''}>${s}</option>`).join('');
+  document.getElementById('d-stage').innerHTML=pipelineOf(curRec.ncc, curRec.stage).map(s=>`<option${s===curRec.stage?' selected':''}>${s}</option>`).join('');
   probOptions('d-prob',probPct(curRec));
   document.getElementById('d-closing').value=curRec.closing||'';
   document.getElementById('d-kg1').value=curRec.kgThis;

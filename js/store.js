@@ -269,6 +269,7 @@
         byNcc[n].sort((a, b) => a.order - b.order);
         LISTS.pipelines[n] = byNcc[n].map(p => p.stage);
       });
+      LISTS.pipelineKeys = Object.keys(byNcc).filter(Boolean);
       pipe.forEach(p => {
         if (p.group) LISTS.groupOf[p.stage] = p.group;
         if (!isNaN(p.prob)) LISTS.probOf[p.stage] = p.prob;
@@ -277,7 +278,11 @@
     const unknown = [];
     recs.forEach(r => {
       if (!r.ncc || !r.stage) return;
-      const arr = (LISTS.pipelines[r.ncc] = LISTS.pipelines[r.ncc] || []);
+      // NCC không có pipeline riêng → khởi tạo bằng pipeline chuẩn (Roquette)
+      const own = window.pipelineKeyOf ? pipelineKeyOf(r.ncc) : r.ncc;
+      const key = own || r.ncc;
+      const arr = (LISTS.pipelines[key] = LISTS.pipelines[key]
+        || (window.pipelineOf ? pipelineOf(r.ncc) : []));
       if (arr.indexOf(r.stage) < 0) { arr.push(r.stage); unknown.push(r.ncc + " · " + r.stage); }
     });
 

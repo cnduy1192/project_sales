@@ -54,6 +54,9 @@ var LISTS = {
   probOf:    Object.assign({}, CATALOG.probOf),
   segTree:   JSON.parse(JSON.stringify(CATALOG.segTree)),
   segments:  CATALOG.segments.slice(),
+  // NCC có pipeline riêng (từ list Pipelines trên SharePoint, fallback catalog).
+  // NCC không nằm trong đây → dùng pipeline của Roquette.
+  pipelineKeys: Object.keys(CATALOG.pipelines),
 
   customers:    [],
   products:     [],
@@ -73,6 +76,7 @@ function resetCatalog() {
     Object.keys(LISTS[k]).forEach(function (x) { delete LISTS[k][x]; });
     Object.assign(LISTS[k], CATALOG[k]);
   });
+  LISTS.pipelineKeys = Object.keys(CATALOG.pipelines);
 }
 window.resetCatalog = resetCatalog;
 

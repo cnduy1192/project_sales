@@ -48,7 +48,7 @@ function formNcc(){ return (!nccFilter || isAllNcc()) ? (NCCS[0] || '') : nccFil
 
 function stageGroups(){
   const out = [], seen = {};
-  NCCS.forEach(n => (PIPELINES[n]||[]).forEach(s => {
+  NCCS.forEach(n => pipelineOf(n).forEach(s => {
     const g = STAGE_GROUP[s] || s;
     if(!seen[g]){ seen[g] = 1; out.push(g); }
   }));
@@ -56,7 +56,7 @@ function stageGroups(){
 }
 function activeStages(){
   if(isAllNcc()) return stageGroups();
-  return (nccFilter && PIPELINES[nccFilter]) || PIPELINES[NCCS[0]] || [];
+  return nccFilter ? pipelineOf(nccFilter) : (PIPELINES[NCCS[0]] || []);
 }
 
 function supplierOptions(){
@@ -70,11 +70,41 @@ function supplierOptions(){
   return out.slice(0, mainCount).concat(rest);
 }
 
-var DEFAULT_PIPELINE = ['LEAD','SAMPLE SENT','TESTING','TEST PASSED','QUOTED / PO'];
-function pipelineOf(ncc){
-  return (ncc && PIPELINES[ncc] && PIPELINES[ncc].length) ? PIPELINES[ncc] : DEFAULT_PIPELINE;
+/* ── Stage theo NCC ─────────────────────────────────────────────
+   IFF / Kimica / Roquette (và NCC nào có dòng trong list Pipelines) dùng pipeline riêng.
+   Khớp không phân biệt hoa thường + theo "họ" tên: "Kimica-Navido" → Kimica.
+   Mọi NCC còn lại → pipeline của Roquette (chuẩn).                              */
+var STANDARD_PIPELINE_NCC = 'Roquette';
+var DEFAULT_PIPELINE = ['SHARED BUSINESS GOAL','BUILDING A SOLUTION','SOLUTION TESTING','OFFER & AGREEMENT'];
+function _nccNorm(s){ return String(s == null ? '' : s).trim().toUpperCase(); }
+function _pipelineKeys(){
+  var k = (LISTS.pipelineKeys && LISTS.pipelineKeys.length) ? LISTS.pipelineKeys : Object.keys(PIPELINES);
+  return k.filter(function(x){ return PIPELINES[x] && PIPELINES[x].length; });
+}
+function pipelineKeyOf(ncc){
+  var n = _nccNorm(ncc); if(!n) return '';
+  var keys = _pipelineKeys();
+  var hit = keys.filter(function(k){ return _nccNorm(k) === n; })[0];
+  if(!hit) hit = keys.filter(function(k){
+    var kk = _nccNorm(k);
+    return kk && n.indexOf(kk) === 0 && !/[A-Z0-9]/.test(n.charAt(kk.length) || '');
+  })[0];
+  return hit || '';
+}
+function standardPipelineKey(){
+  var std = _nccNorm(STANDARD_PIPELINE_NCC);
+  return _pipelineKeys().filter(function(k){ return _nccNorm(k).indexOf(std) === 0; })[0] || '';
+}
+/* keepStage: stage hiện tại của dự án cũ — nếu không thuộc pipeline thì vẫn giữ ở cuối
+   để dropdown/Path không làm mất stage đang lưu. */
+function pipelineOf(ncc, keepStage){
+  var k = pipelineKeyOf(ncc) || standardPipelineKey();
+  var out = ((k && PIPELINES[k]) || DEFAULT_PIPELINE).slice();
+  if(keepStage && out.indexOf(keepStage) < 0) out.push(keepStage);
+  return out;
 }
 window.supplierOptions = supplierOptions; window.pipelineOf = pipelineOf;
+window.pipelineKeyOf = pipelineKeyOf;
 
 function atStage(r, s){
   if(!s) return true;
