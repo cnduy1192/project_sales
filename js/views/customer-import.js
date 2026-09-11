@@ -17,6 +17,7 @@
       else if (m.legal === undefined && (s === "legalname" || s.indexOf("pháp nhân") >= 0)) m.legal = i;
       else if (m.segment === undefined && s === "segment") m.segment = i;
       else if (m.region === undefined && s === "region") m.region = i;
+      else if (m.tier === undefined && (s === "tier" || s === "phân loại" || s === "phân hạng")) m.tier = i;
       else if (m.status === undefined && (s.indexOf("customerstatus") >= 0
           || s === "trạng thái" || s === "status")) m.status = i;
     });
@@ -41,7 +42,7 @@
         out.push({
           title: title, owner: cell(r, map.owner), legal: legal,
           segment: cell(r, map.segment), region: cell(r, map.region),
-          status: cell(r, map.status), _sheet: name,
+          status: cell(r, map.status), tier: cell(r, map.tier), _sheet: name,
         });
       }
     });
@@ -163,7 +164,7 @@
           <button class="btn-primary" id="ciRun" disabled onclick="FISG_CUSTOMER_IMPORT.run()">Cập nhật lên SharePoint</button>
         </div>
         <div class="ci-bar" id="ciBar" style="display:none"><div id="ciBarFill"></div></div>
-        <div class="ci-status" id="ciStatus">Cột nhận diện: Title · Owner (Người phụ trách) · LegalName (Tên pháp nhân) · Segment · Region · CustomerStatus. Sheet phụ (Cần rà, Còn trống) tự bỏ qua.</div>
+        <div class="ci-status" id="ciStatus">Cột nhận diện: Title · Owner (Người phụ trách) · LegalName (Tên pháp nhân) · Segment · Region · CustomerStatus · Tier (Phân loại). Sheet phụ (Cần rà, Còn trống) tự bỏ qua.</div>
         <div class="ci-errors" id="ciErrors" style="display:none"></div>
       </div>`;
   }

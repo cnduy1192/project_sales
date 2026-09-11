@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="styles.css?v=21">
 <link rel="stylesheet" href="ui-kit.css?v=21">
 <link rel="stylesheet" href="funnel.css?v=21">
-<link rel="stylesheet" href="funnel-sf.css?v=9">
+<link rel="stylesheet" href="funnel-sf.css?v=20">
 </head>
 <body class="sf-body">
 
@@ -39,22 +39,22 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
     </a>
     <div class="sf-brand"><span class="logo-mark">FI</span><span class="sf-brand-t">Sales Funnel</span><span class="sf-brand-tag">Project workspace</span></div>
-    <div class="sf-ncc" id="sfNcc" role="tablist" aria-label="Nhà cung cấp"></div>
-    <div class="sf-search">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm" oninput="SF.render()" aria-label="Tìm nhanh">
-    </div>
+    <div class="sf-ncc" id="sfNcc"></div>
     <span class="sf-user" id="sfUser"></span>
   </header>
 
   <div class="sf-subbar">
     <div class="sf-seg" id="sfStatusSeg" role="group" aria-label="Lọc trạng thái">
-      <button class="sf-seg-b on" data-st="IN PROGRESS" onclick="SF.setStatus('IN PROGRESS')">Đang chạy</button>
-      <button class="sf-seg-b" data-st="WON" onclick="SF.setStatus('WON')">Thắng</button>
-      <button class="sf-seg-b" data-st="LOST" onclick="SF.setStatus('LOST')">Thua</button>
+      <button class="sf-seg-b on" data-st="IN PROGRESS" onclick="SF.setStatus('IN PROGRESS')">Đang chạy<span class="sf-seg-n" data-n="IN PROGRESS">0</span></button>
+      <button class="sf-seg-b" data-st="WON" onclick="SF.setStatus('WON')">Thắng<span class="sf-seg-n" data-n="WON">0</span></button>
+      <button class="sf-seg-b" data-st="LOST" onclick="SF.setStatus('LOST')">Thua<span class="sf-seg-n" data-n="LOST">0</span></button>
     </div>
+    <div class="sf-search sf-search-sub">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm, ứng dụng, PIC…" oninput="SF.render()" aria-label="Tìm nhanh">
+    </div>
+    <button class="sf-expand" id="sfExpandAll" type="button" onclick="SF.toggleAll()">Mở rộng tất cả</button>
   </div>
-  <div class="sf-kpibar" id="sfStats" role="group" aria-label="Số lượng dự án"></div>
 
   <main class="sf-main">
     <div class="sf-list" id="sfList"></div>
@@ -77,8 +77,8 @@
 <script src="js/lib/localstore.js?v=21"></script>
 <script src="js/graph.js?v=21"></script>
 <script src="js/store.js?v=21"></script>
-<script src="js/views/funnel-sf.js?v=9"></script>
-<script src="js/data/demo-funnel.js?v=9"></script>
+<script src="js/views/funnel-sf.js?v=20"></script>
+<script src="js/data/demo-funnel.js?v=10"></script>
 <script src="js/auth.js?v=21"></script>
 </body>
 </html>

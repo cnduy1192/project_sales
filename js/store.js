@@ -37,7 +37,10 @@
              ReportsTo: "Báo cáo cho", Supports: "Hỗ trợ sales" },
 
     Customers: { Owner: "Người phụ trách", LegalName: "Tên pháp nhân",
-                 Segment: "Segment", Region: "Region", CustomerStatus: "Trạng thái" },
+                 Segment: "Segment", Region: "Region", CustomerStatus: "Trạng thái",
+                 // Phân loại khách (Strategic / Key Account / Prospect) — thuộc tính riêng của khách,
+                 // KHÔNG suy từ tên người phụ trách.
+                 Tier: "Phân loại" },
 
     Reports: {
       PICName: "Người gửi", WeekLabel: "Tuần", ReportDate: "Ngày gửi",
@@ -148,6 +151,7 @@
           segment: txtOf(g, f, "Segment"),
           region: txtOf(g, f, "Region"),
           status: txtOf(g, f, "CustomerStatus"),
+          tier: txtOf(g, f, "Tier"),
           spId: it.id,
         };
       }).filter(c => c.name);
@@ -169,6 +173,7 @@
         if (!ex.segment && c.segment) ex.segment = c.segment;
         if (!ex.region && c.region) ex.region = c.region;
         if (!ex.status && c.status) ex.status = c.status;
+        if (!ex.tier && c.tier) ex.tier = c.tier;
       } else {
         if (k) seen[k] = CUSTOMER_DIR.length;
         CUSTOMER_DIR.push(c);
@@ -663,6 +668,7 @@
 
       if (r.owner) put(f, get, "Owner", r.owner);
       if (r.legal) put(f, get, "LegalName", r.legal);
+      if (r.tier && has("Tier")) put(f, get, "Tier", r.tier);
 
       [["segment", "Segment"], ["region", "Region"], ["status", "CustomerStatus"]].forEach(([rk, ck]) => {
         if (!r[rk] || !has(ck)) return;
@@ -1019,6 +1025,9 @@
     return true;
   }
 
+  let _custMissing = [];
+  function customerMissingCols() { return _custMissing.slice(); }
+
   async function saveCustomer(row) {
     if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
     const get = await schemaOf("Customers");
@@ -1037,9 +1046,17 @@
     }
     if (row.owner != null) put(f, get, "Owner", row.owner);
     if (row.legal != null) put(f, get, "LegalName", row.legal);
-    [["segment", "Segment"], ["region", "Region"], ["status", "CustomerStatus"]].forEach(([rk, ck]) => {
-      if (row[rk] != null && get.internal(ck)) put(f, get, ck, row[rk]);
+    const missing = [];
+    [["segment", "Segment"], ["region", "Region"], ["status", "CustomerStatus"],
+     ["tier", "Tier"]].forEach(([rk, ck]) => {
+      if (row[rk] == null) return;
+      if (get.internal(ck)) put(f, get, ck, row[rk]);
+      else if (String(row[rk]).trim()) missing.push(ck);
     });
+    _custMissing = missing;
+    if (missing.length)
+      console.warn("[store] list Customers chưa có cột: " + missing.join(", ")
+        + " — giá trị này KHÔNG được lưu. Thêm cột \"Phân loại\" trên SharePoint.");
 
     let spId = row.spId;
     if (isNew) {
@@ -1568,7 +1585,7 @@
                         applyPicAliases, picAliasMap,
                         findSeedActivities, deleteSeedActivities,
                         loadCustomerDirectory, customerOwnerOf, customerLegalOf, setCustomerOwner,
-                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer, deleteCustomer,
+                        bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer, deleteCustomer, customerMissingCols,
                         bulkUpsertSuppliers, previewSupplierUpsert,
                         loadReports, sendReportToSP, updateReport, addReportComment,
                         loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,

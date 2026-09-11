@@ -1,20 +1,16 @@
 /* ============================================================
-   Sales Funnel — Salesforce-style workspace (Phase 1)
+   Sales Funnel — Customer-centric workspace
    Trang riêng salesfunnel.html. Tái dùng tầng data của app chính
-   (catalog/config/insights/roles/store/auth) và tự render workspace
-   Kanban + Record Page. KHÔNG đụng DOM của index.html.
+   (catalog/config/insights/roles/store/auth) và tự render danh sách
+   dự án theo khách hàng + Record Page. KHÔNG đụng DOM của index.html.
    ============================================================ */
 (function () {
   "use strict";
 
   var statusFilter = "IN PROGRESS";   // IN PROGRESS | WON | LOST
-  var viewMode = "board";             // board | list
   var curId = null;                   // record đang mở
-  var recTab = "overview";
   var closePick = null;
   var expanded = {};                  // KH nào đang bung project (cây thư mục)
-
-  var PALETTE = ["#01426A", "#0A5C8F", "#0E7490", "#6D28D9", "#B45309", "#157F3C"];
 
   /* ---------- toast (trang riêng, không phụ thuộc modal của index) ---------- */
   var _toastT;
@@ -30,7 +26,11 @@
   function initials(n) { return String(n || "?").trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join("").toUpperCase(); }
   function colorOf(pic) { var u = USERS.find(function (x) { return x.pic === pic; }); return u ? u.color : "#4A5F70"; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
-  function viDate(d) { return d ? new Date(d).toLocaleDateString("vi-VN") : "—"; }
+  function viDate(d) {
+    if (!d) return "—";
+    var x = new Date(d); if (isNaN(x)) return "—";
+    return String(x.getDate()).padStart(2, "0") + "/" + String(x.getMonth() + 1).padStart(2, "0") + "/" + x.getFullYear();
+  }
   function probPct(r) { return Math.round((r.prob || 0) * 100); }
   function stageShort(s) {
     return String(s || "").replace("SHARED BUSINESS GOAL", "SHARED GOAL").replace("BUILDING A SOLUTION", "BUILDING")
@@ -48,14 +48,8 @@
   function searchQ() { return (document.getElementById("sfQ").value || "").toLowerCase().trim(); }
   function matchQ(r, q) { return !q || (r.customer + " " + r.product + " " + r.application + " " + (r.pic || "")).toLowerCase().indexOf(q) >= 0; }
 
-  function health(r) {
-    if (r.status === "WON") return { cls: "green", label: "Đã thắng" };
-    if (r.status === "LOST") return { cls: "red", label: "Đã thua" };
-    if (r.closing && new Date(r.closing) < TODAY) return { cls: "red", label: "Trễ hạn" };
-    if ((r.prob || 0) >= 0.6) return { cls: "green", label: "On track" };
-    if ((r.prob || 0) >= 0.3) return { cls: "amber", label: "Cần đẩy" };
-    return { cls: "amber", label: "Mới" };
-  }
+  function isLate(r) { return r.status === "IN PROGRESS" && r.closing && new Date(r.closing) < TODAY; }
+  function isMac() { return /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || ""); }
 
   /* ============================================================
      BOOT — loginAs override (auth.js gọi khi đã xác thực)
@@ -85,27 +79,98 @@
     el.title = me.name + " · " + roleLabel(me.role);
   }
 
-  function renderNccTabs() {
-    var box = document.getElementById("sfNcc");
-    var html = '<button class="sf-ncc-tab' + (isAllNcc() ? " on" : "") + '" data-ncc="' + ALL_NCC +
-      '" onclick="SF.setNcc(\'' + ALL_NCC + '\')" title="Tất cả nhà cung cấp — chỉ xem theo nhóm giai đoạn">' + ALL_NCC_LABEL + "</button>";
-    html += NCCS.map(function (n) {
-      return '<button class="sf-ncc-tab' + (n === nccFilter ? " on" : "") + '" data-ncc="' + esc(n) +
-        '" onclick="SF.setNcc(\'' + n.replace(/'/g, "\\'") + '\')">' + esc(n) + "</button>";
-    }).join("");
-    box.innerHTML = html;
+  /* ============================================================
+     NCC — custom listbox (native select không cho style popup và
+     mũi tên không bắt được click). Bấm đâu trong khung cũng mở.
+     ============================================================ */
+  var NCC_IC = '<svg class="sf-ncc-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/><path d="M3 7l9 4 9-4M12 21V11"/></svg>';
+  var NCC_CV = '<svg class="sf-ncc-cv" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  var NCC_CK = '<svg class="ck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.2L20 7"/></svg>';
+
+  function nccLabel(v) { return v === ALL_NCC ? ALL_NCC_LABEL + " nhà cung cấp" : v; }
+  function nccCount(v) {
+    var all = scopeRecords(RECORDS, me) || [];
+    return (v === ALL_NCC ? all : all.filter(function (r) { return r.ncc === v; })).length;
   }
 
-  function setNcc(n) { nccFilter = n; if (isAllNcc() && viewMode === "board") { /* group columns, read-only */ } renderNccTabs(); render(); }
+  function renderNccTabs() {
+    var box = document.getElementById("sfNcc"); if (!box) return;
+    var open = box.classList.contains("open");
+    var items = [ALL_NCC].concat(NCCS);
+    var opts = items.map(function (v, i) {
+      var on = (v === ALL_NCC) ? isAllNcc() : (v === nccFilter);
+      return (i === 1 ? '<div class="sf-ncc-sep"></div>' : "") +
+        '<div class="sf-ncc-opt' + (on ? " on" : "") + '" role="option" tabindex="-1" aria-selected="' + on +
+        '" data-v="' + esc(v) + '">' + NCC_CK +
+        '<span class="lb">' + esc(nccLabel(v)) + "</span>" +
+        '<span class="n">' + nccCount(v) + "</span></div>";
+    }).join("");
+
+    box.className = "sf-ncc" + (isAllNcc() ? "" : " filtered") + (open ? " open" : "");
+    box.innerHTML =
+      '<button type="button" class="sf-ncc-btn" id="sfNccBtn" aria-haspopup="listbox" aria-expanded="' + open +
+        '" aria-controls="sfNccPop" aria-label="Nhà cung cấp: ' + esc(nccLabel(nccFilter)) + '">' +
+        NCC_IC + '<span class="sf-ncc-val">' + esc(nccLabel(nccFilter)) + "</span>" + NCC_CV + "</button>" +
+      '<div class="sf-ncc-pop" id="sfNccPop" role="listbox" aria-label="Chọn nhà cung cấp"' + (open ? "" : " hidden") + ">" +
+        opts + "</div>";
+  }
+
+  function nccOpen(on) {
+    var box = document.getElementById("sfNcc"), pop = document.getElementById("sfNccPop"), btn = document.getElementById("sfNccBtn");
+    if (!box || !pop || !btn) return;
+    box.classList.toggle("open", on);
+    pop.hidden = !on;
+    btn.setAttribute("aria-expanded", on ? "true" : "false");
+    if (on) { var f = pop.querySelector(".sf-ncc-opt.on") || pop.querySelector(".sf-ncc-opt"); if (f) f.focus(); }
+  }
+  function nccIsOpen() { var pop = document.getElementById("sfNccPop"); return !!pop && !pop.hidden; }
+  function nccPick(v) {
+    nccOpen(false);
+    setNcc(v);
+    var btn = document.getElementById("sfNccBtn"); if (btn) btn.focus();
+  }
+
+  function setNcc(n) { nccFilter = n; renderNccTabs(); render(); }
+
+  (function bindNcc() {
+    var box = document.getElementById("sfNcc"); if (!box) return;
+
+    box.addEventListener("click", function (e) {
+      var opt = e.target.closest(".sf-ncc-opt");
+      if (opt) { nccPick(opt.dataset.v); return; }
+      if (e.target.closest(".sf-ncc-btn")) nccOpen(!nccIsOpen());
+    });
+
+    box.addEventListener("keydown", function (e) {
+      var pop = document.getElementById("sfNccPop"); if (!pop) return;
+      var opts = [].slice.call(pop.querySelectorAll(".sf-ncc-opt"));
+      var i = opts.indexOf(document.activeElement);
+
+      if (e.key === "Escape" && nccIsOpen()) {
+        e.preventDefault(); e.stopPropagation();
+        nccOpen(false); document.getElementById("sfNccBtn").focus(); return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!nccIsOpen()) { nccOpen(true); return; }
+        var k = e.key === "ArrowDown" ? (i + 1) % opts.length : (i <= 0 ? opts.length - 1 : i - 1);
+        opts[k].focus(); return;
+      }
+      if (nccIsOpen() && (e.key === "Home" || e.key === "End")) {
+        e.preventDefault(); opts[e.key === "Home" ? 0 : opts.length - 1].focus(); return;
+      }
+      if (e.key === "Enter" || e.key === " ") {
+        var o = e.target.closest(".sf-ncc-opt");
+        if (o) { e.preventDefault(); nccPick(o.dataset.v); }
+      }
+    });
+
+    document.addEventListener("click", function (e) { if (nccIsOpen() && !e.target.closest("#sfNcc")) nccOpen(false); });
+    document.addEventListener("focusin", function (e) { if (nccIsOpen() && !e.target.closest("#sfNcc")) nccOpen(false); });
+  })();
   function setStatus(st) {
     statusFilter = st;
     document.querySelectorAll("#sfStatusSeg .sf-seg-b").forEach(function (b) { b.classList.toggle("on", b.dataset.st === st); });
-    // WON/LOST không còn giai đoạn pipeline sống → luôn hiện danh sách; render() tự xử lý.
-    render();
-  }
-  function setView(v) {
-    viewMode = v;
-    document.querySelectorAll("#sfViewToggle .sf-vt-b").forEach(function (b) { b.classList.toggle("on", b.dataset.view === v); });
     render();
   }
 
@@ -115,8 +180,11 @@
   function render() {
     if (!me) return;
     var q = searchQ();
-    var rows = scoped().filter(function (r) { return r.status === statusFilter; }).filter(function (r) { return matchQ(r, q); });
-    renderStats(scopeRecords(RECORDS, me));   // KPI = tổng toàn bộ dự án trong quyền xem (mọi NCC)
+    var pool = scoped().filter(function (r) { return matchQ(r, q); });
+    var rows = pool.filter(function (r) { return r.status === statusFilter; });
+    renderStats(pool);                        // số đếm hiển thị ngay trên tab trạng thái
+    if (q) rows.forEach(function (r) { expanded[r.customer || "—"] = true; });   // tìm kiếm → tự bung
+    syncExpandBtn(rows);
 
     var list = document.getElementById("sfList"), empty = document.getElementById("sfEmpty");
     if (!rows.length) {
@@ -130,49 +198,30 @@
     renderList(rows);
   }
 
-  // KPI = số lượng dự án theo trạng thái (không còn KG), phủ đều trang
+  // Số lượng dự án theo trạng thái — hiển thị ngay trên tab (đã bỏ dải thẻ KPI)
   function renderStats(all) {
-    var run = all.filter(function (r) { return r.status === "IN PROGRESS"; }).length;
-    var won = all.filter(function (r) { return r.status === "WON"; }).length;
-    var lost = all.filter(function (r) { return r.status === "LOST"; }).length;
-    function node(n, l, cls) { return '<div class="sf-stat ' + cls + '"><b>' + n + '</b><small>' + l + '</small></div>'; }
-    document.getElementById("sfStats").innerHTML =
-      node(run, "Đang chạy", "run") + node(won, "Thắng", "won") + node(lost, "Thua", "lost");
+    document.querySelectorAll("#sfStatusSeg .sf-seg-n").forEach(function (el) {
+      var st = el.dataset.n;
+      el.textContent = all.filter(function (r) { return r.status === st; }).length;
+    });
   }
 
-  function renderBoard(rows) {
-    var stages = activeStages();
-    var canDrag = !isAllNcc();
-    var box = document.getElementById("sfBoard");
-    box.innerHTML = stages.map(function (s, i) {
-      var cards = rows.filter(function (r) { return atStage(r, s); });
-      var kg = cards.reduce(function (a, r) { return a + (r.kgThis || 0); }, 0);
-      var col = PALETTE[i % PALETTE.length];
-      var body = cards.length
-        ? cards.sort(function (a, b) { return (a.closing || "9999") < (b.closing || "9999") ? -1 : 1; }).map(cardHTML).join("")
-        : '<div class="sf-col-empty">Kéo thẻ vào đây</div>';
-      return '<section class="sf-col" data-stage="' + esc(s) + '">' +
-        '<div class="sf-col-head" style="background:' + col + '">' +
-        '<span class="sf-col-name">' + esc(stageShort(s)) + '</span>' +
-        '<span class="sf-col-meta">' + cards.length + ' dự án · ' + fmt(kg) + ' KG</span></div>' +
-        '<div class="sf-col-body">' + body + "</div></section>";
-    }).join("");
-
-    if (canDrag) wireDnD();
+  // nhãn nút "Mở rộng / Thu gọn tất cả"
+  function syncExpandBtn(rows) {
+    var btn = document.getElementById("sfExpandAll"); if (!btn) return;
+    var names = uniq(rows.map(function (r) { return r.customer || "—"; }));
+    var allOpen = names.length > 0 && names.every(function (n) { return !!expanded[n]; });
+    btn.textContent = allOpen ? "Thu gọn tất cả" : "Mở rộng tất cả";
   }
 
-  function cardHTML(r) {
-    var over = r.closing && new Date(r.closing) < TODAY;
-    return '<article class="sf-card" draggable="' + (!isAllNcc()) + '" data-id="' + esc(r.id) + '" onclick="SF.openRecord(\'' + esc(r.id) + '\')">' +
-      '<span class="sf-card-prob">' + probPct(r) + '%</span>' +
-      '<div class="sf-card-cust">' + esc(r.customer) + '</div>' +
-      '<div class="sf-card-prod">' + esc(r.product) + '</div>' +
-      (r.application ? '<div class="sf-card-app">' + esc(r.application) + "</div>" : "") +
-      '<div class="sf-card-foot">' +
-      '<span class="sf-card-kg">' + fmt(r.kgThis) + '<small>KG</small></span>' +
-      '<span class="sf-card-due' + (over ? " over" : "") + '">' + (r.closing ? viDate(r.closing) : "—") + "</span>" +
-      '<span class="sf-card-av" style="background:' + colorOf(r.pic) + '" title="' + esc(r.pic || "") + '">' + initials(r.pic || "?") + "</span>" +
-      "</div></article>";
+  function toggleAll() {
+    var q = searchQ();
+    var rows = scoped().filter(function (r) { return matchQ(r, q); })
+                       .filter(function (r) { return r.status === statusFilter; });
+    var names = uniq(rows.map(function (r) { return r.customer || "—"; }));
+    var anyClosed = names.some(function (n) { return !expanded[n]; });
+    names.forEach(function (n) { expanded[n] = anyClosed; });
+    render();
   }
 
   function uniq(a) {
@@ -181,98 +230,145 @@
     return o;
   }
   function jsq(s) { return "'" + String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
-  function groupNum(n) { return (Number(n) || 0).toLocaleString("en-US"); }   // 1,500,000,000
+  function titleCase(x) {
+    return String(x || "").toLowerCase()
+      .replace(/(^|[\s\/&-])([a-z\u00e0-\u1ef9])/g, function (m, sep, ch) { return sep + ch.toUpperCase(); })
+      .replace("/Po", "/PO");
+  }
+  // class màu pill/chấm theo giai đoạn (WON/LOST dùng màu trạng thái)
+  function pillCls(stage) { return stage === "WON" ? "p-won" : stage === "LOST" ? "p-lost" : stageCls(stage); }
+  function grpCls(stage) { return pillCls(stage).replace("p-", "g-"); }
+  function moneyStr(n) { return (n == null || n === "") ? "—" : groupNum(n) + " \u20ab"; }
+  function avHTML(pic, title) {
+    return '<span class="sf-av" style="background:' + colorOf(pic) + '" title="' + esc(title || pic || "—") + '">' + initials(pic) + "</span>";
+  }
+  function groupNum(n) { return (Number(n) || 0).toLocaleString("vi-VN"); }   // 1.500.000.000
   function amountStr(r) { return (r.amount != null && r.amount !== "") ? groupNum(r.amount) : "—"; }
 
-  // Trang chủ theo hướng khách hàng: mỗi KH 1 dòng, click để bung project (cây thư mục)
+  /* ============================================================
+     MASTER → DETAIL: mỗi khách hàng 1 hàng cha, bung ra các dự án con
+     Hàng cha và hàng con dùng chung lưới 7 cột (xem funnel-sf.css)
+     ============================================================ */
   function renderList(rows) {
     var box = document.getElementById("sfList");
     var map = {}, order = [];
     rows.forEach(function (r) { var k = r.customer || "—"; if (!map[k]) { map[k] = []; order.push(k); } map[k].push(r); });
-    order.sort(function (a, b) { return a.localeCompare(b, "vi"); });
 
     var head = '<div class="sf-ct-head">' +
-      '<div>Khách hàng</div>' +
-      '<div class="sf-lc-hide">NCC</div>' +
-      '<div class="sf-lc-hide">Nhóm ngành</div>' +
-      '<div class="sf-lc-hide sf-num">Ngày khởi tạo</div>' +
-      '<div class="sf-lc-hide sf-num">Closed date</div>' +
-      '<div>PIC</div></div>';
+      "<div>Khách hàng · Dự án</div>" +
+      "<div>NCC</div>" +
+      "<div>Nhóm ngành · Sản phẩm</div>" +
+      "<div>Tiến độ · Hạn chốt</div>" +
+      "<div>Sản lượng</div>" +
+      "<div>Giá trị</div>" +
+      "<div>PIC</div></div>";
 
-    var body = order.map(function (k) {
-      var ps = map[k];
-      var nccs = uniq(ps.map(function (r) { return r.ncc; }));
-      var groups = uniq(ps.map(function (r) { return r.group; }));
-      var created = ps.map(function (r) { return r.created; }).filter(Boolean).sort()[0] || "";
-      var closedArr = ps.map(function (r) { return r.closedAt || r.closing || ""; }).filter(Boolean).sort();
-      var closed = closedArr.length ? closedArr[closedArr.length - 1] : "";     // muộn nhất
-      var owner = (typeof customerOwnerOf === "function" && customerOwnerOf(k)) || ps[0].pic || "—";
-      var open = !!expanded[k];
+    var groups = order.map(function (k) { return summarize(k, map[k]); })
+      .sort(function (a, b) { return b.amount - a.amount || a.name.localeCompare(b.name, "vi"); });
 
-      var parent = '<div class="sf-ct-row' + (open ? " open" : "") + '" role="button" tabindex="0" aria-expanded="' + open + '"' +
-        ' onclick="SF.toggleCustomer(' + jsq(k) + ')"' +
-        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();SF.toggleCustomer(' + jsq(k) + ')}">' +
-        '<div class="sf-ct-cust"><span class="sf-ct-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' +
-          '<b>' + esc(k) + '</b><span class="sf-ct-count">' + ps.length + ' dự án</span></div>' +
-        '<div class="sf-lc-hide">' + esc(nccs.join(", ") || "—") + "</div>" +
-        '<div class="sf-lc-hide">' + esc(groups.join(", ") || "—") + "</div>" +
-        '<div class="sf-lc-hide sf-num">' + (created ? viDate(created) : "—") + "</div>" +
-        '<div class="sf-lc-hide sf-num">' + (closed ? viDate(closed) : "—") + "</div>" +
-        '<div class="sf-ct-pic"><span class="sf-card-av" style="background:' + colorOf(owner) + '" title="' + esc(owner) + '">' + initials(owner) + '</span><span class="sf-ct-pic-n sf-lc-hide">' + esc(owner) + "</span></div>" +
-        "</div>";
-
-      return '<div class="sf-ct-group">' + parent + (open ? childTable(ps) : "") + "</div>";
+    var totKg = 0, totAmt = 0, totDeal = 0;
+    var body = groups.map(function (g) {
+      totKg += g.kg; totAmt += g.amount; totDeal += g.items.length;
+      return '<div class="sf-ct-group">' + parentRow(g) + (expanded[g.name] ? childTable(g.items) : "") + "</div>";
     }).join("");
 
-    box.innerHTML = head + body;
+    var foot = '<div class="sf-ct-foot">' +
+      '<div class="sf-ct-foot-l">Tổng cộng <span>· ' + groups.length + " khách hàng · " + totDeal + " dự án</span></div>" +
+      "<div></div><div></div><div></div>" +
+      '<div class="sf-num">' + fmt(totKg) + " <small>KG</small></div>" +
+      '<div class="sf-num">' + moneyStr(totAmt) + "</div><div></div></div>";
+
+    box.innerHTML = head + body + foot;
   }
 
+  // gộp số liệu 1 khách hàng
+  function summarize(name, ps) {
+    var items = ps.slice().sort(function (a, b) { return (a.closing || "9999") < (b.closing || "9999") ? -1 : 1; });
+    var kg = 0, amount = 0, byStage = {}, byGroup = {}, byPic = {};
+    items.forEach(function (r) {
+      kg += Number(r.kgThis) || 0;
+      amount += Number(r.amount) || 0;
+      byStage[r.stage] = (byStage[r.stage] || 0) + 1;
+      if (r.group) byGroup[r.group] = (byGroup[r.group] || 0) + 1;
+      if (r.pic) byPic[r.pic] = (byPic[r.pic] || 0) + 1;
+    });
+    var owner = (typeof customerOwnerOf === "function" && customerOwnerOf(name)) || topKey(byPic) || items[0].pic || "—";
+    return {
+      name: name, items: items, kg: kg, amount: amount,
+      nccs: uniq(items.map(function (r) { return r.ncc; })),
+      group: topKey(byGroup),
+      stages: Object.keys(byStage).map(function (st) { return { stage: st, n: byStage[st] }; })
+        .sort(function (a, b) { return b.n - a.n || a.stage.localeCompare(b.stage); }),
+      pic: owner,
+      late: items.some(isLate)
+    };
+  }
+  function topKey(o) {
+    var k = Object.keys(o); if (!k.length) return "";
+    k.sort(function (a, b) { return o[b] - o[a] || a.localeCompare(b, "vi"); });
+    return k[0];
+  }
+
+  /* ---------- HÀNG CHA: KHÁCH HÀNG (không hiển thị ngày tháng) ---------- */
+  function parentRow(g) {
+    var open = !!expanded[g.name];
+    var nccs = g.nccs.join(", ") || "—";
+    var prog = g.stages.map(function (x) {
+      return '<span class="sf-pg ' + grpCls(x.stage) + '"><span class="dot"></span><b>' + x.n + "</b>" +
+        "<span>" + esc(titleCase(stageShort(x.stage))) + "</span></span>";
+    }).join("") || "—";
+
+    return '<div class="sf-ct-row' + (open ? " open" : "") + '" role="button" tabindex="0" aria-expanded="' + open + '"' +
+      ' onclick="SF.toggleCustomer(' + jsq(g.name) + ')"' +
+      ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();SF.toggleCustomer(' + jsq(g.name) + ')}">' +
+
+      '<div class="sf-ct-cust">' +
+        '<span class="sf-ct-chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' +
+        "<b>" + esc(g.name) + "</b>" +
+        '<span class="sf-ct-count">' + g.items.length + " dự án</span>" +
+        (g.late ? '<span class="sf-ct-late">Trễ hạn</span>' : "") +
+      "</div>" +
+
+      '<div class="sf-ct-ncc" title="' + esc(nccs) + '">' + esc(nccs) + "</div>" +
+      '<div><span class="sf-ct-grp">' + esc(g.group || "—") + "</span></div>" +
+      '<div class="sf-ct-prog">' + prog + "</div>" +
+      '<div class="sf-ct-kg">' + fmt(g.kg) + " <small>KG</small></div>" +
+      '<div class="sf-ct-amt">' + moneyStr(g.amount) + "</div>" +
+      '<div class="sf-ct-pic">' + avHTML(g.pic) + "</div>" +
+      "</div>";
+  }
+
+  /* ---------- HÀNG CON: DỰ ÁN CỦA KHÁCH HÀNG ĐÓ ---------- */
   function childTable(ps) {
-    ps = ps.slice().sort(function (a, b) { return (a.closing || "9999") < (b.closing || "9999") ? -1 : 1; });
-    var h = '<div class="sf-cc-head"><div>Project</div><div>NCC</div><div>Nhóm ngành</div><div>Segment</div>' +
-      '<div>Sản phẩm</div><div>Ứng dụng</div><div class="sf-num">Số lượng</div><div class="sf-num">Amount</div></div>';
     var body = ps.map(function (r) {
-      return '<div class="sf-cc-row" onclick="SF.openRecord(' + jsq(r.id) + ')">' +
-        '<div class="sf-cc-proj"><b>' + esc(r.id) + '</b><span class="pill ' + stageCls(r.stage) + ' sf-cc-stage"><span class="dot"></span>' + esc(stageShort(r.stage)) + "</span></div>" +
-        "<div>" + esc(r.ncc || "—") + "</div>" +
-        "<div>" + esc(r.group || "—") + "</div>" +
-        "<div>" + esc(r.segment || "—") + "</div>" +
-        '<div class="sf-cc-prod">' + esc(r.product || "—") + "</div>" +
-        '<div class="sf-cc-app">' + esc(r.application || "—") + "</div>" +
-        '<div class="sf-num">' + fmt(r.kgThis) + ' <small>KG</small></div>' +
-        '<div class="sf-num">' + amountStr(r) + "</div>" +
+      var late = isLate(r);
+      return '<div class="sf-cc-row" role="button" tabindex="0"' +
+        ' onclick="SF.openRecord(' + jsq(r.id) + ')"' +
+        ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();SF.openRecord(' + jsq(r.id) + ')}">' +
+
+        '<div class="sf-cc-proj"><b>' + esc(r.id) + "</b>" +
+          '<span class="pill ' + pillCls(r.stage) + ' sf-cc-stage"><span class="dot"></span>' + esc(stageShort(r.stage)) + "</span></div>" +
+
+        '<div class="sf-cc-ncc">' + esc(r.ncc || "—") + "</div>" +
+
+        "<div><div class=\"sf-cc-prod\" title=\"" + esc(r.product || "") + "\">" + esc(r.product || "—") + "</div>" +
+          '<div class="sf-cc-app" title="' + esc(r.application || "") + '">' + esc(r.application || "—") + "</div></div>" +
+
+        '<div class="sf-cc-due' + (late ? " late" : "") + '">Hạn: <b>' + viDate(r.closing) + "</b></div>" +
+
+        '<div class="sf-num">' + fmt(r.kgThis) + " <small>KG</small></div>" +
+        '<div class="sf-num">' + moneyStr(r.amount) + "</div>" +
+        '<div class="sf-ct-pic">' + avHTML(r.pic) + "</div>" +
         "</div>";
     }).join("");
-    return '<div class="sf-cc-wrap">' + h + body + "</div>";
+    return '<div class="sf-cc-wrap">' + body + "</div>";
   }
 
   function toggleCustomer(k) { expanded[k] = !expanded[k]; render(); }
 
   /* ============================================================
-     DRAG & DROP → đổi giai đoạn
+     Đổi giai đoạn (dùng bởi stepper ở Record Page)
      ============================================================ */
-  var dragId = null;
-  function wireDnD() {
-    document.querySelectorAll("#sfBoard .sf-card").forEach(function (c) {
-      c.addEventListener("dragstart", function (e) {
-        dragId = c.dataset.id;
-        c.classList.add("dragging");
-        e.dataTransfer.effectAllowed = "move";
-        try { e.dataTransfer.setData("text/plain", dragId); } catch (x) {}
-      });
-      c.addEventListener("dragend", function () { c.classList.remove("dragging"); dragId = null; document.querySelectorAll(".sf-col").forEach(function (k) { k.classList.remove("drop-on"); }); });
-    });
-    document.querySelectorAll("#sfBoard .sf-col").forEach(function (col) {
-      col.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("drop-on"); e.dataTransfer.dropEffect = "move"; });
-      col.addEventListener("dragleave", function () { col.classList.remove("drop-on"); });
-      col.addEventListener("drop", function (e) {
-        e.preventDefault(); col.classList.remove("drop-on");
-        var id = dragId || (e.dataTransfer && e.dataTransfer.getData("text/plain"));
-        moveStage(id, col.dataset.stage);
-      });
-    });
-  }
-
   function moveStage(id, stage) {
     var r = recById(id); if (!r || !stage || r.stage === stage) return;
     if (!capEdit(r, me) || r.status !== "IN PROGRESS") { toast("Bạn không có quyền đổi giai đoạn dự án này."); return; }
@@ -307,7 +403,7 @@
      ============================================================ */
   function openRecord(id) {
     var r = recById(id); if (!r) return;
-    curId = id; recTab = "timeline";
+    curId = id;
     buildRecord();
     document.getElementById("sfRecBd").classList.add("open");
     document.getElementById("sfRec").classList.add("open");
@@ -322,72 +418,99 @@
   function buildRecord() {
     var r = recById(curId); if (!r) return;
     var el = document.getElementById("sfRec");
-    var h = health(r), editable = capEdit(r, me) && r.status === "IN PROGRESS";
+    var editable = capEdit(r, me) && r.status === "IN PROGRESS";
     var stClass = r.status === "WON" ? "won" : r.status === "LOST" ? "lost" : "run";
 
     el.innerHTML =
+      headerHTML(r, stClass) +
+      pathHTML(r, editable) +
       '<div class="sf-rec-split">' +
         '<div class="sf-rec-left">' +
-          highlightsHTML(r, h, stClass) +
-          pathHTML(r, editable) +
-          tabsHTML(r) +
-          '<div class="sf-rec-main">' + tabBodyHTML(r, editable) + "</div>" +
-          footHTML(r, editable) +
+          '<div class="sf-rec-main">' +
+            titleHTML(r) +
+            progressHTML(r, editable) +
+            composerHTML(r) +
+            timelineHTML(r) +
+          "</div>" +
         "</div>" +
-        '<aside class="sf-rec-side">' + sideHTML(r) + "</aside>" +
-      "</div>";
-    wireRecord(r, editable);
+        '<aside class="sf-rec-side">' + sideHTML(r, editable) + "</aside>" +
+      "</div>" +
+      footHTML(r, editable);
   }
 
-  function highlightsHTML(r, h, stClass) {
+  /* Top header — chỉ định danh & hành động: ← Danh sách · mã dự án (copy) · badge trạng thái · × */
+  function headerHTML(r, stClass) {
     var stLabel = r.status === "WON" ? "Thắng" : r.status === "LOST" ? "Thua" : "Đang chạy";
-    return '<div class="sf-hl"><div class="sf-hl-top">' +
-      '<div class="sf-hl-h"><h3 id="sfRecTitle">' + esc(r.customer) + " · " + esc(r.product) + "</h3>" +
-      '<div class="sf-hl-pills">' +
-        '<span class="sf-hp">' + esc(r.ncc || "—") + "</span>" +
-        (r.segment ? '<span class="sf-hp">' + esc(r.segment) + "</span>" : "") +
-      "</div></div>" +
-      '<div class="sf-hl-right">' +
-        '<span class="sf-hl-status sf-stpill ' + stClass + '">' + stLabel + "</span>" +
-        '<button class="sf-rec-x" onclick="SF.closeRecord()" aria-label="Đóng"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
-      "</div>" +
-      "</div>" +
-      '<div class="sf-hl-metrics">' +
-        metric("Tiềm năng " + TODAY.getFullYear(), fmt(r.kgThis) + ' <small>KG</small>') +
-        metric("Năm sau", fmt(r.kgNext) + ' <small>KG</small>') +
-        metric("Ngày đóng DK", viDate(r.closing)) +
-        metric("Tỷ lệ", probPct(r) + "%") +
-      "</div></div>";
+    return '<header class="sf-rec-head">' +
+      '<button class="sf-rec-back" onclick="SF.closeRecord()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Danh sách</button>' +
+      '<button class="sf-rec-code" onclick="SF.copyId(' + jsq(r.id) + ',this)" title="Sao chép mã dự án">' + esc(r.id) +
+        '<svg class="ic-copy" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+        '<svg class="ic-ok" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button>' +
+      '<span class="sf-stpill ' + stClass + '">' + stLabel + "</span>" +
+      (isLate(r) ? '<span class="sf-rec-late">Trễ hạn</span>' : "") +
+      '<button class="sf-rec-x" onclick="SF.closeRecord()" aria-label="Đóng (Esc)" title="Đóng (Esc)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>' +
+      "</header>";
   }
-  function metric(l, v) { return '<div class="sf-metric"><div class="m-l">' + l + '</div><div class="m-v">' + v + "</div></div>"; }
 
+  /* Tiêu đề dự án — inline edit, nằm đầu cột trái */
+  function titleHTML(r) {
+    var editable = capEdit(r, me) && r.status === "IN PROGRESS";
+    var titleText = (r.title && r.title.trim()) ? r.title : (r.customer + " · " + r.product);
+    return '<div class="sf-rec-title-row"' + (editable ? ' onclick="SF.startEditTitle()" title="Bấm để đổi tên dự án"' : "") + ">" +
+      '<h3 id="sfRecTitle">' + esc(titleText) + "</h3>" +
+      (editable ? '<span class="sf-title-edit" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span>' : "") +
+      "</div>";
+  }
+
+  /* Khối TIẾN ĐỘ & PHỤ TRÁCH — người phụ trách · ngày tạo · ngày đóng dự kiến */
+  function daysTo(iso) {
+    var d = parseWhen(iso); if (!d) return null;
+    return Math.round((d - new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate())) / 864e5);
+  }
+  function progressHTML(r, editable) {
+    var n = daysTo(r.closing);
+    var hint = n == null ? "" : n < 0 ? '<span class="hint late">trễ ' + Math.abs(n) + " ngày</span>"
+      : n === 0 ? '<span class="hint late">đến hạn hôm nay</span>' : '<span class="hint">còn ' + n + " ngày</span>";
+    return '<h4 class="sf-sec-h">Tiến độ &amp; phụ trách</h4>' +
+      '<dl class="sf-prog">' +
+        '<div><dt>Người phụ trách</dt><dd><span class="sf-av" style="background:' + colorOf(r.pic) + '">' + initials(r.pic || "?") + "</span>" + esc(r.pic || "—") + "</dd></div>" +
+        "<div><dt>Ngày tạo</dt><dd class=\"num\">" + viDate(r.created) + "</dd></div>" +
+        '<div><dt>Ngày đóng dự kiến</dt><dd>' +
+          (editable
+            ? '<input class="sf-inline-date num" type="date" id="sfClosing" value="' + (r.closing || "") + '">'
+            : '<span class="num">' + viDate(r.closing) + "</span>") +
+          (r.status === "IN PROGRESS" ? hint : "") +
+        "</dd></div>" +
+      "</dl>";
+  }
+
+  /* Quick composer — ghi nhanh ngay đầu nhật ký, không giấu sau modal phụ */
+  function composerHTML(r) {
+    if (!capEdit(r, me)) return "";
+    return '<div class="sf-quicklog">' +
+        '<select id="sfQlType" class="sf-ql-type" aria-label="Loại hoạt động">' +
+          '<option value="Call">Call</option><option value="Visit">Meeting</option>' +
+          '<option value="Email">Email</option><option value="Note">Note</option></select>' +
+        '<input id="sfQlNote" class="sf-ql-note" autocomplete="off" placeholder="Ghi nhanh trao đổi… (Enter để lưu)"' +
+          ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();SF.quickLog()}">' +
+        '<button class="sf-ql-btn" onclick="SF.quickLog()">Ghi</button>' +
+      "</div>";
+  }
+
+  /* Chevron path liền mạch (kiểu Salesforce Path) — click để đổi giai đoạn trực tiếp */
   function pathHTML(r, editable) {
     var pipe = pipelineOf(r.ncc);
     var cur = pipe.indexOf(r.stage);
     var closed = r.status !== "IN PROGRESS";
     return '<div class="sf-path" role="group" aria-label="Tiến trình dự án">' + pipe.map(function (s, i) {
       var cls = "sf-step";
-      if (closed) { cls += r.status === "WON" ? " done" : ""; }
+      if (closed) { cls += r.status === "WON" ? " done" : " muted"; }
       else if (i < cur) cls += " done"; else if (i === cur) cls += " current";
       var clickable = editable && !closed;
       if (!clickable) cls += " locked";
-      return '<button class="' + cls + '"' + (clickable ? ' onclick="SF.moveStage(\'' + esc(r.id) + "','" + esc(s).replace(/'/g, "\\'") + "')\"" : " disabled") +
-        ' title="' + esc(s) + '"><span class="st-n">Bước ' + (i + 1) + "</span>" + esc(stageShort(s)) + "</button>";
+      return '<button class="' + cls + '"' + (clickable ? ' onclick="SF.moveStage(' + jsq(r.id) + "," + jsq(s) + ')"' : " disabled") +
+        ' title="' + esc(s) + '"><span class="st-t">' + esc(stageShort(s)) + "</span></button>";
     }).join("") + "</div>";
-  }
-
-  function tabsHTML(r) {
-    var tabs = [{ id: "timeline", label: "Timeline" }, { id: "details", label: "Details" }, { id: "financial", label: "Financials" }];
-    return '<div class="sf-rec-tabs">' + tabs.map(function (t) {
-      return '<button class="sf-rec-tab' + (recTab === t.id ? " on" : "") + '" onclick="SF.setTab(\'' + t.id + '\')">' + t.label + "</button>";
-    }).join("") + "</div>";
-  }
-  function setTab(t) { recTab = t; buildRecord(); }
-
-  function tabBodyHTML(r, editable) {
-    if (recTab === "details") return detailsTab(r, editable);
-    if (recTab === "financial") return financialTab(r);
-    return timelineTab(r);
   }
 
   // "dd/mm/yyyy [HH:MM]" hoặc "yyyy-mm-dd" → Date (để sắp xếp timeline)
@@ -401,33 +524,113 @@
     return null;
   }
 
-  function timelineTab(r) {
+  /* Nhật ký hoạt động — hoạt động khách hàng + ghi chú, mới nhất lên đầu.
+     Không còn mốc “Tạo dự án” / “Mục tiêu chốt” (đã có ở khối Tiến độ). */
+  var TYPE_VI = { Call: "Call", Visit: "Meeting", Email: "Email", Exhibition: "Hội chợ" };
+  function timelineHTML(r) {
     var ev = [];
-    if (r.created) ev.push({ d: parseWhen(r.created), tag: "Tạo dự án", who: r.pic, text: "Khởi tạo cơ hội " + r.customer + " · " + r.product, kind: "start" });
-    // Hoạt động khách hàng của Sale/R&D gắn với dự án này
-    (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; }).forEach(function (a) {
-      ev.push({ d: parseWhen(a.date), tag: "Hoạt động", who: a.pic, text: (a.type ? a.type + " — " : "") + (a.note || ""), kind: "act" });
+    (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })
+      .forEach(function (a) {
+        ev.push({ d: parseWhen(a.date), tag: TYPE_VI[a.type] || a.type || "Hoạt động", who: a.pic,
+          text: a.note || "", next: a.next || "", kind: "act" });
+      });
+    (r.comments || []).forEach(function (c) {
+      ev.push({ d: parseWhen(c.at), tag: "Note", who: c.by, text: c.text || "", kind: "note" });
     });
-    if (r.closing) ev.push({ d: parseWhen(r.closing), tag: "Mục tiêu chốt", who: "", text: "Ngày đóng dự kiến", kind: "target" });
     ev.sort(function (a, b) { return (b.d ? b.d.getTime() : 0) - (a.d ? a.d.getTime() : 0); });
+
     var extSvg = '<svg class="sf-tl-ext" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h6"/></svg>';
     var body = ev.length ? ev.map(function (e) {
-      var when = e.d ? e.d.toLocaleDateString("vi-VN") : (e.at || "");
+      var when = e.d ? e.d.toLocaleDateString("vi-VN") : "";
       var isAct = e.kind === "act";
       var attrs = isAct ? ' role="link" tabindex="0" title="Mở hoạt động này trên tracker.fisaigon.vn"' +
         ' onclick="SF.openActivityLink(' + jsq(r.customer) + ')"' +
         ' onkeydown="if(event.key===\'Enter\'){SF.openActivityLink(' + jsq(r.customer) + ')}"' : "";
-      return '<div class="sf-tl-item ' + e.kind + (isAct ? " link" : "") + '"' + attrs + '><span class="sf-tl-dot"></span>' +
-        '<div class="sf-tl-c"><div class="sf-tl-top"><span class="sf-tl-tag">' + esc(e.tag) + (isAct ? extSvg : "") + '</span><span class="sf-tl-when">' + esc(when) + "</span></div>" +
-        '<div class="sf-tl-text">' + esc(e.text) + (e.who ? ' <span class="sf-tl-who">· ' + esc(e.who) + "</span>" : "") + "</div></div></div>";
-    }).join("") : '<div class="sf-act-empty">Chưa có hoạt động nào. Bấm “Cập nhật hoạt động” để thêm bước tiếp theo.</div>';
-    var canAdd = capEdit(r, me);
-    return '<div class="sf-tl-head">' +
-        '<div class="sf-sec-h" style="margin:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Dòng thời gian &amp; hoạt động</div>' +
-        (canAdd ? '<button class="sf-tl-add" onclick="SF.openActForm()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Cập nhật hoạt động</button>' : "") +
-      "</div>" +
-      '<div class="sf-timeline">' + body + "</div>";
+      return '<li class="sf-tl-item ' + e.kind + (isAct ? " link" : "") + '"' + attrs + '><span class="sf-tl-dot"></span>' +
+        '<div class="sf-tl-c"><div class="sf-tl-top"><span class="sf-tl-tag">' + esc(e.tag) + (isAct ? extSvg : "") +
+        '</span><span class="sf-tl-when num">' + esc(when) + "</span></div>" +
+        '<p class="sf-tl-text">' + esc(e.text) + (e.who ? ' <span class="sf-tl-who">· ' + esc(e.who) + "</span>" : "") + "</p>" +
+        (e.next ? '<p class="sf-tl-next"><b>Bước tiếp theo</b>' + esc(e.next) + "</p>" : "") +
+        "</div></li>";
+    }).join("") : '<li class="sf-act-empty">Chưa có trao đổi nào. Dùng ô “Ghi nhanh” phía trên để bắt đầu nhật ký.</li>';
+
+    return '<h4 class="sf-sec-h">Nhật ký Hoạt động</h4><ol class="sf-timeline">' + body + "</ol>";
   }
+
+  /* Ghi nhanh hoạt động/ghi chú ngay đầu nhật ký — không cần mở modal phụ */
+  function quickLog() {
+    var r = recById(curId); if (!r) return;
+    if (!capEdit(r, me)) { toast("Bạn không có quyền thêm hoạt động."); return; }
+    var note = (val("sfQlNote") || "").trim();
+    if (!note) { var i = document.getElementById("sfQlNote"); if (i) i.focus(); return; }
+    var type = val("sfQlType") || "Call";
+
+    if (type === "Note") {
+      r.comments = r.comments || [];
+      r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: note });
+      buildRecord();
+      toast("Đã ghi chú nhanh (lưu tạm trong trình duyệt).");
+      return;
+    }
+    var a = {
+      customer: r.customer, pic: me.pic || me.name, ncc: r.ncc || "", nccs: r.ncc ? [r.ncc] : [],
+      product: r.product, type: type, date: todayISO(), note: note, next: "", potential: "Medium",
+      related: [], projectId: r.id, id: "A-tmp" + Date.now(), spId: null
+    };
+    ACTIVITIES.push(a);
+    buildRecord();
+    var live = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && r.spId;
+    toast(live ? "Đã ghi hoạt động — đang đồng bộ lên tracker…" : "Đã ghi hoạt động (lưu tạm trong trình duyệt).");
+    if (live) {
+      FISG_STORE.createActivity(a).then(function (spId) {
+        a.spId = spId; a.id = "A-" + spId; buildRecord();
+      }).catch(function (e) { toast("Chưa đồng bộ được lên SharePoint: " + (e.message || e)); });
+    }
+  }
+
+  /* Copy mã dự án bằng một click */
+  function copyId(id, btn) {
+    var done = function () {
+      if (!btn) return;
+      btn.classList.add("copied");
+      setTimeout(function () { btn.classList.remove("copied"); }, 1200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(id).then(function () { done(); toast("Đã sao chép mã " + id); })
+        .catch(function () { toast("Không sao chép được — mã: " + id); });
+    } else {
+      var t = document.createElement("textarea"); t.value = id; document.body.appendChild(t);
+      t.select(); try { document.execCommand("copy"); done(); toast("Đã sao chép mã " + id); }
+      catch (e) { toast("Không sao chép được — mã: " + id); }
+      document.body.removeChild(t);
+    }
+  }
+
+  /* Inline edit tên dự án (tuỳ chỉnh) — thay tiêu đề bằng ô nhập ngay tại chỗ */
+  function startEditTitle() {
+    var r = recById(curId); if (!r) return;
+    if (!capEdit(r, me) || r.status !== "IN PROGRESS") return;
+    if (document.getElementById("sfTitleInput")) return;
+    var h = document.getElementById("sfRecTitle"); if (!h) return;
+    var row = h.parentElement;
+    row.removeAttribute("onclick"); row.removeAttribute("title"); row.classList.add("editing");
+    var cur = (r.title && r.title.trim()) ? r.title : (r.customer + " · " + r.product);
+    row.innerHTML = '<input id="sfTitleInput" class="sf-title-input" value="' + esc(cur) + '"' +
+      ' onkeydown="if(event.key===\'Enter\'){event.preventDefault();SF.saveTitle()}if(event.key===\'Escape\'){event.stopPropagation();SF.cancelEditTitle()}"' +
+      ' onblur="SF.saveTitle()">';
+    var inp = document.getElementById("sfTitleInput");
+    inp.focus(); inp.select();
+  }
+  function saveTitle() {
+    var r = recById(curId); if (!r) return;
+    var inp = document.getElementById("sfTitleInput"); if (!inp) return;
+    var v = (inp.value || "").trim();
+    var fallback = r.customer + " · " + r.product;
+    r.title = (v && v !== fallback) ? v : "";
+    buildRecord();
+    toast(r.title ? "Đã đổi tên dự án (lưu tạm trong trình duyệt)." : "Đã dùng lại tên mặc định.");
+  }
+  function cancelEditTitle() { buildRecord(); }
 
   /* mở hoạt động của khách hàng trên tracker chính (index.html = tracker.fisaigon.vn) */
   function openActivityLink(customer) {
@@ -435,83 +638,74 @@
     window.open(url, "_blank");
   }
 
-  /* ---------- Cập nhật hoạt động kế tiếp (sync sang list Activities) ---------- */
-  function openActForm() {
-    var r = recById(curId); if (!r) return;
-    if (!capEdit(r, me)) { toast("Bạn không có quyền thêm hoạt động."); return; }
-    var bd = document.getElementById("sfActBd") || buildActModal();
-    document.getElementById("sfActSub").textContent = r.customer + " · " + (r.ncc || "");
-    document.getElementById("sfAtType").value = "Call";
-    document.getElementById("sfAtDate").value = (typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10));
-    document.getElementById("sfAtNote").value = "";
-    document.getElementById("sfAtNext").value = "";
-    bd.classList.add("open");
-    setTimeout(function () { document.getElementById("sfAtNote").focus(); }, 60);
+  /* ---------- Cột phải: 3 khối card ---------- */
+  function mrow(label, valueHTML, cls) {
+    return '<div class="sf-mrow' + (cls ? " " + cls : "") + '"><dt>' + label + "</dt><dd>" + valueHTML + "</dd></div>";
   }
-  function buildActModal() {
-    var bd = document.createElement("div");
-    bd.className = "sf-cm-bd"; bd.id = "sfActBd";
-    bd.innerHTML =
-      '<div class="sf-cm sf-act-modal"><div class="sf-cm-h">Cập nhật hoạt động <span id="sfActSub" style="font-weight:400;color:var(--ink-3);font-size:13px"></span></div>' +
-      '<div class="sf-cm-b">' +
-        '<div class="sf-af-row"><label>Loại hoạt động<select id="sfAtType"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></label>' +
-        '<label>Ngày<input type="date" id="sfAtDate"></label></div>' +
-        '<label class="sf-af-full">Nội dung / mục tiêu<textarea id="sfAtNote" rows="2" placeholder="Nội dung buổi làm việc…"></textarea></label>' +
-        '<label class="sf-af-full">Bước tiếp theo<input id="sfAtNext" placeholder="Hành động kế tiếp…"></label>' +
+  function mval(v) { return '<span class="mv">' + (v == null || v === "" ? "—" : v) + "</span>"; }
+
+  /* Khối 1 — chỉ số thương mại & sản lượng (hero metric) */
+  function cardMetricsHTML(r, editable) {
+    var total = (r.kgThis || 0) + (r.kgNext || 0);
+    var amt = (r.amount != null && r.amount !== "") ? Number(r.amount) : null;
+    var unit = (amt != null && total > 0) ? Math.round(amt / total) : null;
+    var probOpts = [10, 25, 50, 75, 90, 100].map(function (p) {
+      return '<option value="' + p + '"' + (p === probPct(r) ? " selected" : "") + ">" + p + "%</option>";
+    }).join("");
+
+    return '<section class="sf-card"><h4 class="sf-card-h">Giá trị ước tính</h4>' +
+      '<div class="sf-hero">' +
+        '<div class="sf-hero-v">' +
+          (editable
+            ? '<input class="sf-hero-in num" type="text" inputmode="numeric" id="sfAmount" placeholder="0"' +
+              ' value="' + (amt != null ? groupNum(amt) : "") + '" oninput="SF.fmtAmountInput(this)" onchange="SF.saveAmount()">'
+            : '<p class="num">' + (amt != null ? groupNum(amt) : "—") + "</p>") +
+          '<p class="sf-hero-l">Giá trị ước tính (₫)</p>' +
+        "</div>" +
+        (editable
+          ? '<select class="sf-prob-badge num" id="sfProb" aria-label="Xác suất thắng">' + probOpts + "</select>"
+          : '<span class="sf-prob-badge num">' + probPct(r) + "%</span>") +
       "</div>" +
-      '<div class="sf-cm-f"><button class="sf-btn ghost" onclick="SF.closeActForm()">Huỷ</button>' +
-      '<button class="sf-btn primary" onclick="SF.saveActForm()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu &amp; đồng bộ</button></div></div>';
-    bd.addEventListener("click", function (e) { if (e.target === bd) closeActForm(); });
-    document.body.appendChild(bd);
-    return bd;
-  }
-  function closeActForm() { var bd = document.getElementById("sfActBd"); if (bd) bd.classList.remove("open"); }
-  function saveActForm() {
-    var r = recById(curId); if (!r) return;
-    var type = val("sfAtType") || "Call", date = val("sfAtDate") || todayISO();
-    var note = (val("sfAtNote") || "").trim(), next = (val("sfAtNext") || "").trim();
-    if (!note && !next) { toast("Nhập nội dung hoặc bước tiếp theo."); return; }
-    var a = {
-      customer: r.customer, pic: me.pic || me.name, ncc: r.ncc || "", nccs: r.ncc ? [r.ncc] : [],
-      product: r.product, type: type, date: date, note: note, next: next, potential: "Medium",
-      related: [], projectId: r.id, id: "A-tmp" + Date.now(), spId: null
-    };
-    ACTIVITIES.push(a);
-    closeActForm(); buildRecord();
-    var live = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && r.spId;
-    toast(live ? "Đã thêm hoạt động — đang đồng bộ lên tracker…" : "Đã thêm hoạt động (lưu tạm trong trình duyệt).");
-    if (live) {
-      FISG_STORE.createActivity(a).then(function (spId) {
-        a.spId = spId; a.id = "A-" + spId; buildRecord();
-        toast("Đã đồng bộ hoạt động vào Activities trên tracker.");
-      }).catch(function (e) { toast("Chưa đồng bộ được lên SharePoint: " + (e.message || e)); });
-    }
+      '<dl class="sf-meta">' +
+        mrow("Tiềm năng " + TODAY.getFullYear(), mval('<span class="num">' + fmt(r.kgThis) + "</span> <small>KG</small>")) +
+        mrow("Tiềm năng " + (TODAY.getFullYear() + 1), mval('<span class="num">' + fmt(r.kgNext) + "</span> <small>KG</small>")) +
+        mrow("Đơn giá", mval(unit != null ? '<span class="num">' + groupNum(unit) + "</span> <small>đ/KG</small>" : "")) +
+      "</dl></section>";
   }
 
-  function detailsTab(r, editable) {
-    var pipe = pipelineOf(r.ncc);
-    var stageOpts = pipe.map(function (s) { return '<option value="' + esc(s) + '"' + (s === r.stage ? " selected" : "") + ">" + esc(stageShort(s)) + "</option>"; }).join("");
-    var probOpts = [10, 25, 50, 75, 90, 100].map(function (p) { return '<option value="' + p + '"' + (p === probPct(r) ? " selected" : "") + ">" + p + "%</option>"; }).join("");
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>Thông tin dự án</div>' +
-      '<div class="sf-fields">' +
-      field("Khách hàng", '<div class="v">' + esc(r.customer) + "</div>") +
-      field("Sản phẩm", '<div class="v">' + esc(r.product) + "</div>") +
-      field("Ứng dụng", '<div class="v">' + esc(r.application || "—") + "</div>") +
+  /* Khối 2 — đối tác & phân khúc */
+  function cardPartnerHTML(r, editable) {
+    return '<section class="sf-card"><h4 class="sf-card-h">Đối tác &amp; phân khúc</h4><dl class="sf-meta">' +
+      mrow("Khách hàng", mval(esc(r.customer))) +
+      mrow("Sản phẩm", mval(esc(r.product))) +
+      mrow("Ứng dụng", mval(esc(r.application))) +
+      mrow("Nhà cung cấp", mval(esc(r.ncc))) +
       (editable
-        ? field("Segment", '<select id="sfSegment" onchange="SF.onSegmentChange()">' + segmentOptions(r.segment) + "</select>") +
-          field("Nhóm ngành <span class=\"lbl-auto\">tự động theo Segment</span>", '<div class="v" id="sfGroupDerived">' + esc(r.group || "—") + "</div>")
-        : field("Nhóm ngành · Segment", '<div class="v">' + esc(r.group || "—") + " · " + esc(r.segment || "—") + "</div>")) +
-      field("Loại cơ hội", '<div class="v">' + esc(r.boptype || "—") + "</div>") +
-      field("Ngày tạo", '<div class="v">' + viDate(r.created) + "</div>") +
-      (editable
-        ? field("Giai đoạn", '<select id="sfStage">' + stageOpts + "</select>") + field("Xác suất", '<select id="sfProb">' + probOpts + "</select>")
-        : field("Giai đoạn", '<div class="v">' + esc(stageShort(r.stage)) + "</div>") + field("Xác suất", '<div class="v">' + probPct(r) + "%</div>")) +
-      (editable
-        ? field("Ngày đóng dự kiến", '<input type="date" id="sfClosing" value="' + (r.closing || "") + '">')
-        : field("Ngày đóng dự kiến", '<div class="v">' + viDate(r.closing) + "</div>")) +
-      "</div>";
+        ? mrow("Segment", '<select class="mi-in" id="sfSegment" onchange="SF.onSegmentChange()">' + segmentOptions(r.segment) + "</select>") +
+          mrow("Ngành", '<span class="mv" id="sfGroupDerived">' + esc(r.group || "—") + "</span>" +
+            '<span class="mv-hint">tự động theo Segment</span>')
+        : mrow("Ngành / Segment", mval(esc(r.group) + ' <span class="sep">/</span> ' + esc(r.segment)))) +
+      "</dl></section>";
   }
-  function field(l, inner) { return '<div class="sf-f"><label>' + l + "</label>" + inner + "</div>"; }
+
+  /* Khối 3 — nội bộ & rủi ro */
+  function cardInternalHTML(r, editable) {
+    var people = (r.related || []).filter(Boolean);
+    var risk = (r.risk || "").trim();
+    return '<section class="sf-card"><h4 class="sf-card-h">Thông tin khác</h4><dl class="sf-meta">' +
+      mrow("Loại cơ hội", mval(esc(r.boptype))) +
+      mrow("Người tham gia", people.length
+        ? '<span class="mv who">' + people.map(function (x) {
+            return '<span class="sf-av" style="background:' + colorOf(x) + '" title="' + esc(x) + '">' + initials(x) + "</span>";
+          }).join("") + esc(people.join(", ")) + "</span>"
+        : mval("")) +
+      '<div class="sf-mrow risk"><dt>Rủi ro</dt><dd>' +
+        (risk ? '<p class="sf-risk-text">' + esc(risk) + "</p>" : '<p class="sf-side-empty">Chưa ghi nhận rủi ro.</p>') +
+        (editable ? '<div class="sf-risk-edit"><input id="sfRisk" placeholder="Ghi nhận rủi ro…" value="' + esc(risk) + '">' +
+          '<button class="sf-mini-btn" onclick="SF.saveRisk()">Lưu</button></div>' : "") +
+      "</dd></div>" +
+      "</dl></section>";
+  }
 
   // Danh mục Segment nhóm theo Nhóm ngành (BAKERY / SAVOURY / SWEET …) — chuẩn từ catalog
   function segmentOptions(cur) {
@@ -535,74 +729,26 @@
     if (el) el.textContent = g;
   }
 
-  function financialTab(r) {
-    var canEd = capEdit(r, me);
-    var total = (r.kgThis || 0) + (r.kgNext || 0);
-    var amt = (r.amount != null && r.amount !== "") ? Number(r.amount) : null;
-    var unit = (amt != null && total > 0) ? Math.round(amt / total) : null;   // đơn giá/kg = giá trị ước tính / tổng tiềm năng
-    var amountBlock = canEd
-      ? '<div class="sf-amount-edit"><input type="text" inputmode="numeric" id="sfAmount" placeholder="Nhập giá trị ước tính…" value="' + (amt != null ? groupNum(amt) : "") + '" oninput="SF.fmtAmountInput(this)">' +
-        '<button class="sf-mini-btn" onclick="SF.saveAmount()">Lưu</button></div>'
-      : '<div class="sf-fin"><div class="f-l">Giá trị ước tính (Amount)</div><div class="f-v">' + amountStr(r) + "</div></div>";
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v10l-8 4-8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>Tiềm năng sản lượng</div>' +
-      '<div class="sf-fin-grid">' +
-      '<div class="sf-fin"><div class="f-l">Tiềm năng ' + TODAY.getFullYear() + '</div><div class="f-v">' + fmt(r.kgThis) + ' <small>KG</small></div></div>' +
-      '<div class="sf-fin"><div class="f-l">Tiềm năng năm sau</div><div class="f-v">' + fmt(r.kgNext) + ' <small>KG</small></div></div>' +
-      '<div class="sf-fin"><div class="f-l">Xác suất thắng</div><div class="f-v">' + probPct(r) + '%</div></div>' +
-      '<div class="sf-fin"><div class="f-l">Đơn giá / Kg</div><div class="f-v">' + (unit != null ? groupNum(unit) : "—") + '</div></div>' +
-      "</div>" +
-      '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h3M8 15h3M14 11v6"/></svg>Giá trị ước tính (Amount)</div>' +
-      amountBlock;
-  }
   // định dạng ô nhập với dấu phẩy khi gõ
   function fmtAmountInput(el) {
     var digits = (el.value || "").replace(/[^0-9]/g, "");
-    el.value = digits ? Number(digits).toLocaleString("en-US") : "";
+    el.value = digits ? Number(digits).toLocaleString("vi-VN") : "";
   }
 
-  function sideHTML(r) {
-    var cmts = (r.comments || []).slice().sort(function (a, b) { return (a.at || "") < (b.at || "") ? -1 : 1; });
-    var cmtHTML = cmts.length ? cmts.map(function (c) {
-      var mine = (typeof isMine === "function") ? isMine(c.by, me)
-        : ((typeof picKey === "function" ? picKey(c.by) : String(c.by || "").toUpperCase()) === (typeof picKey === "function" ? picKey(me && (me.pic || me.name)) : String((me && (me.pic || me.name)) || "").toUpperCase()));
-      return '<div class="sf-cmt' + (mine ? " mine" : "") + '"><div class="sf-cmt-head"><span class="sf-cmt-by">' + esc(c.by || "—") + '</span><span class="sf-cmt-at">' + esc(c.at || "") + "</span></div>" +
-        '<div class="sf-cmt-tx">' + esc(c.text || "") + "</div></div>";
-    }).join("") : '<div class="sf-cmt-empty">Chưa có trao đổi nào.</div>';
-
-    var people = (r.related && r.related.length) ? r.related.map(function (p) {
-      return '<div class="sf-person"><span class="av" style="background:' + colorOf(p) + '">' + initials(p) + "</span><span>" + esc(p) + "</span></div>";
-    }).join("") : '<div class="sf-side-empty">Chưa có người tham gia.</div>';
-
-    var canPost = capEdit(r, me);
-
-    var risk = (r.risk || "").trim();
-    var riskHTML = risk ? '<div class="sf-risk-text">' + esc(risk) + "</div>"
-      : '<div class="sf-side-empty">Chưa ghi nhận rủi ro.</div>';
-    var riskEdit = canPost
-      ? '<div class="sf-risk-edit"><input id="sfRisk" placeholder="Ghi nhận rủi ro…" value="' + esc(risk) + '"><button class="sf-mini-btn" onclick="SF.saveRisk()">Lưu</button></div>' : "";
-
-    return '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Trao đổi</div>' +
-      '<div class="sf-chat"><div class="sf-cmts" id="sfCmts">' + cmtHTML + "</div>" +
-      (canPost ? '<div class="sf-cmt-input"><input id="sfCmt" placeholder="Viết trao đổi… (Enter để gửi)"><button class="sf-send" onclick="SF.postComment()" aria-label="Gửi"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div>' : "") +
-      "</div>" +
-      '<div class="sf-sec-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c.8-3.3 3.3-5 6.5-5s5.7 1.7 6.5 5"/></svg>Người tham gia</div>' +
-      '<div class="sf-people">' + people + "</div>" +
-      '<div class="sf-sec-h danger"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17.5v.01"/></svg>Rủi ro</div>' +
-      '<div class="sf-risk">' + riskHTML + riskEdit + "</div>";
+  /* Cột phải = 3 khối card, không phải 1 list phẳng trải dài */
+  function sideHTML(r, editable) {
+    return cardMetricsHTML(r, editable) + cardPartnerHTML(r, editable) + cardInternalHTML(r, editable);
   }
 
   function footHTML(r, editable) {
     var canCloseIt = capClose(r, me);
     return '<div class="sf-rec-foot">' +
       (canCloseIt ? '<button class="sf-btn danger" onclick="SF.openClose()" style="margin-right:auto"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 3v4M15 3v4M9 13l2 2 4-4"/></svg>Đóng dự án</button>' : "<span style='margin-right:auto'></span>") +
+      (editable ? '<span class="sf-kbd-hint"><kbd>Esc</kbd> đóng · <kbd>' + (isMac() ? "⌘" : "Ctrl") + "</kbd>+<kbd>S</kbd> lưu</span>"
+                : '<span class="sf-kbd-hint"><kbd>Esc</kbd> đóng</span>') +
       '<button class="sf-btn ghost" onclick="SF.closeRecord()">Đóng</button>' +
       (editable ? '<button class="sf-btn primary" onclick="SF.saveRecord()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu thay đổi</button>' : "") +
       "</div>";
-  }
-
-  function wireRecord(r, editable) {
-    var cmt = document.getElementById("sfCmt");
-    if (cmt) cmt.addEventListener("keydown", function (e) { if (e.key === "Enter") postComment(); });
   }
 
   function saveRecord() {
@@ -642,19 +788,6 @@
     r.amount = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
     buildRecord(); render();
     toast(r.amount === "" ? "Đã xoá giá trị ước tính." : "Đã cập nhật giá trị ước tính (lưu tạm trong trình duyệt).");
-  }
-
-  function postComment() {
-    var r = recById(curId); if (!r) return;
-    var inp = document.getElementById("sfCmt"); if (!inp) return;
-    var text = (inp.value || "").trim(); if (!text) return;
-    if (!capEdit(r, me)) { toast("Bạn không có quyền trao đổi trong dự án này."); return; }
-    r.comments = r.comments || [];
-    r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: text });
-    inp.value = "";
-    buildRecord();
-    if (r.spId && window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite())
-      FISG_STORE.addProjectUpdate(r.spId, text, me.pic || me.name, todayISO()).catch(function (e) { toast("Chưa lưu được trao đổi lên SharePoint."); });
   }
 
   /* ---------- close won/lost ---------- */
@@ -705,20 +838,37 @@
       "Đã đóng " + r.customer + " · " + r.product + " — " + label + ".", null);
   }
 
-  /* ---------- ESC to close ---------- */
+  /* ---------- Phím tắt: Esc = đóng · Cmd/Ctrl+S = lưu ---------- */
+  function anyModalOpen() {
+    return ["sfCloseBd"].some(function (id) {
+      var el = document.getElementById(id); return el && el.classList.contains("open");
+    });
+  }
   document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    var cb = document.getElementById("sfCloseBd");
-    if (cb && cb.classList.contains("open")) { cancelClose(); return; }
-    if (curId) closeRecord();
+    if (e.key === "Escape") {
+      var cb = document.getElementById("sfCloseBd");
+      if (cb && cb.classList.contains("open")) { cancelClose(); return; }
+      if (document.getElementById("sfTitleInput")) { cancelEditTitle(); return; }
+      if (curId) closeRecord();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && (e.key === "s" || e.key === "S")) {
+      if (!curId || anyModalOpen()) return;
+      e.preventDefault();
+      var r = recById(curId);
+      if (r && capEdit(r, me) && r.status === "IN PROGRESS") saveRecord();
+      else toast("Dự án này ở chế độ chỉ xem.");
+    }
   });
 
   /* ---------- expose ---------- */
   window.SF = {
-    render: render, setNcc: setNcc, setStatus: setStatus, setView: setView,
-    openRecord: openRecord, closeRecord: closeRecord, setTab: setTab, toggleCustomer: toggleCustomer,
-    moveStage: moveStage, saveRecord: saveRecord, postComment: postComment, saveRisk: saveRisk, saveAmount: saveAmount, onSegmentChange: onSegmentChange,
-    openActivityLink: openActivityLink, openActForm: openActForm, closeActForm: closeActForm, saveActForm: saveActForm, fmtAmountInput: fmtAmountInput,
+    render: render, setNcc: setNcc, setStatus: setStatus,
+    openRecord: openRecord, closeRecord: closeRecord, toggleCustomer: toggleCustomer, toggleAll: toggleAll,
+    moveStage: moveStage, saveRecord: saveRecord, saveRisk: saveRisk, saveAmount: saveAmount, onSegmentChange: onSegmentChange,
+    copyId: copyId, quickLog: quickLog,
+    startEditTitle: startEditTitle, saveTitle: saveTitle, cancelEditTitle: cancelEditTitle,
+    openActivityLink: openActivityLink, fmtAmountInput: fmtAmountInput,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose
   };
 })();

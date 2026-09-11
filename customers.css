@@ -1,4 +1,6 @@
-.cu-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cu-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px}
+.cu-tools-gap{flex:1 1 auto}
+.cu-head-act{display:flex;align-items:center;gap:10px}
 .cu-sel{
   height:34px;padding:0 30px 0 11px;border-radius:8px;border:1px solid var(--line);
   background:var(--surface);font-size:12.5px;color:var(--text);cursor:pointer}
@@ -6,16 +8,17 @@
 .cu-search svg{position:absolute;left:10px;color:var(--text-3)}
 .cu-search input{
   height:34px;padding:0 12px 0 30px;border-radius:8px;border:1px solid var(--line);
-  background:var(--surface);font-size:12.5px;color:var(--text);min-width:190px}
+  background:var(--surface);font-size:12.5px;color:var(--text);min-width:260px}
 .cu-search input:focus{outline:2px solid var(--marine);outline-offset:-1px;border-color:var(--marine)}
 .cu-count{font-size:12px;color:var(--text-3);white-space:nowrap}
 
 .cu-head,.cu-row{
   display:grid;
-  grid-template-columns:minmax(220px,2.6fr) 1.1fr 120px 1.2fr minmax(210px,auto);
+  grid-template-columns:minmax(230px,2.4fr) minmax(210px,1.6fr) 110px 1fr minmax(200px,auto);
   gap:14px;align-items:center}
-.cu-head span:not(:first-child):not(:last-child){text-align:center}
-.cu-row>.cu-owner,.cu-row>.cu-num,.cu-row>.cu-touch{
+.cu-head span:nth-child(n+3):not(:last-child){text-align:center}
+.cu-row>.cu-owner{display:flex;align-items:center;min-width:0}
+.cu-row>.cu-num,.cu-row>.cu-touch{
   display:flex;align-items:center;justify-content:center;text-align:center;min-width:0}
 .cu-head{
   padding:11px 20px;font-size:10.5px;font-weight:700;letter-spacing:.07em;
@@ -71,8 +74,14 @@
 
 @media (max-width:1100px){
   .cu-head{display:none}
-  .cu-row{grid-template-columns:1fr;gap:6px}
+  .cu-row{grid-template-columns:1fr;gap:8px}
+  .cu-row>.cu-num,.cu-row>.cu-touch{justify-content:flex-start}
   .cu-act{justify-content:flex-start}
+}
+@media (max-width:640px){
+  .cu-search,.cu-search input{flex:1 1 100%;min-width:0;width:100%}
+  .cu-sel{flex:1 1 auto}
+  .cu-tools-gap{display:none}
 }
 
 .ci-card{margin-top:18px;padding:18px 20px;border-radius:var(--r)}
@@ -142,7 +151,6 @@
 .cu-form input:disabled{background:var(--pearl-2);color:var(--text-3);cursor:not-allowed}
 .cu-form .req{color:var(--overdue)}
 
-.cu-form-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .cu-form-act{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin-top:8px;
   padding-top:16px;border-top:1px solid var(--line-2)}
 
@@ -169,3 +177,87 @@
 .cu-rel-act em{display:block;color:var(--text-3);font-style:normal;font-size:11.5px;margin-top:2px}
 .cu-rel-empty{font-size:12px;color:var(--text-3);font-style:italic;padding:4px 0}
 @media (max-width:820px){ .cu-modal-b{grid-template-columns:1fr} .cu-rel{border-left:none;border-top:1px solid var(--line-2)} }
+
+
+/* ================================================================
+   PHÂN LOẠI KHÁCH HÀNG (Tier) — tabs, badge, chip nhân sự, form
+   ================================================================ */
+
+/* ---- Segmented tabs ---- */
+.cu-tier-tabs{
+  display:flex;gap:4px;width:max-content;max-width:100%;margin:0 0 12px;padding:4px;
+  border-radius:12px;background:var(--pearl);border:1px solid var(--line-2);
+  overflow-x:auto;overflow-y:hidden;white-space:nowrap;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+  scroll-snap-type:x proximity;scrollbar-width:none}
+.cu-tier-tabs::-webkit-scrollbar{display:none}
+.tier-tab{
+  flex:none;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 10px 0 13px;
+  border-radius:9px;border:1px solid transparent;background:transparent;
+  font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;scroll-snap-align:start;
+  transition:background .14s,color .14s,border-color .14s,box-shadow .14s}
+.tier-tab:hover{background:var(--surface);border-color:var(--line);color:var(--marine-ink)}
+.tier-tab:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.tier-tab.active{
+  background:var(--marine);border-color:var(--marine);color:#fff;
+  box-shadow:0 1px 2px rgba(1,42,70,.22),0 2px 8px rgba(1,66,106,.18)}
+.tier-ic{font-size:13px;line-height:1}
+.tier-count{
+  min-width:22px;height:20px;padding:0 7px;border-radius:10px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;
+  background:var(--surface);border:1px solid var(--line);color:var(--text-2)}
+.tier-tab.active .tier-count{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);color:#fff}
+
+/* ---- Badge phân loại trên dòng ---- */
+.cu-name-line{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;min-width:0}
+.badge-tier{
+  display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:5px;
+  border:1px solid transparent;font-size:10.5px;font-weight:700;letter-spacing:.01em;
+  line-height:1;white-space:nowrap;flex:none}
+.badge-tier-strategic{background:#F3E8FF;color:#6B21A8;border-color:#E9D5FF}
+.badge-tier-key{background:#E0F2FE;color:#0369A1;border-color:#BAE6FD}
+.badge-tier-prospect{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+/* Chưa phân loại chính thức (đang tạm tính) → viền đứt */
+.badge-tier.is-inferred{border-style:dashed;background:transparent}
+
+/* Vạch màu bên trái theo tier khi hover */
+.cu-row[data-tier="Strategic"]::before{background:#7E22CE}
+.cu-row[data-tier="Key Account"]::before{background:#0369A1}
+.cu-row[data-tier="Prospect"]::before{background:#D97706}
+
+/* ---- Chip sales phụ trách ---- */
+.cu-chip-p{
+  display:inline-flex;align-items:center;gap:5px;max-width:150px;height:22px;padding:0 9px 0 2px;
+  border-radius:11px;border:1px solid var(--line);background:var(--surface);
+  font-size:11.5px;font-weight:600;color:var(--marine-ink);white-space:nowrap}
+.cu-chip-p .nm{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cu-chip-p i{
+  flex:none;width:18px;height:18px;border-radius:50%;font-style:normal;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:8.5px;font-weight:700;letter-spacing:.02em;color:#fff;
+  background:linear-gradient(140deg,var(--marine-2),var(--marine))}
+.cu-chip-p.is-me{border-color:var(--marine-line);background:var(--marine-soft);color:var(--marine)}
+.cu-untiered{
+  font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;
+  color:#92400E;background:#FFFBEB;border:1px dashed #FDE68A}
+.cu-empty-btn{margin-top:14px}
+
+/* ---- Form: chọn phân loại ---- */
+.cu-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--text-2);min-width:0}
+.cu-tier-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cu-form .cu-tier-opt{
+  position:relative;display:flex;flex-direction:row;align-items:center;justify-content:center;padding:10px 11px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface);cursor:pointer;
+  transition:border-color .14s,background .14s,box-shadow .14s}
+.cu-form .cu-tier-opt input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.cu-tier-opt-t{font-size:12.5px;font-weight:700;color:var(--marine-ink)}
+.cu-form .cu-tier-opt:hover{border-color:var(--marine-line)}
+.cu-tier-opt:has(input:focus-visible){box-shadow:0 0 0 3px var(--marine-soft);border-color:var(--marine)}
+.cu-tier-opt.badge-tier-strategic:has(input:checked){background:#F3E8FF;border-color:#C084FC}
+.cu-tier-opt.badge-tier-key:has(input:checked){background:#E0F2FE;border-color:#7DD3FC}
+.cu-tier-opt.badge-tier-prospect:has(input:checked){background:#FEF3C7;border-color:#FCD34D}
+.cu-tier-opt.badge-tier-strategic:has(input:checked) .cu-tier-opt-t{color:#6B21A8}
+.cu-tier-opt.badge-tier-key:has(input:checked) .cu-tier-opt-t{color:#0369A1}
+.cu-tier-opt.badge-tier-prospect:has(input:checked) .cu-tier-opt-t{color:#92400E}
+.cu-tier-opt:has(input:disabled){cursor:not-allowed;opacity:.7}

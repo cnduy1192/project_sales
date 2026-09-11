@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="charts.css?v=21">
 <link rel="stylesheet" href="cockpit.css?v=21">
 <link rel="stylesheet" href="welcome.css?v=21">
-<link rel="stylesheet" href="customers.css?v=21">
+<link rel="stylesheet" href="customers.css?v=23">
 </head>
 <body>
 
@@ -236,9 +236,12 @@
     <section id="view-customers" style="display:none">
       <div class="topbar">
         <h2>Khách hàng của tôi</h2>
-        <div id="cuTools" class="cu-tools"></div>
+        <div id="cuHeadAct" class="cu-head-act"></div>
       </div>
-      <div class="cu-head"><span>Khách hàng</span><span>Phụ trách</span><span>Dự án</span><span>Hoạt động gần nhất</span><span></span></div>
+      <!-- Tab phân loại: Tất cả / Strategic / Key Account / Prospect (vẽ bởi cuRenderTabs) -->
+      <nav id="cuTierTabs" class="cu-tier-tabs" role="tablist" aria-label="Phân loại khách hàng"></nav>
+      <div id="cuTools" class="cu-tools"></div>
+      <div class="cu-head"><span>Khách hàng</span><span>Sales phụ trách</span><span>Dự án</span><span>Hoạt động gần nhất</span><span></span></div>
       <div id="cuRows" class="cu-list glass"></div>
     </section>
 
@@ -547,8 +550,8 @@
 <script src="js/views/reports.js?v=21"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/lib/cleanname.js?v=21"></script>
-<script src="js/views/customers.js?v=21"></script>
-<script src="js/views/customer-import.js?v=21"></script>
+<script src="js/views/customers.js?v=23"></script>
+<script src="js/views/customer-import.js?v=23"></script>
 <script src="js/views/supplier-import.js?v=1"></script>
 <script src="js/views/attachments.js?v=1"></script>
 <script src="js/views/activities.js?v=21"></script>
@@ -560,7 +563,7 @@
 <script src="js/i18n.js?v=21"></script>
 <script src="js/auth.js?v=21"></script>
 <script src="js/graph.js?v=21"></script>
-<script src="js/store.js?v=21"></script>
+<script src="js/store.js?v=23"></script>
 <script src="js/ui-kit.js?v=21"></script>
 <script src="js/share.js?v=21"></script>
 <script src="js/guest.js?v=21"></script>
