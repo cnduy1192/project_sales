@@ -209,12 +209,10 @@
     const safe = f => { try { f(); } catch (e) { console.warn("[funnel-ui]", e && e.message); } };
     wrap("loginAs", () => setTimeout(() => {
       safe(buildRail); safe(moveExportToProfile); safe(applyKey);
-      safe(() => slider("f-prob")); safe(() => slider("d-prob"));
+      safe(() => slider("d-prob"));
     }, 80));
     wrap("render", afterRender);
     wrap("go", () => { safe(buildRail); safe(applyKey); safe(moveExportToProfile); });
-    wrap("buildForm", () => safe(() => slider("f-prob")));
-    wrap("openForm", () => safe(() => slider("f-prob")));
     wrap("openDetail", () => setTimeout(() => safe(() => slider("d-prob")), 30));
     wrap("openProbPop", () => setTimeout(() => safe(probPopSlider), 20));
     safe(buildRail); safe(moveExportToProfile);

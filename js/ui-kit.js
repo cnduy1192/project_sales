@@ -183,7 +183,6 @@
     const targets = [
       { sel: "#q", box: ".gsearch", after: () => window.render && render() },
       { sel: "#insQ", box: ".ins-wrap", after: () => window.clearInsight && clearInsight() },
-      { sel: "#f-cust" }, { sel: "#f-prod" }, { sel: "#f-app" },
     ];
     targets.forEach(t => {
       const input = document.querySelector(t.sel);
@@ -371,23 +370,6 @@
     return r;
   };
 
-  function fixSegmentField() {
-    const seg = document.getElementById("f-seg");
-    if (!seg || typeof LISTS === "undefined" || !LISTS.segments) return;
-    const keep = seg.value;
-    seg.innerHTML = LISTS.segments.map(s => `<option>${s}</option>`).join("");
-    if (keep && LISTS.segments.includes(keep)) seg.value = keep;
-
-    if (!seg.dataset.syncGrp) {
-      seg.dataset.syncGrp = "1";
-      seg.addEventListener("change", () => {
-        const grp = document.getElementById("f-grp");
-        const g = (typeof SEG2GROUP !== "undefined") && SEG2GROUP[seg.value];
-        if (grp && g) grp.value = g;
-      });
-    }
-  }
-
   function afterRender() { paintRows(); paintStatus(); }
   function wrap(name, fn) {
     const orig = window[name];
@@ -415,9 +397,7 @@
 
       setTimeout(() => safe(buildProfile), 300);
     });
-    wrap("buildForm", fixSegmentField);
-    wrap("onFormGroup", fixSegmentField);
-    wrap("openForm", () => { safe(addClears); safe(fixSegmentField); });
+    wrap("openForm", () => { safe(addClears); });
     wrap("openActForm", addClears);
     wrap("openDetail", clearRelated);
 

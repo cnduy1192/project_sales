@@ -1,74 +1,7 @@
 function probOptions(sel,val){
   document.getElementById(sel).innerHTML=PROB_OPTS.map(p=>`<option value="${p}"${p===val?' selected':''}>${p}%</option>`).join('');
 }
-function buildForm(){
-  const dl=(id,arr)=>document.getElementById(id).innerHTML=arr.map(v=>`<option value="${v.replace(/"/g,'&quot;')}">`).join('');
-  dl('dl-cust',LISTS.customers); dl('dl-prod',LISTS.products); dl('dl-app',LISTS.applications);
-
-  const fn=formNcc();
-
-  document.getElementById('f-ncc').innerHTML=supplierOptions().map(n=>`<option${n===fn?' selected':''}>${n}</option>`).join('');
-  document.getElementById('f-grp').innerHTML=SEG_GROUPS.map(g=>`<option>${g}</option>`).join('');
-  onFormGroup();
-  document.getElementById('f-stage').innerHTML=pipelineOf(fn).map(s=>`<option>${s}</option>`).join('');
-  rebuildRel(); syncProb();
-  document.getElementById('f-created').value=isoOf(TODAY);
-}
-function rebuildRel(){
-  const sel=document.getElementById('f-rel');
-  sel.innerHTML='<option value="">+ Thêm người liên quan…</option>'+ALL_PICS.filter(p=>!related.includes(p)).map(p=>`<option>${p}</option>`).join('');
-}
-function addRel(){
-  const v=document.getElementById('f-rel').value; if(!v)return;
-  related.push(v);
-  const t=document.createElement('span'); t.className='tag';
-  t.innerHTML=`${v} <button onclick="rmRel('${v}',this)" aria-label="Xoá ${v}">×</button>`;
-  document.getElementById('relTags').insertBefore(t,document.getElementById('f-rel'));
-  rebuildRel();
-}
-function rmRel(v,btn){related=related.filter(x=>x!==v);btn.parentElement.remove();rebuildRel();}
-function syncProb(){probOptions('f-prob',STAGE_PROB[document.getElementById('f-stage').value]||10);}
-function onFormGroup(){
-  const g=document.getElementById('f-grp').value;
-  document.getElementById('f-seg').innerHTML=(SEG_TREE[g]||[]).map(s=>`<option>${s}</option>`).join('');
-}
-function onFormNcc(){
-  const n=document.getElementById('f-ncc').value;
-  document.getElementById('f-stage').innerHTML=pipelineOf(n).map(s=>`<option>${s}</option>`).join('');
-  syncProb();
-}
-function openForm(origin){
-  NAV.enter(origin); NAV.renderBack('f-back');
-  document.getElementById('ov').classList.add('open');
-}
-function closeForm(){
-  NAV.back(function(){ document.getElementById('ov').classList.remove('open'); });
-}
-function saveForm(){
-  const g=id=>document.getElementById(id).value.trim();
-  if(!g('f-cust')||!g('f-prod')||!g('f-app')||!g('f-closing')){toast('Vui lòng điền Khách hàng, Sản phẩm, Ứng dụng và Ngày đóng dự kiến.');return;}
-  const synced=[];
-  if(!LISTS.customers.includes(g('f-cust'))){LISTS.customers.push(g('f-cust'));synced.push('SF_Customers');}
-  if(!LISTS.products.includes(g('f-prod'))){LISTS.products.push(g('f-prod'));synced.push('SF_Products');}
-  if(!LISTS.applications.includes(g('f-app'))){LISTS.applications.push(g('f-app'));synced.push('SF_Applications');}
-
-  const rec={id:'PL-'+Date.now().toString(36).toUpperCase(),ncc:g('f-ncc'),group:g('f-grp'),
-    segment:g('f-seg'),application:g('f-app'),product:g('f-prod'),customer:g('f-cust'),
-    created:g('f-created'),closing:g('f-closing'),stage:g('f-stage'),status:'IN PROGRESS',boptype:g('f-type'),
-    prob:(+g('f-prob')||10)/100,kgThis:+g('f-kg1')||0,kgNext:+g('f-kg2')||0,desc:g('f-desc'),
-    pic: me.pic||me.name, related:[...related], comments:[]};
-  if(rec.desc) rec.comments.push({by:me.pic||me.name,at:nowStr(),text:rec.desc});
-  RECORDS.unshift(rec);
-  if(srcAct){srcAct.projectId=rec.id;
-    rec.comments.unshift({by:srcAct.pic,at:srcAct.date,text:'[Nguồn gốc — '+srcAct.type+'] '+srcAct.note+' → '+srcAct.next});
-    srcAct=null; renderActs();}
-  ['f-cust','f-prod','f-app','f-kg1','f-kg2','f-desc'].forEach(x=>document.getElementById(x).value='');
-  related=[]; document.querySelectorAll('#relTags .tag').forEach(t=>t.remove());
-  buildForm(); closeForm(); render(); cockpitRefresh();
-  notify(rec,`đã tạo dự án mới <b>${rec.customer} · ${rec.product}</b>`);
-  toast('Đã tạo dự án cho '+rec.customer+' — đang lưu lên SharePoint…');
-  pushProject(rec);
-}
+/* Form "Thêm dự án mới" (buildForm/openForm/saveForm…) đã chuyển sang js/views/project-form.js */
 
 function pushProject(rec){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){

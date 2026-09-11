@@ -393,12 +393,14 @@ function actPending(a){
 }
 function createProjectFromAct(aid){
   const a=ACTIVITIES.find(x=>x.id===aid); if(!a)return;
-  srcAct=a;
-  openForm();
-  document.getElementById('f-cust').value=a.customer;
-  document.getElementById('f-ncc').value=a.ncc; onFormNcc();
-  if(a.product)document.getElementById('f-prod').value=a.product;
-  document.getElementById('f-desc').value='['+a.type+' '+a.date+'] '+a.note+' → '+a.next;
-  toast('Đã kéo sẵn thông tin từ hoạt động của '+a.customer+'. Bổ sung phần còn thiếu rồi lưu.');
+  const d=a.date?new Date(a.date).toLocaleDateString('vi-VN'):'';
+  openCreateProjectModal({
+    customerId: (typeof custKey==='function'?custKey(a.customer):a.customer),
+    customerName: a.customer, supplier: a.ncc,
+    product: a.product||'',
+    noteContent: (a.note||'')+(a.next?' → '+a.next:''),
+    noteSource: 'từ hoạt động '+(typeof actType==='function'?actType(a.type):a.type)+(d?' '+d:''),
+    sourceActivityId: a.id
+  });
 }
 

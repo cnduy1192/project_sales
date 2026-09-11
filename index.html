@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="cockpit.css?v=21">
 <link rel="stylesheet" href="welcome.css?v=21">
 <link rel="stylesheet" href="customers.css?v=23">
+<link rel="stylesheet" href="project-form.css?v=1">
 </head>
 <body>
 
@@ -148,7 +149,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.4"/><rect x="10" y="4" width="5" height="11" rx="1.4"/><rect x="17" y="4" width="4" height="14" rx="1.4"/></svg>Giao diện Salesforce</a>
           <button class="btn-ghost" onclick="toast('Bản thật: xuất Excel 18 cột đúng format Roquette từ SharePoint List.')">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Xuất Excel</button>
-          <button class="btn-primary" onclick="openForm()">
+          <button class="btn-primary" onclick="openCreateProjectModal()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Thêm dự án</button>
         </div>
       </div>
@@ -265,40 +266,60 @@
 </div>
 
 <div class="overlay" id="ov">
-  <div class="modal">
-    <div class="modal-head">
-      <div><button class="mh-back" id="f-back" onclick="closeForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
-        <h3>Thêm dự án mới</h3></div>
-      <button class="x-btn" onclick="closeForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <form class="modal pf-modal" id="pfForm" role="dialog" aria-modal="true" aria-labelledby="pfTitle" novalidate autocomplete="off">
+    <div class="modal-head pf-head">
+      <div class="pf-head-main">
+        <button type="button" class="mh-back" id="f-back" onclick="closeForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3 id="pfTitle">Thêm dự án mới</h3>
+        <div class="pf-ctx" id="pfCtx" aria-label="Bối cảnh dự án"></div>
+      </div>
+      <button type="button" class="pf-x" onclick="closeForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
-    <div class="modal-body">
-      <div class="field"><label>Khách hàng <span class="req">*</span></label>
-        <input list="dl-cust" id="f-cust" placeholder="Nhập tên khách hàng…"><datalist id="dl-cust"></datalist></div>
-      <div class="field"><label>Sản phẩm <span class="req">*</span></label>
-        <input list="dl-prod" id="f-prod" placeholder="Nhập tên sản phẩm…"><datalist id="dl-prod"></datalist></div>
-      <div class="field"><label>Ứng dụng của khách hàng <span class="req">*</span></label>
-        <input list="dl-app" id="f-app" placeholder="Nhập ứng dụng…"><datalist id="dl-app"></datalist></div>
-      <div class="field"><label>Nhà cung cấp <span class="req">*</span></label><select id="f-ncc" onchange="onFormNcc()"></select></div>
-      <div class="field"><label>Nhóm ngành <span class="req">*</span></label><select id="f-grp" onchange="onFormGroup()"></select></div>
-      <div class="field"><label>Segment <span class="req">*</span></label><select id="f-seg"></select></div>
-      <div class="field"><label>Giai đoạn (BOP Stage) <span class="req">*</span></label><select id="f-stage" onchange="syncProb()"></select></div>
-      <div class="field"><label>Tiến độ dự án</label><select id="f-prob"></select></div>
-      <div class="field"><label>Loại cơ hội</label><select id="f-type"><option>NEW BUSINESS</option><option>GAIN MARKET SHARE</option><option>DEFEND MARKET SHARE</option></select></div>
-      <div class="field"><label>Ngày tạo <span class="req">*</span></label><input type="date" id="f-created"></div>
-      <div class="field"><label>Ngày đóng dự kiến <span class="req">*</span></label><input type="date" id="f-closing"></div>
-      <div class="field"><label>Tiềm năng năm nay (KG)</label><input type="number" min="0" id="f-kg1" placeholder="0"></div>
-      <div class="field"><label>Tiềm năng năm sau (KG)</label><input type="number" min="0" id="f-kg2" placeholder="0"></div>
-      <div class="field full"><label>Người liên quan đến dự án</label>
-        <div class="tags" id="relTags"><select id="f-rel" onchange="addRel()"></select></div></div>
-      <div class="field full"><label>Cập nhật tình hình</label>
-        <textarea id="f-desc" rows="3" placeholder="Cập nhật tình hình…"></textarea></div>
+
+    <div class="modal-body pf-body">
+      <div class="pf-grid">
+        <div class="field" data-f="product"><label for="f-prod">Sản phẩm <span class="req">*</span></label>
+          <input id="f-prod" list="dl-prod" placeholder="Nhập tên sản phẩm / hoạt chất..." aria-describedby="pfErr-product"><datalist id="dl-prod"></datalist>
+          <small class="pf-err" id="pfErr-product"></small></div>
+        <div class="field" data-f="application"><label for="f-app">Ứng dụng <span class="req">*</span></label>
+          <input id="f-app" list="dl-app" placeholder="Nhập ứng dụng..." aria-describedby="pfErr-application"><datalist id="dl-app"></datalist>
+          <small class="pf-err" id="pfErr-application"></small></div>
+        <div class="field" data-f="segment"><label for="f-segment">Nhóm ngành / Segment <span class="req">*</span> <span class="pf-hint" id="pfSegHint"></span></label>
+          <select id="f-segment" aria-describedby="pfErr-segment"></select>
+          <small class="pf-err" id="pfErr-segment"></small></div>
+        <div class="field" data-f="stage"><label for="f-stage">Giai đoạn (Stage) <span class="req">*</span></label>
+          <select id="f-stage" aria-describedby="pfErr-stage"></select>
+          <small class="pf-err" id="pfErr-stage"></small></div>
+      </div>
+
+      <details class="pf-more" id="pfMore">
+        <summary>
+          <svg class="pf-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          Bổ sung dự báo &amp; Chi tiết <span class="pf-opt">(Tùy chọn)</span>
+          <span class="pf-more-n" id="pfMoreN" hidden></span>
+        </summary>
+        <div class="pf-more-body">
+          <div class="pf-grid pf-grid-3">
+            <div class="field"><label for="f-closing">Ngày đóng dự kiến</label><input type="date" id="f-closing"></div>
+            <div class="field"><label for="f-kg1">Tiềm năng năm nay (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg1" placeholder="0"></div>
+            <div class="field"><label for="f-kg2">Tiềm năng năm sau (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg2" placeholder="0"></div>
+          </div>
+          <div class="field"><label for="f-rel">Người liên quan đến dự án</label>
+            <div class="tags pf-tags" id="relTags"><select id="f-rel" aria-label="Thêm người liên quan"></select></div></div>
+        </div>
+      </details>
+
+      <div class="field pf-note"><label for="f-desc">Ghi chú ban đầu <span class="pf-src" id="pfNoteSrc"></span></label>
+        <textarea id="f-desc" rows="2" placeholder="Bối cảnh, nhu cầu của khách... (không bắt buộc)"></textarea></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeForm()">Huỷ</button>
-      <button class="btn-primary" onclick="saveForm()">
+
+    <div class="modal-foot pf-foot">
+      <span class="pf-kbd" aria-hidden="true"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> để lưu</span>
+      <button type="button" class="btn-ghost" onclick="closeForm()">Huỷ</button>
+      <button type="submit" class="btn-primary pf-save" id="pfSave">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu dự án</button>
     </div>
-  </div>
+  </form>
 </div>
 
 <div class="overlay" id="dov">
@@ -555,7 +576,8 @@
 <script src="js/views/supplier-import.js?v=1"></script>
 <script src="js/views/attachments.js?v=1"></script>
 <script src="js/views/activities.js?v=21"></script>
-<script src="js/views/detail.js?v=21"></script>
+<script src="js/views/detail.js?v=22"></script>
+<script src="js/views/project-form.js?v=1"></script>
 <script src="js/components/notifications.js?v=21"></script>
 <script src="js/views/admin.js?v=21"></script>
 <script src="js/components/toast.js?v=21"></script>

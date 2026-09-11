@@ -36,6 +36,12 @@
     "Nhân viên": "Staff", "Vai trò": "Role", "Thao tác": "Actions",
 
     "Thêm dự án mới": "Add new project", "Khách hàng": "Customer",
+    "Khách hàng:": "Customer:", "NCC:": "Supplier:", "Nhóm ngành / Segment": "Industry / Segment",
+    "Giai đoạn (Stage)": "Stage", "Bổ sung dự báo & Chi tiết": "Forecast & details", "(Tùy chọn)": "(Optional)",
+    "Ghi chú ban đầu": "Initial note", "Chọn segment…": "Choose segment…", "để lưu": "to save",
+    "· gợi ý từ dự án trước": "· suggested from past project", "Chọn / nhập khách hàng…": "Pick / type customer…",
+    "Nhập tên sản phẩm / hoạt chất...": "Product / active ingredient...", "Nhập ứng dụng...": "Application...",
+    "Bối cảnh, nhu cầu của khách... (không bắt buộc)": "Context, customer needs... (optional)",
     "Sản phẩm": "Product", "Ứng dụng của khách hàng": "Customer application",
     "Nhà cung cấp": "Supplier", "Nhóm ngành": "Segment group",
     "Giai đoạn (BOP Stage)": "Stage (BOP Stage)", "Tiến độ dự án": "Project progress",

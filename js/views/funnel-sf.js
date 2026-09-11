@@ -644,13 +644,25 @@
   }
   function mval(v) { return '<span class="mv">' + (v == null || v === "" ? "—" : v) + "</span>"; }
 
+  /* Badge xác suất đổi màu theo giá trị — không để 90% vẫn hiện màu cảnh báo */
+  function probTone(p) { return p >= 70 ? "high" : p >= 30 ? "mid" : "low"; }
+  function repaintProb(sel) {
+    sel.classList.remove("low", "mid", "high");
+    sel.classList.add(probTone(+sel.value || 0));
+  }
+
   /* Khối 1 — chỉ số thương mại & sản lượng (hero metric) */
   function cardMetricsHTML(r, editable) {
     var total = (r.kgThis || 0) + (r.kgNext || 0);
     var amt = (r.amount != null && r.amount !== "") ? Number(r.amount) : null;
     var unit = (amt != null && total > 0) ? Math.round(amt / total) : null;
-    var probOpts = [10, 25, 50, 75, 90, 100].map(function (p) {
-      return '<option value="' + p + '"' + (p === probPct(r) ? " selected" : "") + ">" + p + "%</option>";
+    // luôn chèn xác suất hiện tại vào danh sách — STAGE_PROB có các mốc 40/60/80
+    // không nằm trong preset, nếu thiếu thì select sẽ tự nhảy về 10% và hiển thị sai.
+    var cur = probPct(r);
+    var probList = [10, 25, 50, 75, 90, 100];
+    if (probList.indexOf(cur) < 0) { probList.push(cur); probList.sort(function (a, b) { return a - b; }); }
+    var probOpts = probList.map(function (p) {
+      return '<option value="' + p + '"' + (p === cur ? " selected" : "") + ">" + p + "%</option>";
     }).join("");
 
     return '<section class="sf-card"><h4 class="sf-card-h">Giá trị ước tính</h4>' +
@@ -663,8 +675,9 @@
           '<p class="sf-hero-l">Giá trị ước tính (₫)</p>' +
         "</div>" +
         (editable
-          ? '<select class="sf-prob-badge num" id="sfProb" aria-label="Xác suất thắng">' + probOpts + "</select>"
-          : '<span class="sf-prob-badge num">' + probPct(r) + "%</span>") +
+          ? '<select class="sf-prob-badge num ' + probTone(probPct(r)) + '" id="sfProb" aria-label="Xác suất thắng"' +
+            ' onchange="SF.repaintProb(this)">' + probOpts + "</select>"
+          : '<span class="sf-prob-badge num ' + probTone(probPct(r)) + '">' + probPct(r) + "%</span>") +
       "</div>" +
       '<dl class="sf-meta">' +
         mrow("Tiềm năng " + TODAY.getFullYear(), mval('<span class="num">' + fmt(r.kgThis) + "</span> <small>KG</small>")) +
@@ -866,7 +879,7 @@
     render: render, setNcc: setNcc, setStatus: setStatus,
     openRecord: openRecord, closeRecord: closeRecord, toggleCustomer: toggleCustomer, toggleAll: toggleAll,
     moveStage: moveStage, saveRecord: saveRecord, saveRisk: saveRisk, saveAmount: saveAmount, onSegmentChange: onSegmentChange,
-    copyId: copyId, quickLog: quickLog,
+    copyId: copyId, quickLog: quickLog, repaintProb: repaintProb,
     startEditTitle: startEditTitle, saveTitle: saveTitle, cancelEditTitle: cancelEditTitle,
     openActivityLink: openActivityLink, fmtAmountInput: fmtAmountInput,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose

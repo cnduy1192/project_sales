@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════════════════════
+   Modal "Thêm dự án mới" — Quick Deal
+   Chỉ dùng token sẵn có trong styles.css (marine / line / surface / ink…)
+   Ngân sách chiều cao: thu gọn ≈ 460px · mở rộng ≈ 610px ≤ 620px
+   ═══════════════════════════════════════════════════════════════ */
+
+#ov{padding:16px}
+.pf-modal{
+  width:640px;max-width:100%;
+  max-height:min(620px, calc(100dvh - 32px));
+  border-radius:12px;font-family:'Inter',system-ui,sans-serif}
+
+/* ── Header + bối cảnh ── */
+.pf-head{padding:14px 16px 10px 20px;align-items:flex-start;gap:12px}
+.pf-x{width:32px;height:32px;flex:none;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);margin-top:-2px}
+.pf-x:hover{background:var(--line-2);color:var(--ink)}
+.pf-x:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.pf-head-main{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;min-width:0;flex:1}
+.pf-head .mh-back{margin:0;padding:3px 10px 3px 7px;font-size:11.5px;max-width:200px}
+.pf-head h3{font-family:'Plus Jakarta Sans',var(--font-display);font-size:16px;font-weight:700;
+  color:var(--marine-ink);letter-spacing:-.01em;line-height:1.35}
+.pf-ctx{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px}
+.pf-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;max-width:100%;
+  border:1px solid var(--marine-line);background:var(--marine-soft);border-radius:8px;
+  font-size:12.5px;color:var(--marine-ink);line-height:1;min-width:0}
+.pf-chip svg{color:var(--marine-label)}
+.pf-chip em{font-style:normal;color:var(--marine-mute);font-weight:500;white-space:nowrap}
+.pf-chip b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+/* chip chỉnh được (khi không có bối cảnh kế thừa) */
+.pf-chip-edit{background:var(--surface);border-color:var(--line);cursor:text;transition:border-color .12s,box-shadow .12s}
+.pf-chip-edit:focus-within{border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
+.pf-chip-edit input,.pf-chip-edit select{border:0;outline:0;background:none;font:inherit;font-weight:600;
+  color:var(--marine-ink);height:26px;padding:0;min-width:0}
+.pf-chip-edit input{width:190px}
+.pf-chip-edit input::placeholder{font-weight:400;color:var(--ink-3)}
+.pf-chip-edit input::-webkit-calendar-picker-indicator{display:none!important}
+.pf-chip-edit select{cursor:pointer;padding-right:2px}
+.pf-chip-edit.invalid{border-color:var(--lost)}
+
+/* ── Body ── */
+.pf-body{display:flex!important;flex-direction:column;gap:12px;padding:14px 20px}
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.pf-grid-3{grid-template-columns:1.15fr 1fr 1fr}
+.pf-modal .field{gap:5px;min-width:0}
+.pf-modal .field label{font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-modal .field input,.pf-modal .field select,.pf-modal .field textarea{
+  height:38px;padding:8px 11px;border-radius:8px;border-color:var(--line);font-size:13.5px;background:var(--surface)}
+.pf-modal .field textarea{height:auto;min-height:54px;max-height:54px;resize:none;line-height:1.45;padding:8px 11px}
+.pf-modal .field input:focus,.pf-modal .field select:focus,.pf-modal .field textarea:focus{
+  border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
+.pf-modal .field select{cursor:pointer}
+.pf-modal .field.invalid input,.pf-modal .field.invalid select{border-color:var(--lost)}
+.pf-modal .field.invalid input:focus,.pf-modal .field.invalid select:focus{box-shadow:0 0 0 3px var(--lost-bg)}
+.pf-err{font-size:11.5px;color:var(--lost);line-height:1.35}
+.pf-err:empty{display:none}
+.pf-err-ctx{flex-basis:100%}
+.pf-hint,.pf-src{font-weight:500;color:var(--marine-label);font-size:11px}
+.pf-opt{font-weight:500;color:var(--ink-3)}
+
+/* ── Accordion "Bổ sung dự báo & Chi tiết" ── */
+.pf-more{border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.pf-more>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--marine);border-radius:8px;user-select:none}
+.pf-more>summary::-webkit-details-marker{display:none}
+.pf-more>summary:hover{background:var(--pearl-2)}
+.pf-more>summary:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+.pf-caret{transition:transform .15s ease-out}
+.pf-more[open]>summary .pf-caret{transform:rotate(90deg)}
+.pf-more[open]>summary{border-bottom:1px solid var(--line-2);border-radius:8px 8px 0 0}
+.pf-more-n{margin-left:auto;font-size:11px;font-weight:600;color:var(--marine);background:var(--marine-soft);
+  border-radius:20px;padding:2px 8px}
+.pf-more[open] .pf-more-n{display:none}
+.pf-more-body{display:flex;flex-direction:column;gap:10px;padding:10px 12px 12px}
+.pf-tags{min-height:38px;padding:4px 6px;border-radius:8px;gap:5px;align-items:center}
+.pf-tags:focus-within{border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
+.pf-modal .pf-tags select{height:28px;border:0;box-shadow:none!important;padding:0 4px;flex:1;min-width:160px;background:none;color:var(--ink-3)}
+.pf-modal .pf-tags .tag{background:var(--marine-soft);color:var(--marine);border-color:var(--marine-line)}
+.pf-modal .pf-tags .tag button{color:var(--marine)}
+
+/* ── Footer (luôn hiện) ── */
+.pf-foot{padding:12px 20px;align-items:center;gap:8px;background:var(--surface);border-radius:0 0 12px 12px}
+.pf-kbd{margin-right:auto;font-size:11.5px;color:var(--ink-3)}
+.pf-kbd kbd{font:600 10.5px/1 'Inter',system-ui,sans-serif;border:1px solid var(--line);border-bottom-width:2px;
+  border-radius:4px;padding:2px 5px;background:var(--pearl-2);color:var(--ink-2)}
+.pf-foot .btn-ghost{border-radius:8px}
+.pf-foot .btn-ghost:hover{border-color:var(--marine);color:var(--marine)}
+.pf-save{background:var(--marine);border-radius:8px;min-width:128px;justify-content:center}
+.pf-save:hover{background:var(--marine-deep)}
+.pf-save:focus-visible,.pf-foot .btn-ghost:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.pf-save.is-busy{opacity:.7;cursor:progress}
+
+/* ── Responsive ── */
+@media (max-width:600px){
+  #ov{padding:0;align-items:flex-end}
+  .pf-modal{max-height:100dvh;border-radius:12px 12px 0 0}
+  .pf-grid,.pf-grid-3{grid-template-columns:1fr}
+  .pf-chip-edit input{width:150px}
+  .pf-chip b{max-width:180px}
+  .pf-kbd{display:none}
+  .pf-foot .btn-ghost,.pf-save{flex:1}
+}
+@media (prefers-reduced-motion:reduce){.pf-caret{transition:none}}

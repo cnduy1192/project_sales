@@ -220,11 +220,7 @@ function wcQuickLog(iso){
 }
 function wcQuickProject(iso){
   closeWelcome();
-  if(typeof openForm === 'function'){
-    openForm();
-    const el = document.getElementById('f-created'); if(el) el.value = iso;
-    const cl = document.getElementById('f-closing'); if(cl && !cl.value) cl.focus();
-  }
+  if(typeof openCreateProjectModal === 'function') openCreateProjectModal({ createdDate: iso });
 }
 window.wcQuickLog = wcQuickLog; window.wcQuickProject = wcQuickProject;
 

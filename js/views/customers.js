@@ -457,10 +457,10 @@ function cuOpen(name){
 window.cuOpen = cuOpen;
 
 function cuNewProject(name){
-  if(!window.openForm) return;
-  openForm();
-  const f = document.getElementById('f-cust'); if(f) f.value = custLabel(name);
-  if(window.toast) toast('Đang tạo dự án cho ' + custLabel(name) + '. Điền phần còn lại rồi lưu.');
+  if(!window.openCreateProjectModal) return;
+  // NCC chỉ khoá khi đang lọc đúng 1 nhà cung cấp; ngược lại modal tự gợi ý từ lịch sử khách
+  const ncc = (typeof isAllNcc === 'function' && !isAllNcc() && nccFilter) ? nccFilter : '';
+  openCreateProjectModal({ customerId: custKey(name), customerName: custLabel(name), supplier: ncc });
 }
 window.cuNewProject = cuNewProject;
 
