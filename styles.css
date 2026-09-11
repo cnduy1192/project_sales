@@ -58,6 +58,14 @@ svg{flex:none}
 .badge-mgr{margin-left:auto;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:20px;padding:2.5px 9px}
 
 #app{display:none;min-height:100dvh}
+/* Đang mở lại phiên M365 (js/lib/resume.js) → không hiện màn hình đăng nhập */
+html.fisg-resuming #login,html.fisg-resuming #sfLogin{display:none!important}
+html.fisg-resuming body::before{content:"";position:fixed;left:50%;top:calc(50% - 30px);width:28px;height:28px;margin-left:-14px;
+  border-radius:50%;border:3px solid var(--marine-line);border-top-color:var(--marine);animation:fisgSpin .8s linear infinite;z-index:9999}
+html.fisg-resuming body::after{content:"Đang mở phiên làm việc…";position:fixed;left:0;right:0;top:calc(50% + 12px);text-align:center;
+  font:600 13.5px/1.4 Inter,system-ui,sans-serif;color:var(--marine-mute);z-index:9999}
+@keyframes fisgSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){html.fisg-resuming body::before{animation-duration:2.4s}}
 .shell{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:100dvh;
   transition:grid-template-columns .34s cubic-bezier(.4,0,.2,1)}
 .shell.side-min{grid-template-columns:var(--side-w-min) 1fr}

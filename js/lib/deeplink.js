@@ -4,7 +4,7 @@
       Mở từ salesfunnel.html → tự vào view Hoạt động và lọc.
    2) openSalesFunnel(event, extra) — menu "Sales Funnel" ở index
       → salesfunnel.html?ncc=…&status=…&q=…&open=<mã dự án>&from=index
-      (mang theo bộ lọc hiện tại; chưa đăng nhập M365 → thêm demo=1)
+      (mang theo bộ lọc hiện tại; salesfunnel.html dùng lại phiên M365 → không qua màn hình đăng nhập)
    ============================================================ */
 (function () {
   "use strict";
@@ -24,8 +24,6 @@
     var q = extra.q != null ? extra.q : (qEl ? qEl.value.trim() : "");
     if (q) p.set("q", q);
     if (extra.open) p.set("open", extra.open);
-    var live = window.FISG_AUTH && FISG_AUTH.account && FISG_AUTH.account();
-    if (!live) p.set("demo", "1");
     p.set("from", "index");
     return "salesfunnel.html?" + p.toString();
   }

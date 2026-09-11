@@ -61,6 +61,11 @@
     }
   }
 
+  function resumeDone() {
+    if (window.FISG_RESUME) FISG_RESUME.done();
+    else document.documentElement.classList.remove("fisg-resuming");
+  }
+
   async function enter(acc) {
     const email = (acc.username || "").toLowerCase();
 
@@ -71,20 +76,21 @@
         USERS.push({ name: acc.name || "Khách", email: acc.username, role: "guest", pic: null, color: "#6D28D9" });
         idx = USERS.length - 1;
       }
-      loginAs(idx);
+      loginAs(idx); resumeDone();
       if (window.FISG_STORE) await FISG_STORE.syncFromGraph();
       await FISG_GUEST.afterLogin(email);
       return;
     }
 
-    if (!window.FISG_STORE) { toast("Thiếu js/store.js — không tải được dữ liệu."); return; }
+    if (!window.FISG_STORE) { resumeDone(); toast("Thiếu js/store.js — không tải được dữ liệu."); return; }
     const p = await FISG_STORE.profileFor(email, acc.name || acc.username);
     if (!p.user) {
+      resumeDone();
       toast("Tài khoản " + acc.username + " chưa có trong list Users trên SharePoint. "
             + "Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.");
       return;
     }
-    loginAs(p.index);
+    loginAs(p.index); resumeDone();
     await FISG_STORE.syncFromGraph();
   }
 
@@ -103,7 +109,13 @@
   function boot() {
     const btn = document.querySelector(".ms-btn");
     if (btn) btn.onclick = signIn;
-    handleRedirect().then(acc => { if (acc) enter(acc); });
+    handleRedirect().then(acc => {
+      if (!acc) { resumeDone(); return; }          // không có phiên → hiện màn hình đăng nhập
+      enter(acc).catch(e => {
+        resumeDone();
+        if (window.toast) toast("Không mở lại được phiên đăng nhập: " + (e.message || e) + ". Hãy đăng nhập lại.");
+      });
+    }, () => resumeDone());
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();

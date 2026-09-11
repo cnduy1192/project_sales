@@ -1,7 +1,8 @@
 /* ============================================================
    Dữ liệu DEMO cho Sales Funnel (Salesforce view) — Phase 1
    Cho phép xem salesfunnel.html mà KHÔNG cần đăng nhập M365.
-   Kích hoạt bằng nút "Xem bản demo" hoặc mở salesfunnel.html?demo=1
+   CHỈ nạp trong salesfunnel-demo.html (bản training, window.FISG_DEMO_AUTO = true).
+   salesfunnel.html (dữ liệu thật) không còn nạp file này.
    Tất cả record có spId:null → chỉnh sửa chỉ ở trình duyệt, không ghi SharePoint.
    ============================================================ */
 (function () {
@@ -38,10 +39,10 @@
     ["IFF", "Interfood (Wonderfarm)", "CREMODAN Ice", "Trà bí đao", "SWEET", "BEVERAGE", "TESTING", "IN PROGRESS", 60000, 90000, "Thu", "2026-05-14", "2026-10-12", [], "Test ổn định huyền phù."],
     ["IFF", "Vissan", "GRINDSTED Carrageenan", "Xúc xích tiệt trùng", "SAVOURY", "MEAT", "LOST", "LOST", 100000, 0, "Hùng", "2025-08-20", "2026-05-20", ["Khoa"], "Khách chọn nhà cung cấp khác do giá thấp hơn."],
 
-    ["Kimica-Navido", "Dutch Lady (FrieslandCampina)", "KIMICA Algin", "Sữa tiệt trùng có hạt", "SWEET", "DAIRY", "SAMPLE SENT", "IN PROGRESS", 85000, 120000, "Lan", "2026-06-25", "2026-11-28", ["Khoa"], "Support Ngọc — gửi mẫu alginate độ nhớt cao."],
-    ["Kimica-Navido", "Cầu Tre", "Sodium Alginate", "Chả giò đông lạnh", "SAVOURY", "SEAFOOD", "TESTING", "IN PROGRESS", 45000, 70000, "Ngọc", "2026-04-08", "2026-09-30", [], "Test khả năng kết dính nhân."],
-    ["Kimica-Navido", "Vinasoy", "KIMICA Algin", "Sữa đậu nành", "SAVOURY", "VEGAN", "POSTPONED", "IN PROGRESS", 50000, 80000, "Hùng", "2026-02-28", "2026-12-20", [], "Khách hoãn do thay đổi kế hoạch sản phẩm 2026."],
-    ["Kimica-Navido", "Bel Vietnam", "Sodium Alginate", "Phô mai chế biến", "SWEET", "DAIRY", "TEST PASSED", "IN PROGRESS", 75000, 100000, "Thu", "2025-12-15", "2026-09-15", ["Khoa"], "Đạt yêu cầu kỹ thuật, chờ duyệt ngân sách."],
+    ["Kimica", "Dutch Lady (FrieslandCampina)", "KIMICA Algin", "Sữa tiệt trùng có hạt", "SWEET", "DAIRY", "SAMPLE SENT", "IN PROGRESS", 85000, 120000, "Lan", "2026-06-25", "2026-11-28", ["Khoa"], "Support Ngọc — gửi mẫu alginate độ nhớt cao."],
+    ["Kimica", "Cầu Tre", "Sodium Alginate", "Chả giò đông lạnh", "SAVOURY", "SEAFOOD", "TESTING", "IN PROGRESS", 45000, 70000, "Ngọc", "2026-04-08", "2026-09-30", [], "Test khả năng kết dính nhân."],
+    ["Kimica", "Vinasoy", "KIMICA Algin", "Sữa đậu nành", "SAVOURY", "VEGAN", "POSTPONED", "IN PROGRESS", 50000, 80000, "Hùng", "2026-02-28", "2026-12-20", [], "Khách hoãn do thay đổi kế hoạch sản phẩm 2026."],
+    ["Kimica", "Bel Vietnam", "Sodium Alginate", "Phô mai chế biến", "SWEET", "DAIRY", "TEST PASSED", "IN PROGRESS", 75000, 100000, "Thu", "2025-12-15", "2026-09-15", ["Khoa"], "Đạt yêu cầu kỹ thuật, chờ duyệt ngân sách."],
 
     // Cùng khách hàng, nhiều project / nhiều NCC — để minh hoạ gộp dòng khách hàng
     ["IFF", "Vinamilk", "CREMODAN SE", "Kem ăn", "SWEET", "DAIRY", "SAMPLE SENT", "IN PROGRESS", 95000, 130000, "Thu", "2026-05-01", "2026-10-20", ["Khoa"], "Vinamilk quan tâm chất ổn định cho kem."],
@@ -83,11 +84,11 @@
       { id: "A-4", spId: null, ncc: "IFF", customer: "Vinacafé Biên Hòa", pic: "Thu", type: "Visit", date: "2026-07-28", note: "Họp chốt kết quả test, khách xác nhận đạt.", next: "Chuẩn bị báo giá", potential: "High", related: ["Lan"], projectId: "P-1009" },
 
       // P-1015 — Cầu Tre · Sodium Alginate: nhật ký đủ dày để xem Record Page
-      { id: "A-5", spId: null, ncc: "Kimica-Navido", customer: "Cầu Tre", pic: "Ngọc", type: "Visit", date: "2026-08-19", note: "Làm việc tại nhà máy Củ Chi, gửi mẫu Sodium Alginate 500 G kèm TDS/COA cho phòng R&D. Chốt tiêu chí đánh giá: độ kết dính nhân và thất thoát sau cấp đông.", next: "Theo dõi lịch test của QA", potential: "High", related: ["Khoa"], projectId: "P-1015" },
-      { id: "A-6", spId: null, ncc: "Kimica-Navido", customer: "Cầu Tre", pic: "Ngọc", type: "Call", date: "2026-08-28", note: "Gọi theo dõi sau khi gửi mẫu. QA xác nhận đã nhận hàng, đang xếp lịch test tuần 36.", next: "Chờ kết quả test", potential: "High", related: [], projectId: "P-1015" },
-      { id: "A-7", spId: null, ncc: "Kimica-Navido", customer: "Cầu Tre", pic: "Ngọc", type: "Email", date: "2026-09-02", note: "Khách phản hồi kết quả test: độ kết dính nhân chả giò đạt yêu cầu, thất thoát sau cấp đông giảm rõ. Cầu Tre đề nghị gửi thêm 2 KG để chạy thử trên line 3.", next: "Gửi 2 KG mẫu chạy line 3", potential: "High", related: ["Khoa"], projectId: "P-1015" },
+      { id: "A-5", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Visit", date: "2026-08-19", note: "Làm việc tại nhà máy Củ Chi, gửi mẫu Sodium Alginate 500 G kèm TDS/COA cho phòng R&D. Chốt tiêu chí đánh giá: độ kết dính nhân và thất thoát sau cấp đông.", next: "Theo dõi lịch test của QA", potential: "High", related: ["Khoa"], projectId: "P-1015" },
+      { id: "A-6", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Call", date: "2026-08-28", note: "Gọi theo dõi sau khi gửi mẫu. QA xác nhận đã nhận hàng, đang xếp lịch test tuần 36.", next: "Chờ kết quả test", potential: "High", related: [], projectId: "P-1015" },
+      { id: "A-7", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Email", date: "2026-09-02", note: "Khách phản hồi kết quả test: độ kết dính nhân chả giò đạt yêu cầu, thất thoát sau cấp đông giảm rõ. Cầu Tre đề nghị gửi thêm 2 KG để chạy thử trên line 3.", next: "Gửi 2 KG mẫu chạy line 3", potential: "High", related: ["Khoa"], projectId: "P-1015" },
 
-      { id: "A-8", spId: null, ncc: "Kimica-Navido", customer: "Bel Vietnam", pic: "Thu", type: "Email", date: "2026-08-22", note: "Gửi hồ sơ kỹ thuật alginate cho bộ phận mua hàng, khách xác nhận đạt yêu cầu kỹ thuật.", next: "Chờ duyệt ngân sách", potential: "Medium", related: ["Khoa"], projectId: "P-1017" },
+      { id: "A-8", spId: null, ncc: "Kimica", customer: "Bel Vietnam", pic: "Thu", type: "Email", date: "2026-08-22", note: "Gửi hồ sơ kỹ thuật alginate cho bộ phận mua hàng, khách xác nhận đạt yêu cầu kỹ thuật.", next: "Chờ duyệt ngân sách", potential: "Medium", related: ["Khoa"], projectId: "P-1017" },
       { id: "A-9", spId: null, ncc: "IFF", customer: "Cholimex Foods", pic: "Ngọc", type: "Call", date: "2026-08-14", note: "Đàm phán lại giá tương ớt, khách xin giữ mức giá đến hết Q4.", next: "Trình duyệt giá nội bộ", potential: "High", related: [], projectId: "P-1011" }
     ];
 
@@ -134,7 +135,7 @@
     if (!document.getElementById("sfDemoBadge")) {
       var b = document.createElement("div");
       b.id = "sfDemoBadge"; b.className = "sf-demo-badge";
-      b.innerHTML = "Dữ liệu demo · chỉ lưu trong trình duyệt";
+      b.innerHTML = "Dữ liệu demo · thao tác thử không lưu";
       var top = document.querySelector(".sf-top"); if (top) top.appendChild(b);
     }
     if (window.toast) toast("Đang xem " + RECORDS.length + " dự án demo. Chỉnh sửa chỉ lưu tạm trong trình duyệt.");
@@ -146,7 +147,7 @@
   function boot() {
     var demo = false;
     try { demo = /(?:^|[?&])demo=1(?:&|$)/.test(location.search); } catch (e) {}
-    if (demo) setTimeout(load, 60);
+    if (demo || window.FISG_DEMO_AUTO) setTimeout(load, 60);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
