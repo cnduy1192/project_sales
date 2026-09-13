@@ -5,10 +5,27 @@ let cuFilterOwner = '';
 let cuQuery = '';
 let cuFilterTier = 'all';   // 'all' | 'Strategic' | 'Key Account' | 'Prospect'
 
+// Bộ icon dùng chung một hình kim cương: mức lấp đầy tăng dần theo hạng khách
+// (nét đứt → nửa đặc → đặc), để nhìn icon là đoán được thứ bậc.
+const CU_ICON = {
+  all: '<svg class="tier-ic" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">'
+     + '<rect x="2.3" y="2.3" width="5" height="5" rx="1.5" fill="currentColor" opacity=".38"/>'
+     + '<rect x="8.7" y="2.3" width="5" height="5" rx="1.5" fill="currentColor" opacity=".7"/>'
+     + '<rect x="2.3" y="8.7" width="5" height="5" rx="1.5" fill="currentColor" opacity=".7"/>'
+     + '<rect x="8.7" y="8.7" width="5" height="5" rx="1.5" fill="currentColor" opacity=".38"/></svg>',
+  strategic: '<svg class="tier-ic" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">'
+     + '<path d="M8 1.9 14.1 8 8 14.1 1.9 8Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  key: '<svg class="tier-ic" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">'
+     + '<path d="M8 1.9 14.1 8 8 14.1 1.9 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>'
+     + '<path d="M3.4 8.4h9.2L8 13.1Z" fill="currentColor"/></svg>',
+  prospect: '<svg class="tier-ic" viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">'
+     + '<path d="M8 1.9 14.1 8 8 14.1 1.9 8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+};
+
 const CU_TIERS = [
-  { id:'Strategic',   label:'Strategic',   icon:'⭐', cls:'badge-tier-strategic', hint:'Khách hàng chiến lược, trọng yếu' },
-  { id:'Key Account', label:'Key Account', icon:'🏢', cls:'badge-tier-key',       hint:'Khách lớn / chính thức, đang kinh doanh thường xuyên' },
-  { id:'Prospect',    label:'Prospect',    icon:'🎯', cls:'badge-tier-prospect',  hint:'Khách tiềm năng, chưa phát sinh đơn hàng' },
+  { id:'Strategic',   label:'Strategic',   svg:CU_ICON.strategic, cls:'badge-tier-strategic', hint:'Khách hàng chiến lược, trọng yếu' },
+  { id:'Key Account', label:'Key Account', svg:CU_ICON.key,       cls:'badge-tier-key',       hint:'Khách lớn / chính thức, đang kinh doanh thường xuyên' },
+  { id:'Prospect',    label:'Prospect',    svg:CU_ICON.prospect,  cls:'badge-tier-prospect',  hint:'Khách tiềm năng, chưa phát sinh đơn hàng' },
 ];
 window.CU_TIERS = CU_TIERS;
 
@@ -111,12 +128,12 @@ function cuRenderTabs(base){
   if(!box) return;
   const n = cuTierCounts(base || cuBaseRows());
   const hadFocus = box.contains(document.activeElement);
-  const tabs = [{ id:'all', label:'Tất cả', icon:'', hint:'Mọi phân loại' }].concat(CU_TIERS);
+  const tabs = [{ id:'all', label:'Tất cả', svg:CU_ICON.all, hint:'Mọi phân loại' }].concat(CU_TIERS);
   box.innerHTML = tabs.map(t => {
     const on = cuFilterTier === t.id;
     return `<button type="button" role="tab" class="tier-tab${on ? ' active' : ''}" data-tier="${ckEsc(t.id)}"
       aria-selected="${on}" tabindex="${on ? 0 : -1}" title="${ckEsc(t.hint)}" onclick="cuSetTier('${ckAttr(t.id)}')">
-      ${t.icon ? `<span class="tier-ic" aria-hidden="true">${t.icon}</span>` : ''}<span class="tier-lbl">${ckEsc(t.label)}</span>
+      ${t.svg}<span class="tier-lbl">${ckEsc(t.label)}</span>
       <span class="tier-count" aria-label="${n[t.id]} khách hàng">${n[t.id]}</span></button>`;
   }).join('');
   if(!box.dataset.kb){
@@ -363,7 +380,7 @@ function cuOpenEdit(name){
           <div class="cu-tier-pick" role="radiogroup" aria-label="Phân loại khách hàng">
             ${CU_TIERS.map(t => `<label class="cu-tier-opt ${t.cls}">
               <input type="radio" name="cuf-tier" value="${ckEsc(t.id)}"${tierSel === t.id ? ' checked' : ''} ${dis}>
-              <span class="cu-tier-opt-t"><span aria-hidden="true">${t.icon}</span> ${ckEsc(t.label)}</span></label>`).join('')}
+              <span class="cu-tier-opt-t">${t.svg}${ckEsc(t.label)}</span></label>`).join('')}
           </div>
         </div>
         <label><span class="cu-cap">Sales phụ trách</span> ${ownerField}</label>

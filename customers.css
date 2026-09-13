@@ -201,7 +201,13 @@
 .tier-tab.active{
   background:var(--marine);border-color:var(--marine);color:#fff;
   box-shadow:0 1px 2px rgba(1,42,70,.22),0 2px 8px rgba(1,66,106,.18)}
-.tier-ic{font-size:13px;line-height:1}
+/* Icon hạng khách: màu riêng theo hạng khi tab nghỉ, trắng khi tab đang chọn */
+.tier-ic{flex:none;display:block;width:15px;height:15px;color:var(--tier-c,var(--text-3));transition:color .14s}
+.tier-tab[data-tier="all"]{--tier-c:var(--marine-2)}
+.tier-tab[data-tier="Strategic"]{--tier-c:#7E22CE}
+.tier-tab[data-tier="Key Account"]{--tier-c:#0369A1}
+.tier-tab[data-tier="Prospect"]{--tier-c:#B45309}
+.tier-tab.active .tier-ic{color:#fff}
 .tier-count{
   min-width:22px;height:20px;padding:0 7px;border-radius:10px;
   display:inline-flex;align-items:center;justify-content:center;
@@ -251,7 +257,11 @@
   border:1px solid var(--line);background:var(--surface);cursor:pointer;
   transition:border-color .14s,background .14s,box-shadow .14s}
 .cu-form .cu-tier-opt input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
-.cu-tier-opt-t{font-size:12.5px;font-weight:700;color:var(--marine-ink)}
+.cu-tier-opt-t{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:var(--marine-ink)}
+.cu-tier-opt.badge-tier-strategic{--tier-c:#7E22CE}
+.cu-tier-opt.badge-tier-key{--tier-c:#0369A1}
+.cu-tier-opt.badge-tier-prospect{--tier-c:#B45309}
+.cu-tier-opt .tier-ic{width:16px;height:16px}
 .cu-form .cu-tier-opt:hover{border-color:var(--marine-line)}
 .cu-tier-opt:has(input:focus-visible){box-shadow:0 0 0 3px var(--marine-soft);border-color:var(--marine)}
 .cu-tier-opt.badge-tier-strategic:has(input:checked){background:#F3E8FF;border-color:#C084FC}
