@@ -2827,6 +2827,10 @@
 "Dự án đang chạy theo giai đoạn",
 "Open Opportunities by Stage"
 ],
+"rp.openInActs": [
+"Mở hoạt động của {c} trong trang Hoạt động",
+"Open {c} in the Activities page"
+],
 "rp.pick": [
 "Chọn một báo cáo để đọc",
 "Select a report to read"

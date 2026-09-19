@@ -348,7 +348,50 @@ function rpSection(title, count, body, extra){
   </section>`;
 }
 
-function rpActTable(items, emptyTitle, emptyHint){
+/* ---------- Deep-link sang trang Hoạt động (view 'acts') ----------
+   Ứng dụng là SPA (một trang index.html), trang Hoạt động mở bằng go('acts').
+   Dùng <a href> thật để chuột giữa / Ctrl-⌘ / "Mở trong tab mới" giữ nguyên
+   màn hình báo cáo quản lý đang xem; click thường điều hướng ngay trong trang,
+   lọc theo khách hàng và mở đúng hoạt động (nếu có activity_id).            */
+function rpActUrl(o){
+  var p = new URLSearchParams();
+  p.set('open', 'acts');
+  if(o.client){ p.set('client_id', o.client); p.set('q', o.client); }
+  if(o.sales) p.set('sales_id', o.sales);
+  if(o.actId) p.set('activity_id', o.actId);
+  if(o.date)  p.set('date', o.date);
+  return 'index.html?' + p.toString();
+}
+function rpGoActivity(e, client, actId){
+  // Chuột giữa / phím bổ trợ → để trình duyệt tự mở tab mới bằng href sẵn có.
+  if(e && (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1)) return true;
+  if(e && e.preventDefault) e.preventDefault();
+  try{
+    if(window.go) go('acts');
+    if(typeof setActSearch === 'function') setActSearch(client || '');
+    if(actId && typeof openActEdit === 'function') openActEdit(actId);
+  }catch(err){ console.warn('[reports] mở hoạt động lỗi:', err && (err.message || err)); }
+  return false;
+}
+window.rpGoActivity = rpGoActivity;
+
+// Ô Khách hàng dạng liên kết: màu chủ đạo, gạch chân khi hover, kèm icon ↗ hiện khi hover.
+function rpAccountCell(o){
+  var label = o.label || '—';
+  var url   = rpActUrl(o);
+  return `<a class="rp-acc-link" href="${ckEsc(url)}"
+      onclick="return rpGoActivity(event, '${ckAttr(o.client || '')}', '${ckAttr(o.actId || '')}')"
+      title="${T('rp.openInActs',{c:label})}">
+      <span class="rp-acc-n">${ckEsc(label)}</span>
+      <svg class="rp-acc-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
+    </a>`;
+}
+function rpRowAttrs(o){
+  return `class="rp-linkrow" data-sales-id="${ckEsc(o.sales || '')}" data-client-id="${ckEsc(o.client || '')}"`
+    + ` data-activity-id="${ckEsc(o.actId || '')}" data-date="${ckEsc(o.date || '')}"`;
+}
+
+function rpActTable(items, emptyTitle, emptyHint, pic){
   if(!items.length) return `<div class="rp-frame">${rpEmpty('list', emptyTitle, emptyHint)}</div>`;
   return `<div class="rp-frame"><table class="rp-table rp-log">
     <colgroup><col class="c-date"><col class="c-acc"><col class="c-type"><col></colgroup>
@@ -356,17 +399,21 @@ function rpActTable(items, emptyTitle, emptyHint){
       <th scope="col">${T('common.date')}</th><th scope="col">${T('common.account')}</th>
       <th scope="col">${T('rp.x.type')}</th><th scope="col">${T('rp.col.summary')}</th>
     </tr></thead>
-    <tbody>${items.map(a => `<tr>
+    <tbody>${items.map(a => {
+      const client = a.custLabel || a.customer || '';
+      const link = { label: client || '—', client: client, sales: pic || '', actId: a.id || '', date: a.date || '' };
+      return `<tr ${rpRowAttrs(link)}>
       <td class="rp-mono rp-date" title="${ckVN(a.date)}">${rpShortDate(a.date)}</td>
-      <td class="rp-acc">${ckEsc(a.custLabel || a.customer || '—')}</td>
+      <td class="rp-acc">${rpAccountCell(link)}</td>
       <td class="rp-type">${rpTypeTag(rpType(a.type))}</td>
       <td class="rp-sumcell"><span class="rp-note-t">${ckEsc(a.note || '—')}</span>${a.next
         ? `<span class="rp-next">${T('act.nextStep')}: ${ckEsc(a.next)}</span>` : ''}${rpChips(rpProducts((a.note || '') + ' ' + (a.next || '')))}</td>
-    </tr>`).join('')}</tbody>
+    </tr>`;
+    }).join('')}</tbody>
   </table></div>`;
 }
 
-function rpChangeTable(items){
+function rpChangeTable(items, pic){
   if(!items.length) return `<div class="rp-frame">${rpEmpty('swap', T('rp.emptyChanges'), T('rp.emptyChangesHint'))}</div>`;
   return `<div class="rp-frame"><table class="rp-table rp-log">
     <colgroup><col class="c-date"><col class="c-acc"><col class="c-type"><col></colgroup>
@@ -374,12 +421,16 @@ function rpChangeTable(items){
       <th scope="col">${T('common.date')}</th><th scope="col">${T('common.account')}</th>
       <th scope="col">${T('rp.x.type')}</th><th scope="col">${T('rp.col.summary')}</th>
     </tr></thead>
-    <tbody>${items.map(c => `<tr>
+    <tbody>${items.map(c => {
+      const client = c.custLabel || c.customer || '';
+      const link = { label: client || '—', client: client, sales: pic || '', actId: '', date: c.ts || '' };
+      return `<tr ${rpRowAttrs(link)}>
       <td class="rp-mono rp-date" title="${ckVN(c.ts)}">${rpShortDate(c.ts)}</td>
-      <td class="rp-acc">${ckEsc(c.custLabel || c.customer || '—')}</td>
+      <td class="rp-acc">${rpAccountCell(link)}</td>
       <td class="rp-type">${rpChangeTag(c)}</td>
       <td class="rp-sumcell"><span class="rp-note-t">${c.text ? ckEsc(c.text.slice(0,160)) + (c.text.length > 160 ? '…' : '') : '<span class="rp-muted">—</span>'}</span>${rpChips(rpProducts(c.text, c.product))}</td>
-    </tr>`).join('')}</tbody>
+    </tr>`;
+    }).join('')}</tbody>
   </table></div>`;
 }
 
@@ -434,12 +485,12 @@ function rpRenderPanel(list){
     ${rpAnalytics(r)}
 
     ${rpSection(T('rp.doneActs'), (r.doneActs || []).length,
-      rpActTable(r.doneActs || [], T('rp.noDoneActs'), T('rp.emptyActsHint')))}
+      rpActTable(r.doneActs || [], T('rp.noDoneActs'), T('rp.emptyActsHint'), r.pic))}
 
     ${(r.missedActs || []).length ? rpSection(T('rp.missedPlans'), r.missedActs.length,
-      rpActTable(r.missedActs, T('rp.emptyMissed'), '')) : ''}
+      rpActTable(r.missedActs, T('rp.emptyMissed'), '', r.pic)) : ''}
 
-    ${rpSection(T('wc.sec.oppChanges'), changes.length, rpChangeTable(shown),
+    ${rpSection(T('wc.sec.oppChanges'), changes.length, rpChangeTable(shown, r.pic),
       changes.length > shown.length ? `<em>${T('rp.showingOf',{n:shown.length,t:changes.length})}</em>` : '')}
 
     <div class="rp-field">

@@ -61,16 +61,20 @@
   try { params = new URLSearchParams(location.search); } catch (e) { return; }
   var open = params.get("open");
   if (!open) return;
-  var q = params.get("q") || "";
+  // client_id do trang Báo cáo gửi sang; giữ tương thích tham số q cũ (từ salesfunnel.html).
+  var q = params.get("client_id") || params.get("q") || "";
+  var actId = params.get("activity_id") || "";
 
   var tries = 0;
+  var navigated = false;
   var iv = setInterval(function () {
     tries++;
     var ready = (typeof me !== "undefined" && me && typeof window.go === "function");
-    if (ready && (open !== "acts" || (typeof ACTIVITIES !== "undefined" && ACTIVITIES.length >= 0))) {
-      clearInterval(iv);
+    if (ready && (open !== "acts" || typeof ACTIVITIES !== "undefined")) {
       try {
-        if (open === "acts") {
+        if (open !== "acts") { clearInterval(iv); return; }
+        if (!navigated) {
+          navigated = true;
           go("acts");
           if (q) {
             var inp = document.getElementById("actSearch");
@@ -79,7 +83,16 @@
           }
           if (window.toast) toast(T("dl.viewingActs", { q: q }));
         }
-      } catch (e) { /* im lặng */ }
+        // Không có activity_id → xong. Có → chờ ACTIVITIES nạp xong rồi mở đúng hoạt động.
+        if (!actId) { clearInterval(iv); return; }
+        var found = ACTIVITIES.some(function (x) { return x.id === actId; });
+        if (found) {
+          if (typeof openActEdit === "function") openActEdit(actId);
+          clearInterval(iv);
+          return;
+        }
+        // hoạt động chưa nạp (dữ liệu SharePoint về sau) → thử lại ở nhịp kế tiếp
+      } catch (e) { clearInterval(iv); }
     }
     if (tries > 120) clearInterval(iv);   // ~36s thì bỏ
   }, 300);
