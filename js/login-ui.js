@@ -36,7 +36,7 @@
         '<span aria-hidden="true"></span>' +
       '</aside>' +
       '<main class="lg-pane">' +
-        '<h2 class="lg-h2">Đăng nhập</h2>' +
+        '<h2 class="lg-h2" data-i18n="auth.signIn">' + T('auth.signIn') + '</h2>' +
         '<div class="lg-actions" id="lgActions"></div>' +
       '</main>';
 
@@ -46,7 +46,7 @@
 
     actions.appendChild(msBtn);
     const or = document.createElement("div");
-    or.className = "lg-or"; or.textContent = "hoặc";
+    or.className = "lg-or"; or.setAttribute("data-i18n", "common.or"); or.textContent = T("common.or");
     actions.appendChild(or);
 
     const g = guestBtn || document.createElement("button");

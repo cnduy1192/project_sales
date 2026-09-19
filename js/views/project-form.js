@@ -61,7 +61,7 @@
   function fillSegments(keep) {
     var sel = $("f-segment"); if (!sel) return;
     var tree = (typeof SEG_TREE !== "undefined") ? SEG_TREE : {};
-    var html = '<option value="">Chọn segment…</option>';
+    var html = '<option value="">' + T('pf.pickSegment') + '</option>';
     Object.keys(tree).forEach(function (g) {
       html += '<optgroup label="' + esc(g) + '">' +
         (tree[g] || []).map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + "</option>"; }).join("") +
@@ -84,7 +84,7 @@
     var mine = (typeof me !== "undefined" && me) ? (me.pic || me.name) : "";
     var pool = (typeof ALL_PICS !== "undefined" ? ALL_PICS : [])
       .filter(function (p) { return p !== mine && related.indexOf(p) < 0; });
-    sel.innerHTML = '<option value="">+ Thêm người liên quan…</option>' +
+    sel.innerHTML = '<option value="">+ ' + T('act.addRelated') + '</option>' +
       pool.map(function (p) { return '<option value="' + esc(p) + '">' + esc(p) + "</option>"; }).join("");
   }
   function addRel(v) {
@@ -94,7 +94,7 @@
     related.push(v);
     var t = document.createElement("span");
     t.className = "tag"; t.dataset.v = v;
-    t.innerHTML = esc(v) + ' <button type="button" aria-label="Xoá ' + esc(v) + '">×</button>';
+    t.innerHTML = esc(v) + ' <button type="button" aria-label="' + esc(T('common.removeX', { x: v })) + '">×</button>';
     t.querySelector("button").addEventListener("click", function () { rmRel(v, this); });
     $("relTags").insertBefore(t, sel);
     rebuildRel(); updateMoreCount();
@@ -160,7 +160,7 @@
       var r = latestRecordOf(cust);
       if (r && r.segment) {
         $("f-segment").value = r.segment;
-        if ($("f-segment").value === r.segment && hint) hint.textContent = "· gợi ý từ dự án trước";
+        if ($("f-segment").value === r.segment && hint) hint.textContent = "· " + T("pf.suggestedPrev");
       }
     }
   }
@@ -176,16 +176,16 @@
   function renderContext() {
     var c = PF.ctx, box = $("pfCtx");
     var custHtml = PF.lockCust
-      ? '<span class="pf-chip" title="Kế thừa từ dòng đã chọn">' + ICON_CUST +
-        '<em>Khách hàng:</em><b id="f-cust-ro">' + esc(c.customerName) + "</b></span>"
+      ? '<span class="pf-chip" title="' + esc(T("pf.inherited")) + '">' + ICON_CUST +
+        '<em>' + T('pf.accountLbl') + '</em><b id="f-cust-ro">' + esc(c.customerName) + "</b></span>"
       : '<label class="pf-chip pf-chip-edit" data-f="customer">' + ICON_CUST +
-        '<em>Khách hàng:</em><input id="f-cust" list="dl-cust" placeholder="Chọn / nhập khách hàng…" ' +
+        '<em>' + T('pf.accountLbl') + '</em><input id="f-cust" list="dl-cust" placeholder="' + esc(T("pf.accountPh")) + '" ' +
         'aria-required="true" aria-describedby="pfErr-customer"><datalist id="dl-cust"></datalist></label>';
     var nccHtml = PF.lockNcc
-      ? '<span class="pf-chip" title="Kế thừa từ dòng đã chọn">' + ICON_NCC +
-        '<em>NCC:</em><b id="f-ncc-ro">' + esc(c.supplier) + "</b></span>"
+      ? '<span class="pf-chip" title="' + esc(T("pf.inherited")) + '">' + ICON_NCC +
+        '<em>' + T('pf.supplierLbl') + '</em><b id="f-ncc-ro">' + esc(c.supplier) + "</b></span>"
       : '<label class="pf-chip pf-chip-edit" data-f="ncc">' + ICON_NCC +
-        '<em>NCC:</em><select id="f-ncc" aria-label="Nhà cung cấp"></select></label>';
+        '<em>' + T('pf.supplierLbl') + '</em><select id="f-ncc" aria-label="' + esc(T("common.supplier")) + '"></select></label>';
     box.innerHTML = custHtml + nccHtml + '<small class="pf-err pf-err-ctx" id="pfErr-customer"></small>';
 
     if (!PF.lockCust) {
@@ -220,7 +220,7 @@
     if (+$("f-kg2").value > 0) n++;
     if (related.length) n++;
     var b = $("pfMoreN");
-    b.hidden = !n; b.textContent = n ? n + " mục đã nhập" : "";
+    b.hidden = !n; b.textContent = n ? T("pf.nFilled", { n: n }) : "";
   }
 
   /* ───────────── Lỗi inline ───────────── */
@@ -281,7 +281,7 @@
     if (c.application) $("f-app").value = c.application;
     if (c.noteContent) {
       $("f-desc").value = c.noteContent;
-      $("pfNoteSrc").textContent = c.noteSource ? "· " + c.noteSource : "· từ hoạt động";
+      $("pfNoteSrc").textContent = c.noteSource ? "· " + c.noteSource : "· " + T("pf.fromActivity");
     }
     PF.createdDate = c.createdDate || (typeof isoOf === "function" ? isoOf(TODAY) : new Date().toISOString().slice(0, 10));
 
@@ -331,12 +331,12 @@
 
   function validateProjectForm(p) {
     var errs = {};
-    if (!p.customer) errs.customer = "Chọn hoặc nhập khách hàng.";
-    else if (!p.ncc) errs.customer = "Chọn nhà cung cấp.";
-    if (!p.product) errs.product = "Nhập sản phẩm.";
-    if (!p.application) errs.application = "Nhập ứng dụng.";
-    if (!p.segment) errs.segment = "Chọn segment.";
-    if (!p.stage) errs.stage = "Chọn giai đoạn.";
+    if (!p.customer) errs.customer = T('pf.err.account');
+    else if (!p.ncc) errs.customer = T('pf.err.supplier');
+    if (!p.product) errs.product = T('pf.err.product');
+    if (!p.application) errs.application = T('pf.err.application');
+    if (!p.segment) errs.segment = T('pf.err.segment');
+    if (!p.stage) errs.stage = T('pf.err.stage');
     return errs;
   }
 
@@ -386,8 +386,7 @@
     var dup = findDuplicate(p);
     if (dup && PF.dupAck !== dup.id) {
       PF.dupAck = dup.id;
-      setErr("product", "Khách này đã có dự án đang chạy với sản phẩm này (" + dup.id + " · " + dup.stage +
-        "). Bấm Lưu lần nữa nếu vẫn muốn tạo mới.");
+      setErr("product", T("pf.err.dup", { id: dup.id, stage: dup.stage }));
       $("f-prod").focus();
       return;
     }
@@ -413,8 +412,8 @@
     if (typeof render === "function") render();
     if (typeof cockpitRefresh === "function") cockpitRefresh();
     if (typeof renderCustomers === "function") try { renderCustomers(); } catch (err) {}
-    if (typeof notify === "function") notify(rec, "đã tạo dự án mới <b>" + esc(rec.customer) + " · " + esc(rec.product) + "</b>");
-    if (typeof toast === "function") toast("Đã tạo dự án " + rec.customer + " · " + rec.product + " (" + rec.stage + ") — đang lưu lên SharePoint…");
+    if (typeof notify === "function") notify(rec, T("pf.notif.created", { name: esc(rec.customer) + " · " + esc(rec.product) }));
+    if (typeof toast === "function") toast(T("pf.msg.created", { name: rec.customer + " · " + rec.product, stage: rec.stage }));
     if (typeof pushProject === "function") pushProject(rec);
     return rec;
   }

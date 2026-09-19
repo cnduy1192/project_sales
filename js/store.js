@@ -369,7 +369,7 @@
           supports: (typeof splitAliases === "function" ? splitAliases(txt(g(f, "Supports"))) : []),
         };
       }).filter(u => u.email);
-      if (!rows.length) throw new Error("list " + listName + " rỗng");
+      if (!rows.length) throw new Error(T("err.listEmpty", { list: listName }));
       USERS.length = 0; rows.forEach(u => USERS.push(u));
       usersLoaded = true; usersWritable = true; userCols = cols;
       if (window.buildUsers) buildUsers();
@@ -444,7 +444,7 @@
   }
 
   async function saveUser(u) {
-    if (!canWriteUsers()) throw new Error("chưa đọc được list " + USERS_LIST() + " nên không ghi được");
+    if (!canWriteUsers()) throw new Error(T("err.usersListWrite", { list: USERS_LIST() }));
     const fields = userFields(u);
     if (u.spId) {
       await FISG_GRAPH.updateItem(USERS_LIST(), u.spId, fields);
@@ -456,7 +456,7 @@
   }
 
   async function deleteUser(u) {
-    if (!canWriteUsers()) throw new Error("chưa đọc được list " + USERS_LIST() + " nên không xoá được");
+    if (!canWriteUsers()) throw new Error(T("err.usersListDelete", { list: USERS_LIST() }));
     if (u.spId) await FISG_GRAPH.deleteItem(USERS_LIST(), u.spId);
     const i = USERS.indexOf(u);
     if (i >= 0) USERS.splice(i, 1);
@@ -544,7 +544,7 @@
     if (typeof invalidateCockpit === "function") invalidateCockpit();
     if (window.renderActs) try { renderActs(); } catch (e) {}
     if (window.renderCockpit) try { renderCockpit(); } catch (e) {}
-    if (window.toast) toast("Đã xoá " + n + " hoạt động khỏi SharePoint.");
+    if (window.toast) toast(T("msg.actsDeleted", { n: n }));
     return n;
   }
 
@@ -674,10 +674,10 @@
   }
 
   async function bulkUpsertCustomers(rows, onProgress) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const { idx, get } = await customerIndex();
     if (!get.internal("Owner"))
-      throw new Error('list Customers thiếu cột "Người phụ trách" (Owner). Xem docs/SharePoint_Setup.md mục 3f.');
+      throw new Error(T("err.noOwnerCol"));
 
     const plan = planCustomerUpsert(rows, idx);
     const total = plan.length;
@@ -758,7 +758,7 @@
   }
 
   async function bulkUpsertSuppliers(names, onProgress) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const idx = await supplierIndex();
     const list = [], seen = {};
     (names || []).forEach(n => {
@@ -867,7 +867,7 @@
   }
 
   async function sendReportToSP(report) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Reports");
     // Lấy danh sách mới nhất rồi sinh mã kế tiếp để tránh trùng (R-0001, R-0002, …).
     try { await loadReports(); } catch (e) {}
@@ -895,9 +895,9 @@
   // Sửa báo cáo đã gửi: chỉ cập nhật nội dung chữ; số liệu giữ nguyên ảnh chụp lúc gửi.
   // Mốc "đã sửa" được nhét vào StatsJson nên không cần thêm cột SharePoint.
   async function updateReport(report, note) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const spId = report && (report.spId || report.id);
-    if (!spId) throw new Error("thiếu mã báo cáo");
+    if (!spId) throw new Error(T("err.noReportId"));
     const get = await schemaOf("Reports");
     const editedAt = todayISO();
     const snap = {
@@ -980,15 +980,15 @@
   }
 
   function attValidate(file) {
-    if (!file) return "chưa chọn tệp";
-    if (file.size > ATT_MAX) return "tệp quá 15MB (" + Math.round(file.size / 1048576) + "MB)";
+    if (!file) return T("att.err.noFile");
+    if (file.size > ATT_MAX) return T("att.err.tooBig", { n: Math.round(file.size / 1048576) });
     if (ATT_EXT.indexOf(attExt(file.name)) < 0)
-      return "định dạng không hỗ trợ (chỉ pdf, word, excel, powerpoint, ảnh, zip)";
+      return T("att.err.type");
     return "";
   }
 
   async function uploadAttachment(parentType, parentId, ctx, file) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const bad = attValidate(file);
     if (bad) throw new Error(bad);
 
@@ -1050,12 +1050,12 @@
   function customerMissingCols() { return _custMissing.slice(); }
 
   async function saveCustomer(row) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Customers");
     const clean = (typeof cleanCustomerName === "function") ? cleanCustomerName
       : function (s) { return String(s || "").trim(); };
     const title = clean(String(row.title || "").trim() || row.legal || "");
-    if (!title) throw new Error("thiếu tên khách hàng");
+    if (!title) throw new Error(T("err.noAccountName"));
 
     const f = {};
 
@@ -1093,9 +1093,9 @@
   }
 
   async function deleteCustomer(target) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const spId = (target && typeof target === "object") ? target.spId : target;
-    if (!spId) throw new Error("thiếu mã dòng khách hàng");
+    if (!spId) throw new Error(T("err.noAccountRow"));
     await FISG_GRAPH.deleteItem("Customers", spId);
     const i = CUSTOMER_DIR.findIndex(c => c.spId === spId);
     if (i >= 0) {
@@ -1164,7 +1164,7 @@
   }
 
   async function createActivity(a) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Activities");
     const miss = [], f = {};
     const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
@@ -1217,7 +1217,7 @@
 
   async function deleteActivity(a) {
     const spId = a && typeof a === "object" ? a.spId : a;
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     if (!spId) return false;
     await FISG_GRAPH.deleteItem("Activities", spId);
 
@@ -1269,7 +1269,7 @@
   }
 
   async function createProject(r) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Projects");
     const miss = [], f = {};
     const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
@@ -1288,6 +1288,8 @@
     set("SegmentGroup", r.group);
     set("Stage", r.stage);
     set("Status", r.status === "IN PROGRESS" ? "Open" : "Closed");
+    // Cột OnHold là tuỳ chọn: chỉ ghi khi list đã có cột, tránh lỗi trên tenant chưa tạo
+    if (get.internal("OnHold")) set("OnHold", !!r.onHold);
     set("WinProbability", Math.round((r.prob || 0) * 100));
     set("PotentialKgThisYear", r.kgThis || 0);
     set("PotentialKgNextYear", r.kgNext || 0);
@@ -1313,8 +1315,8 @@
   }
 
   async function updateProject(spId, patch) {
-    if (!canWrite()) throw new Error("chưa đăng nhập Microsoft 365");
-    if (!spId) throw new Error("dự án này chưa có trên SharePoint");
+    if (!canWrite()) throw new Error(T("err.notSignedIn"));
+    if (!spId) throw new Error(T("err.oppNotOnSp"));
     const get = await schemaOf("Projects");
     const miss = [], f = {};
     Object.keys(patch).forEach(k => {
@@ -1441,6 +1443,7 @@
           segment: txt(gp(f, "Segment")), group: txt(gp(f, "SegmentGroup")),
           stage: txt(gp(f, "Stage")),
           status: statusOf(gp(f, "Status"), gp(f, "Result")),
+          onHold: gp(f, "OnHold") === true || String(gp(f, "OnHold") || "").toLowerCase() === "true",
           boptype: txt(gp(f, "ProjectType")),
           prob: (Number(gp(f, "WinProbability")) || 0) / 100,
           kgThis: Number(gp(f, "PotentialKgThisYear")) || 0,
@@ -1548,7 +1551,7 @@
       }
       return true;
     } catch (e) {
-      if (window.toast) toast("Không tải được dữ liệu SharePoint: " + (e.message || e));
+      if (window.toast) toast(T("msg.loadFailed") + " " + (e.message || e));
       console.error("[store] syncFromGraph", e);
       return false;
     }

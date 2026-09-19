@@ -2,12 +2,12 @@ var NAV = (function(){
   var stack = [];
 
   var VIEW_LABEL = {
-    cockpit: 'Tổng quan',
+    get cockpit(){ return T('nav.overview'); },
     funnel:  'Sales Funnel',
-    acts:    'Hoạt động khách hàng',
+    get acts(){ return T('nav.activities'); },
     dash:    'Dashboard',
-    reports: 'Báo cáo',
-    users:   'Người dùng & phân quyền'
+    get reports(){ return T('nav.reports'); },
+    get users(){ return T('nav.users'); }
   };
 
   function currentViewId(){
@@ -24,7 +24,7 @@ var NAV = (function(){
     if(explicit){ stack.push(explicit); return; }
 
     if(typeof wcIsOpen === 'function' && wcIsOpen()){
-      stack.push({ label:'Kế hoạch tuần', restore: window.openWelcome });
+      stack.push({ label:T('nav.weeklyPlan'), restore: window.openWelcome });
       closeWelcome();
       return;
     }
@@ -63,7 +63,7 @@ var NAV = (function(){
     var o = top();
     if(!o){ btn.classList.remove('on'); return; }
     btn.querySelector('span').textContent = o.label;
-    btn.setAttribute('aria-label', 'Quay lại ' + o.label);
+    btn.setAttribute('aria-label', T('common.backTo', { x: o.label }));
     btn.classList.add('on');
   }
 

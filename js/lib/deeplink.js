@@ -77,7 +77,7 @@
             if (inp) inp.value = q;
             if (typeof setActSearch === "function") setActSearch(q);
           }
-          if (window.toast) toast("Đang xem hoạt động của khách hàng: " + q);
+          if (window.toast) toast(T("dl.viewingActs", { q: q }));
         }
       } catch (e) { /* im lặng */ }
     }

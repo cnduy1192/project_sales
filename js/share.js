@@ -7,7 +7,7 @@
   }
   const pad2 = n => String(n).padStart(2, "0");
   const isoDay = d => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
-  const viDay = s => s ? new Date(s).toLocaleDateString("vi-VN") : "—";
+  const viDay = s => s ? new Date(s).toLocaleDateString(I18N.locale()) : "—";
 
   async function fetchShares() {
     try {
@@ -114,7 +114,7 @@
 
   async function workerPut(key, payload, expiry, meta) {
     const base = workerUrl();
-    if (!base) throw new Error("Chưa cấu hình SHARE_WORKER_URL trong js/sp-config.js");
+    if (!base) throw new Error(T("sh.err.noWorker"));
     if (!writeKey()) throw new Error("NO_WRITE_KEY");
     const r = await fetch(base + "/s/" + encodeURIComponent(key), {
       method: "PUT",
@@ -133,7 +133,7 @@
   }
   async function workerGet(key) {
     const base = workerUrl();
-    if (!base) throw new Error("Chưa cấu hình đường dẫn chia sẻ.");
+    if (!base) throw new Error(T("sh.err.noLink"));
     const r = await fetch(base + "/s/" + encodeURIComponent(key));
     const d = await r.json().catch(() => ({}));
     if (!r.ok) { const e = new Error(d.error || ("HTTP " + r.status)); e.status = r.status; throw e; }
@@ -143,8 +143,7 @@
   async function ensureWriteKey() {
     if (writeKey()) return true;
     const v = window.prompt(
-      "Nhập mã ghi của Share Gateway (WRITE_KEY đã đặt trong Cloudflare Worker).\n" +
-      "Chỉ cần nhập một lần trên máy này.");
+      T("sh.promptKey"));
     if (!v) return false;
     setWriteKey(v.trim());
     return true;
@@ -168,8 +167,8 @@
     ov.id = "shareOv"; ov.className = "share-ov";
     ov.innerHTML =
       '<div class="share-modal glass" role="dialog" aria-modal="true" aria-labelledby="shTitle">' +
-        '<div class="share-head"><h3 id="shTitle">Chia sẻ dự án cho khách</h3>' +
-          '<button class="share-close" id="shX" type="button" aria-label="Đóng">×</button></div>' +
+        '<div class="share-head"><h3 id="shTitle">' + T("sh.title") + '</h3>' +
+          '<button class="share-close" id="shX" type="button" aria-label="' + T("common.close") + '">×</button></div>' +
         '<div class="share-body" id="shBody"></div>' +
       '</div>';
     document.body.appendChild(ov);
@@ -187,18 +186,18 @@
   async function open() {
 
     if (!workerUrl() && !live()) {
-      if (window.toast) toast("Chưa cấu hình SHARE_WORKER_URL trong js/sp-config.js.");
+      if (window.toast) toast(T("sh.err.noWorker") + ".");
       return;
     }
     if (!(typeof RECORDS !== "undefined" && RECORDS.length)) {
-      if (window.toast) toast("Chưa có dữ liệu dự án để chia sẻ.");
+      if (window.toast) toast(T("sh.noData"));
       return;
     }
     ensureModal();
     const ov = document.getElementById("shareOv");
     const body = document.getElementById("shBody");
     ov.classList.add("open");
-    body.innerHTML = '<div class="share-loading">Đang chuẩn bị…</div>';
+    body.innerHTML = '<div class="share-loading">' + T("sh.preparing") + '</div>';
 
     const key = await genKey();
 
@@ -211,34 +210,34 @@
 
     body.innerHTML =
       '<div class="share-grid">' +
-        '<label class="sh-f"><span>Phạm vi</span>' +
+        '<label class="sh-f"><span>' + T("sh.scope") + '</span>' +
           '<select id="shScope">' +
-            '<option value="Toàn bộ NCC">Toàn bộ dự án của 1 nhà cung cấp</option>' +
-            '<option value="Chọn dự án">Chọn từng dự án</option>' +
-            '<option value="Tất cả NCC">Toàn bộ dự án của tất cả nhà cung cấp</option>' +
+            '<option value="Toàn bộ NCC">' + T("sh.scope.one") + '</option>' +
+            '<option value="Chọn dự án">' + T("sh.scope.pick") + '</option>' +
+            '<option value="Tất cả NCC">' + T("sh.scope.all") + '</option>' +
           '</select></label>' +
-        '<label class="sh-f" id="shNccF"><span>Nhà cung cấp</span>' +
+        '<label class="sh-f" id="shNccF"><span>' + T("common.supplier") + '</span>' +
           '<select id="shNcc">' + nccs.map(n =>
             `<option${n === cur ? " selected" : ""}>${esc(n)}</option>`).join("") + '</select></label>' +
-        '<label class="sh-f"><span>Hết hạn</span>' +
+        '<label class="sh-f"><span>' + T("sh.expiry") + '</span>' +
           `<input type="date" id="shExp" value="${isoDay(exp)}"></label>` +
-        '<label class="sh-f"><span>Chia sẻ cho (ghi chú)</span>' +
-          '<input id="shNote" placeholder="Tên khách hoặc công ty"></label>' +
+        '<label class="sh-f"><span>' + T("sh.sharedWithNote") + '</span>' +
+          '<input id="shNote" placeholder="' + T("sh.notePh") + '"></label>' +
       '</div>' +
       '<div class="sh-picker" id="shPicker" hidden>' +
-        '<div class="sh-picker-head"><b>Chọn dự án</b>' +
-          '<span><button type="button" class="sh-mini" id="shAll">Chọn tất cả</button>' +
-          '<button type="button" class="sh-mini" id="shNone">Bỏ chọn</button></span></div>' +
+        '<div class="sh-picker-head"><b>' + T("sh.pickOpps") + '</b>' +
+          '<span><button type="button" class="sh-mini" id="shAll">' + T("common.selectAll") + '</button>' +
+          '<button type="button" class="sh-mini" id="shNone">' + T("common.deselectAll") + '</button></span></div>' +
         '<div class="sh-picker-list" id="shList"></div></div>' +
       '<div class="sh-key-row">' +
-        '<label class="sh-f sh-keyf"><span>KEY ID cho khách</span>' +
+        '<label class="sh-f sh-keyf"><span>' + T("sh.keyId") + '</span>' +
           `<input id="shKey" value="${key}" maxlength="12" autocomplete="off" spellcheck="false"></label>` +
-        '<button type="button" class="sh-mini" id="shGen">Tạo mã khác</button>' +
+        '<button type="button" class="sh-mini" id="shGen">' + T("sh.regen") + '</button>' +
       '</div>' +
-      '<p class="sh-hint" id="shMsg">Mã 6 chữ số, hoặc tự đặt 4–12 ký tự (chữ và số).</p>' +
+      '<p class="sh-hint" id="shMsg">' + T("sh.keyHint") + '</p>' +
       '<div class="sh-actions">' +
-        '<button type="button" class="sh-btn ghost" id="shCancel">Huỷ</button>' +
-        '<button type="button" class="sh-btn primary" id="shSave">Tạo mã chia sẻ</button>' +
+        '<button type="button" class="sh-btn ghost" id="shCancel">' + T("common.cancel") + '</button>' +
+        '<button type="button" class="sh-btn primary" id="shSave">' + T("sh.create") + '</button>' +
       '</div>';
 
     const $ = id => document.getElementById(id);
@@ -248,7 +247,7 @@
       $("shList").innerHTML = rows.length
         ? rows.map(r => `<label class="sh-item"><input type="checkbox" value="${esc(r.id)}">` +
             `<span><b>${esc(r.customer)}</b><small>${esc(r.id)} · ${esc(r.stage || "")}</small></span></label>`).join("")
-        : '<div class="sh-empty">Không có dự án nào của nhà cung cấp này.</div>';
+        : '<div class="sh-empty">' + T("sh.noOppsSupplier") + '</div>';
     };
     const syncScope = () => {
       const s = $("shScope").value;
@@ -269,35 +268,34 @@
       const k = $("shKey").value.trim();
       const msg = $("shMsg");
       if (!/^[A-Za-z0-9]{4,12}$/.test(k)) {
-        msg.textContent = "KEY phải gồm 4–12 ký tự chữ hoặc số."; msg.className = "sh-hint err"; return;
+        msg.textContent = T("sh.err.key"); msg.className = "sh-hint err"; return;
       }
       const scope = $("shScope").value;
       const codes = scope === "Chọn dự án"
         ? [...$("shList").querySelectorAll("input:checked")].map(c => c.value) : [];
       if (scope === "Chọn dự án" && !codes.length) {
-        msg.textContent = "Chọn ít nhất một dự án."; msg.className = "sh-hint err"; return;
+        msg.textContent = T("sh.err.pickOne"); msg.className = "sh-hint err"; return;
       }
       const ncc = scope === "Tất cả NCC" ? "" : $("shNcc").value;
       const expiry = $("shExp").value;
       if (!workerUrl()) {
-        msg.innerHTML = 'Chưa cấu hình <b>SHARE_WORKER_URL</b> trong <code>js/sp-config.js</code>. ' +
-                        'Deploy Share Gateway theo <code>FISG_Share_Worker.js</code> rồi dán URL vào đó.';
+        msg.innerHTML = T("sh.err.noWorkerHtml");
         msg.className = "sh-hint err"; return;
       }
-      $("shSave").disabled = true; msg.textContent = "Đang lưu…"; msg.className = "sh-hint";
+      $("shSave").disabled = true; msg.textContent = T("common.saving"); msg.className = "sh-hint";
       try {
         let all = [];
         try { all = await fetchShares(); } catch (e) { all = []; }
         if (all.some(s => s.key === k && s.active)) {
-          msg.textContent = "KEY này đang được dùng. Chọn mã khác."; msg.className = "sh-hint err";
+          msg.textContent = T("sh.err.keyUsed"); msg.className = "sh-hint err";
           $("shSave").disabled = false; return;
         }
 
         if (!(await ensureWriteKey())) {
-          msg.textContent = "Cần mã ghi để tạo link cho khách."; msg.className = "sh-hint err";
+          msg.textContent = T("sh.err.needWriteKey"); msg.className = "sh-hint err";
           $("shSave").disabled = false; return;
         }
-        msg.textContent = "Đang đẩy dữ liệu cho khách…";
+        msg.textContent = T("sh.pushing");
         await workerPut(k, buildSnapshot(scope, ncc, codes), expiry,
           { scope, ncc, note: $("shNote").value.trim(), count: codes.length });
 
@@ -309,7 +307,7 @@
         showResult(k, scope, ncc, expiry, codes.length);
       } catch (e) {
         const m = (e.message === "NO_WRITE_KEY")
-          ? "Chưa có mã ghi Worker." : "Lưu lỗi: " + (e.message || e);
+          ? T("sh.err.noWriteKey") : T("sh.err.save") + " " + (e.message || e);
         msg.textContent = m; msg.className = "sh-hint err";
         $("shSave").disabled = false;
       }
@@ -317,35 +315,34 @@
   }
 
   function showResult(key, scope, ncc, exp, n) {
-    const what = scope === "Tất cả NCC" ? "tất cả nhà cung cấp"
-      : scope === "Chọn dự án" ? `${n} dự án của ${ncc}` : `toàn bộ dự án của ${ncc}`;
+    const what = scope === "Tất cả NCC" ? T("sh.what.all")
+      : scope === "Chọn dự án" ? T("sh.what.pick", { n: n, s: ncc }) : T("sh.what.one", { s: ncc });
     const link = location.origin + location.pathname + "?key=" + encodeURIComponent(key);
     document.getElementById("shBody").innerHTML =
       '<div class="sh-done">' +
         '<div class="sh-done-ico" aria-hidden="true">' +
           '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' +
         '</div>' +
-        '<p class="sh-done-t">Đã tạo mã chia sẻ</p>' +
+        '<p class="sh-done-t">' + T("sh.created") + '</p>' +
         `<div class="sh-key" id="shKeyOut">${esc(key)}</div>` +
         '<div class="sh-copy-row">' +
-          '<button type="button" class="sh-btn primary" id="shCopy">Sao chép mã</button>' +
-          '<button type="button" class="sh-btn ghost" id="shCopyLink">Sao chép link</button>' +
+          '<button type="button" class="sh-btn primary" id="shCopy">' + T("sh.copyCode") + '</button>' +
+          '<button type="button" class="sh-btn ghost" id="shCopyLink">' + T("sh.copyLink") + '</button>' +
         '</div>' +
-        `<p class="sh-done-d">Khách xem được <b>${esc(what)}</b>, hết hạn <b>${viDay(exp)}</b>.<br>` +
-        'Khách <b>không cần đăng nhập</b> — mở link rồi nhập mã, hoặc bấm “Khách xem chia sẻ”.</p>' +
-        '<button type="button" class="sh-btn ghost" id="shDone">Đóng</button>' +
+        `<p class="sh-done-d">${T("sh.doneDesc", { w: esc(what), d: viDay(exp) })}</p>` +
+        '<button type="button" class="sh-btn ghost" id="shDone">' + T("common.close") + '</button>' +
       '</div>';
     document.getElementById("shDone").onclick = close;
     const copyTo = (btnId, text, label) => {
       const t = document.getElementById(btnId);
       if (!t) return;
       t.onclick = () => {
-        const done = () => { t.textContent = "Đã sao chép"; setTimeout(() => t.textContent = label, 1800); };
+        const done = () => { t.textContent = T("sh.copied"); setTimeout(() => t.textContent = label, 1800); };
         if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, done); else done();
       };
     };
-    copyTo("shCopy", key, "Sao chép mã");
-    copyTo("shCopyLink", link, "Sao chép link");
+    copyTo("shCopy", key, T("sh.copyCode"));
+    copyTo("shCopyLink", link, T("sh.copyLink"));
   }
 
   window.FISG_SHARE_NET = { workerGet, workerPut, workerDelete, buildSnapshot, setWriteKey };
@@ -357,38 +354,38 @@
     if (!box) {
       box = document.createElement("div");
       box.id = "shareMgr"; box.className = "card glass share-mgr";
-      box.innerHTML = '<h4>Mã chia sẻ cho khách</h4><div id="shareMgrBody">Đang tải…</div>';
+      box.innerHTML = '<h4>' + T("sh.mgr") + '</h4><div id="shareMgrBody">' + T("common.loading") + '</div>';
       host.appendChild(box);
     }
     const body = document.getElementById("shareMgrBody");
     try {
       const list = await fetchShares();
-      if (!list.length) { body.innerHTML = '<div class="sh-empty">Chưa có mã chia sẻ nào.</div>'; return; }
+      if (!list.length) { body.innerHTML = '<div class="sh-empty">' + T("sh.none") + '</div>'; return; }
       const today = isoDay(new Date());
       body.innerHTML =
-        '<table class="sh-table"><thead><tr><th>KEY</th><th>Phạm vi</th><th>Chia sẻ cho</th><th>Hết hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody>' +
+        '<table class="sh-table"><thead><tr><th>KEY</th><th>' + T("sh.scope") + '</th><th>' + T("sh.sharedWith") + '</th><th>' + T("sh.expiry") + '</th><th>' + T("common.status") + '</th><th></th></tr></thead><tbody>' +
         list.map(s => {
           const expired = s.expiry && s.expiry < today;
-          const st = !s.active ? '<span class="pill p-lost">Đã thu hồi</span>'
-            : expired ? '<span class="pill p-prog">Hết hạn</span>'
-            : '<span class="pill p-won">Đang hiệu lực</span>';
+          const st = !s.active ? '<span class="pill p-lost">' + T("sh.st.revoked") + '</span>'
+            : expired ? '<span class="pill p-prog">' + T("sh.st.expired") + '</span>'
+            : '<span class="pill p-won">' + T("sh.st.active") + '</span>';
           const n = s.count || s.codes.length;
-          const scope = s.scope === "Tất cả NCC" ? "Tất cả NCC"
-            : s.scope === "Chọn dự án" ? `${n} dự án · ${esc(s.ncc)}` : `Toàn bộ ${esc(s.ncc)}`;
+          const scope = s.scope === "Tất cả NCC" ? T("sf.allSuppliers")
+            : s.scope === "Chọn dự án" ? `${T("sf.nOpps", { n: n })} · ${esc(s.ncc)}` : T("sh.allOf", { s: esc(s.ncc) });
           return `<tr><td><b>${esc(s.key)}</b></td><td>${scope}</td><td>${esc(s.note) || "—"}</td>` +
             `<td>${viDay(s.expiry)}</td><td>${st}</td><td>` +
-            (s.active ? `<button class="sh-mini danger" data-revoke="${s.spId || ""}" data-key="${esc(s.key)}">Thu hồi</button>` : "") +
+            (s.active ? `<button class="sh-mini danger" data-revoke="${s.spId || ""}" data-key="${esc(s.key)}">${T("sh.revoke")}</button>` : "") +
             '</td></tr>';
         }).join("") + "</tbody></table>";
       body.querySelectorAll("[data-revoke]").forEach(b => {
         b.onclick = async () => {
           b.disabled = true;
-          try { await revoke(b.dataset.revoke, b.dataset.key); await renderManager(); if (window.toast) toast("Đã thu hồi mã."); }
-          catch (e) { b.disabled = false; if (window.toast) toast("Thu hồi lỗi: " + e.message); }
+          try { await revoke(b.dataset.revoke, b.dataset.key); await renderManager(); if (window.toast) toast(T("sh.revoked")); }
+          catch (e) { b.disabled = false; if (window.toast) toast(T("sh.revokeErr") + " " + e.message); }
         };
       });
     } catch (e) {
-      body.innerHTML = '<div class="sh-empty">Chưa đọc được danh sách mã. Kiểm tra <b>SHARE_WORKER_URL</b> trong <code>js/sp-config.js</code> và mã ghi Worker.</div>';
+      body.innerHTML = '<div class="sh-empty">' + T("sh.listErr") + '</div>';
     }
   }
 
@@ -398,7 +395,7 @@
     const b = document.createElement("button");
     b.id = "btnShare"; b.type = "button"; b.className = "btn-share";
     b.innerHTML =
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Chia sẻ';
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> <span data-i18n="sh.share">' + T("sh.share") + '</span>';
     b.onclick = open;
     bar.appendChild(b);
   }

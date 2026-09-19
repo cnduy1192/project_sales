@@ -1,0 +1,38 @@
+{
+"(không có nội dung)": {
+"en": "(no content)",
+"vi": "(không có nội dung)"
+},
+"Hoãn": {
+"en": "On Hold",
+"vi": "Hoãn"
+},
+"IN PROGRESS": {
+"en": "In Progress",
+"vi": "Đang chạy"
+},
+"Khác": {
+"en": "Other",
+"vi": "Khác"
+},
+"LOST": {
+"en": "Closed Lost",
+"vi": "Thua"
+},
+"Thử mẫu": {
+"en": "Sampling",
+"vi": "Thử mẫu"
+},
+"Tiếp cận": {
+"en": "Discovery",
+"vi": "Tiếp cận"
+},
+"WON": {
+"en": "Closed Won",
+"vi": "Thắng"
+},
+"Đàm phán": {
+"en": "Negotiation",
+"vi": "Đàm phán"
+}
+}

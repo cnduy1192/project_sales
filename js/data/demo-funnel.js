@@ -135,10 +135,10 @@
     if (!document.getElementById("sfDemoBadge")) {
       var b = document.createElement("div");
       b.id = "sfDemoBadge"; b.className = "sf-demo-badge";
-      b.innerHTML = "Dữ liệu demo · thao tác thử không lưu";
+      b.setAttribute("data-i18n", "demo.badge"); b.textContent = T("demo.badge");
       var top = document.querySelector(".sf-top"); if (top) top.appendChild(b);
     }
-    if (window.toast) toast("Đang xem " + RECORDS.length + " dự án demo. Chỉnh sửa chỉ lưu tạm trong trình duyệt.");
+    if (window.toast) toast(T("demo.toast", { n: RECORDS.length }));
   }
 
   window.FISG_DEMO = { load: load, build: build };

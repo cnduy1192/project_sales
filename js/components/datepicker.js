@@ -32,7 +32,7 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "dp-btn";
-    btn.setAttribute("aria-label", "Mở lịch chọn ngày");
+    btn.setAttribute("aria-label", T("dp.open"));
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
       'stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/>' +
       '<path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
@@ -73,16 +73,16 @@
         '<div class="dp-head">' +
           '<span class="dp-title" data-noi18n>' + monName(view.m) + " " + view.y + "</span>" +
           '<div class="dp-nav">' +
-            '<button type="button" class="dp-mv" data-mv="-1" aria-label="Tháng trước">' +
+            '<button type="button" class="dp-mv" data-mv="-1" aria-label="' + T("dp.prev") + '">' +
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-            '<button type="button" class="dp-mv" data-mv="1" aria-label="Tháng sau">' +
+            '<button type="button" class="dp-mv" data-mv="1" aria-label="' + T("dp.next") + '">' +
               '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>' +
           "</div></div>" +
         '<div class="dp-dow">' + DOW.map(function (x) { return "<span>" + x + "</span>"; }).join("") + "</div>" +
         '<div class="dp-grid">' + cells + "</div>" +
         '<div class="dp-foot">' +
-          '<button type="button" class="dp-link" data-act="clear">Xoá</button>' +
-          '<button type="button" class="dp-link" data-act="today">Hôm nay</button>' +
+          '<button type="button" class="dp-link" data-act="clear">' + T("common.clear") + '</button>' +
+          '<button type="button" class="dp-link" data-act="today">' + T("common.today") + '</button>' +
         "</div>";
 
       pop.querySelectorAll(".dp-mv").forEach(function (b) {

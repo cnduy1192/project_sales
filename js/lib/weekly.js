@@ -1,4 +1,6 @@
-var WD_VI = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+/* i18n: weekday names follow the current language (index access via getters) */
+var WD_VI = { length: 7 };
+['sun','mon','tue','wed','thu','fri','sat'].forEach(function(d,i){ Object.defineProperty(WD_VI, i, { get: function(){ return I18N.t('wd.'+d); } }); });
 
 function weekBounds(iso){
   var d = new Date(normDate(iso) || todayISO());
@@ -24,7 +26,7 @@ function dayLabelVI(iso){ return WD_VI[new Date(normDate(iso)).getDay()]; }
 
 function dayStampVI(iso){
   var d = normDate(iso) || todayISO();
-  return dayLabelVI(d) + ', ngày ' + d.slice(8,10) + '/' + d.slice(5,7) + '/' + d.slice(0,4);
+  return I18N.t('wc.dayStamp', { w: dayLabelVI(d), d: d.slice(8,10) + '/' + d.slice(5,7) + '/' + d.slice(0,4) });
 }
 
 function userByName(pic){
@@ -155,17 +157,17 @@ function suggestWork(pic, limit){
     if(closing && closing < T){
       var late = daysSince(closing);
       offer(k, Object.assign({}, base, { score: 100 + late, action:'update',
-        reason: 'Quá hạn ngày đóng ' + late + ' ngày' }));
+        reason: I18N.t('wk.reason.overdue', { n: late }) }));
     } else if(closing){
       var left = -daysSince(closing);
       if(left <= 30) offer(k, Object.assign({}, base, { score: 60 + (30 - left), action:'schedule',
-        reason: 'Đóng dự kiến sau ' + left + ' ngày' }));
+        reason: I18N.t('wk.reason.closing', { n: left }) }));
     }
     var ups = (r.updates||[]).map(function(u){ return normDate(u.at); }).filter(Boolean).sort();
     var lastUp = ups.length ? ups[ups.length-1] : null;
     var age = lastUp ? daysSince(lastUp) : 999;
     offer(k, Object.assign({}, base, { score: 20 + age/10, action:'update',
-      reason: lastUp ? 'Chưa cập nhật ' + age + ' ngày' : 'Chưa có cập nhật nào' }));
+      reason: lastUp ? I18N.t('wk.reason.stale', { n: age }) : I18N.t('wk.reason.noUpdates') }));
   });
 
   Object.keys(touch).forEach(function(k){
@@ -177,7 +179,7 @@ function suggestWork(pic, limit){
       projectId: r ? r.id : null, product: r ? r.product : null,
       segment: r ? r.segment : null, ncc: r ? r.ncc : null, kg: r ? (r.kgThis||0) : 0,
       score: 30 + silent/10, action:'schedule',
-      reason: 'Im lặng ' + silent + ' ngày'
+      reason: I18N.t('wk.reason.silent', { n: silent })
     });
   });
 

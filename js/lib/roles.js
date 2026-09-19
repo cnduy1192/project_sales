@@ -2,46 +2,46 @@ var ROLE_DEF = {
   sales: {
     label:'Sales', scope:'own-pic',
     edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
-    hint:'Chỉ thấy dự án và hoạt động của mình; KHÔNG xoá được khách hàng'
+    get hint(){ return T('role.hint.sales'); }
   },
   salesupport: {
     label:'Sale Support', scope:'support',
     edit:true,  close:true,  del:false, delCustomer:false, admin:false, cockpit:false, weekly:true,  weeklyAuto:false, report:true,
-    hint:'Hỗ trợ các sales được chỉ định: thấy và sửa dự án/hoạt động/khách của họ, nhưng KHÔNG xoá'
+    get hint(){ return T('role.hint.salesupport'); }
   },
   rnd: {
 
     label:'R&D', scope:'own-rnd', viewAll:true,
     edit:true,  close:false, del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
-    hint:'Thấy toàn bộ khách hàng và dự án; ghi được hoạt động với mọi khách; chỉ sửa dự án mình phụ trách R&D, không đóng dự án; KHÔNG xoá được khách hàng'
+    get hint(){ return T('role.hint.rnd'); }
   },
   teamlead: {
     label:'Team Leader', scope:'team', lead:true,
     edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
-    hint:'Trưởng nhóm (cao hơn Sales/Sale Support/R&D, thấp hơn Manager): thấy dự án/hoạt động/khách của các sale báo cáo cho mình ở chế độ CHỈ ĐỌC, đọc báo cáo tuần của team; tự nhập và quản lý việc của chính mình; KHÔNG xoá khách hàng'
+    get hint(){ return T('role.hint.teamlead'); }
   },
   manager: {
     label:'Manager', scope:'all',
     edit:true,  close:true,  del:true,  delCustomer:true, admin:false, cockpit:true,  weekly:true,  weeklyAuto:false, report:true,
-    hint:'Thấy toàn đội, đóng được dự án, có Kế hoạch tuần; xoá được khách hàng; TỰ SOẠN báo cáo tuần của mình và ĐỌC báo cáo của đội; không sửa phân quyền'
+    get hint(){ return T('role.hint.manager'); }
   },
   director: {
     label:'Director', scope:'all',
     edit:false, close:false, del:false, delCustomer:true, admin:false, cockpit:true,  weekly:false, weeklyAuto:false, report:false,
-    hint:'Thấy toàn đội ở chế độ chỉ đọc; không nhập liệu, không đóng dự án; được phép xoá khách hàng'
+    get hint(){ return T('role.hint.director'); }
   },
   superadmin: {
     label:'Super Admin', scope:'all',
 
     edit:true,  close:true,  del:true,  delCustomer:true, admin:true,  cockpit:true,  weekly:true, weeklyAuto:false, report:false,
-    hint:'Toàn quyền, xem được mọi màn hình'
+    get hint(){ return T('role.hint.superadmin'); }
   }
 };
 
 var ROLE_FALLBACK = {
-  label:'Chưa phân quyền', scope:'own-pic',
+  get label(){ return T('role.none'); }, scope:'own-pic',
   edit:false, close:false, del:false, delCustomer:false, admin:false, cockpit:false, weekly:false, weeklyAuto:false, report:false,
-  hint:'Vai trò không hợp lệ — liên hệ quản trị'
+  get hint(){ return T('role.hint.none'); }
 };
 
 var ROLE_ORDER = ['sales','salesupport','rnd','teamlead','manager','director','superadmin'];

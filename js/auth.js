@@ -27,7 +27,7 @@
 
   async function getToken(scopes) {
     const a = await ready();
-    if (!a || !account) throw new Error("chưa đăng nhập Microsoft");
+    if (!a || !account) throw new Error(T("err.notSignedIn"));
     try {
       const r = await a.acquireTokenSilent({ scopes: scopes || CFG.scopes, account });
       return r.accessToken;
@@ -42,11 +42,11 @@
 
     for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = await ready(); }
     if (!a) {
-      if (window.toast) toast("Chưa tải được MSAL. Tải lại trang (F5); nếu vẫn lỗi, kiểm tra mạng/chặn CDN.");
+      if (window.toast) toast(T("auth.msg.noMsal"));
       return;
     }
     if (location.protocol === "file:") {
-      if (window.toast) toast("Đăng nhập Microsoft cần chạy qua http(s) (GitHub Pages/localhost), không mở file trực tiếp.");
+      if (window.toast) toast(T("auth.msg.needHttp"));
       return;
     }
     try {
@@ -56,8 +56,8 @@
     } catch (e) {
       const msg = e.message || String(e);
       if (/redirect_uri|AADSTS50011/i.test(msg))
-        toast("Redirect URI chưa khớp. Thêm '" + CFG.redirectUri + "' vào App Registration → Authentication (SPA).");
-      else if (window.toast) toast("Đăng nhập lỗi: " + msg);
+        toast(T("auth.msg.redirect", { uri: CFG.redirectUri }));
+      else if (window.toast) toast(T("auth.msg.failed") + " " + msg);
     }
   }
 
@@ -73,7 +73,7 @@
     if (guests.includes(email) && window.FISG_GUEST) {
       let idx = USERS.findIndex(u => (u.email || "").toLowerCase() === email);
       if (idx < 0) {
-        USERS.push({ name: acc.name || "Khách", email: acc.username, role: "guest", pic: null, color: "#6D28D9" });
+        USERS.push({ name: acc.name || T("auth.guest"), email: acc.username, role: "guest", pic: null, color: "#6D28D9" });
         idx = USERS.length - 1;
       }
       loginAs(idx); resumeDone();
@@ -82,12 +82,11 @@
       return;
     }
 
-    if (!window.FISG_STORE) { resumeDone(); toast("Thiếu js/store.js — không tải được dữ liệu."); return; }
+    if (!window.FISG_STORE) { resumeDone(); toast(T("auth.msg.noStore")); return; }
     const p = await FISG_STORE.profileFor(email, acc.name || acc.username);
     if (!p.user) {
       resumeDone();
-      toast("Tài khoản " + acc.username + " chưa có trong list Users trên SharePoint. "
-            + "Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.");
+      toast(T("auth.msg.notInUsers", { user: acc.username }));
       return;
     }
     loginAs(p.index); resumeDone();
@@ -113,7 +112,7 @@
       if (!acc) { resumeDone(); return; }          // không có phiên → hiện màn hình đăng nhập
       enter(acc).catch(e => {
         resumeDone();
-        if (window.toast) toast("Không mở lại được phiên đăng nhập: " + (e.message || e) + ". Hãy đăng nhập lại.");
+        if (window.toast) toast(T("auth.msg.resumeFailed", { e: e.message || e }));
       });
     }, () => resumeDone());
   }

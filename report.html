@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Báo cáo tuần · FI SAIGON</title>
+  <title data-i18n="rpx.pageTitle">Báo cáo tuần · FI SAIGON</title>
+  <script src="js/i18n-dict.js?v=1"></script>
+  <script src="js/i18n.js?v=2"></script>
   <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,16 +19,17 @@
       <div class="rpx-brand">
         <span class="rpx-logo">FIS</span>
         <div class="rpx-title">
-          <b>Báo cáo tuần</b>
+          <b data-i18n="rpx.brand">Báo cáo tuần</b>
           <small>FI SAIGON JSC</small>
         </div>
       </div>
+      <div data-lang-switch style="margin-left:auto;margin-right:12px"></div>
       <div class="rpx-user" id="rpxUser" hidden>
         <div class="rpx-user-meta">
           <b id="rpxUserName">—</b>
           <small id="rpxUserRole">—</small>
         </div>
-        <button class="rpx-btn-ghost" id="rpxSignOut" type="button">Đăng xuất</button>
+        <button class="rpx-btn-ghost" id="rpxSignOut" type="button" data-i18n="auth.signOut">Đăng xuất</button>
       </div>
     </header>
 
@@ -35,14 +38,14 @@
       <!-- Đang tải -->
       <section class="rpx-state" id="rpxLoading">
         <div class="rpx-spin" aria-hidden="true"></div>
-        <p id="rpxLoadingMsg">Đang tải…</p>
+        <p id="rpxLoadingMsg" data-i18n="common.loading">Đang tải…</p>
       </section>
 
       <!-- Cần đăng nhập -->
       <section class="rpx-state" id="rpxSignin" hidden>
         <div class="rpx-state-card">
-          <h1>Đăng nhập để xem báo cáo</h1>      
-          <button class="rpx-btn-primary" id="rpxSignIn" type="button">
+          <h1 data-i18n="rpx.signInTitle">Đăng nhập để xem báo cáo</h1>      
+          <button class="rpx-btn-primary" id="rpxSignIn" type="button" data-i18n="rpx.signInMs">
             Đăng nhập Microsoft
           </button>
           <p class="rpx-hint" id="rpxSigninHint"></p>
@@ -52,9 +55,9 @@
       <!-- Không có quyền -->
       <section class="rpx-state" id="rpxDenied" hidden>
         <div class="rpx-state-card">
-          <h1>Bạn không có quyền xem trang này</h1>
+          <h1 data-i18n="rpx.deniedTitle">Bạn không có quyền xem trang này</h1>
           <p id="rpxDeniedMsg">Liên hệ với Administrator.</p>
-          <button class="rpx-btn-ghost" id="rpxDeniedSignOut" type="button">
+          <button class="rpx-btn-ghost" id="rpxDeniedSignOut" type="button" data-i18n="rpx.otherAccount">
             Đăng nhập tài khoản khác
           </button>
         </div>
@@ -69,11 +72,11 @@
           <div class="rpx-filters">
             <label class="rpx-field">
               <span>Sales</span>
-              <select id="rpxFilterPic"><option value="">Tất cả sales</option></select>
+              <select id="rpxFilterPic"><option value="" data-i18n="ck.allReps">Tất cả sales</option></select>
             </label>
             <label class="rpx-field">
-              <span>Tuần</span>
-              <select id="rpxFilterWeek"><option value="">Tất cả tuần</option></select>
+              <span data-i18n="rpx.weekLbl">Tuần</span>
+              <select id="rpxFilterWeek"><option value="" data-i18n="rpx.allWeeks">Tất cả tuần</option></select>
             </label>
           </div>
           <div class="rpx-list" id="rpxList" role="list"></div>
@@ -85,7 +88,7 @@
     </main>
 
     <footer class="rpx-foot">
-      <span>FI SAIGON — Sales Funnel · Báo cáo tuần</span>
+      <span data-i18n="rpx.footer">FI SAIGON — Sales Funnel · Báo cáo tuần</span>
     </footer>
   </div>
 
@@ -95,12 +98,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <!-- Module tái dùng của app (không sửa) -->
+  <script src="js/i18n-legacy.js?v=1"></script>
   <script src="js/sp-config.js"></script>
-  <script src="js/lib/roles.js"></script>
+  <script src="js/lib/roles.js?v=2"></script>
   <script src="js/graph.js"></script>
 
   <!-- Riêng cho trang này -->
-  <script src="js/report/report-auth.js"></script>
-  <script src="js/report/report-page.js"></script>
+  <script src="js/report/report-auth.js?v=2"></script>
+  <script src="js/report/report-page.js?v=2"></script>
 </body>
 </html>

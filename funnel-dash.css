@@ -1,0 +1,221 @@
+/* ============================================================
+   Sales Funnel — Dashboard / Analytics tab
+   Kế thừa token của styles.css + funnel-sf.css (.sf-body).
+   Không dùng framework CSS ngoài; mọi màu đều lấy từ biến sẵn có.
+   ============================================================ */
+
+/* ---------- View switcher trên sub-bar ---------- */
+.sf-view-seg{display:inline-flex;background:#EEF1F6;border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex:none;}
+.sf-view-b{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ink-3);
+  padding:6px 13px;border-radius:8px;background:transparent;border:0;cursor:pointer;transition:all .15s;font-family:inherit;}
+.sf-view-b:hover{color:var(--marine-ink);}
+.sf-view-b.on{background:#fff;color:var(--pri);box-shadow:var(--shadow);}
+.sf-view-b svg{opacity:.85;}
+.sf-view-b:focus-visible{outline:2px solid var(--marine-2);outline-offset:2px;}
+
+body.sf-view-dash .sf-only-list{display:none !important;}
+body.sf-view-dash .sf-main{display:none;}
+body:not(.sf-view-dash) #sfDash{display:none;}
+
+/* ---------- Khung dashboard ---------- */
+.sf-dash{flex:1;min-height:0;overflow:auto;padding:0 0 28px;background:var(--pearl);}
+.sf-dash-inner{max-width:1680px;margin:0 auto;padding:16px 20px 0;}
+
+/* ---------- Thanh điều khiển ---------- */
+.sf-dbar{position:sticky;top:0;z-index:12;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 20px;margin-bottom:2px;background:rgba(241,245,248,.92);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line-2);}
+.sf-dbar-l{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-right:2px;}
+
+/* dropdown nhiều lựa chọn */
+.sf-dd{position:relative;flex:none;}
+.sf-dd-btn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 10px;background:#fff;
+  border:1px solid var(--line);border-radius:9px;color:var(--ink-2);font-family:inherit;font-size:12.5px;
+  font-weight:600;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;white-space:nowrap;}
+.sf-dd-btn:hover{border-color:var(--marine-line);background:var(--pearl-2);}
+.sf-dd-btn:focus-visible{outline:none;border-color:var(--marine-2);box-shadow:0 0 0 3px var(--pri-ring);}
+.sf-dd.on .sf-dd-btn{background:var(--accent-soft);border-color:var(--pri-bd);color:var(--pri);}
+.sf-dd-cv{transition:transform .15s;}
+.sf-dd.open .sf-dd-cv{transform:rotate(180deg);}
+.sf-dd-n{font-size:10.5px;font-weight:700;background:var(--pri);color:#fff;border-radius:20px;padding:1px 6px;min-width:17px;text-align:center;}
+.sf-dd-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;min-width:216px;max-height:308px;overflow:auto;
+  background:#fff;border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-lg);padding:5px;}
+.sf-dd-opt{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border:0;border-radius:8px;background:transparent;
+  font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink-2);text-align:left;cursor:pointer;}
+.sf-dd-opt:hover{background:var(--pearl);}
+.sf-dd-opt .bx{width:15px;height:15px;flex:none;border:1.6px solid var(--line);border-radius:4px;display:flex;
+  align-items:center;justify-content:center;color:#fff;background:#fff;}
+.sf-dd-opt.on .bx{background:var(--pri);border-color:var(--pri);}
+.sf-dd-opt .bx svg{display:none;}
+.sf-dd-opt.on .bx svg{display:block;}
+.sf-dd-opt .ct{margin-left:auto;font-size:11px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;}
+.sf-dd-head{display:flex;gap:6px;padding:4px 5px 7px;border-bottom:1px solid var(--line-2);margin-bottom:4px;}
+.sf-dd-head button{flex:1;font-family:inherit;font-size:11.5px;font-weight:600;color:var(--marine-2);background:var(--accent-soft);
+  border:1px solid var(--pri-bd);border-radius:7px;padding:5px;cursor:pointer;}
+.sf-dd-head button:hover{background:var(--pri);color:#fff;border-color:var(--pri);}
+
+/* segmented control dùng chung: bộ chọn Kỳ và bộ chọn Chỉ số */
+.sf-seg2{display:inline-flex;background:#EEF1F6;border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex:none;}
+.sf-seg2 b{font-size:12.5px;font-weight:600;color:var(--ink-3);padding:5px 12px;border-radius:7px;cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap;}
+.sf-seg2 b:hover{color:var(--marine-ink);}
+.sf-seg2 b.on{background:#fff;color:var(--pri);box-shadow:var(--shadow);}
+.sf-metric{margin-left:auto;}
+
+.sf-dreset{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--lost-bd);
+  border-radius:9px;background:var(--lost-bg);color:var(--lost);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.sf-dreset:hover{background:var(--lost);color:#fff;border-color:var(--lost);}
+.sf-dreset[hidden]{display:none;}
+
+/* chip cross-filter */
+.sf-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 20px;margin:10px auto 0;max-width:1680px;}
+.sf-chips[hidden]{display:none;}
+.sf-chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 6px 0 11px;border-radius:20px;
+  background:var(--accent-soft);border:1px solid var(--pri-bd);color:var(--pri);font-size:12px;font-weight:600;}
+.sf-chip i{font-style:normal;opacity:.7;font-weight:600;}
+.sf-chip button{width:18px;height:18px;border:0;border-radius:50%;background:rgba(14,107,168,.14);color:var(--pri);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;line-height:1;padding:0;}
+.sf-chip button:hover{background:var(--pri);color:#fff;}
+
+/* ---------- Lưới ---------- */
+.sf-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:14px;}
+.sf-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:none;
+  display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.sf-card-h{display:flex;align-items:center;gap:10px;padding:13px 16px 6px;min-height:22px;}
+.sf-card-h h3{font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif;font-size:13.5px;font-weight:600;
+  letter-spacing:-.005em;color:var(--marine-ink);margin:0;line-height:1.3;}
+.sf-meta{margin-left:auto;flex:none;font-size:11.5px;font-weight:500;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;white-space:nowrap;}
+/* nút quay ra của Sunburst (thay cho nhãn hướng dẫn cũ) */
+.sf-back{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;
+  border:1px solid var(--pri-bd);border-radius:20px;background:var(--accent-soft);color:var(--pri);
+  font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;transition:background .15s,color .15s;}
+.sf-back:hover{background:var(--pri);color:#fff;border-color:var(--pri);}
+.sf-back:focus-visible{outline:2px solid var(--marine-2);outline-offset:2px;}
+.sf-back[hidden]{display:none;}
+
+/* biểu đồ có thể bấm: con trỏ tay do ECharts đặt trên từng phần tử,
+   thêm nhấn nhẹ ở khung card để người dùng thấy vùng tương tác */
+.sf-card:has(.sf-chart):hover{border-color:var(--pri-bd);}
+.sf-chart{touch-action:pan-y;}
+.sf-chart{width:100%;min-height:260px;flex:1;}
+
+
+
+.c4{grid-column:span 3;} .c5{grid-column:span 5;} .c7{grid-column:span 7;} .c12{grid-column:span 12;}
+
+/* ---------- KPI ---------- */
+/* KPI tối giản: chỉ viền mảnh trung tính, không vạch màu trang trí */
+.sf-kpi{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:none;padding:15px 17px 14px;
+  display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden;}
+.sf-kpi-t{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.045em;text-transform:uppercase;color:#64748B;}
+.sf-kpi-v{font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--marine-ink);
+  line-height:1.15;font-variant-numeric:tabular-nums;margin-top:5px;}
+.sf-kpi-v small{font-size:14px;font-weight:700;color:var(--ink-2);margin-left:3px;letter-spacing:0;}
+.sf-kpi-s{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:3px;}
+.sf-kpi-s b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums;}
+.sf-pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px;}
+.sf-pill.up{color:var(--won);background:var(--won-bg);} .sf-pill.dn{color:var(--lost);background:var(--lost-bg);}
+.sf-pill.wt{color:var(--prog);background:var(--prog-bg);}
+
+/* ---------- Bảng chi tiết ---------- */
+.sf-tbl-wrap{overflow:auto;max-height:600px;}
+table.sf-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;}
+table.sf-tbl th{position:sticky;top:0;z-index:2;background:var(--pearl-2);border-bottom:1px solid var(--line);
+  padding:10px 14px;text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink-3);white-space:nowrap;cursor:pointer;user-select:none;}
+table.sf-tbl th:hover{color:var(--pri);}
+table.sf-tbl th .ar{opacity:.35;margin-left:3px;}
+table.sf-tbl th.srt .ar{opacity:1;color:var(--pri);}
+table.sf-tbl td{padding:12px 14px;border-bottom:1px solid var(--line-2);vertical-align:middle;color:var(--ink-2);line-height:1.45;}
+table.sf-tbl tbody tr{cursor:pointer;transition:background .12s;}
+table.sf-tbl tbody tr:hover{background:var(--pri-tint);}
+table.sf-tbl .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--marine-ink);white-space:nowrap;}
+table.sf-tbl .cust{font-weight:700;color:var(--marine-ink);}
+table.sf-tbl .sub{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:1px;}
+.sf-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:700;border-radius:6px;padding:3px 8px;white-space:nowrap;}
+.sf-badge.p-sbg{color:var(--sbg);background:var(--sbg-bg);} .sf-badge.p-bas{color:var(--bas);background:var(--bas-bg);}
+.sf-badge.p-st{color:var(--st);background:var(--st-bg);} .sf-badge.p-oa{color:var(--oa);background:var(--oa-bg);}
+.sf-badge.p-won{color:var(--won);background:var(--won-bg);} .sf-badge.p-lost{color:var(--lost);background:var(--lost-bg);}
+.sf-badge.p-prog{color:var(--prog);background:var(--prog-bg);}
+.sf-prob{display:flex;align-items:center;gap:7px;min-width:92px;}
+.sf-prob i{flex:1;height:5px;border-radius:3px;background:var(--line-2);overflow:hidden;display:block;}
+.sf-prob i b{display:block;height:100%;border-radius:3px;background:var(--pri);}
+.sf-prob span{font-size:11px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;width:30px;text-align:right;}
+.sf-late{display:inline-flex;align-items:center;gap:4px;color:var(--overdue);font-size:10.5px;font-weight:700;
+  background:var(--overdue-bg);border-radius:6px;padding:2px 7px;margin-left:6px;}
+.sf-tav{width:23px;height:23px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:9.5px;font-weight:700;color:#fff;margin-right:7px;vertical-align:middle;}
+
+/* ---------- Trạng thái rỗng / lỗi ---------- */
+.sf-dnote{display:flex;align-items:center;gap:9px;padding:9px 14px;margin-top:12px;border-radius:10px;
+  background:var(--prog-bg);border:1px solid var(--prog-bd);color:var(--prog);font-size:12px;font-weight:600;}
+.sf-dnote.err{background:var(--lost-bg);border-color:var(--lost-bd);color:var(--lost);}
+.sf-dempty{padding:52px 20px;text-align:center;color:var(--ink-3);font-size:13px;}
+.sf-dempty b{display:block;font-family:var(--font-display);font-size:15px;color:var(--ink-2);margin-bottom:5px;}
+
+/* ---------- Tooltip ECharts ---------- */
+.sf-tt{font-family:'Inter',system-ui,sans-serif;min-width:178px;max-width:300px;}
+.sf-tt-h{font-size:12.5px;font-weight:700;color:var(--marine-ink);line-height:1.35;margin-bottom:2px;}
+.sf-tt-s{font-size:11px;color:var(--ink-3);margin-bottom:7px;}
+.sf-tt-r{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-2);padding:2px 0;}
+.sf-tt-r em{font-style:normal;color:var(--ink-3);}
+.sf-tt-r b{margin-left:auto;font-weight:700;color:var(--marine-ink);font-variant-numeric:tabular-nums;}
+.sf-tt-d{width:8px;height:8px;border-radius:3px;flex:none;}
+.sf-tt-f{margin-top:7px;padding-top:6px;border-top:1px solid var(--line-2);font-size:10.5px;color:var(--ink-3);}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1280px){
+  .c7{grid-column:span 12;} .c5{grid-column:span 12;} .c4{grid-column:span 6;}
+}
+@media (max-width:760px){
+  .c4{grid-column:span 12;}
+  .sf-dash-inner,.sf-dbar,.sf-chips{padding-left:12px;padding-right:12px;}
+  .sf-metric{margin-left:0;}
+  .sf-seg2 b{padding:5px 9px;font-size:12px;}
+  .sf-kpi-v{font-size:23px;}
+}
+@media print{
+  .sf-dbar,.sf-top,.sf-subbar{position:static;}
+  .sf-card{break-inside:avoid;}
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   THANH CUỘN — hiện rõ, kiểu phần mềm quản trị
+   Áp cho cả vùng cuộn của Record Page (.sf-rec-main / .sf-rec-side):
+   nội dung cột phải thường dài hơn khung, trước đây bị cắt mà không
+   có dấu hiệu nào cho biết còn nội dung bên dưới.
+   ══════════════════════════════════════════════════════════════ */
+/* KHÔNG dùng scrollbar-width:thin — Chromium hiểu đó là thanh cuộn dạng overlay:
+   chiếm 0px và chỉ hiện lúc đang cuộn, nên người dùng không thấy gì. Chỉ khai báo
+   ::-webkit-scrollbar để có thanh cuộn cổ điển, luôn hiện khi nội dung tràn.
+   Firefox dùng thanh cuộn mặc định của nó (cũng luôn hiện). */
+.sf-dash::-webkit-scrollbar,
+.sf-tbl-wrap::-webkit-scrollbar,
+.sf-dd-pop::-webkit-scrollbar,
+.sf-rec-main::-webkit-scrollbar,
+.sf-rec-side::-webkit-scrollbar{width:11px;height:11px;}
+.sf-dash::-webkit-scrollbar-track,
+.sf-tbl-wrap::-webkit-scrollbar-track,
+.sf-dd-pop::-webkit-scrollbar-track,
+.sf-rec-main::-webkit-scrollbar-track,
+.sf-rec-side::-webkit-scrollbar-track{background:transparent;}
+.sf-dash::-webkit-scrollbar-thumb,
+.sf-tbl-wrap::-webkit-scrollbar-thumb,
+.sf-dd-pop::-webkit-scrollbar-thumb,
+.sf-rec-main::-webkit-scrollbar-thumb,
+.sf-rec-side::-webkit-scrollbar-thumb{
+  background:#CBD5E1;border-radius:8px;
+  border:3px solid transparent;background-clip:content-box;
+}
+.sf-dash::-webkit-scrollbar-thumb:hover,
+.sf-tbl-wrap::-webkit-scrollbar-thumb:hover,
+.sf-dd-pop::-webkit-scrollbar-thumb:hover,
+.sf-rec-main::-webkit-scrollbar-thumb:hover,
+.sf-rec-side::-webkit-scrollbar-thumb:hover{background:#94A3B8;background-clip:content-box;}
+.sf-dash::-webkit-scrollbar-corner,
+.sf-tbl-wrap::-webkit-scrollbar-corner{background:transparent;}
+
+/* cột phải Record Page: chừa chỗ cho thanh cuộn, không để card dính sát mép */
+.sf-rec-side{padding-right:14px;padding-bottom:26px;scroll-padding-bottom:16px;}

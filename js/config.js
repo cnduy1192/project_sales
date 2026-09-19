@@ -41,7 +41,8 @@ function rebuildDerived(){
 window.rebuildDerived = rebuildDerived;
 
 const ALL_NCC = '*';
-const ALL_NCC_LABEL = 'Tất cả';
+/* i18n: label follows the current language (global getter, read like a constant) */
+Object.defineProperty(window, 'ALL_NCC_LABEL', { configurable: true, get: function(){ return T('common.all'); } });
 function isAllNcc(){ return nccFilter === ALL_NCC; }
 
 function formNcc(){ return (!nccFilter || isAllNcc()) ? (NCCS[0] || '') : nccFilter; }
@@ -116,7 +117,7 @@ const PROB_OPTS = [10,25,50,75,90,100];
 const GRP_CLS = {'Tiếp cận':'p-sbg','Thử mẫu':'p-bas','Đàm phán':'p-oa','Hoãn':'p-prog'};
 function stageCls(s){return GRP_CLS[STAGE_GROUP[s]]||'p-st';}
 const STATUS_CLS = {'WON':'p-won','IN PROGRESS':'p-prog','LOST':'p-lost'};
-const STATUS_VI = {'WON':'Thắng','IN PROGRESS':'Đang chạy','LOST':'Thua'};
+const STATUS_VI = { get 'WON'(){ return T('status.won'); }, get 'IN PROGRESS'(){ return T('status.inProgress'); }, get 'LOST'(){ return T('status.lost'); } };
 const SEG_COLORS = ['#0B4F9E','#00838F','#F59E0B','#7C3AED','#0D9488','#DB2777','#B45309','#1D4ED8','#059669','#DC2626','#0E7490','#9333EA','#CA8A04'];
 const GROUP_COLORS = {'BAKERY':'#B45309','SAVOURY':'#0B4F9E','SWEET':'#DB2777'};
 

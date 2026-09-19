@@ -1,19 +1,19 @@
 function setF(f){filter=f;document.querySelectorAll('.chip[data-f]').forEach(c=>c.classList.toggle('on',c.dataset.f===f));render();}
-function fmt(n){return (n||0).toLocaleString('vi-VN')}
-function stageShort(s){return (s||'').replace('SHARED BUSINESS GOAL','SHARED GOAL').replace('BUILDING A SOLUTION','BUILDING').replace('SOLUTION TESTING','TESTING').replace('OFFER & AGREEMENT','OFFER').replace('QUOTED / PO','QUOTED/PO').replace('TEST PASSED','PASSED')}
+function fmt(n){return (n||0).toLocaleString(I18N.locale())}
+function stageShort(s){return tv((s||'').replace('SHARED BUSINESS GOAL','SHARED GOAL').replace('BUILDING A SOLUTION','BUILDING').replace('SOLUTION TESTING','TESTING').replace('OFFER & AGREEMENT','OFFER').replace('QUOTED / PO','QUOTED/PO').replace('TEST PASSED','PASSED'))}
 function probPct(r){return Math.round((r.prob||0)*100)}
 function rowHTML(r, subId){
   const u = USERS.find(x=>x.pic===r.pic);
   const col = u?u.color:'#8A90A4';
-  const overdue = subId==='overdue' ? ` <span class="pill p-over" style="font-size:10px;padding:2px 7px">trễ ${Math.round((TODAY-new Date(r.closing))/864e5)} ngày</span>`:'';
+  const overdue = subId==='overdue' ? ` <span class="pill p-over" style="font-size:10px;padding:2px 7px">${T('sf.daysLate',{n:Math.round((TODAY-new Date(r.closing))/864e5)})}</span>`:'';
   const editable = canEdit(r) && r.status==='IN PROGRESS';
   const probBtn = editable
     ? `<button class="prob-btn" onclick="event.stopPropagation();openProbPop('${r.id}',event)">${probPct(r)}%<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>`
     : `<span class="prob-btn locked">${probPct(r)}%</span>`;
   const closeBtn = canClose(r)
-    ? `<button class="close-btn" onclick="event.stopPropagation();openCloseModal('${r.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 13l2 2 4-4"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 3v4M15 3v4"/></svg>Đóng</button>` : '';
+    ? `<button class="close-btn" onclick="event.stopPropagation();openCloseModal('${r.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 13l2 2 4-4"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 3v4M15 3v4"/></svg>${T('common.close')}</button>` : '';
   return `<div class="row" onclick="openDetail('${r.id}')">
-    <div class="r-main"><b>${r.customer}</b><small>đóng ${r.closing? new Date(r.closing).toLocaleDateString('vi-VN'):'—'}${overdue}</small></div>
+    <div class="r-main"><b>${r.customer}</b><small>${T('fn.closes')} ${r.closing? new Date(r.closing).toLocaleDateString(I18N.locale()):'—'}${overdue}</small></div>
     <div class="r-app">${r.application}</div>
     <div class="r-prod">${r.product}</div>
     <div><span class="pill ${stageCls(r.stage)}"><span class="dot"></span>${stageShort(r.stage)}</span></div>
@@ -34,12 +34,12 @@ function renderSpine(rs){
   document.getElementById('spineFlow').innerHTML=stages.map((s,i)=>{
     const n=rs.filter(r=>atStage(r,s)).length;
     return `<button class="spine-step${stageFilter===s?' on':''}" onclick="stageFilter=stageFilter==='${s.replace(/'/g,"\\'")}'?null:'${s.replace(/'/g,"\\'")}';render()"
-      aria-pressed="${stageFilter===s}" title="${s}: ${n} dự án">
+      aria-pressed="${stageFilter===s}" title="${s}: ${T('sf.nOpps',{n:n})}">
       <div class="spine-chev" style="--sc:${SPINE_PALETTE[i%SPINE_PALETTE.length]}">
         <div class="spine-num">${n}</div><div class="spine-lbl">${stageShort(s)}</div>
       </div></button>`;}).join('');
 }
-const THEAD=`<div class="thead"><div>Khách hàng</div><div>Ứng dụng</div><div>Sản phẩm</div><div>Giai đoạn</div><div>Tiến độ dự án</div><div style="text-align:right">Tiềm năng</div><div>PIC</div><div></div></div>`;
+const THEAD_HTML=()=>`<div class="thead"><div>${T('common.account')}</div><div>${T('common.application')}</div><div>${T('common.product')}</div><div>${T('common.stage')}</div><div>${T('dt.progress')}</div><div style="text-align:right">${T('fn.potential')}</div><div>${T('common.owner')}</div><div></div></div>`;
 function render(){
   const q=(document.getElementById('q').value||'').toLowerCase();
   const rows=visible().filter(r=> filter==='ALL'||r.status===filter)
@@ -60,22 +60,22 @@ function render(){
       subsHTML+=`<div class="sub${collapsed[cid]?' collapsed':''}">
         <div class="sub-head" onclick="collapsed['${cid}']=!collapsed['${cid}'];render()">
           <span class="g-bar" style="background:${S.color}"></span>
-          <span class="s-title">${S.title}</span><span class="g-count">${rs.length} dự án</span>
-          <span class="g-kg">${fmt(kg)} <small>KG/năm</small></span>
-          <button class="g-toggle" aria-label="Thu gọn / mở rộng"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+          <span class="s-title">${S.title}</span><span class="g-count">${T('sf.nOpps',{n:rs.length})}</span>
+          <span class="g-kg">${fmt(kg)} <small>${T('fn.kgPerYear')}</small></span>
+          <button class="g-toggle" aria-label="${T('common.toggle')}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
         </div>
-        <div class="sub-body">${THEAD}${rs.map(r=>rowHTML(r,S.id)).join('')}</div>
+        <div class="sub-body">${THEAD_HTML()}${rs.map(r=>rowHTML(r,S.id)).join('')}</div>
       </div>`;
     });
     mEl.innerHTML=`<div class="major-head" onclick="collapsed['major-${M.id}']=!collapsed['major-${M.id}'];render()">
       <span class="g-bar" style="background:${M.color}"></span>
-      <span class="m-title">${M.title}</span><span class="g-count">${mRows.length} dự án</span>
-      <span class="g-kg">${fmt(mKg)} <small>KG/năm</small></span>
-      <button class="g-toggle" aria-label="Thu gọn / mở rộng"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <span class="m-title">${M.title}</span><span class="g-count">${T('sf.nOpps',{n:mRows.length})}</span>
+      <span class="g-kg">${fmt(mKg)} <small>${T('fn.kgPerYear')}</small></span>
+      <button class="g-toggle" aria-label="${T('common.toggle')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
     </div><div class="major-body">${subsHTML}</div>`;
     box.appendChild(mEl);
   });
-  if(!box.children.length) box.innerHTML=`<div class="major glass"><div class="empty"><b>Không có dự án nào</b>Thử đổi bộ lọc, hoặc bấm "Thêm dự án" để tạo mới.</div></div>`;
+  if(!box.children.length) box.innerHTML=`<div class="major glass"><div class="empty"><b>${T('sf.empty.title')}</b>${T('fn.emptyHint')}</div></div>`;
 }
 
 function openProbPop(id,ev){
@@ -94,13 +94,13 @@ function setProb(p){
   const old=probPct(r);
   r.prob=p/100;
   document.getElementById('probPop').classList.remove('open');
-  if(old!==p){notify(r,`đã cập nhật Tiến độ dự án <b>${r.customer} · ${r.product}</b>: ${old}% → ${p}%`);toast(`Tiến độ dự án ${r.customer} · ${r.product}: ${old}% → ${p}%. Đã thông báo người liên quan.`);}
+  if(old!==p){notify(r,T('fn.notif.progress',{name:`${r.customer} · ${r.product}`,a:old,b:p}));toast(T('fn.msg.progress',{name:`${r.customer} · ${r.product}`,a:old,b:p}));}
   render();
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.prob-pop')&&!e.target.closest('.prob-btn'))document.getElementById('probPop').classList.remove('open');});
 
 function openCloseModal(id){
-  const r=RECORDS.find(x=>x.id===id); if(!r||!canClose(r)){toast('Chỉ người tạo dự án (PIC) hoặc Manager mới có quyền đóng dự án.');return;}
+  const r=RECORDS.find(x=>x.id===id); if(!r||!canClose(r)){toast(T('sf.msg.closeOnlyOwner'));return;}
   closeRecId=id; closeResult=null;
   document.getElementById('c-sub').innerHTML=`<span class="pill p-sbg">${r.customer} · ${r.product}</span>`;
   document.getElementById('c-won').classList.remove('sel');
@@ -126,26 +126,26 @@ function pickResult(res){
 function confirmClose(){
   const r=RECORDS.find(x=>x.id===closeRecId); if(!r)return;
   const reason=document.getElementById('c-reason').value.trim();
-  if(!closeResult){toast('Chọn kết quả Thắng hoặc Thua.');return;}
-  if(!reason){toast('Vui lòng nhập lý do đóng dự án.');return;}
+  if(!closeResult){toast(T('sf.msg.pickOutcome'));return;}
+  if(!reason){toast(T('sf.msg.enterReason'));return;}
   r.status=closeResult; r.prob=closeResult==='WON'?1:0;
 
   r.closedAt=isoOf(TODAY);
-  r.comments.push({by:me.pic||me.name,at:nowStr(),text:`[Đóng dự án — ${STATUS_VI[closeResult]}] ${reason}`});
-  notify(r,`đã đóng dự án <b>${r.customer} · ${r.product}</b> — kết quả: <b>${STATUS_VI[closeResult]}</b>. Lý do: ${reason.slice(0,60)}${reason.length>60?'…':''}`);
+  r.comments.push({by:me.pic||me.name,at:nowStr(),text:`[Đóng dự án — ${({WON:'Thắng',LOST:'Thua'})[closeResult]||closeResult}] ${reason}`});
+  notify(r,T('fn.notif.closed',{name:`${r.customer} · ${r.product}`,outcome:STATUS_VI[closeResult],reason:reason.slice(0,60)+(reason.length>60?'…':'')}));
 
   document.getElementById('cov').classList.remove('open'); closeRecId=null;
   var layer = NAV.popRaw();
   if(layer && layer.base && typeof layer.base.restore === 'function') layer.base.restore();
   render(); cockpitRefresh();
   if(typeof welcomeRefresh==='function') welcomeRefresh();
-  toast(`Đã đóng ${r.id} (${STATUS_VI[closeResult]}). Thông báo gửi qua Email & Teams đến: ${recipientsOf(r).join(', ')}.`);
+  toast(T('fn.msg.closed',{id:r.id,outcome:STATUS_VI[closeResult],to:recipientsOf(r).join(', ')}));
 
   if(typeof pushProjectPatch==='function')
     pushProjectPatch(r, {
       Status: 'Closed', Result: closeResult,
       WinProbability: closeResult==='WON' ? 100 : 0,
-    }, '[Đóng dự án — '+STATUS_VI[closeResult]+'] '+reason);
+    }, '[Đóng dự án — '+(({WON:'Thắng',LOST:'Thua'})[closeResult]||closeResult)+'] '+reason);
 }
 function closeCloseModal(){
   NAV.back(function(){

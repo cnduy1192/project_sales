@@ -26,53 +26,53 @@
   function onFile(input) {
     const f = input.files && input.files[0];
     if (!f) return;
-    if (typeof XLSX === "undefined") { setStatus("Chưa tải được thư viện đọc Excel.", "err"); return; }
-    fileName = f.name; setStatus("Đang đọc " + f.name + "…");
+    if (typeof XLSX === "undefined") { setStatus(T("imp.noXlsx"), "err"); return; }
+    fileName = f.name; setStatus(T("imp.reading", { f: f.name }));
     const reader = new FileReader();
     reader.onload = e => {
       try {
         names = parseWorkbook(XLSX.read(new Uint8Array(e.target.result), { type: "array" }));
-        if (!names.length) { setStatus("Không tìm thấy tên nhà cung cấp nào trong file.", "err"); setActions(false); return; }
-        setStatus("Đã đọc " + names.length + " nhà cung cấp từ " + f.name + ". Bấm “Xem trước”.");
+        if (!names.length) { setStatus(T("imp.sup.noRows"), "err"); setActions(false); return; }
+        setStatus(T("imp.sup.read", { n: names.length, f: f.name }));
         setActions(true, false);
-      } catch (err) { setStatus("Không đọc được file: " + (err.message || err), "err"); }
+      } catch (err) { setStatus(T("imp.readFail") + " " + (err.message || err), "err"); }
     };
-    reader.onerror = () => setStatus("Không đọc được file.", "err");
+    reader.onerror = () => setStatus(T("imp.readFailShort"), "err");
     reader.readAsArrayBuffer(f);
   }
 
   async function preview() {
     if (!names) return;
-    setStatus("Đang đối chiếu với list Suppliers…");
+    setStatus(T("imp.sup.reconciling"));
     try {
       const r = await FISG_STORE.previewSupplierUpsert(names);
-      setStatus(`Đối chiếu xong: <b>${r.create}</b> tạo mới · ${r.skip} đã có (bỏ qua). Bấm “Cập nhật lên SharePoint”.`, "ok");
+      setStatus(T("imp.sup.reconciled", { c: r.create, s: r.skip }), "ok");
       setActions(true, true);
-    } catch (e) { setStatus("Không đối chiếu được: " + (e.message || e), "err"); }
+    } catch (e) { setStatus(T("imp.reconcileFail") + " " + (e.message || e), "err"); }
   }
 
   async function run() {
     if (!names) return;
     if (typeof confirm === "function"
-        && !confirm("Cập nhật " + names.length + " nhà cung cấp lên list Suppliers?\n\nTên đã có sẽ bỏ qua, tên mới sẽ được tạo. Chạy lại vẫn an toàn.")) return;
+        && !confirm(T("imp.sup.confirm", { n: names.length }))) return;
     setActions(false);
     const bar = document.getElementById("siBar"), fill = document.getElementById("siBarFill");
     if (bar) bar.style.display = "block";
     try {
       const rep = await FISG_STORE.bulkUpsertSuppliers(names, (done, total) => {
-        setStatus(`Đang ghi… ${done}/${total}`);
+        setStatus(T("imp.writing", { a: done, b: total }));
         if (fill) fill.style.width = (total ? Math.round(done / total * 100) : 100) + "%";
       });
-      let msg = `Xong: <b>${rep.created}</b> tạo mới · ${rep.skipped} bỏ qua`;
-      if (rep.failed) msg += ` · <b style="color:var(--overdue)">${rep.failed} lỗi</b>`;
+      let msg = T("imp.sup.done", { c: rep.created, s: rep.skipped });
+      if (rep.failed) msg += ` · <b style="color:var(--overdue)">${T("imp.nFailed", { n: rep.failed })}</b>`;
       setStatus(msg, rep.failed ? "err" : "ok");
       if (rep.failed) {
         const box = document.getElementById("siErrors");
-        if (box) { box.style.display = "block"; box.innerHTML = "<b>Dòng chưa ghi được:</b><br>" + rep.errors.slice(0, 40).map(x => "• " + esc(x)).join("<br>"); }
+        if (box) { box.style.display = "block"; box.innerHTML = "<b>" + T("imp.failedRows") + "</b><br>" + rep.errors.slice(0, 40).map(x => "• " + esc(x)).join("<br>"); }
       }
       setActions(true, true);
     } catch (e) {
-      setStatus("Dừng giữa chừng: " + (e.message || e), "err"); setActions(true, true);
+      setStatus(T("imp.stopped") + " " + (e.message || e), "err"); setActions(true, true);
     } finally { if (bar) setTimeout(() => { bar.style.display = "none"; }, 1200); }
   }
 
@@ -90,16 +90,16 @@
     host.innerHTML = `
       <div class="ci-card glass">
         <div class="ci-head"><div>
-          <b>Nhập nhà cung cấp từ Excel</b>
-          <p>File một cột tên NCC. App tự đối chiếu list Suppliers: tên mới thì tạo, tên đã có thì bỏ qua. Chạy lại vẫn an toàn.</p>
+          <b>${T("imp.sup.title")}</b>
+          <p>${T("imp.sup.desc")}</p>
         </div></div>
         <div class="ci-row">
-          <label class="ci-file"><input type="file" accept=".xlsx,.xls" onchange="FISG_SUPPLIER_IMPORT.onFile(this)"><span>Chọn file Excel…</span></label>
-          <button class="btn-ghost" id="siPreview" disabled onclick="FISG_SUPPLIER_IMPORT.preview()">Xem trước</button>
-          <button class="btn-primary" id="siRun" disabled onclick="FISG_SUPPLIER_IMPORT.run()">Cập nhật lên SharePoint</button>
+          <label class="ci-file"><input type="file" accept=".xlsx,.xls" onchange="FISG_SUPPLIER_IMPORT.onFile(this)"><span>${T("imp.pickFile")}</span></label>
+          <button class="btn-ghost" id="siPreview" disabled onclick="FISG_SUPPLIER_IMPORT.preview()">${T("imp.preview")}</button>
+          <button class="btn-primary" id="siRun" disabled onclick="FISG_SUPPLIER_IMPORT.run()">${T("imp.update")}</button>
         </div>
         <div class="ci-bar" id="siBar" style="display:none"><div id="siBarFill"></div></div>
-        <div class="ci-status" id="siStatus">Cột nhận diện: Title / Supplier / Nhà cung cấp (hoặc cột đầu tiên).</div>
+        <div class="ci-status" id="siStatus">${T("imp.sup.cols")}</div>
         <div class="ci-errors" id="siErrors" style="display:none"></div>
       </div>`;
   }

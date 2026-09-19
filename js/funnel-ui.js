@@ -2,9 +2,9 @@
   "use strict";
 
   const KEYS = [
-    { id: "run",    label: "Đang chạy", match: /ĐANG CHẠY|IN PROGRESS/i,
+    { id: "run",    get label() { return T("status.inProgress"); }, match: /ĐANG CHẠY|IN PROGRESS/i,
       color: "#1E3A8A", soft: "#EEF2FB", bd: "#C9D5F0", glow: "rgba(30,58,138,.20)" },
-    { id: "closed", label: "Closed",    match: /ĐÃ ĐÓNG|CLOSED/i,
+    { id: "closed", get label() { return T("fn.closed"); },    match: /ĐÃ ĐÓNG|CLOSED/i,
       color: "#565668", soft: "#F2F2F6", bd: "#D8D8E2", glow: "rgba(86,86,104,.18)" },
   ];
   let active = "run";
@@ -20,7 +20,7 @@
   }
   function exportExcel() {
     const data = rows();
-    if (!data.length) { if (window.toast) toast("Không có dự án nào để xuất."); return; }
+    if (!data.length) { if (window.toast) toast(T("fn.msg.nothingToExport")); return; }
     const head = ["Mã dự án", "Nhà cung cấp", "Khách hàng", "Sản phẩm", "Ứng dụng", "Nhóm ngành",
       "Segment", "Giai đoạn", "Trạng thái", "Tiến độ dự án", "KG năm nay", "KG năm sau",
       "Sale phụ trách", "Ngày tạo", "Ngày đóng dự kiến"];
@@ -36,7 +36,7 @@
       String(d.getMonth() + 1).padStart(2, "0") + String(d.getDate()).padStart(2, "0") + ".csv";
     document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
-    if (window.toast) toast("Đã xuất " + data.length + " dự án ra Excel.");
+    if (window.toast) toast(T("fn.msg.exported", { n: data.length }));
   }
 
   function moveExportToProfile() {
@@ -47,7 +47,7 @@
     b.id = "pmExport"; b.type = "button"; b.className = "profile-act neutral"; b.setAttribute("role", "menuitem");
     b.innerHTML =
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>' +
-      'Xuất Excel';
+      '<span data-i18n="common.exportExcel">' + T("common.exportExcel") + '</span>';
     b.onclick = () => {
       exportExcel();
       const w = document.querySelector(".profile-wrap");
@@ -56,7 +56,7 @@
     if (out) out.parentNode.insertBefore(b, out); else menu.appendChild(b);
 
     document.querySelectorAll('#view-funnel .topbar button').forEach(x => {
-      if (/Xuất Excel/i.test(x.textContent)) x.remove();
+      if (/Xuất Excel|Export to Excel/i.test(x.textContent)) x.remove();
     });
   }
 
@@ -70,14 +70,14 @@
     const rail = document.createElement("div");
     rail.id = "fnRail"; rail.className = "fn-rail";
     rail.setAttribute("role", "tablist");
-    rail.setAttribute("aria-label", "Trạng thái dự án");
+    rail.setAttribute("aria-label", T("fn.statusRail"));
     rail.innerHTML = KEYS.map(k =>
       '<button type="button" class="fn-key" role="tab" data-key="' + k.id + '" ' +
         'aria-selected="false" title="' + k.label + '" ' +
         'style="--key:' + k.color + ';--key-soft:' + k.soft + ';--key-bd:' + k.bd +
         ';--key-glow:' + k.glow + '">' +
         '<span class="fn-key-num" data-num="' + k.id + '">—</span>' +
-        '<span class="fn-key-label">' + k.label + '</span>' +
+        '<span class="fn-key-label" data-i18n="' + (k.id === "run" ? "status.inProgress" : "fn.closed") + '">' + k.label + '</span>' +
       '</button>').join("");
 
     groups.parentNode.insertBefore(wrap, groups);
@@ -153,7 +153,7 @@
     const cur = parseInt(sel.value, 10) || 10;
     wrap.innerHTML =
       '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" ' +
-        'aria-label="Tiến độ dự án">' +
+        'aria-label="' + T("dt.progress") + '">' +
       '<span class="pb-val">' + cur + '%</span>';
     sel.parentNode.insertBefore(wrap, sel);
     sel.classList.add("pb-hidden");
@@ -189,7 +189,7 @@
     const cur = parseInt((chips.querySelector(".pp-chip.on") || {}).textContent, 10) || 50;
     const w = document.createElement("div");
     w.className = "pb-wrap";
-    w.innerHTML = '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" aria-label="Tiến độ dự án">' +
+    w.innerHTML = '<input type="range" class="pb-range" min="0" max="100" step="5" value="' + cur + '" aria-label="' + T("dt.progress") + '">' +
                   '<span class="pb-val">' + cur + '%</span>';
     chips.style.display = "none";
     chips.parentNode.appendChild(w);

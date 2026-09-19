@@ -6,7 +6,7 @@
   const NCC_COLOR = { Roquette: "#1E3A8A", IFF: "#0D9488", Kimica: "#7C3AED" };
   const EXTRA = ["#B45309", "#0B4F9E", "#DB2777", "#059669"];
   const colorOf = (n, i) => NCC_COLOR[n] || EXTRA[(i || 0) % EXTRA.length];
-  const fmtN = n => (Number(n) || 0).toLocaleString("vi-VN");
+  const fmtN = n => (Number(n) || 0).toLocaleString(I18N.locale());
 
   function applyTheme() {
     if (!window.Chart) return false;
@@ -42,8 +42,8 @@
     const card = document.createElement("div");
     card.className = "card glass span2 vol-card";
     card.innerHTML =
-      '<h4>Sản lượng theo mặt hàng<small id="volSub"></small></h4>' +
-      '<div class="vol-switch" id="volSwitch" role="group" aria-label="Chọn năm">' +
+      '<h4><span data-i18n="ch.volByProduct">' + T('ch.volByProduct') + '</span><small id="volSub"></small></h4>' +
+      '<div class="vol-switch" id="volSwitch" role="group" aria-label="' + T('ch.pickYear') + '">' +
         '<button type="button" class="vol-tab on" data-y="kgThis">KG 2026</button>' +
         '<button type="button" class="vol-tab" data-y="kgNext">KG 2027</button>' +
       "</div>" +
@@ -81,14 +81,14 @@
 
     const sub = document.getElementById("volSub");
     if (sub) sub.textContent = top.length
-      ? "Dự án đang chạy + thắng · tổng " + fmtN(top.reduce((s, x) => s + x.kg, 0)) + " KG"
-      : "Chưa có khối lượng từ dự án đang chạy hoặc thắng";
+      ? T("ch.volSub", { n: fmtN(top.reduce((s, x) => s + x.kg, 0)) })
+      : T("ch.noVol");
 
     if (window.dc) window.dc("volume");
     const state = document.getElementById("volState");
     if (!top.length) {
       cv.style.visibility = "hidden";
-      if (state) { state.textContent = "NCC này chưa có khối lượng từ dự án đang chạy hoặc đã thắng."; state.classList.add("show"); }
+      if (state) { state.textContent = T("ch.noVolSupplier"); state.classList.add("show"); }
       return;
     }
     cv.style.visibility = "visible";
@@ -149,7 +149,7 @@
         onClick: (e, els) => {
           if (!els.length || !window.toast) return;
           const t = top[els[0].index];
-          toast(t.product + ": " + fmtN(t.kg) + " KG · " + t.n + " dự án");
+          toast(t.product + ": " + fmtN(t.kg) + " KG · " + T("sf.nOpps", { n: t.n }));
         },
       },
     });
@@ -157,7 +157,7 @@
     } catch (e) {
       console.error("[charts] render volume", e);
       cv.style.visibility = "hidden";
-      if (state) { state.textContent = "Không thể hiển thị biểu đồ khối lượng. Vui lòng thử lại."; state.classList.add("show"); }
+      if (state) { state.textContent = T("ch.volError"); state.classList.add("show"); }
     }
   }
 

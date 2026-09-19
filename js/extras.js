@@ -2,8 +2,8 @@
   "use strict";
   const esc = s => String(s == null ? "" : s)
     .replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const fmtN = n => (Number(n) || 0).toLocaleString("vi-VN");
-  const viDay = d => d ? new Date(d).toLocaleDateString("vi-VN") : "—";
+  const fmtN = n => (Number(n) || 0).toLocaleString(I18N.locale());
+  const viDay = d => d ? new Date(d).toLocaleDateString(I18N.locale()) : "—";
   const NCC_COLOR = { Roquette: "#1E3A8A", IFF: "#0D9488", Kimica: "#7C3AED" };
   const EXTRA_COLORS = ["#B45309", "#0B4F9E", "#DB2777", "#059669", "#9333EA"];
   const colorOf = (n, i) => NCC_COLOR[n] || EXTRA_COLORS[i % EXTRA_COLORS.length];
@@ -58,7 +58,7 @@
     box.innerHTML =
       '<button class="ncc-tab ncc-tab-all' + (cur === all ? " on" : "") +
       '" data-ncc="' + all + '" onclick="setNcc(\'' + all + '\')"' +
-      ' title="Xem dự án và hoạt động của mọi nhà cung cấp">Tất cả</button>' +
+      ' title="' + esc(T("hdr.allSuppliersHint")) + '">' + esc(T("common.all")) + '</button>' +
       LISTS.nccs.map(n =>
       '<button class="ncc-tab' + (n === (typeof nccFilter !== "undefined" ? nccFilter : "") ? " on" : "") +
       '" data-ncc="' + esc(n) + '" onclick="setNcc(\'' + esc(n).replace(/'/g, "\\'") + '\')">' + esc(n) + '</button>').join("");
@@ -70,7 +70,7 @@
     if (!box || document.getElementById("btnAddNcc")) return;
     const b = document.createElement("button");
     b.id = "btnAddNcc"; b.type = "button"; b.className = "ncc-add";
-    b.title = "Thêm nhà cung cấp"; b.setAttribute("aria-label", "Thêm nhà cung cấp");
+    b.title = T("ex.addSupplier"); b.setAttribute("aria-label", T("ex.addSupplier"));
     b.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
     b.onclick = openSupplierModal;
     box.parentNode.insertBefore(b, box.nextSibling);
@@ -82,8 +82,8 @@
       ov = document.createElement("div");
       ov.id = "nccOv"; ov.className = "x-ov";
       ov.innerHTML = '<div class="x-modal glass" role="dialog" aria-modal="true" aria-labelledby="nccT">' +
-        '<div class="x-head"><h3 id="nccT">Thêm nhà cung cấp</h3>' +
-        '<button class="x-close" id="nccX" type="button" aria-label="Đóng">×</button></div>' +
+        '<div class="x-head"><h3 id="nccT">' + esc(T("ex.addSupplier")) + '</h3>' +
+        '<button class="x-close" id="nccX" type="button" aria-label="' + esc(T("common.close")) + '">×</button></div>' +
         '<div class="x-body" id="nccBody"></div></div>';
       document.body.appendChild(ov);
       ov.addEventListener("click", e => { if (e.target === ov) ov.classList.remove("open"); });
@@ -94,15 +94,15 @@
     const existing = (typeof LISTS !== "undefined" ? LISTS.nccs : []).slice();
     const body = document.getElementById("nccBody");
     body.innerHTML =
-      '<label class="x-f"><span>Tên nhà cung cấp</span>' +
+      '<label class="x-f"><span>' + esc(T("ex.supplierName")) + '</span>' +
         '<input id="nccName" autocomplete="off" spellcheck="false"></label>' +
-      '<div class="x-sec-h">Chọn mô hình pipeline để áp dụng</div>' +
+      '<div class="x-sec-h">' + esc(T("ex.pickPipeline")) + '</div>' +
       '<div class="ncc-tpls" id="nccTpls">' +
         existing.map((n, i) => {
           const st = (LISTS.pipelines[n] || []);
           return '<button type="button" class="ncc-tpl" data-src="' + esc(n) + '" ' +
             'style="--tc:' + colorOf(n, i) + '">' +
-            '<span class="tpl-head"><b>' + esc(n) + '</b><small>' + st.length + ' giai đoạn</small></span>' +
+            '<span class="tpl-head"><b>' + esc(n) + '</b><small>' + esc(T("ex.nStages", { n: st.length })) + '</small></span>' +
             '<span class="tpl-stages">' + st.map((s, j) =>
               '<span class="tpl-stage"><i>' + (j + 1) + '</i>' + esc(s) + '</span>').join("") +
             '</span></button>';
@@ -110,8 +110,8 @@
       '</div>' +
       '<p class="x-msg" id="nccMsg" role="alert" aria-live="polite"></p>' +
       '<div class="x-actions">' +
-        '<button type="button" class="x-btn ghost" id="nccCancel">Huỷ</button>' +
-        '<button type="button" class="x-btn primary" id="nccSave">Thêm</button>' +
+        '<button type="button" class="x-btn ghost" id="nccCancel">' + esc(T("common.cancel")) + '</button>' +
+        '<button type="button" class="x-btn primary" id="nccSave">' + esc(T("common.add")) + '</button>' +
       '</div>';
 
     let picked = existing[0] || "";
@@ -123,11 +123,11 @@
     document.getElementById("nccSave").onclick = () => {
       const msg = document.getElementById("nccMsg");
       const name = (document.getElementById("nccName").value || "").trim();
-      if (!name) { msg.textContent = "Nhập tên nhà cung cấp."; msg.className = "x-msg err"; return; }
+      if (!name) { msg.textContent = T("ex.err.name"); msg.className = "x-msg err"; return; }
       if (LISTS.nccs.some(n => n.toLowerCase() === name.toLowerCase())) {
-        msg.textContent = "Nhà cung cấp này đã có."; msg.className = "x-msg err"; return;
+        msg.textContent = T("ex.err.dup"); msg.className = "x-msg err"; return;
       }
-      if (!picked) { msg.textContent = "Chọn một mô hình pipeline."; msg.className = "x-msg err"; return; }
+      if (!picked) { msg.textContent = T("ex.err.pipeline"); msg.className = "x-msg err"; return; }
       const stages = (LISTS.pipelines[picked] || []).slice();
       const probs = {}, groups = {};
       stages.forEach(s => { probs[s] = LISTS.probOf[s]; groups[s] = LISTS.groupOf[s]; });
@@ -137,7 +137,7 @@
       if (window.setNcc) setNcc(name);
       if (window.buildForm) try { buildForm(); } catch (e) {}
       ov.classList.remove("open");
-      if (window.toast) toast('Đã thêm "' + name + '" theo mô hình ' + picked + ".");
+      if (window.toast) toast(T("ex.msg.added", { n: name, p: picked }));
     };
   }
 
@@ -148,7 +148,7 @@
       ov.id = "custOv"; ov.className = "x-ov";
       ov.innerHTML = '<div class="x-modal wide glass" role="dialog" aria-modal="true" aria-labelledby="custT">' +
         '<div class="x-head"><h3 id="custT"></h3>' +
-        '<button class="x-close" id="custX" type="button" aria-label="Đóng">×</button></div>' +
+        '<button class="x-close" id="custX" type="button" aria-label="' + esc(T("common.close")) + '">×</button></div>' +
         '<div class="x-body" id="custBody"></div></div>';
       document.body.appendChild(ov);
       ov.addEventListener("click", e => { if (e.target === ov) ov.classList.remove("open"); });
@@ -175,23 +175,23 @@
 
     document.getElementById("custBody").innerHTML =
       '<div class="cust-kpis">' +
-        '<div class="cust-kpi"><b>' + prj.length + "</b><span>dự án</span></div>" +
-        '<div class="cust-kpi run"><b>' + run + "</b><span>đang chạy</span></div>" +
-        '<div class="cust-kpi won"><b>' + won + "</b><span>thắng</span></div>" +
-        '<div class="cust-kpi lost"><b>' + lost + "</b><span>thua</span></div>" +
+        '<div class="cust-kpi"><b>' + prj.length + "</b><span>" + T("db.oppsLower") + "</span></div>" +
+        '<div class="cust-kpi run"><b>' + run + "</b><span>" + T("cu.openLower") + "</span></div>" +
+        '<div class="cust-kpi won"><b>' + won + "</b><span>" + T("ex.wonLower") + "</span></div>" +
+        '<div class="cust-kpi lost"><b>' + lost + "</b><span>" + T("ex.lostLower") + "</span></div>" +
         '<div class="cust-kpi kg"><b>' + fmtN(kg) + "</b><span>KG 2026</span></div>" +
       "</div>" +
-      '<div class="x-sec-h">Dự án của khách hàng</div>' +
+      '<div class="x-sec-h">' + T("ex.accountOpps") + '</div>' +
       (prj.length
-        ? '<div class="cust-tbl"><table><thead><tr><th>Mã</th><th>Sản phẩm</th><th>Giai đoạn</th>' +
-          "<th>Trạng thái</th><th>KG</th><th>PIC</th></tr></thead><tbody>" +
+        ? '<div class="cust-tbl"><table><thead><tr><th>' + T("ex.id") + '</th><th>' + T("common.product") + '</th><th>' + T("common.stage") + '</th>' +
+          "<th>" + T("common.status") + "</th><th>KG</th><th>" + T("common.owner") + "</th></tr></thead><tbody>" +
           prj.map(r => '<tr data-open="' + esc(r.id) + '"><td><b>' + esc(r.id) + "</b></td><td>" +
             esc(r.product) + "</td><td>" + esc(r.stage) + '</td><td><span class="st st-' +
             (r.status === "WON" ? "won" : r.status === "LOST" ? "lost" : "run") + '">' +
-            esc(r.status) + "</span></td><td>" + fmtN(r.kgThis) + "</td><td>" + esc(r.pic) + "</td></tr>").join("") +
+            esc((typeof STATUS_VI !== "undefined" && STATUS_VI[r.status]) || r.status) + "</span></td><td>" + fmtN(r.kgThis) + "</td><td>" + esc(r.pic) + "</td></tr>").join("") +
           "</tbody></table></div>"
-        : '<div class="x-empty">Chưa có dự án nào.</div>') +
-      '<div class="x-sec-h">Lịch sử hoạt động (' + acts.length + ")</div>" +
+        : '<div class="x-empty">' + T("ex.noOpps") + '</div>') +
+      '<div class="x-sec-h">' + T("ex.actHistory", { n: acts.length }) + "</div>" +
       (acts.length
         ? '<ol class="cust-tl">' + acts.slice()
             .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
@@ -201,7 +201,7 @@
               (a.note ? '<span class="tl-note">' + esc(a.note) + "</span>" : "") +
               (a.next ? '<span class="tl-next">→ ' + esc(a.next) + "</span>" : "") +
               "</span></li>").join("") + "</ol>"
-        : '<div class="x-empty">Chưa có hoạt động nào.</div>');
+        : '<div class="x-empty">' + T("act.empty") + '</div>');
 
     document.getElementById("custBody").querySelectorAll("[data-open]").forEach(tr => {
       tr.onclick = () => {
@@ -230,9 +230,9 @@
     if (!grid || document.getElementById("segShareBox")) return;
     const card = document.createElement("div");
     card.className = "card glass";
-    card.innerHTML = '<h4>Tỷ trọng Segment</h4>' +
+    card.innerHTML = '<h4 data-i18n="ex.segShare">' + T("ex.segShare") + '</h4>' +
       '<div id="segShareBox"></div><div class="legend" id="segShareLeg"></div>';
-    const segCardEl = [...grid.children].find(c => /Phân khúc thị trường/.test(c.textContent));
+    const segCardEl = [...grid.children].find(c => /Phân khúc thị trường|Market Segments/.test(c.textContent));
     if (segCardEl && segCardEl.nextSibling) grid.insertBefore(card, segCardEl.nextSibling);
     else grid.appendChild(card);
   }
@@ -247,13 +247,13 @@
     const items = Object.keys(by).sort((a, b) => by[b] - by[a])
       .map((s, i) => ({ label: s, value: by[s], color: pal[i % pal.length] }));
     if (!items.length) {
-      document.getElementById("segShareBox").innerHTML = '<div class="x-empty">Chưa có dữ liệu segment.</div>';
+      document.getElementById("segShareBox").innerHTML = '<div class="x-empty">' + T("ex.noSegData") + '</div>';
       document.getElementById("segShareLeg").innerHTML = ""; return;
     }
     try {
       donut("segShareBox", "segShareLeg", items, lbl => {
         if (typeof segDrill !== "undefined") {  }
-        if (window.toast) toast(lbl + ": " + by[lbl] + " dự án");
+        if (window.toast) toast(lbl + ": " + T("sf.nOpps", { n: by[lbl] }));
       });
     } catch (e) { console.warn("[extras] segment chart:", e.message); }
   }

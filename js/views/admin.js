@@ -19,7 +19,7 @@ function buildUsers(){
     tools.innerHTML = myCap().admin
       ? `<button class="btn-primary" onclick="openUserForm()">
            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-           Thêm người dùng</button>`
+           ${T('adm.addUser')}</button>`
       : '';
   }
 
@@ -28,8 +28,7 @@ function buildUsers(){
     note.innerHTML = admCanWrite()
       ? ''
       : `<div class="ck-badge warn" style="margin-bottom:14px">
-           Chưa đọc được list <b>${admEsc(admListName())}</b> trên SharePoint — thay đổi ở đây
-           sẽ mất khi tải lại trang. Tạo list rồi đăng nhập lại để lưu được.
+           ${T('adm.noList',{l:admEsc(admListName())})}
          </div>`;
   }
 
@@ -37,9 +36,9 @@ function buildUsers(){
   if(!box) return;
   if(!USERS.length){
     box.innerHTML = `<div class="ck-empty">
-      <b>Chưa có người dùng nào</b>
-      <p>Thêm người đầu tiên để phân quyền cho đội.</p>
-      ${myCap().admin ? '<button class="ck-chip" onclick="openUserForm()">Thêm người dùng</button>' : ''}
+      <b>${T('adm.empty')}</b>
+      <p>${T('adm.emptyHint')}</p>
+      ${myCap().admin ? '<button class="ck-chip" onclick="openUserForm()">'+T('adm.addUser')+'</button>' : ''}
     </div>`;
     return;
   }
@@ -56,19 +55,19 @@ function buildUsers(){
     return `<div class="adm-row">
       <div class="adm-who">
         <span class="avatar" style="background:${ROLE_COLOR[u.role]||'#8A90A4'}">${admEsc(initials(u.name||u.email))}</span>
-        <span class="adm-nm">${admEsc(u.name || '—')}${self ? '<span class="adm-self">bạn</span>' : ''}
+        <span class="adm-nm">${admEsc(u.name || '—')}${self ? '<span class="adm-self">'+T('adm.you')+'</span>' : ''}
           <small>${admPicLine(u)}</small></span>
       </div>
       <div class="adm-mail">${admEsc(u.email)}</div>
       <div>${canEdit
-        ? `<select class="ck-sel" aria-label="Vai trò của ${admEsc(u.name||u.email)}"
+        ? `<select class="ck-sel" aria-label="${T('adm.roleOf',{u:admEsc(u.name||u.email)})}"
              onchange="setRole(${idx}, this.value)">
              ${ROLES.map(r => `<option value="${r.id}"${r.id===u.role?' selected':''}>${r.label}</option>`).join('')}
            </select>`
         : `<span class="pill ${u.role==='superadmin'||u.role==='director'?'p-oa':u.role==='manager'?'p-sbg':'p-st'}">${roleVI(u.role)}</span>`}</div>
       <div class="adm-act">${canEdit ? `
-        <button class="wc-btn" onclick="openUserForm(${idx})">Sửa</button>
-        ${self ? '' : `<button class="wc-btn danger" onclick="removeUser(${idx})">Xoá</button>`}` : '—'}</div>
+        <button class="wc-btn" onclick="openUserForm(${idx})">${T('common.edit')}</button>
+        ${self ? '' : `<button class="wc-btn danger" onclick="removeUser(${idx})">${T('common.delete')}</button>`}` : '—'}</div>
     </div>`;
   }).join('');
 
@@ -81,11 +80,10 @@ function admPicLine(u){
   const al = splitAliases(u.picRaw).filter(function(x){
     return !u.fullName || picKey(x) !== picKey(u.fullName); });
   if(al.length && u.fullName)
-    return 'Dữ liệu ghi ' + al.map(function(x){ return '"' + admEsc(x) + '"'; }).join(' · ')
-         + ' → hiển thị "' + admEsc(u.fullName) + '"';
+    return T('adm.picAlias', { a: al.map(function(x){ return '"' + admEsc(x) + '"'; }).join(' · '), f: admEsc(u.fullName) });
   if(u.picRaw) return 'PIC: ' + admEsc(u.picRaw);
-  if(u.fullName) return 'PIC: ' + admEsc(u.fullName) + ' (theo tên O365)';
-  return 'PIC lấy theo tên O365 khi đăng nhập';
+  if(u.fullName) return 'PIC: ' + admEsc(u.fullName) + ' ' + T('adm.byO365');
+  return T('adm.picFromO365');
 }
 
 async function setRole(idx, role){
@@ -93,14 +91,13 @@ async function setRole(idx, role){
   const self = me && (u.email||'').toLowerCase() === (me.email||'').toLowerCase();
 
   if(self && !cap(role).admin
-     && !confirm('Bạn đang tự hạ quyền của mình xuống ' + roleVI(role)
-                 + '. Sau khi lưu bạn sẽ không vào được màn hình phân quyền nữa. Tiếp tục?')){
+     && !confirm(T('adm.confirmDemote',{r:roleVI(role)}))){
     buildUsers(); return;
   }
   const old = u.role;
   u.role = role;
   u.color = ROLE_COLOR[role] || u.color;
-  await admPersist(u, 'Đã đổi vai trò của ' + (u.name||u.email) + ' thành ' + roleVI(role) + '.',
+  await admPersist(u, T('adm.msg.roleChanged',{u:u.name||u.email,r:roleVI(role)}),
     function(){ u.role = old; });
   buildUsers();
 }
@@ -108,7 +105,7 @@ window.setRole = setRole;
 
 async function admPersist(u, okMsg, rollback){
   if(!admCanWrite()){
-    toast('Chưa nối được list ' + admListName() + ' — thay đổi chỉ nằm trong phiên này.');
+    toast(T('adm.msg.sessionOnly',{l:admListName()}));
     return false;
   }
   admBusy = true;
@@ -118,7 +115,7 @@ async function admPersist(u, okMsg, rollback){
     return true;
   }catch(e){
     if(rollback) rollback();
-    toast('Không lưu được lên SharePoint: ' + (e.message || e));
+    toast(T('sf.msg.saveFailed') + ' ' + (e.message || e));
     return false;
   }finally{
     admBusy = false;
@@ -127,15 +124,14 @@ async function admPersist(u, okMsg, rollback){
 
 async function removeUser(idx){
   const u = USERS[idx]; if(!u) return;
-  if(!confirm('Xoá ' + (u.name || u.email) + ' khỏi danh sách phân quyền?\n\n'
-              + 'Người này sẽ không đăng nhập được nữa. Dự án và hoạt động của họ vẫn giữ nguyên.')) return;
-  if(!admCanWrite()){ toast('Chưa nối được list ' + admListName() + ' — không xoá được.'); return; }
+  if(!confirm(T('adm.confirmRemove',{u:u.name || u.email}))) return;
+  if(!admCanWrite()){ toast(T('adm.msg.cannotDelete',{l:admListName()})); return; }
   admBusy = true;
   try{
     await FISG_STORE.deleteUser(u);
-    toast('Đã xoá ' + (u.name || u.email) + '.');
+    toast(T('adm.msg.removed',{u:u.name || u.email}));
   }catch(e){
-    toast('Không xoá được: ' + (e.message || e));
+    toast(T('att.delFail') + ' ' + (e.message || e));
   }finally{
     admBusy = false; buildUsers();
   }
@@ -149,7 +145,7 @@ function openUserForm(idx){
   const u = admEditIdx >= 0 ? USERS[admEditIdx] : null;
   NAV.enter(); NAV.renderBack('u-back');
 
-  document.getElementById('u-title').textContent = u ? 'Sửa người dùng' : 'Thêm người dùng';
+  document.getElementById('u-title').textContent = u ? T('adm.editUser') : T('adm.addUser');
   const mail = document.getElementById('u-mail');
   mail.value = u ? (u.email || '') : '';
   mail.disabled = !!u;
@@ -161,7 +157,7 @@ function openUserForm(idx){
   const leads = USERS.filter(x => cap(x.role).scope === 'all' || cap(x.role).lead);
   const rsel = document.getElementById('u-reports');
   if(rsel){
-    rsel.innerHTML = '<option value="">— Tất cả quản lý —</option>' +
+    rsel.innerHTML = '<option value="">— '+T('adm.allManagers')+' —</option>' +
       leads.map(l => `<option value="${admEsc(l.pic||l.name)}"${u && sameName(u.reportsTo, l.pic||l.name)?' selected':''}>${admEsc(l.name||l.pic)}</option>`).join('');
   }
 
@@ -191,7 +187,7 @@ function admBuildSupports(picked){
       <span class="u-spcheck" aria-hidden="true">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
       </span></label>`;
-  }).join('') || '<div class="u-spempty">Chưa có sales nào trong dữ liệu.</div>';
+  }).join('') || '<div class="u-spempty">'+T('adm.noReps')+'</div>';
 }
 window.openUserForm = openUserForm;
 
@@ -219,34 +215,31 @@ window.admFilterSupports = admFilterSupports;
 async function lookupUserEmail(){
   const mail = document.getElementById('u-mail').value.trim();
   const box = document.getElementById('u-found');
-  if(!mail){ box.innerHTML = '<span class="u-warn">Nhập email trước đã.</span>'; return; }
-  box.innerHTML = '<span class="u-wait">Đang tìm trên Microsoft 365…</span>';
+  if(!mail){ box.innerHTML = '<span class="u-warn">'+T('adm.enterEmailFirst')+'</span>'; return; }
+  box.innerHTML = '<span class="u-wait">'+T('adm.searching')+'</span>';
   let p = null;
   try{ p = await FISG_STORE.lookupUser(mail); }catch(e){}
   if(!p){
-    box.innerHTML = `<span class="u-warn">Không tìm thấy <b>${admEsc(mail)}</b> trên O365.
-      Vẫn thêm được, nhưng hãy tự điền tên PIC cho khớp cột PIC trong dữ liệu.</span>`;
+    box.innerHTML = `<span class="u-warn">${T('adm.notFoundO365',{m:admEsc(mail)})}</span>`;
     return;
   }
   document.getElementById('u-name').value = p.name;
   const m = (typeof picMatchReport === 'function') ? picMatchReport(p.name) : { ok:true };
-  box.innerHTML = `<span class="u-ok">Tìm thấy <b>${admEsc(p.name)}</b>${p.title ? ' · ' + admEsc(p.title) : ''}.</span>`
+  box.innerHTML = `<span class="u-ok">${T('adm.found',{n:admEsc(p.name)})}${p.title ? ' · ' + admEsc(p.title) : ''}.</span>`
     + (m.ok
-        ? '<span class="u-ok">Tên này khớp cột PIC trong dữ liệu — để trống ô PIC bên dưới.</span>'
-        : `<span class="u-warn">Chưa có dự án nào ghi PIC là "${admEsc(p.name)}"${
-            m.near && m.near.length ? '. Gần nhất: <b>' + admEsc(m.near.join(', ')) + '</b>' : ''
-          }. Điền tên như nó nằm trong dữ liệu vào ô PIC bên dưới — app sẽ tự đổi sang tên đầy đủ khi hiển thị.</span>`);
+        ? '<span class="u-ok">'+T('adm.picMatches')+'</span>'
+        : `<span class="u-warn">${T('adm.noPicMatch',{n:admEsc(p.name)})}${m.near && m.near.length ? '. ' + T('adm.nearest',{x:admEsc(m.near.join(', '))}) : ''}. ${T('adm.fillPic')}</span>`);
 }
 window.lookupUserEmail = lookupUserEmail;
 
 async function saveUserForm(){
   const g = function(id){ return document.getElementById(id).value.trim(); };
   const mail = g('u-mail').toLowerCase();
-  if(!mail || mail.indexOf('@') < 0){ toast('Nhập email Microsoft 365 hợp lệ.'); return; }
+  if(!mail || mail.indexOf('@') < 0){ toast(T('adm.msg.invalidEmail')); return; }
 
   const dup = USERS.filter(function(x,i){
     return i !== admEditIdx && (x.email||'').toLowerCase() === mail; })[0];
-  if(dup){ toast('Email này đã có trong danh sách.'); return; }
+  if(dup){ toast(T('adm.msg.dupEmail')); return; }
 
   const role = g('u-role');
   const reportsTo = g('u-reports') || null;
@@ -276,7 +269,7 @@ async function saveUserForm(){
     u.supports = supports;
   }
 
-  const ok = await admPersist(u, (isNew ? 'Đã thêm ' : 'Đã cập nhật ') + (u.name || u.email) + '.',
+  const ok = await admPersist(u, (isNew ? T('adm.msg.added',{u:u.name || u.email}) : T('adm.msg.updated',{u:u.name || u.email})),
     function(){
       if(before) Object.assign(u, before);
       else { const i = USERS.indexOf(u); if(i >= 0) USERS.splice(i,1); }

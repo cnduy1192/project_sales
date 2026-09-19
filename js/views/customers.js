@@ -23,9 +23,9 @@ const CU_ICON = {
 };
 
 const CU_TIERS = [
-  { id:'Strategic',   label:'Strategic',   svg:CU_ICON.strategic, cls:'badge-tier-strategic', hint:'Khách hàng chiến lược, trọng yếu' },
-  { id:'Key Account', label:'Key Account', svg:CU_ICON.key,       cls:'badge-tier-key',       hint:'Khách lớn / chính thức, đang kinh doanh thường xuyên' },
-  { id:'Prospect',    label:'Prospect',    svg:CU_ICON.prospect,  cls:'badge-tier-prospect',  hint:'Khách tiềm năng, chưa phát sinh đơn hàng' },
+  { id:'Strategic',   label:'Strategic',   svg:CU_ICON.strategic, cls:'badge-tier-strategic', get hint(){ return T('cu.tier.strategicHint'); } },
+  { id:'Key Account', label:'Key Account', svg:CU_ICON.key,       cls:'badge-tier-key',       get hint(){ return T('cu.tier.keyHint'); } },
+  { id:'Prospect',    label:'Prospect',    svg:CU_ICON.prospect,  cls:'badge-tier-prospect',  get hint(){ return T('cu.tier.prospectHint'); } },
 ];
 window.CU_TIERS = CU_TIERS;
 
@@ -128,13 +128,13 @@ function cuRenderTabs(base){
   if(!box) return;
   const n = cuTierCounts(base || cuBaseRows());
   const hadFocus = box.contains(document.activeElement);
-  const tabs = [{ id:'all', label:'Tất cả', svg:CU_ICON.all, hint:'Mọi phân loại' }].concat(CU_TIERS);
+  const tabs = [{ id:'all', label:T('common.all'), svg:CU_ICON.all, hint:T('cu.allTiers') }].concat(CU_TIERS);
   box.innerHTML = tabs.map(t => {
     const on = cuFilterTier === t.id;
     return `<button type="button" role="tab" class="tier-tab${on ? ' active' : ''}" data-tier="${ckEsc(t.id)}"
       aria-selected="${on}" tabindex="${on ? 0 : -1}" title="${ckEsc(t.hint)}" onclick="cuSetTier('${ckAttr(t.id)}')">
       ${t.svg}<span class="tier-lbl">${ckEsc(t.label)}</span>
-      <span class="tier-count" aria-label="${n[t.id]} khách hàng">${n[t.id]}</span></button>`;
+      <span class="tier-count" aria-label="${T('sf.nAccounts',{n:n[t.id]})}">${n[t.id]}</span></button>`;
   }).join('');
   if(!box.dataset.kb){
     box.dataset.kb = '1';
@@ -165,7 +165,7 @@ window.cuSetTier = cuSetTier;
 // ----- Mảnh giao diện của 1 dòng -----
 function cuBadge(c){
   const info = cuTierInfo(c), d = cuTierDef(info.tier);
-  const tip = info.inferred ? d.hint + ' · Chưa phân loại chính thức (đang tạm tính)' : d.hint;
+  const tip = info.inferred ? d.hint + ' · ' + T('cu.inferred') : d.hint;
   return `<span class="badge-tier ${d.cls}${info.inferred ? ' is-inferred' : ''}" title="${ckEsc(tip)}">${ckEsc(d.label)}</span>`;
 }
 function cuInitials(p){
@@ -174,11 +174,11 @@ function cuInitials(p){
   return (w.length > 1 ? w[0][0] + w[w.length - 1][0] : w[0].slice(0, 2)).toUpperCase();
 }
 function cuPeopleCell(c){
-  if(!String(c.owner || '').trim()) return '<span class="cu-tag cu-tag-free">Chưa ai quản lý</span>';
+  if(!String(c.owner || '').trim()) return '<span class="cu-tag cu-tag-free">'+T('cu.unowned')+'</span>';
   const self = !!(me && typeof isMine === 'function' && isMine(c.owner, me));
   const name = picLabel(c.owner) || c.owner;
   return `<span class="cu-chip-p${self ? ' is-me' : ''}" title="${ckEsc(name)}">
-    <i aria-hidden="true">${ckEsc(cuInitials(c.owner))}</i><span class="nm">${ckEsc(self ? 'Bạn' : name)}</span></span>`;
+    <i aria-hidden="true">${ckEsc(cuInitials(c.owner))}</i><span class="nm">${ckEsc(self ? T('cu.you') : name)}</span></span>`;
 }
 
 function cuRenderRows(){
@@ -188,19 +188,19 @@ function cuRenderRows(){
   const base = cuBaseRows();
   const rows = cuRows(base);
   const cnt = document.querySelector('#cuTools .cu-count');
-  if(cnt) cnt.textContent = rows.length + ' khách hàng';
+  if(cnt) cnt.textContent = T('sf.nAccounts',{n:rows.length});
 
   if(!rows.length){
     const dir = (typeof CUSTOMER_DIR !== 'undefined' ? CUSTOMER_DIR : []);
     const tierEmpty = base.length && cuFilterTier !== 'all';
     const td = cuTierDef(cuFilterTier);
     box.innerHTML = `<div class="cu-empty">
-      <b>${tierEmpty ? 'Chưa có khách hàng nhóm ' + ckEsc(td.label)
-        : dir.length ? 'Không có khách hàng khớp bộ lọc' : 'Danh bạ khách hàng đang trống'}</b>
-      <p>${tierEmpty ? ckEsc(td.hint) + '. Mở một khách hàng và chọn “Phân loại” để đưa vào nhóm này.'
-        : dir.length ? 'Thử bỏ bớt bộ lọc hoặc ô tìm kiếm.'
-        : 'Nhập list Customers trên SharePoint (kèm cột Người phụ trách) để danh bạ hiện ở đây. Xem docs/SharePoint_Setup.md.'}</p>
-      ${tierEmpty ? `<button class="btn-ghost cu-empty-btn" onclick="cuSetTier('all')">Xem tất cả khách hàng</button>` : ''}
+      <b>${tierEmpty ? T('cu.empty.tier',{t:ckEsc(td.label)})
+        : dir.length ? T('cu.empty.filter') : T('cu.empty.dir')}</b>
+      <p>${tierEmpty ? ckEsc(td.hint) + '. ' + T('cu.empty.tierHint')
+        : dir.length ? T('cu.empty.filterHint')
+        : T('cu.empty.dirHint')}</p>
+      ${tierEmpty ? `<button class="btn-ghost cu-empty-btn" onclick="cuSetTier('all')">${T('cu.viewAll')}</button>` : ''}
     </div>`;
     return;
   }
@@ -215,17 +215,17 @@ function cuRenderRows(){
     const canAct = mine || cuUnowned(c);
 
     const actCell = canAct
-      ? `<button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ Dự án</button>
-         <button class="cu-btn ghost" onclick="cuNewAct('${ckAttr(c.name)}')">Ghi hoạt động</button>`
-      : `<span class="cu-foreign">Khách của sales khác</span>`;
+      ? `<button class="cu-btn" onclick="cuNewProject('${ckAttr(c.name)}')">+ ${T('cu.oppShort')}</button>
+         <button class="cu-btn ghost" onclick="cuNewAct('${ckAttr(c.name)}')">${T('act.log')}</button>`
+      : `<span class="cu-foreign">${T('cu.foreign')}</span>`;
 
     return `<div class="cu-row" data-tier="${ckEsc(cuTierOf(c))}">
-      <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="Xem & sửa thông tin khách hàng">
+      <button class="cu-name" onclick="cuOpenEdit('${ckAttr(c.name)}')" title="${T('cu.editHint')}">
         <span class="cu-name-line"><b>${ckEsc(custLabel(c.name))}</b>${cuBadge(c)}</span>${legal}
       </button>
       <div class="cu-owner">${cuPeopleCell(c)}</div>
       <div class="cu-num">${s.open
-        ? `<span class="cu-pill"><b>${s.open}</b><em>đang chạy</em></span>`
+        ? `<span class="cu-pill"><b>${s.open}</b><em>${T('cu.openLower')}</em></span>`
         : '<span class="cu-zero">0</span>'}</div>
       <div class="cu-touch ${touch.cls}">${touch.text
         ? `<span class="cu-chip">${touch.text}</span>`
@@ -251,8 +251,8 @@ function cuCanDelete(entry){
 function cuTouch(iso){
   const d = daysSince(iso);
   if(d <= 7)  return { text:ckVN(iso), cls:'cu-quiet-ok' };
-  if(d <= 30) return { text:d + ' ngày trước', cls:'cu-quiet-mid' };
-  return { text:d + ' ngày trước', cls:'cu-quiet-old' };
+  if(d <= 30) return { text:T('ck.daysAgo',{n:d}), cls:'cu-quiet-mid' };
+  return { text:T('ck.daysAgo',{n:d}), cls:'cu-quiet-old' };
 }
 
 function cuRenderTools(){
@@ -263,8 +263,8 @@ function cuRenderTools(){
   if(cuCanSeeAll()){
     const owners = Array.from(new Set(dir.map(c => c.owner).filter(Boolean)))
       .sort((a,b) => String(picLabel(a)).localeCompare(String(picLabel(b)), 'vi'));
-    ownerSel = `<select class="cu-sel" aria-label="Lọc theo sales" onchange="cuSetOwner(this.value)">
-      <option value="">Tất cả sales</option>
+    ownerSel = `<select class="cu-sel" aria-label="${T('ck.filterRep')}" onchange="cuSetOwner(this.value)">
+      <option value="">${T('ck.allReps')}</option>
       ${owners.map(o => `<option value="${ckEsc(o)}"${picKey(cuFilterOwner)===picKey(o)?' selected':''}>${ckEsc(picLabel(o))}</option>`).join('')}
     </select>`;
   }
@@ -272,18 +272,18 @@ function cuRenderTools(){
   const addBtn = (window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite())
     ? `<button class="btn-primary cu-add" onclick="cuOpenEdit()">
          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-         Thêm khách hàng</button>` : '';
+         ${T('cu.add')}</button>` : '';
   if(head) head.innerHTML = addBtn;
   const untiered = myCap().admin ? dir.filter(c => cuTierInfo(c).inferred).length : 0;
   box.innerHTML = `${head ? '' : addBtn}
     <div class="cu-search">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input type="search" placeholder="Tìm khách hàng, sales…" value="${ckEsc(cuQuery)}" oninput="cuSetQuery(this.value)" aria-label="Tìm khách hàng">
+      <input type="search" placeholder="${T('cu.searchPh')}" value="${ckEsc(cuQuery)}" oninput="cuSetQuery(this.value)" aria-label="${T('ck.searchAccounts')}">
     </div>
     ${ownerSel}
     <span class="cu-tools-gap"></span>
-    ${untiered ? `<span class="cu-untiered" title="Các khách này chưa có cột Phân loại — đang tạm tính theo Trạng thái (hoặc Prospect).">${untiered} khách chưa phân loại</span>` : ''}
-    <span class="cu-count">0 khách hàng</span>`;
+    ${untiered ? `<span class="cu-untiered" title="${T('cu.untieredHint')}">${T('cu.untiered',{n:untiered})}</span>` : ''}
+    <span class="cu-count">${T('sf.nAccounts',{n:0})}</span>`;
 }
 
 function cuSetOwner(v){ cuFilterOwner = v; cuRenderTabs(); cuRenderRows(); }
@@ -349,7 +349,7 @@ function cuOpenEdit(name){
   const supports = (typeof supportsList==='function' && me) ? supportsList(me) : [];
   const isSupport = !!(me && typeof cap==='function' && cap(me.role).scope === 'support');
   const pk = (typeof picKey==='function') ? picKey : (s=>String(s||'').trim().toLowerCase());
-  const optionsFor = (arr) => ['<option value="">— Chưa giao —</option>'].concat(
+  const optionsFor = (arr) => ['<option value="">— '+T('cu.unassigned')+' —</option>'].concat(
     (arr||[]).map(p=>`<option value="${ckEsc(p)}"${pk(p)===pk(v.owner)?' selected':''}>${ckEsc(picLabel?picLabel(p):p)}</option>`)).join('');
 
   let ownerField;
@@ -365,30 +365,30 @@ function cuOpenEdit(name){
   const dis = canEdit ? '' : 'disabled';
   ov.innerHTML = `<div class="cu-modal glass" role="dialog" aria-modal="true">
     <div class="cu-modal-h">
-      <h3>${isNew ? 'Thêm khách hàng' : ckEsc(custLabel(v.name))}</h3>
-      <button class="x-close" onclick="cuCloseEdit()" aria-label="Đóng">×</button>
+      <h3>${isNew ? T('cu.add') : ckEsc(custLabel(v.name))}</h3>
+      <button class="x-close" onclick="cuCloseEdit()" aria-label="${T('common.close')}">×</button>
     </div>
     <div class="cu-modal-b">
       <div class="cu-form">
-        ${!canEdit ? '<div class="cu-readonly">Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.</div>' : ''}
-        <label><span class="cu-cap">Tên hiển thị <span class="req">*</span></span>
-          <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="Tên khách hàng…" ${dis}></label>
-        <label><span class="cu-cap">Tên đầy đủ</span>
-          <input id="cuf-legal" value="${ckEsc(v.legal||'')}" placeholder="Tên đầy đủ trên giấy phép" ${dis}></label>
+        ${!canEdit ? '<div class="cu-readonly">'+T('cu.readOnly')+'</div>' : ''}
+        <label><span class="cu-cap">${T('cu.displayName')} <span class="req">*</span></span>
+          <input id="cuf-title" value="${ckEsc(v.name||'')}" placeholder="${T('cu.namePh')}" ${dis}></label>
+        <label><span class="cu-cap">${T('cu.legalName')}</span>
+          <input id="cuf-legal" value="${ckEsc(v.legal||'')}" placeholder="${T('cu.legalPh')}" ${dis}></label>
         <div class="cu-field">
-          <span class="cu-cap">Phân loại khách hàng</span>
-          <div class="cu-tier-pick" role="radiogroup" aria-label="Phân loại khách hàng">
+          <span class="cu-cap">${T('cu.tier')}</span>
+          <div class="cu-tier-pick" role="radiogroup" aria-label="${T('cu.tier')}">
             ${CU_TIERS.map(t => `<label class="cu-tier-opt ${t.cls}">
               <input type="radio" name="cuf-tier" value="${ckEsc(t.id)}"${tierSel === t.id ? ' checked' : ''} ${dis}>
               <span class="cu-tier-opt-t">${t.svg}${ckEsc(t.label)}</span></label>`).join('')}
           </div>
         </div>
-        <label><span class="cu-cap">Sales phụ trách</span> ${ownerField}</label>
+        <label><span class="cu-cap">${T('cu.col.owner')}</span> ${ownerField}</label>
         ${(canEdit || canDel) ? `<div class="cu-form-act">
-          ${canDel ? `<button class="btn-danger cu-del" id="cuf-del" onclick="cuDeleteCustomer()">Xoá khách hàng</button>` : ''}
+          ${canDel ? `<button class="btn-danger cu-del" id="cuf-del" onclick="cuDeleteCustomer()">${T('cu.delete')}</button>` : ''}
           <span class="cu-act-gap"></span>
-          <button class="btn-ghost" onclick="cuCloseEdit()">${canEdit ? 'Huỷ' : 'Đóng'}</button>
-          ${canEdit ? `<button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?'Tạo khách hàng':'Lưu thay đổi'}</button>` : ''}
+          <button class="btn-ghost" onclick="cuCloseEdit()">${canEdit ? T('common.cancel') : T('common.close')}</button>
+          ${canEdit ? `<button class="btn-primary" id="cuf-save" onclick="cuSaveCustomer()">${isNew?T('cu.create'):T('common.saveChanges')}</button>` : ''}
         </div>` : ''}
       </div>
       ${related}
@@ -410,7 +410,7 @@ window.cuCloseEdit = cuCloseEdit;
 function cuSaveCustomer(){
   const g = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const title = g('cuf-title');
-  if(!title){ if(window.toast) toast('Nhập tên khách hàng.'); return; }
+  if(!title){ if(window.toast) toast(T('act.msg.enterAccount')); return; }
   const entry = cuEditName ? cuFind(cuEditName) : null;
   const owner = myCap().admin ? cuReadOwner()
     : (entry ? (entry.owner || '') : (cuReadOwner() || cuDefaultOwner()));
@@ -419,28 +419,28 @@ function cuSaveCustomer(){
   const tierEl = document.querySelector('input[name="cuf-tier"]:checked');
   row.tier = tierEl ? tierEl.value : (entry ? (entry.tier || '') : 'Prospect');
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
-    if(window.toast) toast('Chưa đăng nhập Microsoft 365 — không lưu được.');
+    if(window.toast) toast(T('cu.msg.noSignInSave'));
     return;
   }
-  const btn = document.getElementById('cuf-save'); if(btn){ btn.disabled = true; btn.textContent = 'Đang lưu…'; }
+  const btn = document.getElementById('cuf-save'); if(btn){ btn.disabled = true; btn.textContent = T('common.saving'); }
   FISG_STORE.saveCustomer(row).then(()=>{
     const miss = (FISG_STORE.customerMissingCols ? FISG_STORE.customerMissingCols() : []);
     if(miss.length && window.toast)
-      toast('Đã lưu, NHƯNG list Customers chưa có cột: ' + miss.join(', ') + ' — phân loại chưa được ghi. Nhờ quản trị thêm cột trên SharePoint.');
-    else if(window.toast) toast(entry ? 'Đã lưu khách hàng.' : 'Đã thêm khách hàng ' + custLabel(title) + '.');
+      toast(T('cu.msg.missingCols',{c:miss.join(', ')}));
+    else if(window.toast) toast(entry ? T('cu.msg.saved') : T('cu.msg.added',{c:custLabel(title)}));
     cuCloseEdit(); renderCustomers();
   }).catch(e=>{
     console.warn('[customers] lưu hỏng:', e && (e.message||e));
-    if(window.toast) toast('KHÔNG lưu được lên SharePoint: ' + (e.message||e));
-    if(btn){ btn.disabled = false; btn.textContent = entry ? 'Lưu thay đổi' : 'Tạo khách hàng'; }
+    if(window.toast) toast(T('cu.msg.saveFailed',{e:e.message||e}));
+    if(btn){ btn.disabled = false; btn.textContent = entry ? T('common.saveChanges') : T('cu.create'); }
   });
 }
 window.cuSaveCustomer = cuSaveCustomer;
 
 function cuDeleteCustomer(){
   const entry = cuEditName ? cuFind(cuEditName) : null;
-  if(!entry){ if(window.toast) toast('Không tìm thấy khách hàng.'); return; }
-  if(!cuCanDelete(entry)){ if(window.toast) toast('Bạn không có quyền xoá khách hàng này.'); return; }
+  if(!entry){ if(window.toast) toast(T('cu.msg.notFound')); return; }
+  if(!cuCanDelete(entry)){ if(window.toast) toast(T('cu.msg.noDelPerm')); return; }
   const label = custLabel(entry.name);
   const key = (typeof custOwnerKey === 'function') ? custOwnerKey
             : (s => String(s||'').trim().toUpperCase());
@@ -448,21 +448,21 @@ function cuDeleteCustomer(){
   const used = (typeof RECORDS !== 'undefined' ? RECORDS : []).filter(r => key(r.customer) === k).length
              + (typeof ACTIVITIES !== 'undefined' ? ACTIVITIES : []).filter(a => key(a.customer) === k).length;
   const warn = used
-    ? `Khách "${label}" đang gắn với ${used} dự án/hoạt động. Xoá khỏi danh bạ sẽ KHÔNG xoá các bản ghi đó, nhưng khách sẽ biến mất khỏi danh sách. Tiếp tục?`
-    : `Xoá khách hàng "${label}" khỏi danh bạ?`;
+    ? T('cu.confirmDelUsed',{c:label,n:used})
+    : T('cu.confirmDel',{c:label});
   if(!confirm(warn)) return;
   if(!window.FISG_STORE || !FISG_STORE.deleteCustomer || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
-    if(window.toast) toast('Chưa đăng nhập Microsoft 365 — không xoá được.');
+    if(window.toast) toast(T('cu.msg.noSignInDel'));
     return;
   }
-  const btn = document.getElementById('cuf-del'); if(btn){ btn.disabled = true; btn.textContent = 'Đang xoá…'; }
+  const btn = document.getElementById('cuf-del'); if(btn){ btn.disabled = true; btn.textContent = T('common.deleting'); }
   FISG_STORE.deleteCustomer(entry).then(()=>{
-    if(window.toast) toast('Đã xoá khách hàng ' + label + '.');
+    if(window.toast) toast(T('cu.msg.deleted',{c:label}));
     cuCloseEdit(); renderCustomers();
   }).catch(e=>{
     console.warn('[customers] xoá hỏng:', e && (e.message||e));
-    if(window.toast) toast('KHÔNG xoá được trên SharePoint: ' + (e.message||e));
-    if(btn){ btn.disabled = false; btn.textContent = 'Xoá khách hàng'; }
+    if(window.toast) toast(T('cu.msg.delFailed',{e:e.message||e}));
+    if(btn){ btn.disabled = false; btn.textContent = T('cu.delete'); }
   });
 }
 window.cuDeleteCustomer = cuDeleteCustomer;
@@ -483,6 +483,6 @@ window.cuNewProject = cuNewProject;
 
 function cuNewAct(name){
   if(!window.openActForm) return;
-  openActForm({ customer: custLabel(name), title: 'Ghi hoạt động cho ' + custLabel(name) });
+  openActForm({ customer: custLabel(name), title: T('cu.logFor',{c:custLabel(name)}) });
 }
 window.cuNewAct = cuNewAct;

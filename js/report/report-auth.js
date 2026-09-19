@@ -31,7 +31,7 @@
 
   async function getToken(scopes) {
     const a = await ready();
-    if (!a || !account) throw new Error("chưa đăng nhập Microsoft");
+    if (!a || !account) throw new Error(T("err.notSignedIn"));
     try {
       const r = await a.acquireTokenSilent({ scopes: scopes || CFG.scopes, account });
       return r.accessToken;
@@ -45,9 +45,9 @@
   async function signIn() {
     let a = await ready();
     for (let i = 0; !a && i < 15; i++) { await new Promise(r => setTimeout(r, 200)); a = await ready(); }
-    if (!a) { fail("Chưa tải được MSAL. Tải lại trang (F5) hoặc kiểm tra mạng/chặn CDN."); return; }
+    if (!a) { fail(T("auth.msg.noMsal")); return; }
     if (location.protocol === "file:") {
-      fail("Đăng nhập Microsoft cần chạy qua http(s), không mở trực tiếp file."); return;
+      fail(T("auth.msg.needHttp")); return;
     }
     try {
       const r = await a.loginPopup({ scopes: CFG.scopes });
@@ -56,8 +56,8 @@
     } catch (e) {
       const msg = (e && e.message) || String(e);
       if (/redirect_uri|AADSTS50011/i.test(msg))
-        fail("Redirect URI chưa khớp. Thêm '" + CFG.redirectUri + "' (loại SPA) vào App Registration → Authentication.");
-      else fail("Đăng nhập lỗi: " + msg);
+        fail(T("auth.msg.redirect", { uri: CFG.redirectUri }));
+      else fail(T("auth.msg.failed") + " " + msg);
     }
   }
 
@@ -84,7 +84,7 @@
 
   async function boot() {
     const a = await ready();
-    if (!a) { fail("Chưa tải được MSAL."); return; }
+    if (!a) { fail(T("auth.msg.noMsal")); return; }
     try {
       const r = await a.handleRedirectPromise();
       if (r && r.account) account = r.account;

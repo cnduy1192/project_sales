@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="js/lib/resume.js?v=1"></script>
-<title>FI SAIGON — Sales Funnel</title>
+<title data-i18n="sf.pageTitle">FI SAIGON — Sales Funnel</title>
+<script src="js/i18n-dict.js?v=2"></script>
+<script src="js/i18n.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
@@ -17,20 +19,22 @@
 <link rel="stylesheet" href="extras.css?v=21">
 <link rel="stylesheet" href="charts.css?v=21">
 <link rel="stylesheet" href="cockpit.css?v=21">
-<link rel="stylesheet" href="welcome.css?v=21">
+<link rel="stylesheet" href="welcome.css?v=22">
 <link rel="stylesheet" href="customers.css?v=24">
 <link rel="stylesheet" href="project-form.css?v=1">
+<link rel="stylesheet" href="reports.css?v=1">
 </head>
 <body>
 
 <div id="login">
   <div class="login-card glass">
+    <div data-lang-switch style="position:absolute;top:14px;right:14px"></div>
     <div class="logo"><div class="logo-mark">FI</div>FI SAIGON <span style="color:var(--text-3);font-weight:600">JSC</span></div>
     <h1>Sales Funnel</h1>
-    <p>Đăng nhập bằng tài khoản công ty <b>@fisaigon.vn</b>.</p>
-    <button class="ms-btn" onclick="toast('Đang tải Microsoft 365… Nếu không mở được cửa sổ đăng nhập, tải lại trang.')">
+    <p data-i18n-html="auth.signInCompany">Đăng nhập bằng tài khoản công ty <b>@fisaigon.vn</b>.</p>
+    <button class="ms-btn" onclick="toast(T('auth.msg.loadingM365'))">
       <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
-      Đăng nhập bằng Microsoft 365
+      <span data-i18n="auth.signInM365">Đăng nhập bằng Microsoft 365</span>
     </button>
 
     <div class="demo-note" id="demoNote" style="display:none">
@@ -44,38 +48,38 @@
   <aside class="sidebar">
     <div class="side-head">
       <div class="logo"><div class="logo-mark">FI</div><span class="logo-t">FI SAIGON</span></div>
-      <button class="side-toggle" id="sideToggle" onclick="toggleSidebar()" aria-label="Thu gọn thanh điều hướng" aria-expanded="true">
+      <button class="side-toggle" id="sideToggle" onclick="toggleSidebar()" aria-label="Thu gọn thanh điều hướng" data-i18n-aria-label="nav.collapse" aria-expanded="true">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-6 7 6 7"/></svg>
       </button>
     </div>
     <nav class="side-nav">
-      <div class="nav-label" id="navCockpitLabel">Điều hành</div>
+      <div class="nav-label" id="navCockpitLabel" data-i18n="nav.sec.exec">Điều hành</div>
       <button class="nav-item" data-view="cockpit" onclick="go('cockpit')" id="navCockpit">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 17l5-6 4 3 4-6 5 4"/><path d="M3 21h18"/><circle cx="8" cy="11" r="1.3"/><circle cx="12" cy="14" r="1.3"/><circle cx="16" cy="8" r="1.3"/></svg>
-        <span class="nav-t">Tổng quan</span></button>
+        <span class="nav-t" data-i18n="nav.overview">Tổng quan</span></button>
       <button class="nav-item" data-view="welcome" onclick="openWelcome()" id="navWelcome">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><circle cx="12" cy="14.5" r="1.6"/></svg>
-        <span class="nav-t">Kế hoạch tuần</span></button>
-      <div class="nav-label">Làm việc</div>
-      <a class="nav-item active" data-view="funnel" href="salesfunnel.html" id="navFunnel" onclick="return openSalesFunnel(event)" title="Mở trang Sales Funnel">
+        <span class="nav-t" data-i18n="nav.weeklyPlan">Kế hoạch tuần</span></button>
+      <div class="nav-label" data-i18n="nav.sec.work">Làm việc</div>
+      <a class="nav-item active" data-view="funnel" href="salesfunnel.html" id="navFunnel" onclick="return openSalesFunnel(event)" title="Mở trang Sales Funnel" data-i18n-title="nav.openFunnel">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>
         <span class="nav-t">Sales Funnel</span></a>
       <button class="nav-item" data-view="customers" onclick="go('customers')" id="navCustomers">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/></svg>
-        <span class="nav-t">Khách hàng</span></button>
+        <span class="nav-t" data-i18n="nav.accounts">Khách hàng</span></button>
       <button class="nav-item" data-view="acts" onclick="go('acts')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="4" cy="6" r="1.4"/><circle cx="4" cy="12" r="1.4"/><circle cx="4" cy="18" r="1.4"/></svg>
-        <span class="nav-t">Hoạt động khách hàng</span></button>
+        <span class="nav-t" data-i18n="nav.activities">Hoạt động khách hàng</span></button>
       <button class="nav-item" data-view="dash" onclick="go('dash')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
         <span class="nav-t">Dashboard</span></button>
       <button class="nav-item" data-view="reports" onclick="go('reports')" id="navReports">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3h9l5 5v13a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v6h6M9 13h6M9 17h4"/></svg>
-        <span class="nav-t">Báo cáo</span></button>
-      <div class="nav-label" id="navAdminLabel">Quản trị</div>
+        <span class="nav-t" data-i18n="nav.reports">Báo cáo</span></button>
+      <div class="nav-label" id="navAdminLabel" data-i18n="nav.sec.admin">Quản trị</div>
       <button class="nav-item" data-view="users" onclick="go('users')" id="navUsers">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.5-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.6a3.5 3.5 0 010 6.8M18.5 14.7c1.6.8 2.7 2.3 3 5.3"/></svg>
-        <span class="nav-t">Người dùng &amp; phân quyền</span></button>
+        <span class="nav-t" data-i18n="nav.users">Người dùng &amp; phân quyền</span></button>
     </nav>
     <div class="sidebar-user" id="sideUser"></div>
   </aside>
@@ -87,15 +91,16 @@
       <div class="ncc-tabs" id="nccTabs"></div>
       <div class="gsearch">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input placeholder="Lọc nhanh funnel…" id="q" oninput="render()">
+        <input placeholder="Lọc nhanh funnel…" data-i18n-placeholder="hdr.quickFilter" id="q" oninput="render()">
       </div>
+      <div data-lang-switch></div>
       <div style="position:relative">
-        <button class="icon-btn" onclick="toggleNotif(event)" aria-label="Thông báo">
+        <button class="icon-btn" onclick="toggleNotif(event)" aria-label="Thông báo" data-i18n-aria-label="notif.title">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M10.3 21a2 2 0 003.4 0"/></svg>
           <span class="bell-dot" id="bellDot" style="display:none">0</span>
         </button>
         <div class="notif-panel glass" id="notifPanel">
-          <div class="np-head">Thông báo</div>
+          <div class="np-head" data-i18n="notif.title">Thông báo</div>
           <div id="notifList"></div>
         </div>
       </div>
@@ -104,16 +109,16 @@
 
     <section id="view-cockpit" style="display:none">
       <div class="topbar ck-top">
-        <h2>Tổng quan</h2>
-        <div class="ck-period" id="ckPeriod" role="group" aria-label="Chọn cửa sổ thời gian"></div>
+        <h2 data-i18n="nav.overview">Tổng quan</h2>
+        <div class="ck-period" id="ckPeriod" role="group" aria-label="Chọn cửa sổ thời gian" data-i18n-aria-label="ck.periodAria"></div>
       </div>
       <div class="ck-range" id="ckRange"></div>
 
-      <div class="ck-signals" id="ckSignals" role="group" aria-label="Tín hiệu cần chú ý"></div>
+      <div class="ck-signals" id="ckSignals" role="group" aria-label="Tín hiệu cần chú ý" data-i18n-aria-label="ck.signalsAria"></div>
 
       <section class="ck-panel glass" aria-labelledby="ckFeedH">
         <div class="ck-head">
-          <h3 id="ckFeedH">Dòng thời gian<span class="ck-count" id="ckFeedCount"></span></h3>
+          <h3 id="ckFeedH"><span data-i18n="ck.feed">Dòng thời gian</span><span class="ck-count" id="ckFeedCount"></span></h3>
           <div class="ck-head-tools" id="ckFilters"></div>
         </div>
         <div class="ck-feed" id="ckFeed"></div>
@@ -121,19 +126,19 @@
 
       <section class="ck-panel glass" aria-labelledby="ckUpH" id="ckUpPanel">
         <div class="ck-head">
-          <h3 id="ckUpH">Sắp tới<span class="ck-count" id="ckUpCount"></span></h3>
-          <div class="ck-head-tools"><span class="ck-note">Hoạt động sales đã lên lịch, chưa diễn ra</span></div>
+          <h3 id="ckUpH"><span data-i18n="ck.upcoming">Sắp tới</span><span class="ck-count" id="ckUpCount"></span></h3>
+          <div class="ck-head-tools"><span class="ck-note" data-i18n="ck.upcomingNote">Hoạt động sales đã lên lịch, chưa diễn ra</span></div>
         </div>
         <div class="ck-feed" id="ckUp"></div>
       </section>
 
       <section class="ck-panel glass" aria-labelledby="ckCustH">
         <div class="ck-head">
-          <h3 id="ckCustH">Khách hàng<span class="ck-count" id="ckCustCount"></span></h3>
+          <h3 id="ckCustH"><span data-i18n="nav.accounts">Khách hàng</span><span class="ck-count" id="ckCustCount"></span></h3>
           <div class="ck-head-tools">
             <div class="ck-search">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-              <input id="ckQ" placeholder="Tìm khách hàng…" aria-label="Tìm khách hàng" oninput="ckSetQuery(this.value)">
+              <input id="ckQ" placeholder="Tìm khách hàng…" data-i18n-placeholder="ck.searchAccountsPh" aria-label="Tìm khách hàng" data-i18n-aria-label="ck.searchAccounts" oninput="ckSetQuery(this.value)">
             </div>
           </div>
         </div>
@@ -146,47 +151,47 @@
       <div class="topbar">
         <h2>Sales Funnel</h2>
         <div style="display:flex;gap:10px">
-          <a class="btn-ghost" href="salesfunnel.html" onclick="return openSalesFunnel(event)" title="Mở không gian dự án kiểu Salesforce" style="text-decoration:none">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.4"/><rect x="10" y="4" width="5" height="11" rx="1.4"/><rect x="17" y="4" width="4" height="14" rx="1.4"/></svg>Giao diện Salesforce</a>
-          <button class="btn-ghost" onclick="toast('Bản thật: xuất Excel 18 cột đúng format Roquette từ SharePoint List.')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>Xuất Excel</button>
+          <a class="btn-ghost" href="salesfunnel.html" onclick="return openSalesFunnel(event)" title="Mở không gian dự án kiểu Salesforce" data-i18n-title="fn.openWorkspace" style="text-decoration:none">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="5" height="16" rx="1.4"/><rect x="10" y="4" width="5" height="11" rx="1.4"/><rect x="17" y="4" width="4" height="14" rx="1.4"/></svg><span data-i18n="fn.sfView">Giao diện Salesforce</span></a>
+          <button class="btn-ghost" onclick="toast(T('fn.exportHint'))">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg><span data-i18n="common.exportExcel">Xuất Excel</span></button>
           <button class="btn-primary" onclick="openCreateProjectModal()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Thêm dự án</button>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="fn.addOpp">Thêm dự án</span></button>
         </div>
       </div>
       <div class="spine glass" id="spineBox" style="display:none">
-        <div class="spine-top"><b>Phân bố giai đoạn</b>
-          <button class="spine-clear" id="spineClear" onclick="stageFilter=null;render()">Bỏ lọc giai đoạn</button></div>
+        <div class="spine-top"><b data-i18n="fn.stageDist">Phân bố giai đoạn</b>
+          <button class="spine-clear" id="spineClear" onclick="stageFilter=null;render()" data-i18n="fn.clearStage">Bỏ lọc giai đoạn</button></div>
         <div class="spine-flow" id="spineFlow"></div>
       </div>
       <div class="filters">
-        <button class="chip on" data-f="ALL" onclick="setF('ALL')">Tất cả</button>
-        <button class="chip" data-f="IN PROGRESS" onclick="setF('IN PROGRESS')">Đang chạy</button>
-        <button class="chip" data-f="WON" onclick="setF('WON')">Thắng</button>
-        <button class="chip" data-f="LOST" onclick="setF('LOST')">Thua</button>
+        <button class="chip on" data-f="ALL" onclick="setF('ALL')" data-i18n="common.all">Tất cả</button>
+        <button class="chip" data-f="IN PROGRESS" onclick="setF('IN PROGRESS')" data-i18n="status.inProgress">Đang chạy</button>
+        <button class="chip" data-f="WON" onclick="setF('WON')" data-i18n="status.won">Thắng</button>
+        <button class="chip" data-f="LOST" onclick="setF('LOST')" data-i18n="status.lost">Thua</button>
       </div>
       <div id="groups"></div>
     </section>
 
     <section id="view-acts" style="display:none">
-      <div class="topbar"><h2>Hoạt động khách hàng</h2>
+      <div class="topbar"><h2 data-i18n="nav.activities">Hoạt động khách hàng</h2>
         <button class="btn-primary" onclick="openActForm()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tạo hoạt động</button>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="act.create">Tạo hoạt động</span></button>
       </div>
       <div class="filters">
-        <button class="chip on" data-af="ALL" onclick="setAF('ALL')">Tất cả</button>
-        <button class="chip" data-af="LINKED" onclick="setAF('LINKED')">Đã gắn dự án</button>
-        <button class="chip" data-af="FREE" onclick="setAF('FREE')">Chưa có dự án</button>
+        <button class="chip on" data-af="ALL" onclick="setAF('ALL')" data-i18n="common.all">Tất cả</button>
+        <button class="chip" data-af="LINKED" onclick="setAF('LINKED')" data-i18n="act.linked">Đã gắn dự án</button>
+        <button class="chip" data-af="FREE" onclick="setAF('FREE')" data-i18n="act.unlinked">Chưa có dự án</button>
         <div class="act-tools" id="actTools" hidden>
           <div class="act-search">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="actSearch" type="search" placeholder="Sale, Khách hàng" oninput="setActSearch(this.value)" aria-label="Tìm theo sale hoặc khách hàng">
+            <input id="actSearch" type="search" placeholder="Sale, Khách hàng" data-i18n-placeholder="act.searchPh" oninput="setActSearch(this.value)" aria-label="Tìm theo sale hoặc khách hàng" data-i18n-aria-label="act.searchAria">
           </div>
-          <div class="act-sort" role="group" aria-label="Sắp xếp theo ngày">
-            <span class="act-sort-lbl">Ngày</span>
-            <button type="button" class="act-sort-ar on" id="actSortDesc" onclick="setActSort('desc')" title="Gần nhất trước" aria-label="Gần nhất trước">
+          <div class="act-sort" role="group" aria-label="Sắp xếp theo ngày" data-i18n-aria-label="act.sortAria">
+            <span class="act-sort-lbl" data-i18n="common.date">Ngày</span>
+            <button type="button" class="act-sort-ar on" id="actSortDesc" onclick="setActSort('desc')" title="Gần nhất trước" data-i18n-title="act.newestFirst" aria-label="Gần nhất trước" data-i18n-aria-label="act.newestFirst">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
-            <button type="button" class="act-sort-ar" id="actSortAsc" onclick="setActSort('asc')" title="Xa nhất trước" aria-label="Xa nhất trước">
+            <button type="button" class="act-sort-ar" id="actSortAsc" onclick="setActSort('asc')" title="Xa nhất trước" data-i18n-title="act.oldestFirst" aria-label="Xa nhất trước" data-i18n-aria-label="act.oldestFirst">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
           </div>
         </div>
@@ -199,34 +204,34 @@
       <div class="kpis" id="kpis"></div>
       <div class="dash-grid">
         <div class="card glass span2">
-          <h4>Tra cứu chi tiết &amp; lịch sử<small>Khách hàng · Segment · Sales</small></h4>
+          <h4><span data-i18n="db.lookup">Tra cứu chi tiết &amp; lịch sử</span><small data-i18n="db.lookupSub">Khách hàng · Segment · Sales</small></h4>
           <div class="ins-wrap">
             <div class="ins-search">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-              <input id="insQ" placeholder="Gõ khách hàng, sản phẩm, phân khúc, sales hoặc giai đoạn… (vd: Bibica, NUTRIOSE, DAIRY, Thu, TESTING)" oninput="insSuggest()" onfocus="insSuggest()">
+              <input id="insQ" placeholder="Gõ khách hàng, sản phẩm, phân khúc, sales hoặc giai đoạn… (vd: Bibica, NUTRIOSE, DAIRY, Thu, TESTING)" data-i18n-placeholder="db.lookupPh" oninput="insSuggest()" onfocus="insSuggest()">
             </div>
             <div class="ins-sug glass" id="insSug"></div>
           </div>
-          <div id="insResult"><div class="ins-empty">Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.</div></div>
+          <div id="insResult"><div class="ins-empty" data-i18n="db.lookupEmpty">Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.</div></div>
         </div>
-        <div class="card glass span2"><h4>Dự án tạo mới theo tháng<small>di chuột lên điểm để xem chi tiết</small></h4><div id="lineChart"></div></div>
-        <div class="card glass span2"><h4>Phân khúc thị trường<small id="segHint">click một nhóm để xem 13 segment bên trong</small></h4>
+        <div class="card glass span2"><h4><span data-i18n="db.newByMonth">Dự án tạo mới theo tháng</span><small data-i18n="db.hoverPoint">di chuột lên điểm để xem chi tiết</small></h4><div id="lineChart"></div></div>
+        <div class="card glass span2"><h4><span data-i18n="db.marketSegments">Phân khúc thị trường</span><small id="segHint" data-i18n="db.segHint">click một nhóm để xem 13 segment bên trong</small></h4>
           <div class="drill-head" id="drillHead"></div>
           <div class="seg-grid" id="segGrid"></div></div>
-        <div class="card glass"><h4>Tỷ trọng phân khúc<small id="segDonutHint">click một lát để xem lịch sử dự án</small></h4>
+        <div class="card glass"><h4><span data-i18n="db.segShare">Tỷ trọng phân khúc</span><small id="segDonutHint" data-i18n="db.segDonutHint">click một lát để xem lịch sử dự án</small></h4>
           <div class="drill-head" id="donutDrillHead"></div>
           <div class="chart-flex"><div id="donutSeg"></div><div class="legend" id="legSeg"></div></div></div>
-        <div class="card glass"><h4>Tỷ trọng trạng thái<small>di chuột để xem chi tiết</small></h4><div class="chart-flex"><div id="donutStatus"></div><div class="legend" id="legStatus"></div></div></div>
-        <div class="card glass"><h4>Hiệu suất theo Sales<small>click để xem chi tiết</small></h4><div id="teamBars"></div></div>
-        <div class="card glass"><h4>Sắp đến hạn đóng<small>click để mở dự án</small></h4><div id="upcoming"></div></div>
-        <div class="card glass"><h4>Funnel theo giai đoạn (đang chạy)</h4><div id="stageBars"></div></div>
-        <div class="card glass"><h4>Top sản phẩm theo tiềm năng KG</h4><div id="prodBars"></div></div>
+        <div class="card glass"><h4><span data-i18n="db.statusShare">Tỷ trọng trạng thái</span><small data-i18n="db.hover">di chuột để xem chi tiết</small></h4><div class="chart-flex"><div id="donutStatus"></div><div class="legend" id="legStatus"></div></div></div>
+        <div class="card glass"><h4><span data-i18n="db.byRep">Hiệu suất theo Sales</span><small data-i18n="db.clickDetails">click để xem chi tiết</small></h4><div id="teamBars"></div></div>
+        <div class="card glass"><h4><span data-i18n="db.closingSoon">Sắp đến hạn đóng</span><small data-i18n="db.clickOpen">click để mở dự án</small></h4><div id="upcoming"></div></div>
+        <div class="card glass"><h4 data-i18n="db.funnelByStage">Funnel theo giai đoạn (đang chạy)</h4><div id="stageBars"></div></div>
+        <div class="card glass"><h4 data-i18n="db.topProducts">Top sản phẩm theo tiềm năng KG</h4><div id="prodBars"></div></div>
       </div>
     </section>
 
     <section id="view-reports" style="display:none">
       <div class="topbar">
-        <h2>Báo cáo</h2>
+        <h2 data-i18n="nav.reports">Báo cáo</h2>
         <div id="rpTools"></div>
       </div>
       <div class="rp-grid">
@@ -237,25 +242,25 @@
 
     <section id="view-customers" style="display:none">
       <div class="topbar">
-        <h2>Khách hàng</h2>
+        <h2 data-i18n="nav.accounts">Khách hàng</h2>
         <div id="cuHeadAct" class="cu-head-act"></div>
       </div>
       <!-- Tab phân loại: Tất cả / Strategic / Key Account / Prospect (vẽ bởi cuRenderTabs) -->
-      <nav id="cuTierTabs" class="cu-tier-tabs" role="tablist" aria-label="Phân loại khách hàng"></nav>
+      <nav id="cuTierTabs" class="cu-tier-tabs" role="tablist" aria-label="Phân loại khách hàng" data-i18n-aria-label="cu.tierAria"></nav>
       <div id="cuTools" class="cu-tools"></div>
-      <div class="cu-head"><span>Khách hàng</span><span>Sales phụ trách</span><span>Dự án</span><span>Hoạt động gần nhất</span><span></span></div>
+      <div class="cu-head"><span data-i18n="common.account">Khách hàng</span><span data-i18n="cu.col.owner">Sales phụ trách</span><span data-i18n="cu.col.opps">Dự án</span><span data-i18n="cu.col.lastAct">Hoạt động gần nhất</span><span></span></div>
       <div id="cuRows" class="cu-list glass"></div>
     </section>
 
     <section id="view-users" style="display:none">
       <div class="topbar">
-        <h2>Người dùng &amp; phân quyền</h2>
+        <h2 data-i18n="nav.users">Người dùng &amp; phân quyền</h2>
         <div id="admTools"></div>
       </div>
       <div id="admNote"></div>
       <div class="ck-panel glass">
         <div class="adm-head adm-row">
-          <div>Nhân viên</div><div>Email Microsoft 365</div><div>Vai trò</div><div>Thao tác</div>
+          <div data-i18n="adm.col.staff">Nhân viên</div><div>Email Microsoft 365</div><div data-i18n="adm.col.role">Vai trò</div><div data-i18n="common.actions">Thao tác</div>
         </div>
         <div id="userRows"></div>
       </div>
@@ -271,24 +276,24 @@
     <div class="modal-head pf-head">
       <div class="pf-head-main">
         <button type="button" class="mh-back" id="f-back" onclick="closeForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
-        <h3 id="pfTitle">Thêm dự án mới</h3>
-        <div class="pf-ctx" id="pfCtx" aria-label="Bối cảnh dự án"></div>
+        <h3 id="pfTitle" data-i18n="pf.titleNew">Thêm dự án mới</h3>
+        <div class="pf-ctx" id="pfCtx" aria-label="Bối cảnh dự án" data-i18n-aria-label="pf.ctxAria"></div>
       </div>
-      <button type="button" class="pf-x" onclick="closeForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button type="button" class="pf-x" onclick="closeForm()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
 
     <div class="modal-body pf-body">
       <div class="pf-grid">
-        <div class="field" data-f="product"><label for="f-prod">Sản phẩm <span class="req">*</span></label>
-          <input id="f-prod" list="dl-prod" placeholder="Nhập tên sản phẩm / hoạt chất..." aria-describedby="pfErr-product"><datalist id="dl-prod"></datalist>
+        <div class="field" data-f="product"><label for="f-prod"><span data-i18n="common.product">Sản phẩm</span> <span class="req">*</span></label>
+          <input id="f-prod" list="dl-prod" placeholder="Nhập tên sản phẩm / hoạt chất..." data-i18n-placeholder="pf.productPh" aria-describedby="pfErr-product"><datalist id="dl-prod"></datalist>
           <small class="pf-err" id="pfErr-product"></small></div>
-        <div class="field" data-f="application"><label for="f-app">Ứng dụng <span class="req">*</span></label>
-          <input id="f-app" list="dl-app" placeholder="Nhập ứng dụng..." aria-describedby="pfErr-application"><datalist id="dl-app"></datalist>
+        <div class="field" data-f="application"><label for="f-app"><span data-i18n="common.application">Ứng dụng</span> <span class="req">*</span></label>
+          <input id="f-app" list="dl-app" placeholder="Nhập ứng dụng..." data-i18n-placeholder="pf.applicationPh" aria-describedby="pfErr-application"><datalist id="dl-app"></datalist>
           <small class="pf-err" id="pfErr-application"></small></div>
-        <div class="field" data-f="segment"><label for="f-segment">Nhóm ngành / Segment <span class="req">*</span> <span class="pf-hint" id="pfSegHint"></span></label>
+        <div class="field" data-f="segment"><label for="f-segment"><span data-i18n="pf.segment">Nhóm ngành / Segment</span> <span class="req">*</span> <span class="pf-hint" id="pfSegHint"></span></label>
           <select id="f-segment" aria-describedby="pfErr-segment"></select>
           <small class="pf-err" id="pfErr-segment"></small></div>
-        <div class="field" data-f="stage"><label for="f-stage">Giai đoạn (Stage) <span class="req">*</span></label>
+        <div class="field" data-f="stage"><label for="f-stage"><span data-i18n="pf.stage">Giai đoạn (Stage)</span> <span class="req">*</span></label>
           <select id="f-stage" aria-describedby="pfErr-stage"></select>
           <small class="pf-err" id="pfErr-stage"></small></div>
       </div>
@@ -296,29 +301,29 @@
       <details class="pf-more" id="pfMore">
         <summary>
           <svg class="pf-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          Bổ sung dự báo &amp; Chi tiết <span class="pf-opt">(Tùy chọn)</span>
+          <span data-i18n="pf.moreDetails">Bổ sung dự báo &amp; Chi tiết</span> <span class="pf-opt" data-i18n="common.optional">(Tùy chọn)</span>
           <span class="pf-more-n" id="pfMoreN" hidden></span>
         </summary>
         <div class="pf-more-body">
           <div class="pf-grid pf-grid-3">
-            <div class="field"><label for="f-closing">Ngày đóng dự kiến</label><input type="date" id="f-closing"></div>
-            <div class="field"><label for="f-kg1">Tiềm năng năm nay (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg1" placeholder="0"></div>
-            <div class="field"><label for="f-kg2">Tiềm năng năm sau (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg2" placeholder="0"></div>
+            <div class="field"><label for="f-closing" data-i18n="common.expectedClose">Ngày đóng dự kiến</label><input type="date" id="f-closing"></div>
+            <div class="field"><label for="f-kg1" data-i18n="pf.kgThis">Tiềm năng năm nay (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg1" placeholder="0"></div>
+            <div class="field"><label for="f-kg2" data-i18n="pf.kgNext">Tiềm năng năm sau (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg2" placeholder="0"></div>
           </div>
-          <div class="field"><label for="f-rel">Người liên quan đến dự án</label>
-            <div class="tags pf-tags" id="relTags"><select id="f-rel" aria-label="Thêm người liên quan"></select></div></div>
+          <div class="field"><label for="f-rel" data-i18n="pf.related">Người liên quan đến dự án</label>
+            <div class="tags pf-tags" id="relTags"><select id="f-rel" aria-label="Thêm người liên quan" data-i18n-aria-label="pf.addRelated"></select></div></div>
         </div>
       </details>
 
-      <div class="field pf-note"><label for="f-desc">Ghi chú ban đầu <span class="pf-src" id="pfNoteSrc"></span></label>
-        <textarea id="f-desc" rows="2" placeholder="Bối cảnh, nhu cầu của khách... (không bắt buộc)"></textarea></div>
+      <div class="field pf-note"><label for="f-desc"><span data-i18n="pf.initialNote">Ghi chú ban đầu</span> <span class="pf-src" id="pfNoteSrc"></span></label>
+        <textarea id="f-desc" rows="2" placeholder="Bối cảnh, nhu cầu của khách... (không bắt buộc)" data-i18n-placeholder="pf.notePh"></textarea></div>
     </div>
 
     <div class="modal-foot pf-foot">
-      <span class="pf-kbd" aria-hidden="true"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> để lưu</span>
-      <button type="button" class="btn-ghost" onclick="closeForm()">Huỷ</button>
+      <span class="pf-kbd" aria-hidden="true"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> <span data-i18n="pf.toSave">để lưu</span></span>
+      <button type="button" class="btn-ghost" onclick="closeForm()" data-i18n="common.cancel">Huỷ</button>
       <button type="submit" class="btn-primary pf-save" id="pfSave">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu dự án</button>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="pf.save">Lưu dự án</span></button>
     </div>
   </form>
 </div>
@@ -331,36 +336,36 @@
         <h3 id="d-title"></h3>
         <div class="mh-sub" id="d-pills"></div>
       </div>
-      <button class="x-btn" onclick="closeDetail()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="x-btn" onclick="closeDetail()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="detail-grid">
       <div class="d-col">
-        <h5>Thông tin &amp; tiến độ</h5>
+        <h5 data-i18n="dt.info">Thông tin &amp; tiến độ</h5>
         <div class="d-fields">
-          <div class="field"><label>Sản phẩm</label><input id="d-prod" disabled></div>
-          <div class="field"><label>Ứng dụng</label><input id="d-app" disabled></div>
-          <div class="field"><label>Giai đoạn</label><select id="d-stage" onchange="dSyncProb()"></select></div>
-          <div class="field"><label>Tiến độ dự án</label><select id="d-prob"></select></div>
-          <div class="field"><label>Ngày đóng dự kiến</label><input type="date" id="d-closing"></div>
-          <div class="field"><label>Loại cơ hội</label><input id="d-type" disabled></div>
-          <div class="field"><label>KG năm nay</label><input type="number" min="0" id="d-kg1"></div>
-          <div class="field"><label>KG năm sau</label><input type="number" min="0" id="d-kg2"></div>
+          <div class="field"><label data-i18n="common.product">Sản phẩm</label><input id="d-prod" disabled></div>
+          <div class="field"><label data-i18n="common.application">Ứng dụng</label><input id="d-app" disabled></div>
+          <div class="field"><label data-i18n="common.stage">Giai đoạn</label><select id="d-stage" onchange="dSyncProb()"></select></div>
+          <div class="field"><label data-i18n="dt.progress">Tiến độ dự án</label><select id="d-prob"></select></div>
+          <div class="field"><label data-i18n="common.expectedClose">Ngày đóng dự kiến</label><input type="date" id="d-closing"></div>
+          <div class="field"><label data-i18n="sf.oppType">Loại cơ hội</label><input id="d-type" disabled></div>
+          <div class="field"><label data-i18n="dt.kgThis">KG năm nay</label><input type="number" min="0" id="d-kg1"></div>
+          <div class="field"><label data-i18n="dt.kgNext">KG năm sau</label><input type="number" min="0" id="d-kg2"></div>
         </div>
-        <h5 style="margin-top:18px">Hoạt động khách hàng liên quan</h5>
+        <h5 style="margin-top:18px" data-i18n="dt.relatedActs">Hoạt động khách hàng liên quan</h5>
         <div class="linked-box" id="d-acts"></div>
-        <h5 style="margin-top:18px">Người tham gia</h5>
+        <h5 style="margin-top:18px" data-i18n="common.participants">Người tham gia</h5>
         <div class="tags" id="d-relTags"><select id="d-rel" onchange="dAddRel()"></select></div>
       </div>
       <div class="d-col d-chat-col">
-        <section class="chat" aria-label="Trao đổi trong dự án">
+        <section class="chat" aria-label="Trao đổi trong dự án" data-i18n-aria-label="dt.discussion">
           <div class="chat-head">
-            <h5>Trao đổi trong dự án</h5>
+            <h5 data-i18n="dt.discussion">Trao đổi trong dự án</h5>
             <span class="chat-count" id="d-cmt-count"></span>
           </div>
           <div class="comments" id="d-comments" role="log" aria-live="polite"></div>
           <div class="cmt-input">
-            <input id="d-cmt" placeholder="Viết trao đổi… (Enter để gửi)" onkeydown="if(event.key==='Enter')postComment()">
-            <button class="send-btn" onclick="postComment()" aria-label="Gửi">
+            <input id="d-cmt" placeholder="Viết trao đổi… (Enter để gửi)" data-i18n-placeholder="dt.commentPh" onkeydown="if(event.key==='Enter')postComment()">
+            <button class="send-btn" onclick="postComment()" aria-label="Gửi" data-i18n-aria-label="common.send">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
           </div>
         </section>
@@ -368,10 +373,10 @@
     </div>
     <div class="modal-foot">
       <button class="btn-danger" id="d-close-proj" onclick="openCloseModal(curRec.id)" style="margin-right:auto">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 3v4M15 3v4M9 13l2 2 4-4"/></svg>Đóng dự án</button>
-      <button class="btn-ghost" onclick="closeDetail()">Đóng</button>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 3v4M15 3v4M9 13l2 2 4-4"/></svg><span data-i18n="sf.closeOpp">Đóng dự án</span></button>
+      <button class="btn-ghost" onclick="closeDetail()" data-i18n="common.close">Đóng</button>
       <button class="btn-primary" id="d-save" onclick="saveDetail()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>Lưu thay đổi &amp; thông báo</button>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="dt.saveNotify">Lưu thay đổi &amp; thông báo</span></button>
     </div>
   </div>
 </div>
@@ -380,26 +385,26 @@
   <div class="modal narrow">
     <div class="modal-head">
       <div><button class="mh-back" id="c-back" onclick="closeCloseModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
-        <h3>Đóng dự án</h3><div class="mh-sub" id="c-sub"></div></div>
-      <button class="x-btn" onclick="closeCloseModal()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <h3 data-i18n="sf.closeOpp">Đóng dự án</h3><div class="mh-sub" id="c-sub"></div></div>
+      <button class="x-btn" onclick="closeCloseModal()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div style="padding:22px 26px;display:flex;flex-direction:column;gap:15px">
       <div class="result-row">
         <div class="result-opt won" id="c-won" onclick="pickResult('WON')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.2" stroke-linecap="round"><path d="M8 21h8M12 17v4M6 3h12v5a6 6 0 01-12 0V3z"/></svg>
-          <span><b>Thắng</b><small>WON — chốt được đơn</small></span>
+          <span><b data-i18n="status.won">Thắng</b><small data-i18n="sf.close.wonHint">WON — chốt được đơn</small></span>
         </div>
         <div class="result-opt lost" id="c-lost" onclick="pickResult('LOST')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#BE1240" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
-          <span><b>Thua</b><small>LOST — dừng theo đuổi</small></span>
+          <span><b data-i18n="status.lost">Thua</b><small data-i18n="sf.close.lostHint">LOST — dừng theo đuổi</small></span>
         </div>
       </div>
-      <div class="field"><label>Lý do / ghi chú <span class="req">*</span></label>
-        <textarea id="c-reason" rows="3" placeholder="Lý do đóng dự án…"></textarea></div>
+      <div class="field"><label><span data-i18n="cl.reason">Lý do / ghi chú</span> <span class="req">*</span></label>
+        <textarea id="c-reason" rows="3" placeholder="Lý do đóng dự án…" data-i18n-placeholder="cl.reasonPh"></textarea></div>
     </div>
     <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeCloseModal()">Huỷ</button>
-      <button class="btn-primary" onclick="confirmClose()">Xác nhận đóng &amp; thông báo</button>
+      <button class="btn-ghost" onclick="closeCloseModal()" data-i18n="common.cancel">Huỷ</button>
+      <button class="btn-primary" onclick="confirmClose()" data-i18n="cl.confirmNotify">Xác nhận đóng &amp; thông báo</button>
     </div>
   </div>
 </div>
@@ -408,31 +413,31 @@
   <div class="modal narrow">
     <div class="modal-head"><div><button class="mh-back" id="a-back" onclick="closeActForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
         <h3 id="a-title">Kế hoạch làm việc</h3><div class="mh-sub" id="a-sub"></div></div>
-      <button class="x-btn" onclick="closeActForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <button class="x-btn" onclick="closeActForm()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="modal-body">
-      <div class="field full"><label>Khách hàng <span class="req">*</span></label>
-        <input list="dl-cust-all" id="a-cust" placeholder="Nhập hoặc chọn khách hàng…" oninput="onActCustomer()" onchange="onActCustomer()">
+      <div class="field full"><label><span data-i18n="common.account">Khách hàng</span> <span class="req">*</span></label>
+        <input list="dl-cust-all" id="a-cust" placeholder="Nhập hoặc chọn khách hàng…" data-i18n-placeholder="act.accountPh" oninput="onActCustomer()" onchange="onActCustomer()">
         <datalist id="dl-cust-all"></datalist>
         <div class="owner-note" id="a-owner" hidden></div></div>
       <div class="a-gate" id="a-gate" hidden></div>
       <div class="a-fields" id="a-fields" style="display:contents">
-      <div class="field full"><label>Nhà cung cấp <span class="lbl-hint">chọn một hoặc nhiều</span></label>
+      <div class="field full"><label><span data-i18n="common.supplier">Nhà cung cấp</span> <span class="lbl-hint" data-i18n="act.pickMany">chọn một hoặc nhiều</span></label>
         <div class="tags" id="a-nccTags"><select id="a-ncc" onchange="aAddNcc()"></select></div></div>
-      <div class="field"><label>Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
-      <div class="field"><label>Ngày</label><input type="date" id="a-date"></div>
-      <div class="field"><label>Mức độ quan tâm</label><select id="a-pot"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
-      <div class="field full"><label>Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Mục tiêu buổi làm việc…"></textarea></div>
-      <div class="field full"><label>Hành động</label><input id="a-next" placeholder="Bước tiếp theo…"></div>
-      <div class="field full"><label>Người liên quan <span class="lbl-hint">hoạt động sẽ vào kế hoạch tuần &amp; báo cáo của họ</span></label>
+      <div class="field"><label data-i18n="act.type">Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
+      <div class="field"><label data-i18n="common.date">Ngày</label><input type="date" id="a-date"></div>
+      <div class="field"><label data-i18n="act.interest">Mức độ quan tâm</label><select id="a-pot"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
+      <div class="field full"><label data-i18n="act.objective">Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Mục tiêu buổi làm việc…" data-i18n-placeholder="act.objectivePh"></textarea></div>
+      <div class="field full"><label data-i18n="act.action">Hành động</label><input id="a-next" placeholder="Bước tiếp theo…" data-i18n-placeholder="act.nextPh"></div>
+      <div class="field full"><label><span data-i18n="act.related">Người liên quan</span> <span class="lbl-hint" data-i18n="act.relatedHint">hoạt động sẽ vào kế hoạch tuần &amp; báo cáo của họ</span></label>
         <div class="tags" id="a-relTags"><select id="a-rel" onchange="aAddRel()"></select></div></div>
-      <div class="field full"><label>Gắn vào dự án đang chạy</label><select id="a-proj"></select></div>
+      <div class="field full"><label data-i18n="act.attachOpp">Gắn vào dự án đang chạy</label><select id="a-proj"></select></div>
       <div class="field full att-box" id="a-attach"></div>
       </div>
     </div>
     <div class="modal-foot">
       <button class="btn-danger" id="a-del" onclick="deleteAct()" style="margin-right:auto;display:none">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg>Xoá hoạt động</button>
-      <button class="btn-ghost" onclick="closeActForm()">Huỷ</button>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13"/></svg><span data-i18n="act.delete">Xoá hoạt động</span></button>
+      <button class="btn-ghost" onclick="closeActForm()" data-i18n="common.cancel">Huỷ</button>
       <button class="btn-primary" id="a-save" onclick="saveAct()">Lưu kế hoạch</button>
     </div>
   </div>
@@ -443,14 +448,14 @@
   <div class="ck-dr-head">
     <h3 id="ckDrawerTitle"></h3>
     <div class="ck-dr-sub" id="ckDrawerSub"></div>
-    <button class="ck-dr-x" onclick="closeCustomer()" aria-label="Đóng">
+    <button class="ck-dr-x" onclick="closeCustomer()" aria-label="Đóng" data-i18n-aria-label="common.close">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="ck-dr-body" id="ckDrawerBody"></div>
   <div class="ck-dr-foot">
     <button class="ck-link" onclick="ckOpenHistory()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
-      Xem toàn bộ lịch sử dự án</button>
+      <span data-i18n="ck.fullHistory">Xem toàn bộ lịch sử dự án</span></button>
   </div>
 </aside>
 
@@ -461,7 +466,7 @@
         <button class="mh-back" id="u-back" onclick="closeUserForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
         <h3 id="u-title">Thêm người dùng</h3>
       </div>
-      <button class="x-btn" onclick="closeUserForm()" aria-label="Đóng"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="x-btn" onclick="closeUserForm()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="modal-scroll" style="padding:20px 24px;display:flex;flex-direction:column;gap:15px">
       <div class="field">
@@ -469,40 +474,40 @@
         <div class="u-mailrow">
           <input id="u-mail" type="email" placeholder="ten.ho@fisaigon.vn" autocomplete="off"
                  onkeydown="if(event.key==='Enter'){event.preventDefault();lookupUserEmail()}">
-          <button class="wc-btn" onclick="lookupUserEmail()">Tra O365</button>
+          <button class="wc-btn" onclick="lookupUserEmail()" data-i18n="adm.lookupO365">Tra O365</button>
         </div>
         <div class="u-found" id="u-found"></div>
       </div>
       <div class="field">
-        <label for="u-name">Tên đầy đủ (O365)</label>
-        <input id="u-name" placeholder="Tự điền sau khi tra O365">
+        <label for="u-name" data-i18n="adm.fullName">Tên đầy đủ (O365)</label>
+        <input id="u-name" placeholder="Tự điền sau khi tra O365" data-i18n-placeholder="adm.fullNamePh">
       </div>
       <div class="field">
-        <label for="u-pic">Tên PIC như trong dữ liệu</label>
+        <label for="u-pic" data-i18n="adm.picName">Tên PIC như trong dữ liệu</label>
         <input id="u-pic" placeholder="Ngoc, Bich Ngoc">
       </div>
       <div class="field">
-        <label for="u-role">Vai trò <span class="req">*</span></label>
+        <label for="u-role"><span data-i18n="adm.col.role">Vai trò</span> <span class="req">*</span></label>
         <select id="u-role" onchange="admRoleHint()"></select>
       </div>
       <div class="field" id="u-reportsF">
-        <label for="u-reports">Báo cáo cho</label>
+        <label for="u-reports" data-i18n="adm.reportsTo">Báo cáo cho</label>
         <select id="u-reports"></select>
       </div>
       <div class="field" id="u-supportsF" style="display:none">
-        <label>Hỗ trợ các sales</label>
+        <label data-i18n="adm.supports">Hỗ trợ các sales</label>
         <div class="u-splist-wrap">
           <div class="u-splist-search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-            <input id="u-spsearch" placeholder="Tìm sales…" oninput="admFilterSupports(this.value)" autocomplete="off">
+            <input id="u-spsearch" placeholder="Tìm sales…" data-i18n-placeholder="adm.searchRepsPh" oninput="admFilterSupports(this.value)" autocomplete="off">
           </div>
           <div class="u-splist" id="u-supports"></div>
         </div>
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeUserForm()">Huỷ</button>
-      <button class="btn-primary" onclick="saveUserForm()">Lưu lên SharePoint</button>
+      <button class="btn-ghost" onclick="closeUserForm()" data-i18n="common.cancel">Huỷ</button>
+      <button class="btn-primary" onclick="saveUserForm()" data-i18n="adm.saveSp">Lưu lên SharePoint</button>
     </div>
   </div>
 </div>
@@ -520,25 +525,25 @@
       </div>
       <button class="wc-modechip" id="wcMode" onclick="wcCycleMode()"></button>
     </div>
-    <button class="wc-x" onclick="closeWelcome()" aria-label="Đóng màn hình tổng quan tuần">
+    <button class="wc-x" onclick="closeWelcome()" aria-label="Đóng màn hình tổng quan tuần" data-i18n-aria-label="wc.closeAria">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <div class="wc-calbar">
       <button class="wc-cal-toggle" id="wcCalToggle" onclick="wcToggleCal()"
         aria-expanded="false" aria-controls="wcCal">
         <svg class="wc-cal-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        <span>Hiện lịch tuần</span>
+        <span data-i18n="wc.showCal">Hiện lịch tuần</span>
       </button>
     </div>
     <div class="wc-cal collapsed" id="wcCal">
-      <div class="wc-week" id="wcWeek" role="list" aria-label="Bảy ngày trong tuần"></div>
+      <div class="wc-week" id="wcWeek" role="list" aria-label="Bảy ngày trong tuần" data-i18n-aria-label="wc.weekAria"></div>
       <div class="wc-legend">
-        <span><i class="wc-dot done"></i>Đã làm</span>
-        <span><i class="wc-dot plan"></i>Kế hoạch</span>
-        <span><i class="wc-dot miss"></i>Chưa đánh dấu</span>
+        <span><i class="wc-dot done"></i><span data-i18n="wc.done">Đã làm</span></span>
+        <span><i class="wc-dot plan"></i><span data-i18n="wc.planned">Kế hoạch</span></span>
+        <span><i class="wc-dot miss"></i><span data-i18n="wc.unmarked">Chưa đánh dấu</span></span>
       </div>
       <div class="wc-nextwk">
-        <div class="wc-nextwk-h">Tuần kế tiếp<span id="wcNextLabel"></span></div>
-        <div class="wc-week" id="wcWeekNext" role="list" aria-label="Bảy ngày tuần kế tiếp"></div>
+        <div class="wc-nextwk-h"><span data-i18n="wc.nextWeek">Tuần kế tiếp</span><span id="wcNextLabel"></span></div>
+        <div class="wc-week" id="wcWeekNext" role="list" aria-label="Bảy ngày tuần kế tiếp" data-i18n-aria-label="wc.nextWeekAria"></div>
       </div>
     </div>
     <div class="wc-stats" id="wcStats"></div>
@@ -548,7 +553,7 @@
 </div>
 
 <div class="prob-pop glass" id="probPop">
-  <div class="pp-title">Tiến độ dự án</div>
+  <div class="pp-title" data-i18n="dt.progress">Tiến độ dự án</div>
   <div class="pp-chips" id="ppChips"></div>
 </div>
 
@@ -558,42 +563,42 @@
 
 <script src="js/sp-config.js?v=21"></script>
 <script src="js/data/catalog.js?v=22"></script>
-<script src="js/config.js?v=23"></script>
-<script src="js/lib/navstack.js?v=21"></script>
+<script src="js/config.js?v=24"></script>
+<script src="js/lib/navstack.js?v=22"></script>
 <script src="js/lib/insights.js?v=21"></script>
-<script src="js/lib/roles.js?v=21"></script>
+<script src="js/lib/roles.js?v=22"></script>
 <script src="js/lib/localstore.js?v=21"></script>
-<script src="js/lib/weekly.js?v=21"></script>
-<script src="js/core.js?v=21"></script>
-<script src="js/views/funnel.js?v=21"></script>
-<script src="js/views/dashboard.js?v=21"></script>
-<script src="js/views/cockpit.js?v=21"></script>
-<script src="js/views/welcome.js?v=21"></script>
-<script src="js/views/reports.js?v=21"></script>
+<script src="js/lib/weekly.js?v=22"></script>
+<script src="js/core.js?v=22"></script>
+<script src="js/views/funnel.js?v=22"></script>
+<script src="js/views/dashboard.js?v=22"></script>
+<script src="js/views/cockpit.js?v=22"></script>
+<script src="js/views/welcome.js?v=22"></script>
+<script src="js/views/reports.js?v=23"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/lib/cleanname.js?v=21"></script>
-<script src="js/views/customers.js?v=24"></script>
-<script src="js/views/customer-import.js?v=23"></script>
-<script src="js/views/supplier-import.js?v=1"></script>
-<script src="js/views/attachments.js?v=1"></script>
-<script src="js/views/activities.js?v=21"></script>
-<script src="js/views/detail.js?v=23"></script>
-<script src="js/views/project-form.js?v=1"></script>
-<script src="js/components/notifications.js?v=21"></script>
-<script src="js/views/admin.js?v=21"></script>
+<script src="js/views/customers.js?v=25"></script>
+<script src="js/views/customer-import.js?v=24"></script>
+<script src="js/views/supplier-import.js?v=2"></script>
+<script src="js/views/attachments.js?v=2"></script>
+<script src="js/views/activities.js?v=22"></script>
+<script src="js/views/detail.js?v=24"></script>
+<script src="js/views/project-form.js?v=2"></script>
+<script src="js/components/notifications.js?v=22"></script>
+<script src="js/views/admin.js?v=22"></script>
 <script src="js/components/toast.js?v=21"></script>
-<script src="js/components/datepicker.js?v=21"></script>
-<script src="js/i18n.js?v=21"></script>
-<script src="js/auth.js?v=22"></script>
+<script src="js/components/datepicker.js?v=22"></script>
+<script src="js/i18n-legacy.js?v=1"></script>
+<script src="js/auth.js?v=23"></script>
 <script src="js/graph.js?v=21"></script>
-<script src="js/store.js?v=25"></script>
-<script src="js/ui-kit.js?v=22"></script>
-<script src="js/share.js?v=21"></script>
-<script src="js/guest.js?v=21"></script>
-<script src="js/login-ui.js?v=21"></script>
-<script src="js/funnel-ui.js?v=21"></script>
-<script src="js/extras.js?v=21"></script>
-<script src="js/charts.js?v=21"></script>
-<script src="js/lib/deeplink.js?v=3"></script>
+<script src="js/store.js?v=26"></script>
+<script src="js/ui-kit.js?v=23"></script>
+<script src="js/share.js?v=22"></script>
+<script src="js/guest.js?v=22"></script>
+<script src="js/login-ui.js?v=22"></script>
+<script src="js/funnel-ui.js?v=22"></script>
+<script src="js/extras.js?v=22"></script>
+<script src="js/charts.js?v=22"></script>
+<script src="js/lib/deeplink.js?v=4"></script>
 </body>
 </html>

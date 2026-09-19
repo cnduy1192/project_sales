@@ -31,7 +31,7 @@
   function picKey(s) { return stripDia(s).toUpperCase().replace(/\s+/g, " ").trim(); }
   function vn(iso) {
     const d = iso ? new Date(iso) : null;
-    return d && !isNaN(d) ? d.toLocaleDateString("vi-VN") : (iso || "");
+    return d && !isNaN(d) ? d.toLocaleDateString(I18N.locale()) : (iso || "");
   }
   function txt(v) {
     if (v == null) return "";
@@ -51,7 +51,7 @@
   }
   function extOf(name, type) {
     if (type) return String(type).toUpperCase();
-    const m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toUpperCase() : "TỆP";
+    const m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toUpperCase() : T("rpx.file");
   }
   function roleKey(raw) {
     const r = (typeof roleFromText === "function" && roleFromText(raw)) || "";
@@ -111,27 +111,25 @@
 
   /* ---------- Vào trang sau khi đăng nhập ---------- */
   window.REPORT_ON_AUTH = async function (account) {
-    show("rpxLoading", "Đang kiểm tra quyền truy cập…");
+    show("rpxLoading", T("rpx.checkingAccess"));
     try {
       const me = await resolveMe(account);
       if (!me) {
-        deny("Tài khoản " + (account && account.username) + " chưa có trong danh bạ Users trên "
-             + "SharePoint. Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.");
+        deny(T("auth.msg.notInUsers", { user: account && account.username }));
         return;
       }
       S.me = me;
       if (scopeOf(me.role) !== "all") {
-        deny("Tài khoản của bạn (" + roleVI(me.role) + ") không có quyền xem báo cáo toàn đội. "
-             + "Trang này chỉ dành cho Manager, Director hoặc Super Admin.");
+        deny(T("rpx.noAccess", { r: roleVI(me.role) }));
         return;
       }
       paintUser(me);
-      show("rpxLoading", "Đang tải báo cáo…");
+      show("rpxLoading", T("rpx.loading"));
       await loadData();
       enterPortal();
     } catch (e) {
       console.error("[report] lỗi khởi tạo:", e);
-      deny("Không tải được dữ liệu: " + ((e && e.message) || e));
+      deny(T("rpx.loadFail") + " " + ((e && e.message) || e));
     }
   };
 
@@ -244,7 +242,7 @@
     if (want) {
       const hit = S.reports.find(r => r.code === want);
       if (hit) { S.selUid = hit.uid; S.expanded.add(hit.weekLabel); }
-      else toast("Không tìm thấy báo cáo — hiển thị tất cả.");
+      else toast(T("rpx.notFoundAll"));
     }
     show("rpxPortal");
     wireList();
@@ -283,24 +281,24 @@
       (miss.length > 6 ? `<span class="rpx-chip more" data-more="1">+${miss.length - 6}</span>` : "");
     box.innerHTML = `
       <div class="rpx-sum-head">
-        <div><span class="rpx-sum-k">Gửi báo cáo · tuần ${esc(CURRENT_WEEK)}</span>
-          <b class="rpx-sum-n"><em>${done.length}</em>/${total} đã gửi</b></div>
+        <div><span class="rpx-sum-k">${T("rpx.sumTitle", { w: esc(CURRENT_WEEK) })}</span>
+          <b class="rpx-sum-n">${T("rpx.sumN", { a: done.length, b: total })}</b></div>
         <div class="rpx-sum-badges">
-          <span class="rpx-sum-pill done">${done.length} đã gửi</span>
-          <span class="rpx-sum-pill miss">${miss.length} chưa gửi</span>
+          <span class="rpx-sum-pill done">${T("rpx.nSent", { n: done.length })}</span>
+          <span class="rpx-sum-pill miss">${T("rpx.nMissing", { n: miss.length })}</span>
         </div>
       </div>
       <div class="rpx-sum-bar"><i style="width:${pct}%"></i></div>
-      ${miss.length ? `<div class="rpx-sum-miss"><span>Chưa gửi:</span>${chips}</div>`
-                    : `<div class="rpx-sum-miss ok">Cả đội đã gửi đủ tuần này.</div>`}`;
+      ${miss.length ? `<div class="rpx-sum-miss"><span>${T("rpx.missingLbl")}</span>${chips}</div>`
+                    : `<div class="rpx-sum-miss ok">${T("rpx.allSent")}</div>`}`;
     const more = box.querySelector(".rpx-chip.more");
-    if (more) more.addEventListener("click", () => toast("Chưa gửi: " + miss.join(", ")));
+    if (more) more.addEventListener("click", () => toast(T("rpx.missingLbl") + " " + miss.join(", ")));
   }
 
   function currentGroups(list) {
     const order = [], map = {};
     list.forEach(r => {
-      const w = r.weekLabel || "(không rõ tuần)";
+      const w = r.weekLabel || T("rpx.unknownWeek");
       if (!map[w]) { map[w] = []; order.push(w); }
       map[w].push(r);
     });
@@ -319,14 +317,14 @@
     if (selP) {
       const pics = Array.from(new Set(S.reports.map(r => r.pic).filter(Boolean)))
         .sort((a, b) => a.localeCompare(b, "vi"));
-      selP.innerHTML = '<option value="">Tất cả sales</option>' +
+      selP.innerHTML = '<option value="">' + T("ck.allReps") + '</option>' +
         pics.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
       selP.value = S.filterPic;
       selP.onchange = () => { S.filterPic = selP.value; S.selUid = null; renderList(); renderDetail(); };
     }
     if (selW) {
       const weeks = Array.from(new Set(S.reports.map(r => r.weekLabel).filter(Boolean)));
-      selW.innerHTML = '<option value="">Tất cả tuần</option>' +
+      selW.innerHTML = '<option value="">' + T("rpx.allWeeks") + '</option>' +
         weeks.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join("");
       selW.value = S.filterWeek;
       selW.onchange = () => { S.filterWeek = selW.value; S.selUid = null; renderList(); renderDetail(); };
@@ -338,7 +336,7 @@
     return `<button class="rpx-row${S.selUid === r.uid ? " on" : ""}" role="listitem"
       type="button" data-uid="${esc(r.uid)}" title="${esc(r.picLabel)} — ${esc(r.createdAt)}">
       <span class="rpx-row-name">${esc(r.picLabel)}</span>
-      ${nc ? `<span class="rpx-row-cc" title="${nc} phản hồi">${nc}</span>` : ""}
+      ${nc ? `<span class="rpx-row-cc" title="${T("rp.nReplies", { n: nc })}">${nc}</span>` : ""}
       <span class="rpx-row-date">${vn(r.createdAt)}</span>
     </button>`;
   }
@@ -347,8 +345,7 @@
     const box = document.getElementById("rpxList");
     const list = filtered();
     if (!list.length) {
-      box.innerHTML = `<div class="rpx-empty"><b>Chưa có báo cáo nào</b>
-        <p>Không có báo cáo khớp bộ lọc hiện tại.</p></div>`;
+      box.innerHTML = `<div class="rpx-empty"><b>${T("rp.empty")}</b><p>${T("rpx.noMatch")}</p></div>`;
       return;
     }
     // Lọc theo một tuần cụ thể → danh sách phẳng. "Tất cả tuần" → gom nhóm accordion.
@@ -361,8 +358,8 @@
         <button class="rpx-wk-head" type="button" data-week="${esc(g.week)}" aria-expanded="${open}">
           <svg class="rpx-wk-chev" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          <span class="rpx-wk-label">Tuần ${esc(g.week)}</span>
-          ${now ? '<span class="rpx-wk-now-tag">Tuần này</span>' : ""}
+          <span class="rpx-wk-label">${T("rpx.week", { w: esc(g.week) })}</span>
+          ${now ? '<span class="rpx-wk-now-tag">' + T("rpx.thisWeek") + '</span>' : ""}
           <span class="rpx-wk-count">${g.items.length}</span>
         </button>
         ${open ? `<div class="rpx-wk-body">${g.items.map(rowHtml).join("")}</div>` : ""}
@@ -404,62 +401,61 @@
 
     if (!r) {
       box.innerHTML = `<div class="rpx-empty rpx-empty-lg">
-        <b>Chọn một báo cáo để đọc</b>
-        <p>Bấm một dòng bên trái để xem chi tiết tuần làm việc của sales.</p></div>`;
+        <b>${T("rp.pick")}</b><p>${T("rp.pickLead")}</p></div>`;
       return;
     }
 
     const s = r.stats || {};
     const sec = (title, items, render) => `
       <div class="rpx-sec"><div class="rpx-sec-h"><h3>${title}</h3><span>${items.length}</span></div>
-      ${items.length ? items.map(render).join("") : '<div class="rpx-muted">Không có mục nào.</div>'}</div>`;
+      ${items.length ? items.map(render).join("") : '<div class="rpx-muted">' + T("rp.noItems") + '</div>'}</div>`;
 
     box.innerHTML = `
       <div class="rpx-detail-head">
         <div>
-          <h2>${esc(r.picLabel)} — tuần ${esc(r.weekLabel)}</h2>
-          <div class="rpx-meta">Đã gửi ${vn(r.createdAt)} · Mã ${esc(r.code)}</div>
+          <h2>${T("rp.repWeek", { p: esc(r.picLabel), w: esc(r.weekLabel) })}</h2>
+          <div class="rpx-meta">${T("rp.sentOn", { d: vn(r.createdAt) })} · ${T("dash.idLabel", { id: esc(r.code) })}</div>
         </div>
         <button class="rpx-btn-ghost" id="rpxExport" type="button">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-          Xuất Excel</button>
+          ${T("common.exportExcel")}</button>
       </div>
 
       <div class="rpx-stats">
-        <div class="rpx-stat s-done"><b>${s.done || 0}</b><span>Đã làm</span></div>
-        <div class="rpx-stat s-miss"><b>${s.missed || 0}</b><span>Chưa hoàn thành</span></div>
-        <div class="rpx-stat s-chg"><b>${s.changes || 0}</b><span>Thay đổi dự án</span></div>
-        <div class="rpx-stat s-over"><b>${s.overdue || 0}</b><span>Quá hạn</span></div>
+        <div class="rpx-stat s-done"><b>${s.done || 0}</b><span>${T("wc.done")}</span></div>
+        <div class="rpx-stat s-miss"><b>${s.missed || 0}</b><span>${T("rp.notDone")}</span></div>
+        <div class="rpx-stat s-chg"><b>${s.changes || 0}</b><span>${T("wc.sec.oppChanges")}</span></div>
+        <div class="rpx-stat s-over"><b>${s.overdue || 0}</b><span>${T("db.kpi.overdue")}</span></div>
       </div>
 
       <div class="rpx-chart-wrap">
-        <h4>Phân loại hoạt động đã làm</h4>
+        <h4>${T("rpx.doneTypes")}</h4>
         <div class="rpx-chart"><canvas id="rpxChart"></canvas></div>
         <div class="rpx-legend" id="rpxLegend"></div>
       </div>
 
-      ${sec("Hoạt động đã làm", r.doneActs, a => `
+      ${sec(T("rp.doneActs"), r.doneActs, a => `
         <div class="rpx-item"><div class="rpx-item-t">
           <span class="rpx-item-n">${esc(a.custLabel || a.customer || "—")}</span>
           <span class="rpx-tag">${esc(a.type || "—")}</span>
           <span class="rpx-kg">${vn(a.date)}</span></div>
           <div class="rpx-item-r">${esc(a.note || "—")}</div></div>`)}
 
-      ${r.missedActs.length ? sec("Kế hoạch chưa hoàn thành", r.missedActs, a => `
+      ${r.missedActs.length ? sec(T("rp.missedPlans"), r.missedActs, a => `
         <div class="rpx-item"><div class="rpx-item-t">
           <span class="rpx-item-n">${esc(a.custLabel || a.customer || "—")}</span>
           <span class="rpx-badge warn">${vn(a.date)}</span></div>
           <div class="rpx-item-r">${esc(a.note || "—")}</div></div>`) : ""}
 
-      ${sec("Thay đổi dự án", (r.projectChanges || []).slice(0, 20), c => `
+      ${sec(T("wc.sec.oppChanges"), (r.projectChanges || []).slice(0, 20), c => `
         <div class="rpx-item"><div class="rpx-item-t">
           <span class="rpx-item-n">${esc(c.custLabel || c.customer || "—")}</span>
           <span class="rpx-kg">${vn(c.ts)}</span></div>
           <div class="rpx-item-r">${esc(c.product || "")}${c.text ? " — " + esc(String(c.text).slice(0, 140)) : ""}</div></div>`)}
 
       <div class="rpx-sec">
-        <div class="rpx-sec-h"><h3>Nội dung báo cáo</h3></div>
-        <div class="rpx-note">${esc(r.note || "Không có nội dung.")}</div>
+        <div class="rpx-sec-h"><h3>${T("rp.content")}</h3></div>
+        <div class="rpx-note">${esc(r.note || T("rp.noContent"))}</div>
       </div>
 
       ${attachHtml(r)}
@@ -477,7 +473,7 @@
       String(a.parentType).toLowerCase() === "report" && String(a.parentId) === String(r.uid));
     if (!list.length) return "";
     return `<div class="rpx-sec">
-      <div class="rpx-sec-h"><h3>Tệp đính kèm</h3><span>${list.length}</span></div>
+      <div class="rpx-sec-h"><h3>${T("att.title")}</h3><span>${list.length}</span></div>
       <div class="rpx-att">${list.map(a => `
         <a class="rpx-att-item" href="${esc(a.webUrl || "#")}" target="_blank" rel="noopener">
           <span class="rpx-att-ext">${esc(extOf(a.fileName, a.fileType))}</span>
@@ -496,26 +492,26 @@
       const lead = c.role && scopeOf(roleKey(c.role)) === "all";
       return `<div class="rpx-cmt${mine ? " me" : ""}">
         <div class="rpx-cmt-h"><b>${esc(c.by || "—")}</b>
-          ${lead ? '<span class="rpx-cmt-tag">Quản lý</span>' : ""}
+          ${lead ? '<span class="rpx-cmt-tag">' + T("rp.manager") + '</span>' : ""}
           <span>${vn(c.at)}</span></div>
         <div class="rpx-cmt-b">${esc(c.text || "")}</div></div>`;
-    }).join("") : '<div class="rpx-muted">Chưa có phản hồi nào.</div>';
+    }).join("") : '<div class="rpx-muted">' + T("rp.noReplies") + '</div>';
 
     return `<div class="rpx-sec rpx-thread">
-      <div class="rpx-sec-h"><h3>Trao đổi</h3><span>${cmts.length}</span></div>
+      <div class="rpx-sec-h"><h3>${T("rp.discussion")}</h3><span>${cmts.length}</span></div>
       <div class="rpx-thread-list">${list}</div>
       <div class="rpx-cmt-form">
-        <textarea id="rpxCmt" rows="2" placeholder="Phản hồi cho ${esc(r.picLabel)}…"></textarea>
-        <button class="rpx-btn-primary" id="rpxCmtSend" type="button">Gửi phản hồi</button>
+        <textarea id="rpxCmt" rows="2" placeholder="${T("rp.replyTo", { p: esc(r.picLabel) })}"></textarea>
+        <button class="rpx-btn-primary" id="rpxCmtSend" type="button">${T("rp.sendReply")}</button>
       </div></div>`;
   }
 
   async function postComment(r) {
     const el = document.getElementById("rpxCmt");
     const text = el ? el.value.trim() : "";
-    if (!text) { toast("Nhập nội dung phản hồi."); return; }
+    if (!text) { toast(T("rp.msg.enterReply")); return; }
     const btn = document.getElementById("rpxCmtSend");
-    if (btn) { btn.disabled = true; btn.textContent = "Đang gửi…"; }
+    if (btn) { btn.disabled = true; btn.textContent = T("common.sending"); }
     try {
       const cCols = await FISG_GRAPH.columns("ReportComments");
       const byDisplay = {};
@@ -532,11 +528,11 @@
         by: S.me.pic, role: S.me.role, at: new Date().toISOString().slice(0, 10), text,
       }]);
       renderList(); renderDetail();
-      toast("Đã gửi phản hồi. Sales sẽ nhận email thông báo.");
+      toast(T("rpx.replySent"));
     } catch (e) {
       console.error("[report] gửi phản hồi hỏng:", e);
-      toast("CHƯA gửi được phản hồi: " + ((e && e.message) || e));
-      if (btn) { btn.disabled = false; btn.textContent = "Gửi phản hồi"; }
+      toast(T("rpx.replyFail") + " " + ((e && e.message) || e));
+      if (btn) { btn.disabled = false; btn.textContent = T("rp.sendReply"); }
     }
   }
 
@@ -575,35 +571,34 @@
 
   /* ---------- Xuất Excel ---------- */
   function exportExcel(r) {
-    if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong, thử lại."); return; }
+    if (typeof XLSX === "undefined") { toast(T("rp.msg.xlsxLoading")); return; }
     const s = r.stats || {}, rows = [], push = (...c) => rows.push(c);
-    push("BÁO CÁO TUẦN", r.weekLabel || "");
-    push("Người thực hiện", r.picLabel || r.pic || "");
-    push("Ngày gửi", vn(r.createdAt));
+    push(T("rp.x.title"), r.weekLabel || "");
+    push(T("rp.x.author"), r.picLabel || r.pic || "");
+    push(T("rp.x.sentDate"), vn(r.createdAt));
     push();
-    push("Đã làm", s.done || 0, "Chưa hoàn thành", s.missed || 0,
-         "Thay đổi dự án", s.changes || 0, "Quá hạn", s.overdue || 0);
+    push(T("wc.done"), s.done || 0, T("rp.notDone"), s.missed || 0, T("wc.sec.oppChanges"), s.changes || 0, T("db.kpi.overdue"), s.overdue || 0);
     push();
-    push("HOẠT ĐỘNG ĐÃ LÀM");
-    push("Ngày", "Khách hàng", "Loại", "Nội dung", "Next step");
+    push(T("rp.x.doneActs"));
+    push(T("common.date"), T("common.account"), T("rp.x.type"), T("rp.x.note"), T("act.nextStep"));
     (r.doneActs || []).forEach(a =>
       push(vn(a.date), a.custLabel || a.customer || "", a.type || "", a.note || "", a.next || ""));
     push();
-    push("KẾ HOẠCH CHƯA HOÀN THÀNH");
-    push("Ngày", "Khách hàng", "Nội dung");
+    push(T("rp.x.missed"));
+    push(T("common.date"), T("common.account"), T("rp.x.note"));
     (r.missedActs || []).forEach(a => push(vn(a.date), a.custLabel || a.customer || "", a.note || ""));
     push();
-    push("THAY ĐỔI DỰ ÁN");
-    push("Ngày", "Khách hàng", "Sản phẩm", "Nội dung");
+    push(T("rp.x.changes"));
+    push(T("common.date"), T("common.account"), T("common.product"), T("rp.x.note"));
     (r.projectChanges || []).forEach(c => push(vn(c.ts), c.custLabel || "", c.product || "", c.text || ""));
     push();
-    push("NỘI DUNG BÁO CÁO");
-    push(r.note || "Không có nội dung.");
+    push(T("rp.x.content"));
+    push(r.note || T("rp.noContent"));
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws["!cols"] = [{ wch: 13 }, { wch: 30 }, { wch: 14 }, { wch: 44 }, { wch: 30 }];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Báo cáo");
+    XLSX.utils.book_append_sheet(wb, ws, T("rp.x.sheet"));
     const safe = String(r.picLabel || r.pic || "bao-cao").replace(/[^\p{L}\p{N}]+/gu, "_");
     const wk = String(r.weekLabel || "").replace(/[^\p{L}\p{N}]+/gu, "_");
     XLSX.writeFile(wb, "BaoCao_" + safe + "_" + wk + ".xlsx");
@@ -628,6 +623,13 @@
   else wireSignIn();
 
   let toastT = null;
+  /* i18n: re-render the portal in place on EN | VI switch */
+  if (window.I18N) I18N.onChange(function () {
+    const portal = document.getElementById("rpxPortal");
+    if (!S.me || !portal || portal.hidden) { if (S.me) paintUser(S.me); return; }
+    try { paintUser(S.me); renderSummary(); renderFilters(); renderList(); renderDetail(); } catch (e) { console.error(e); }
+  });
+
   function toast(msg) {
     let el = document.getElementById("rpxToast");
     if (!el) {

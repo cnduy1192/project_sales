@@ -129,7 +129,7 @@
     btn.className = "profile-btn"; btn.type = "button";
     btn.setAttribute("aria-haspopup", "menu");
     btn.setAttribute("aria-expanded", "false");
-    btn.setAttribute("aria-label", "Tài khoản");
+    btn.setAttribute("aria-label", T("hdr.account"));
 
     btn.innerHTML =
       '<span class="avatar" id="pfAv" style="width:34px;height:34px;font-size:12px"></span>' +
@@ -146,7 +146,7 @@
       '</div><hr>' +
       '<button class="profile-act" id="pmOut" role="menuitem" type="button">' +
         '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 17l5-5-5-5M20 12H9M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h5"/></svg>' +
-        'Đăng xuất</button>';
+        '<span data-i18n="auth.signOut">' + T("auth.signOut") + '</span></button>';
     wrap.appendChild(btn); wrap.appendChild(menu);
 
     const fill = () => {
@@ -197,7 +197,7 @@
       box.classList.add("has-clear");
       if (getComputedStyle(box).position === "static") box.style.position = "relative";
       const x = document.createElement("button");
-      x.className = "clear-x"; x.type = "button"; x.setAttribute("aria-label", "Xoá nội dung tìm");
+      x.className = "clear-x"; x.type = "button"; x.setAttribute("aria-label", T("common.clearSearch"));
       x.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
       x.onclick = e => {
         e.preventDefault(); e.stopPropagation();
@@ -222,8 +222,8 @@
   function backToTop() {
     if (document.getElementById("toTop")) return;
     const b = document.createElement("button");
-    b.id = "toTop"; b.type = "button"; b.title = "Lên đầu trang";
-    b.setAttribute("aria-label", "Lên đầu trang");
+    b.id = "toTop"; b.type = "button"; b.title = T("common.backToTop");
+    b.setAttribute("aria-label", T("common.backToTop"));
     b.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
     document.body.appendChild(b);
     let smooth = true;
@@ -244,12 +244,19 @@
     onScroll();
   }
 
-  const HINTS = [
+  /* i18n: hints are matched in both languages (VI source text + EN translation) */
+  const HINT_KEYS = ["db.hoverPoint", "db.clickFilterFunnel", "db.segHint", "db.clickDetails",
+    "db.clickOpen", "db.clickSegHistory", "db.lookupEmpty"];
+  const HINT_VI = [
     "di chuột lên điểm để xem chi tiết", "click để lọc funnel",
     "click một nhóm để xem 13 segment bên trong", "click để xem chi tiết",
     "click để mở dự án", "click segment để xem lịch sử dự án",
     "Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.",
   ];
+  const HINTS = { some: function (fn) {
+    const d = window.I18N_DICT || { en: {} };
+    return HINT_VI.concat(HINT_KEYS.map(k => d.en[k]).filter(Boolean)).some(fn);
+  } };
   function stripHints() {
     document.querySelectorAll(".card small, .cardhead small, small, .ins-wrap p").forEach(el => {
       const t = (el.textContent || "").trim();
@@ -261,9 +268,9 @@
     const seg = document.getElementById("segHint");
     if (seg) seg.style.display = "none";
     const ins = document.getElementById("insQ");
-    if (ins) ins.placeholder = "Tìm khách hàng, sản phẩm, phân khúc, sales, giai đoạn";
+    if (ins) { ins.setAttribute("data-i18n-placeholder", "db.lookupPhShort"); ins.placeholder = T("db.lookupPhShort"); }
     const q = document.getElementById("q");
-    if (q) q.placeholder = "Lọc nhanh funnel";
+    if (q) { q.setAttribute("data-i18n-placeholder", "hdr.quickFilterShort"); q.placeholder = T("hdr.quickFilterShort"); }
   }
 
   function picEmailMap() {
@@ -327,7 +334,7 @@
     const { people, notes } = await fetchDirectory();
     PEOPLE = people;
     if (!people.length) {
-      if (window.toast) toast("Chưa lấy được danh bạ O365. " + (notes[0] || ""));
+      if (window.toast) toast(T("hdr.noDirectory") + " " + (notes[0] || ""));
       console.warn("[ui-kit] danh bạ trống:", notes);
       return false;
     }

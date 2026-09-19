@@ -5,7 +5,7 @@
 
   const cfg = () => window.FISG_CFG || {};
   const guestEmails = () => (cfg().GUEST_EMAILS || []).map(e => String(e).toLowerCase());
-  const viDay = s => s ? new Date(s).toLocaleDateString("vi-VN") : "—";
+  const viDay = s => s ? new Date(s).toLocaleDateString(I18N.locale()) : "—";
   const isGuestEmail = m => !!m && guestEmails().includes(String(m).toLowerCase());
 
   window.FISG_IS_GUEST = () => !!STATE;
@@ -18,13 +18,13 @@
     el.innerHTML =
       '<div class="gg-card glass" role="dialog" aria-modal="true" aria-labelledby="ggT">' +
         '<div class="gg-brand"><span class="gg-logo">FI</span><span>FI SAIGON <b>JSC</b></span></div>' +
-        '<h2 id="ggT">Nhập mã chia sẻ</h2>' +
-        '<p class="gg-sub">Mã do nhân viên FI SAIGON cung cấp.</p>' +
+        '<h2 id="ggT">' + T("gs.enterCode") + '</h2>' +
+        '<p class="gg-sub">' + T("gs.codeHint") + '</p>' +
         '<input id="ggKey" class="gg-key" maxlength="12" inputmode="numeric" autocomplete="off" ' +
-          'spellcheck="false" aria-label="Mã chia sẻ" placeholder="––––––">' +
+          'spellcheck="false" aria-label="' + T("gs.code") + '" placeholder="––––––">' +
         '<p class="gg-msg" id="ggMsg" role="status"></p>' +
-        '<button type="button" class="gg-btn" id="ggGo">Xem dự án</button>' +
-        '<button type="button" class="gg-out" id="ggOut">Thoát</button>' +
+        '<button type="button" class="gg-btn" id="ggGo">' + T("gs.view") + '</button>' +
+        '<button type="button" class="gg-out" id="ggOut">' + T("gs.exit") + '</button>' +
       '</div>';
     document.body.appendChild(el);
     const key = el.querySelector("#ggKey");
@@ -43,14 +43,14 @@
   async function submit() {
     const now = Date.now();
     if (now < lockUntil) {
-      msg("Nhập sai nhiều lần. Thử lại sau " + Math.ceil((lockUntil - now) / 1000) + " giây.", true);
+      msg(T("gs.locked", { n: Math.ceil((lockUntil - now) / 1000) }), true);
       return;
     }
     const k = (document.getElementById("ggKey").value || "").trim();
-    if (!k) { msg("Nhập mã chia sẻ.", true); return; }
+    if (!k) { msg(T("gs.enterCodeMsg"), true); return; }
     const go = document.getElementById("ggGo");
     if (go) go.disabled = true;
-    msg("Đang kiểm tra…");
+    msg(T("gs.checking"));
     try {
       const ok = await openWithKey(k);
       if (!ok && go) go.disabled = false;
@@ -61,7 +61,7 @@
     const hasWorker = !!(window.FISG_CFG && FISG_CFG.SHARE_WORKER_URL);
     const loggedIn = !!(window.FISG_AUTH && FISG_AUTH.account && FISG_AUTH.account());
     if (!hasWorker && !loggedIn) {
-      msg("Chưa cấu hình máy chủ chia sẻ. Báo lại FI SAIGON.", true);
+      msg(T("gs.noServer"), true);
       return false;
     }
 
@@ -76,10 +76,10 @@
       finish();
       return true;
     } catch (e) {
-      if (e.status === 410) { msg(e.message || "Mã đã hết hạn.", true); return false; }
-      if (e.status && e.status !== 404) { msg(e.message || "Không tải được dữ liệu.", true); return false; }
+      if (e.status === 410) { msg(e.message || T("gs.expired"), true); return false; }
+      if (e.status && e.status !== 404) { msg(e.message || T("gs.loadFail"), true); return false; }
       if (e.status !== 404 && !/HTTP|Chưa cấu hình/.test(e.message || "")) {
-        msg("Không kết nối được máy chủ chia sẻ.", true); return false;
+        msg(T("gs.connFail"), true); return false;
       }
 
     }
@@ -89,17 +89,17 @@
         const list = await FISG_SHARE.fetchShares();
         const s = list.find(x => x.key.toLowerCase() === k.toLowerCase());
         if (s) {
-          if (!s.active) { msg("Mã này đã bị thu hồi.", true); return false; }
+          if (!s.active) { msg(T("gs.revoked"), true); return false; }
           if (s.expiry && s.expiry < new Date().toISOString().slice(0, 10)) {
-            msg("Mã đã hết hạn ngày " + viDay(s.expiry) + ".", true); return false;
+            msg(T("gs.expiredOn", { d: viDay(s.expiry) }), true); return false;
           }
           STATE = s; finish(); return true;
         }
       } catch (e) {}
     }
     wrongs++;
-    if (wrongs >= 5) { lockUntil = Date.now() + 30000; wrongs = 0; msg("Sai quá 5 lần. Chờ 30 giây.", true); }
-    else msg("Mã không đúng.", true);
+    if (wrongs >= 5) { lockUntil = Date.now() + 30000; wrongs = 0; msg(T("gs.tooMany"), true); }
+    else msg(T("gs.wrong"), true);
     return false;
   }
 
@@ -143,7 +143,7 @@
   }
 
   function lockWrites() {
-    const deny = () => { if (window.toast) toast("Chế độ khách: chỉ xem, không chỉnh sửa."); };
+    const deny = () => { if (window.toast) toast(T("gs.readOnly")); };
     ["openForm", "saveForm", "openCreateProjectModal", "submitCreateProject", "openCloseModal", "confirmClose", "pickResult", "openProbPop",
      "setProb", "postComment", "saveDetail", "openActForm", "saveAct", "createProjectFromAct",
      "attachAct", "addRel", "rmRel", "dAddRel", "dRmRel", "setRole"
@@ -153,16 +153,16 @@
 
   function banner() {
     if (document.getElementById("guestBar")) return;
-    const what = STATE.scope === "Tất cả NCC" ? "Tất cả nhà cung cấp"
-      : STATE.scope === "Chọn dự án" ? STATE.codes.length + " dự án · " + STATE.ncc
-      : "Toàn bộ dự án · " + STATE.ncc;
+    const what = STATE.scope === "Tất cả NCC" ? T("sf.allSuppliers")
+      : STATE.scope === "Chọn dự án" ? T("sf.nOpps", { n: STATE.codes.length }) + " · " + STATE.ncc
+      : T("gs.allOpps") + " · " + STATE.ncc;
     const b = document.createElement("div");
     b.id = "guestBar"; b.className = "guest-bar";
     b.innerHTML =
-      '<span class="gb-tag">Chế độ khách · chỉ xem</span>' +
+      '<span class="gb-tag">' + T("gs.tag") + '</span>' +
       '<span class="gb-scope">' + what + '</span>' +
-      (STATE.expiry ? '<span class="gb-exp">Hết hạn ' + viDay(STATE.expiry) + "</span>" : "") +
-      '<button type="button" class="gb-out" id="gbOut">Thoát</button>';
+      (STATE.expiry ? '<span class="gb-exp">' + T("gs.expires", { d: viDay(STATE.expiry) }) + "</span>" : "") +
+      '<button type="button" class="gb-out" id="gbOut">' + T("gs.exit") + '</button>';
     document.body.prepend(b);
     document.getElementById("gbOut").onclick = () => location.reload();
   }
@@ -172,7 +172,7 @@
 
     try {
       if (typeof me === "undefined" || !me)
-        me = { name: "Khách", email: "", role: "guest", pic: null, color: "#6D28D9" };
+        me = { name: T("auth.guest"), email: "", role: "guest", pic: null, color: "#6D28D9" };
       const app = document.getElementById("app"), lg = document.getElementById("login");
       if (app) app.style.display = "block";
       if (lg) lg.style.display = "none";
@@ -191,7 +191,7 @@
     if (window.go) go("funnel");
     if (window.render) render();
     if (window.renderDash) renderDash();
-    if (window.toast) toast("Đang xem ở chế độ khách — chỉ xem.");
+    if (window.toast) toast(T("gs.viewing"));
   }
 
   async function afterLogin(email) {
@@ -213,7 +213,7 @@
     b.id = "btnGuest"; b.type = "button"; b.className = "guest-btn";
     b.innerHTML =
       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>' +
-      ' Khách xem chia sẻ';
+      ' <span data-i18n="gs.btn">' + T("gs.btn") + '</span>';
     b.onclick = () => screen();
     msBtn.parentNode.insertBefore(b, msBtn.nextSibling);
   }

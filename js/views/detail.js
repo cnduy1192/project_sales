@@ -5,7 +5,7 @@ function probOptions(sel,val){
 
 function pushProject(rec){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
-    toast('Chưa đăng nhập Microsoft 365 — dự án này chỉ nằm trên máy bạn và sẽ mất khi tải lại trang.');
+    toast(T('dt.msg.localOnly'));
     return;
   }
   FISG_STORE.createProject(rec).then(spId=>{
@@ -21,11 +21,10 @@ function pushProject(rec){
     if(rec.desc) FISG_STORE.addProjectUpdate(spId, rec.desc, rec.pic, rec.created);
     if(typeof invalidateCockpit==='function') invalidateCockpit();
     render(); cockpitRefresh(); if(window.renderActs) renderActs();
-    toast('Đã lưu '+rec.id+' lên SharePoint.');
+    toast(T('dt.msg.savedSp',{id:rec.id}));
   }).catch(e=>{
     console.error('[detail] không tạo được dự án trên SharePoint:', e);
-    toast('KHÔNG lưu được lên SharePoint: '+(e.message||e)+'. Dự án chỉ đang nằm trên màn hình, '
-      +'tải lại trang là mất — hãy chụp lại thông tin trước khi rời đi.');
+    toast(T('dt.msg.createFailed',{e:e.message||e}));
   });
 }
 
@@ -35,7 +34,7 @@ function openDetail(id, origin){
   if(typeof ownsRecord==='function' && me
      && !(typeof canViewAll==='function' && canViewAll(me)) && !ownsRecord(rec, me)
      && !(typeof teamSeesRecord==='function' && teamSeesRecord(rec, me))){
-    toast('Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.');
+    toast(T('dt.msg.notYours'));
     return;
   }
   curRec=rec;
@@ -66,9 +65,9 @@ function dRenderActs(){
   const as=actsOfProject(curRec.id);
   box.innerHTML=(as.length?as.map(a=>
     `<div class="linked-item"><span class="act-type">${a.type}</span>
-      <div><b>${new Date(a.date).toLocaleDateString('vi-VN')}</b> · ${a.pic}<div>${a.note}</div></div></div>`).join('')
-    :'<div style="color:var(--ink-3);font-size:12px">Chưa có hoạt động nào gắn vào dự án này.</div>')
-    +`<button class="act-link" style="margin-top:8px" onclick="attachAct()">+ Ghi hoạt động cho dự án này</button>`;
+      <div><b>${new Date(a.date).toLocaleDateString(I18N.locale())}</b> · ${a.pic}<div>${a.note}</div></div></div>`).join('')
+    :'<div style="color:var(--ink-3);font-size:12px">'+T('dt.noActs')+'</div>')
+    +`<button class="act-link" style="margin-top:8px" onclick="attachAct()">+ ${T('dt.logForOpp')}</button>`;
 }
 function attachAct(){
   const pr=curRec;
@@ -77,7 +76,7 @@ function attachAct(){
   document.getElementById('dov').classList.remove('open');
   NAV.popRaw();
   openActForm({
-    title:'Ghi hoạt động cho dự án',
+    title:T('dt.logForOppTitle'),
     sub:pr.customer+' · '+pr.product,
     customer:pr.customer, ncc:pr.ncc, projectId:pr.id
   },{ label:pr.customer+' · '+pr.product,
@@ -90,11 +89,11 @@ function dRenderRel(editable){
   const sel=document.getElementById('d-rel');
   dRelated.forEach(v=>{
     const t=document.createElement('span'); t.className='tag';
-    t.innerHTML=editable?`${v} <button onclick="dRmRel('${v}')" aria-label="Xoá ${v}">×</button>`:v;
+    t.innerHTML=editable?`${v} <button onclick="dRmRel('${v}')" aria-label="${T('common.removeX',{x:v})}">×</button>`:v;
     box.insertBefore(t,sel);
   });
   sel.style.display=editable?'block':'none';
-  sel.innerHTML='<option value="">+ Thêm người tham gia…</option>'+ALL_PICS.filter(p=>!dRelated.includes(p)&&p!==curRec.pic).map(p=>`<option>${p}</option>`).join('');
+  sel.innerHTML='<option value="">+ '+T('dt.addParticipant')+'</option>'+ALL_PICS.filter(p=>!dRelated.includes(p)&&p!==curRec.pic).map(p=>`<option>${p}</option>`).join('');
 }
 function dAddRel(){const v=document.getElementById('d-rel').value;if(!v)return;dRelated.push(v);dRenderRel(true);}
 function dRmRel(v){dRelated=dRelated.filter(x=>x!==v);dRenderRel(true);}
@@ -102,9 +101,9 @@ function dRenderComments(){
   const box=document.getElementById('d-comments');
   const count=document.getElementById('d-cmt-count');
   const n=curRec.comments.length;
-  if(count)count.textContent=n?n+' tin nhắn':'';
+  if(count)count.textContent=n?T('dt.nMessages',{n:n}):'';
   if(!n){
-    box.innerHTML='<div class="d-empty">'+(curRec.desc?('Ghi chú từ Excel: “'+curRec.desc+'”'):'Chưa có trao đổi nào.')+'</div>';return;}
+    box.innerHTML='<div class="d-empty">'+(curRec.desc?T('dt.excelNote',{x:curRec.desc}):T('dt.noComments'))+'</div>';return;}
 
   const mine=me&&(me.pic||me.name);
   box.innerHTML=curRec.comments.map(c=>{
@@ -126,13 +125,13 @@ function postComment(){
   inp.value=''; dRenderComments();
   if(window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && curRec.spId)
     FISG_STORE.addProjectUpdate(curRec.spId, v, (me&&(me.pic||me.name))||'', isoOf(TODAY));
-  notify(curRec,`đã trao đổi trong <b>${curRec.customer} · ${curRec.product}</b>: “${v.slice(0,60)}${v.length>60?'…':''}”`);
+  notify(curRec,T('dt.notif.comment',{name:`${curRec.customer} · ${curRec.product}`,x:v.slice(0,60)+(v.length>60?'…':'')}));
 }
 function saveDetail(){
   const changes=[];
   const ns=document.getElementById('d-stage').value; if(ns!==curRec.stage){changes.push('giai đoạn → '+stageShort(ns));curRec.stage=ns;}
   const np=+document.getElementById('d-prob').value; if(np!==probPct(curRec)){changes.push('Tiến độ dự án → '+np+'%');curRec.prob=np/100;}
-  const nc=document.getElementById('d-closing').value; if(nc!==curRec.closing){changes.push('ngày đóng → '+new Date(nc).toLocaleDateString('vi-VN'));curRec.closing=nc;}
+  const nc=document.getElementById('d-closing').value; if(nc!==curRec.closing){changes.push('ngày đóng → '+new Date(nc).toLocaleDateString(I18N.locale()));curRec.closing=nc;}
   const k1=+document.getElementById('d-kg1').value||0; if(k1!==curRec.kgThis){changes.push('KG năm nay → '+fmt(k1));curRec.kgThis=k1;}
   const k2=+document.getElementById('d-kg2').value||0; if(k2!==curRec.kgNext){changes.push('KG năm sau → '+fmt(k2));curRec.kgNext=k2;}
   const added=dRelated.filter(x=>!curRec.related.includes(x));
@@ -141,8 +140,8 @@ function saveDetail(){
   if(removed.length)changes.push('bỏ người tham gia: '+removed.join(', '));
   curRec.related=[...dRelated];
   if(changes.length){
-    notify(curRec,`đã cập nhật <b>${curRec.customer} · ${curRec.product}</b>: ${changes.join(' · ')}`);
-    toast('Đã lưu. Thông báo gửi qua Email & Microsoft Teams đến: '+recipientsOf(curRec).join(', ')+'.');
+    notify(curRec,T('dt.notif.updated',{name:`${curRec.customer} · ${curRec.product}`,x:changes.join(' · ')}));
+    toast(T('dt.msg.savedNotify',{to:recipientsOf(curRec).join(', ')}));
     pushProjectPatch(curRec, {
       Stage: ns, WinProbability: np, ClosingDate: nc ? nc + 'T12:00:00Z' : undefined,
       PotentialKgThisYear: k1, PotentialKgNextYear: k2,
@@ -154,14 +153,14 @@ function saveDetail(){
 function pushProjectPatch(rec, patch, note){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) return;
   if(!rec.spId){
-    toast('Dự án này chưa có trên SharePoint nên thay đổi chưa được lưu lại.');
+    toast(T('dt.msg.notOnSp'));
     return;
   }
   FISG_STORE.updateProject(rec.spId, patch)
     .then(()=>{ if(note) return FISG_STORE.addProjectUpdate(rec.spId, note, (me&&(me.pic||me.name))||'', isoOf(TODAY)); })
     .catch(e=>{
       console.error('[detail] không cập nhật được dự án trên SharePoint:', e);
-      toast('Thay đổi CHƯA lên được SharePoint: '+(e.message||e));
+      toast(T('dt.msg.updateFailed',{e:e.message||e}));
     });
 }
 

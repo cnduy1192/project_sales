@@ -29,7 +29,7 @@ function mkCanvas(elId, boxClass){
 }
 function chartFallback(elId,legId){
   dc(elId);
-  document.getElementById(elId).innerHTML='<div class="ins-empty">Cần internet để tải biểu đồ (Chart.js CDN).</div>';
+  document.getElementById(elId).innerHTML='<div class="ins-empty">'+T('db.needInternet')+'</div>';
   if(legId)document.getElementById(legId).innerHTML='';
 }
 function chartEmpty(elId,boxClass,message){
@@ -40,12 +40,12 @@ function chartEmpty(elId,boxClass,message){
 }
 function chartError(elId,boxClass,error){
   console.error('[charts] render '+elId,error);
-  chartEmpty(elId,boxClass,'Không thể hiển thị biểu đồ. Vui lòng thử lại.');
+  chartEmpty(elId,boxClass,T('db.chartError'));
 }
 function donut(elId, legId, items, cb){
   if(!window.Chart){chartFallback(elId,legId);return;}
   if(!items.some(i=>i.value>0)){
-    chartEmpty(elId,'donut-box','Chưa có dữ liệu theo bộ lọc này.');
+    chartEmpty(elId,'donut-box',T('db.noDataFilter'));
     document.getElementById(legId).innerHTML='';
     return;
   }
@@ -54,12 +54,12 @@ function donut(elId, legId, items, cb){
     dc(elId);
     const cv=mkCanvas(elId,'donut-box'),host=cv.parentElement;
     const center=document.createElement('div');center.className='donut-center';host.appendChild(center);
-    const setCenter=i=>{const item=items[i],value=document.createElement('b'),label=document.createElement('span');value.style.color=item?item.color:'#16181D';value.textContent=item?item.value:total;label.textContent=item?item.label:'dự án';center.replaceChildren(value,label);};
+    const setCenter=i=>{const item=items[i],value=document.createElement('b'),label=document.createElement('span');value.style.color=item?item.color:'#16181D';value.textContent=item?item.value:total;label.textContent=item?item.label:T('db.oppsLower');center.replaceChildren(value,label);};
     setCenter();
     rc(elId,new Chart(cv,{type:'doughnut',
       data:{labels:items.map(i=>i.label),datasets:[{data:items.map(i=>i.value),backgroundColor:items.map(i=>i.color),borderWidth:2,borderColor:'#fff',hoverOffset:10,hoverBorderWidth:3}]},
       options:{cutout:'72%',responsive:true,maintainAspectRatio:false,animation:{animateRotate:true,animateScale:true,duration:500,easing:'easeOutQuart'},interaction:{mode:'nearest',intersect:true},
-        plugins:{legend:{display:false},tooltip:{animation:{duration:180,easing:'easeOutQuart'},padding:12,cornerRadius:10,displayColors:true,callbacks:{title:c=>c[0].label,label:c=>' '+c.parsed+' dự án',afterLabel:c=>' '+Math.round(100*c.parsed/total)+'% tổng pipeline'}}},
+        plugins:{legend:{display:false},tooltip:{animation:{duration:180,easing:'easeOutQuart'},padding:12,cornerRadius:10,displayColors:true,callbacks:{title:c=>c[0].label,label:c=>' '+T('sf.nOpps',{n:c.parsed}),afterLabel:c=>' '+T('db.pctPipeline',{p:Math.round(100*c.parsed/total)})}}},
         onHover:(e,els)=>{const i=els.length?els[0].index:undefined;setCenter(i);cv.style.cursor=els.length?'pointer':'default';},
         onClick:(e,els)=>{if(cb&&els.length)window[cb](items[els[0].index].label);}}}));
   }catch(e){chartError(elId,'donut-box',e);}
@@ -68,7 +68,7 @@ function donut(elId, legId, items, cb){
 }
 function lineChart(elId, labels, values){
   if(!window.Chart){chartFallback(elId);return;}
-  if(!labels.length){chartEmpty(elId,'line-box','Chưa có dự án được tạo theo bộ lọc này.');return;}
+  if(!labels.length){chartEmpty(elId,'line-box',T('db.noNewOpps'));return;}
   try{
   dc(elId);
   const cv=mkCanvas(elId,'line-box');
@@ -96,7 +96,7 @@ function lineChart(elId, labels, values){
 
 function statusClick(label){
 
-  if(window.toast) toast(label + ': xem chi tiết qua tooltip hoặc tra cứu trong Dashboard.');
+  if(window.toast) toast(T('db.statusClick',{x:label}));
 }
 function segClick(label){showInsight('seg', label);}
 function picClick(label){showInsight('pic', label);}
@@ -111,13 +111,13 @@ function renderSegDonut(rows){
   const head=document.getElementById('donutDrillHead'), hint=document.getElementById('segDonutHint');
   let items;
   if(!donutSegDrill){
-    head.innerHTML='<b>3 nhóm ngành</b><span style="margin-left:auto">click một lát để mở segment bên trong</span>';
+    head.innerHTML='<b>'+T('db.nGroups',{n:3})+'</b><span style="margin-left:auto">'+T('db.clickSliceSeg')+'</span>';
     if(hint)hint.textContent='';
     items=SEG_GROUPS.map(g=>({label:g,value:rows.filter(r=>r.group===g).length,color:GROUP_COLORS[g]}));
   }else{
     const g=donutSegDrill;
-    head.innerHTML=`<button onclick="segDonutBack()">← 3 nhóm ngành</button><span>/</span><b>${g}</b>
-      <span style="margin-left:auto">click segment để xem lịch sử dự án</span>`;
+    head.innerHTML=`<button onclick="segDonutBack()">← ${T('db.nGroups',{n:3})}</button><span>/</span><b>${g}</b>
+      <span style="margin-left:auto">${T('db.clickSegHistory')}</span>`;
     if(hint)hint.textContent='';
     items=SEG_TREE[g].map((sg,i)=>({label:sg,value:rows.filter(r=>r.segment===sg).length,color:SEG_COLORS[i%SEG_COLORS.length]}))
       .filter(i=>i.value>0);
@@ -133,14 +133,14 @@ function renderDash(){
   const winRate=Math.round(100*won.length/(won.length+lost.length||1));
   const kpi=(label,val,sub)=>`<div class="kpi glass"><div class="k-label">${label}</div><div class="k-value">${val}</div><div class="k-sub">${sub}</div></div>`;
   document.getElementById('kpis').innerHTML =
-    kpi('Tổng dự án',rows.length,'toàn bộ pipeline')+
-    kpi('Đang chạy',prog.length,fmt(kg)+' KG tiềm năng 2026')+
-    kpi('Tỷ lệ thắng',winRate+'%','<span class="trend-up">'+won.length+' thắng</span>· '+lost.length+' thua')+
-    kpi('Quá hạn',nOver,'<span class="trend-down">cần xử lý</span>ngày đóng đã qua');
+    kpi(T('db.kpi.total'),rows.length,T('db.kpi.totalSub'))+
+    kpi(T('status.inProgress'),prog.length,T('db.kpi.openSub',{kg:fmt(kg),y:TODAY.getFullYear()}))+
+    kpi(T('dash.kpi.winRate'),winRate+'%','<span class="trend-up">'+T('db.nWon',{n:won.length})+'</span>· '+T('db.nLost',{n:lost.length}))+
+    kpi(T('db.kpi.overdue'),nOver,'<span class="trend-down">'+T('db.kpi.actionNeeded')+'</span>'+T('db.kpi.pastClose'));
   donut('donutStatus','legStatus',[
-    {label:'Đang chạy',value:prog.length,color:'#C2620A'},
-    {label:'Thắng',value:won.length,color:'#15803D'},
-    {label:'Thua',value:lost.length,color:'#BE1240'}],'statusClick');
+    {label:T('status.inProgress'),value:prog.length,color:'#C2620A'},
+    {label:T('status.won'),value:won.length,color:'#15803D'},
+    {label:T('status.lost'),value:lost.length,color:'#BE1240'}],'statusClick');
   renderSegGrid(rows);
   renderSegDonut(rows);
   const mAgg={};
@@ -154,14 +154,14 @@ function renderDash(){
   const tmax=team.length?team[0][1].n:1;
   document.getElementById('teamBars').innerHTML=team.map(([p,a])=>{
     const wr=a.closed?Math.round(100*a.won/a.closed):0;
-    return `<div class="hbar" onclick="picClick('${p}')"><div class="hb-label">${p}</div><div class="hb-track"><div class="hb-fill" style="width:${Math.max(8,100*a.n/tmax)}%;background:#1E3A8A">${a.n}</div></div><div class="hb-extra">${wr}% thắng</div></div>`;}).join('');
+    return `<div class="hbar" onclick="picClick('${p}')"><div class="hb-label">${p}</div><div class="hb-track"><div class="hb-fill" style="width:${Math.max(8,100*a.n/tmax)}%;background:#1E3A8A">${a.n}</div></div><div class="hb-extra">${T('db.pctWon',{p:wr})}</div></div>`;}).join('');
   const up=prog.filter(r=>r.closing&&new Date(r.closing)>=TODAY).sort((a,b)=>a.closing<b.closing?-1:1).slice(0,7);
   document.getElementById('upcoming').innerHTML= up.length? up.map(r=>{
     const days=Math.round((new Date(r.closing)-TODAY)/864e5);
     const urg=days<=30?'var(--overdue)':days<=90?'var(--prog)':'var(--sbg)';
     return `<div class="hbar" onclick="openDetail('${r.id}')"><div class="hb-label">${r.customer}</div>
       <div style="flex:1;font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.product}</div>
-      <div class="hb-extra" style="color:${urg};font-weight:700">${days} ngày</div></div>`;}).join('') : '<div class="ins-empty">Không có dự án sắp đến hạn.</div>';
+      <div class="hb-extra" style="color:${urg};font-weight:700">${T('db.nDays',{n:days})}</div></div>`;}).join('') : '<div class="ins-empty">'+T('db.noUpcoming')+'</div>';
   const sb=document.getElementById('stageBars'); sb.innerHTML='';
   const colors=s=>SPINE_PALETTE[activeStages().indexOf(s)%SPINE_PALETTE.length];
   const stages=activeStages();
@@ -188,27 +188,27 @@ function renderSegGrid(rows){
   const head=document.getElementById('drillHead'), grid=document.getElementById('segGrid');
   const hint=document.getElementById('segHint');
   if(!segDrill){
-    head.innerHTML='<b>3 nhóm ngành</b> — tổng '+rows.length+' dự án';
-    hint.textContent='click một nhóm để xem segment bên trong';
+    head.innerHTML='<b>'+T('db.nGroups',{n:3})+'</b> — '+T('db.totalN',{n:rows.length});
+    hint.textContent=T('db.clickGroupSeg');
     const max=Math.max(...SEG_GROUPS.map(g=>segStats(rows,r=>r.group===g).n),1);
     grid.innerHTML=SEG_GROUPS.map(g=>{
       const s=segStats(rows,r=>r.group===g), c=GROUP_COLORS[g];
       return `<button class="seg-cell" onclick="segDrill='${g}';renderDash()">
         <div class="sc-top"><span class="sc-dot" style="background:${c}"></span><span class="sc-name">${g}</span>
           <span style="margin-left:auto;font-size:10.5px;color:var(--ink-3)">${SEG_TREE[g].length} segment</span></div>
-        <div class="sc-n">${s.n}</div><div class="sc-sub">${s.prog} đang chạy · ${s.win}% thắng · ${fmt(s.kg)} KG</div>
+        <div class="sc-n">${s.n}</div><div class="sc-sub">${T('db.segCellSub',{a:s.prog,p:s.win,kg:fmt(s.kg)})}</div>
         <div class="sc-bar"><i style="width:${Math.round(100*s.n/max)}%;background:${c}"></i></div></button>`;}).join('');
   }else{
     const g=segDrill, segs=SEG_TREE[g];
-    head.innerHTML=`<button onclick="segDrill=null;renderDash()">← 3 nhóm ngành</button><span>/</span><b>${g}</b>
-      <span style="margin-left:auto">click segment để xem lịch sử dự án</span>`;
+    head.innerHTML=`<button onclick="segDrill=null;renderDash()">← ${T('db.nGroups',{n:3})}</button><span>/</span><b>${g}</b>
+      <span style="margin-left:auto">${T('db.clickSegHistory')}</span>`;
     hint.textContent='';
     const max=Math.max(...segs.map(s=>segStats(rows,r=>r.segment===s).n),1);
     grid.innerHTML=segs.map((sg,i)=>{
       const s=segStats(rows,r=>r.segment===sg), c=SEG_COLORS[i%SEG_COLORS.length];
       return `<button class="seg-cell" onclick="showInsight('seg','${sg.replace(/'/g,"\\'")}')">
         <div class="sc-top"><span class="sc-dot" style="background:${c}"></span><span class="sc-name">${sg}</span></div>
-        <div class="sc-n">${s.n}</div><div class="sc-sub">${s.prog} đang chạy · ${s.win}% thắng · ${fmt(s.kg)} KG</div>
+        <div class="sc-n">${s.n}</div><div class="sc-sub">${T('db.segCellSub',{a:s.prog,p:s.win,kg:fmt(s.kg)})}</div>
         <div class="sc-bar"><i style="width:${Math.round(100*s.n/max)}%;background:${c}"></i></div></button>`;}).join('');
   }
 }
@@ -222,8 +222,8 @@ function lcTipAt(i,x,y){
     `<div class="lt-row"><span class="lt-dot" style="background:${ST_COL[r.status]||'#8A90A4'}"></span>
      <span class="lt-name">${r.customer} · ${r.product}</span>
      <b>${probPct(r)}%</b><span class="lt-st" style="color:${ST_COL[r.status]||'#8A90A4'}">${ST_SHORT[r.status]||r.status}</span></div>`).join('');
-  tip.innerHTML=`<div class="lt-head">Tháng ${d.label} · ${d.recs.length} dự án mới</div>`+items
-    +(d.recs.length>6?`<div class="lt-more">+ ${d.recs.length-6} dự án khác…</div>`:'');
+  tip.innerHTML=`<div class="lt-head">${T('db.monthNew',{m:d.label,n:d.recs.length})}</div>`+items
+    +(d.recs.length>6?`<div class="lt-more">${T('db.moreOpps',{n:d.recs.length-6})}</div>`:'');
   tip.style.display='block';
   tip.style.left=Math.min(x+16, innerWidth-380)+'px';
   tip.style.top=Math.min(y+14, innerHeight-tip.offsetHeight-14)+'px';
@@ -243,12 +243,12 @@ function insSuggest(){
   activeStages().filter(s=>s.toLowerCase().includes(q)||stageShort(s).toLowerCase().includes(q)).slice(0,4).forEach(s=>sug.push({t:'stage',label:s}));
   box.innerHTML=sug.length?sug.map(s=>{
     return `<button onclick="showInsight('${s.t}','${s.label.replace(/'/g,"\\'")}')">${INS_TAG[s.t]||''}<b>${s.label}</b></button>`;}).join('')
-    :'<button disabled style="color:var(--text-3)">Không tìm thấy kết quả</button>';
+    :'<button disabled style="color:var(--text-3)">'+T('common.noResults')+'</button>';
   box.classList.add('open');
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.ins-wrap'))document.getElementById('insSug').classList.remove('open');});
-const INS_TAG={kh:'<span class="t t-kh">KHÁCH HÀNG</span>',prod:'<span class="t t-prod">SẢN PHẨM</span>',
-  grp:'<span class="t t-grp">NHÓM NGÀNH</span>',seg:'<span class="t t-seg">SEGMENT</span>',
+const INS_TAG={get kh(){return '<span class="t t-kh">'+T('db.tag.account')+'</span>';},get prod(){return '<span class="t t-prod">'+T('db.tag.product')+'</span>';},
+  get grp(){return '<span class="t t-grp">'+T('db.tag.group')+'</span>';},seg:'<span class="t t-seg">SEGMENT</span>',
   stage:'<span class="t t-stage">BOP STAGE</span>',pic:'<span class="t t-pic">SALES</span>'};
 
 const INS_MATCH={kh:(k)=>r=>custKey(r.customer)===custKey(k),prod:(k)=>r=>r.product===k,grp:(k)=>r=>r.group===k,
@@ -272,10 +272,10 @@ function clearInsight(){
   const wrap=document.querySelector('.ins-wrap'); if(wrap)wrap.classList.remove('filled');
   const sug=document.getElementById('insSug'); if(sug){sug.classList.remove('open');sug.innerHTML='';}
   const box=document.getElementById('insResult');
-  if(box)box.innerHTML='<div class="ins-empty">Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.</div>';
+  if(box)box.innerHTML='<div class="ins-empty">'+T('db.lookupEmpty')+'</div>';
 }
 window.clearInsight=clearInsight;
-const D_VI=d=>d?new Date(d).toLocaleDateString('vi-VN'):'—';
+const D_VI=d=>d?new Date(d).toLocaleDateString(I18N.locale()):'—';
 const TL_FADE_TOP=.62, TL_FADE_END=.10;
 
 function insYear(r){return r.closing?String(new Date(r.closing).getFullYear()):null;}
@@ -284,7 +284,7 @@ function renderInsight(){
   const mk=INS_MATCH[type]||INS_MATCH.pic;
   const ps=visible().filter(mk(key));
   const box=document.getElementById('insResult');
-  if(!ps.length){box.innerHTML='<div class="ins-empty">Không có dự án nào (trong phạm vi quyền xem của bạn).</div>';return;}
+  if(!ps.length){box.innerHTML='<div class="ins-empty">'+T('db.noOppsScope')+'</div>';return;}
   const prog=ps.filter(r=>r.status==='IN PROGRESS'),won=ps.filter(r=>r.status==='WON'),lost=ps.filter(r=>r.status==='LOST');
   const kg=ps.reduce((s,r)=>s+r.kgThis,0);
   const wr=won.length+lost.length?Math.round(100*won.length/(won.length+lost.length)):0;
@@ -302,14 +302,14 @@ function renderInsight(){
     const rs=buckets[y].sort((a,b)=>(a.closing||'')<(b.closing||'')?1:-1);
     const yw=rs.filter(r=>r.status==='WON').length, yl=rs.filter(r=>r.status==='LOST').length;
     const yp=rs.filter(r=>r.status==='IN PROGRESS').length;
-    const meta=[yp?yp+' đang chạy':'',yw?yw+' thắng':'',yl?yl+' thua':''].filter(Boolean).join(' · ');
+    const meta=[yp?T('db.nOpen',{n:yp}):'',yw?T('db.nWon',{n:yw}):'',yl?T('db.nLost',{n:yl}):''].filter(Boolean).join(' · ');
     const start=seen, end=seen+rs.length;
     const knot='rgba(1,66,106,'+Math.max(.4,TL_FADE_TOP-(TL_FADE_TOP-TL_FADE_END)*(start/steps)+.2).toFixed(3)+')';
     seen=end;
     return `<div class="tly${y===thisYear?' now':''}${y==='—'?' na':''}"
       style="--f0:${fade(start)};--f1:${fade(end)};--fknot:${knot}">
-      <div class="tly-head"><span class="tly-year">${y==='—'?'Chưa có ngày đóng':y}</span>
-        <span class="tly-count">${rs.length} dự án</span>
+      <div class="tly-head"><span class="tly-year">${y==='—'?T('db.noCloseDate'):y}</span>
+        <span class="tly-count">${T('sf.nOpps',{n:rs.length})}</span>
         ${meta?`<span class="tly-meta">${meta}</span>`:''}</div>
       <div class="tly-body">${rs.map((r,k)=>{
         const tc=r.status==='WON'?'var(--won)':r.status==='LOST'?'var(--lost)':grp(r)==='overdue'?'var(--overdue)':'var(--accent)';
@@ -327,12 +327,12 @@ function renderInsight(){
         </button>`;}).join('')}</div></div>`;}).join('');
   box.innerHTML=`
     <div class="ins-head">${tag}<h3>${key}</h3>
-      <button class="ins-reset" onclick="clearInsight()">Xoá tra cứu</button></div>
+      <button class="ins-reset" onclick="clearInsight()">${T('db.clearLookup')}</button></div>
     <div class="ins-stats">
-      <span class="ins-stat">Tổng: <b>${ps.length}</b> dự án</span>
-      <span class="ins-stat">Đang chạy: <b>${prog.length}</b></span>
-      <span class="ins-stat">Thắng: <b>${won.length}</b> · Thua: <b>${lost.length}</b> (<b>${wr}%</b> win)</span>
-      <span class="ins-stat">Tiềm năng: <b>${fmt(kg)}</b> KG/năm</span>
+      <span class="ins-stat">${T('db.ins.total',{n:ps.length})}</span>
+      <span class="ins-stat">${T('status.inProgress')}: <b>${prog.length}</b></span>
+      <span class="ins-stat">${T('db.ins.wonLost',{w:won.length,l:lost.length,p:wr})}</span>
+      <span class="ins-stat">${T('db.ins.potential',{kg:fmt(kg)})}</span>
     </div>
     <div class="tlt">${branches}</div>`;
 }

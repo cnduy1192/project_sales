@@ -3,14 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FI SAIGON — Sales Funnel · Demo training</title>
+<title data-i18n="sf.pageTitleDemo">FI SAIGON — Sales Funnel · Demo training</title>
 <meta name="robots" content="noindex">
+<script src="js/i18n-dict.js?v=1"></script>
+<script src="js/i18n.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css?v=22">
 <link rel="stylesheet" href="ui-kit.css?v=21">
 <link rel="stylesheet" href="funnel.css?v=21">
-<link rel="stylesheet" href="funnel-sf.css?v=21">
+<link rel="stylesheet" href="funnel-sf.css?v=23">
+<link rel="stylesheet" href="funnel-dash.css?v=8">
+<!-- Dashboard analytics: ECharts (biểu đồ) + CountUp (số KPI) — có CDN dự phòng -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js';document.head.appendChild(s);"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.7/countUp.umd.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js';document.head.appendChild(s);"></script>
 </head>
 <body class="sf-body">
 
@@ -20,27 +26,28 @@
 <!-- ══════════ APP ══════════ -->
 <div id="sfApp">
   <header class="sf-top">
-    <a class="sf-home" href="index.html" title="Về app chính">
+    <a class="sf-home" href="index.html" title="Về app chính" data-i18n-title="sf.backToApp">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
     </a>
-    <div class="sf-brand"><span class="logo-mark">FI</span><span class="sf-brand-t">Sales Funnel</span><span class="sf-brand-tag sf-brand-demo">Demo training</span></div>
+    <div class="sf-brand"><span class="logo-mark">FI</span><span class="sf-brand-t">Sales Funnel</span><span class="sf-brand-tag sf-brand-demo" data-i18n="sf.brandTagDemo">Demo training</span></div>
     <div class="sf-ncc" id="sfNcc"></div>
-    <button type="button" class="sf-demo-reset" onclick="location.reload()" title="Bỏ mọi thao tác thử, nạp lại dữ liệu demo gốc">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Làm lại dữ liệu demo</button>
+    <button type="button" class="sf-demo-reset" onclick="location.reload()" title="Bỏ mọi thao tác thử, nạp lại dữ liệu demo gốc" data-i18n-title="sf.demoResetHint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span data-i18n="sf.demoReset">Làm lại dữ liệu demo</span></button>
+    <div data-lang-switch></div>
     <span class="sf-user" id="sfUser"></span>
   </header>
 
   <div class="sf-subbar">
-    <div class="sf-seg" id="sfStatusSeg" role="group" aria-label="Lọc trạng thái">
-      <button class="sf-seg-b on" data-st="IN PROGRESS" onclick="SF.setStatus('IN PROGRESS')">Đang chạy<span class="sf-seg-n" data-n="IN PROGRESS">0</span></button>
-      <button class="sf-seg-b" data-st="WON" onclick="SF.setStatus('WON')">Thắng<span class="sf-seg-n" data-n="WON">0</span></button>
-      <button class="sf-seg-b" data-st="LOST" onclick="SF.setStatus('LOST')">Thua<span class="sf-seg-n" data-n="LOST">0</span></button>
+    <div class="sf-seg" id="sfStatusSeg" role="group" aria-label="Lọc trạng thái" data-i18n-aria-label="sf.filterStatus">
+      <button class="sf-seg-b on" data-st="IN PROGRESS" onclick="SF.setStatus('IN PROGRESS')"><span data-i18n="status.inProgress">Đang chạy</span><span class="sf-seg-n" data-n="IN PROGRESS">0</span></button>
+      <button class="sf-seg-b" data-st="WON" onclick="SF.setStatus('WON')"><span data-i18n="status.won">Thắng</span><span class="sf-seg-n" data-n="WON">0</span></button>
+      <button class="sf-seg-b" data-st="LOST" onclick="SF.setStatus('LOST')"><span data-i18n="status.lost">Thua</span><span class="sf-seg-n" data-n="LOST">0</span></button>
     </div>
     <div class="sf-search sf-search-sub">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-      <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm, ứng dụng, PIC…" oninput="SF.render()" aria-label="Tìm nhanh">
+      <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm, ứng dụng, PIC…" data-i18n-placeholder="sf.searchPh" oninput="SF.render()" aria-label="Tìm nhanh" data-i18n-aria-label="common.quickSearch">
     </div>
-    <button class="sf-expand" id="sfExpandAll" type="button" onclick="SF.toggleAll()">Mở rộng tất cả</button>
+    <button class="sf-expand" id="sfExpandAll" type="button" onclick="SF.toggleAll()" data-i18n="sf.expandAll">Mở rộng tất cả</button>
   </div>
 
   <main class="sf-main">
@@ -58,12 +65,14 @@
 <script src="js/sp-config.js?v=21"></script>
 <script>window.FISG_CFG.USE_GRAPH = false; window.FISG_DEMO_AUTO = true;</script>
 <script src="js/data/catalog.js?v=22"></script>
-<script src="js/config.js?v=23"></script>
+<script src="js/config.js?v=24"></script>
 <script src="js/lib/insights.js?v=21"></script>
 <script src="js/lib/cleanname.js?v=21"></script>
-<script src="js/lib/roles.js?v=21"></script>
+<script src="js/lib/roles.js?v=22"></script>
 <script src="js/lib/localstore.js?v=21"></script>
-<script src="js/views/funnel-sf.js?v=21"></script>
-<script src="js/data/demo-funnel.js?v=11"></script>
+<script src="js/views/funnel-sf.js?v=24"></script>
+<script src="js/i18n-legacy.js?v=1"></script>
+<script src="js/views/funnel-dash.js?v=10"></script>
+<script src="js/data/demo-funnel.js?v=12"></script>
 </body>
 </html>

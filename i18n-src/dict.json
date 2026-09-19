@@ -1,0 +1,4090 @@
+{
+"act.accountPh": [
+"Nhập hoặc chọn khách hàng…",
+"Type or select an account…"
+],
+"act.action": [
+"Hành động",
+"Action"
+],
+"act.addRelated": [
+"Thêm người liên quan…",
+"Add related person…"
+],
+"act.addSupplier": [
+"Thêm nhà cung cấp…",
+"Add supplier…"
+],
+"act.attachOpp": [
+"Gắn vào dự án đang chạy",
+"Link to an Open Opportunity"
+],
+"act.confirmDel": [
+"Xoá hoạt động với \"{c}\" ngày {d}? Không thể hoàn tác.",
+"Delete the activity with \"{c}\" on {d}? This cannot be undone."
+],
+"act.create": [
+"Tạo hoạt động",
+"New Activity"
+],
+"act.createOpp": [
+"Tạo dự án",
+"Create Opportunity"
+],
+"act.delete": [
+"Xoá hoạt động",
+"Delete Activity"
+],
+"act.details": [
+"Chi tiết hoạt động",
+"Activity Details"
+],
+"act.empty": [
+"Chưa có hoạt động nào",
+"No activities yet"
+],
+"act.emptyHint": [
+"Bấm \"Ghi hoạt động\" để bắt đầu.",
+"Click \"New Activity\" to get started."
+],
+"act.fromAct": [
+"từ hoạt động {t}",
+"from activity {t}"
+],
+"act.gate": [
+"Khách hàng này do sales khác quản lý — bạn không tạo hoạt động ở đây. Hãy chọn khách của mình hoặc khách chưa ai quản lý.",
+"This account is owned by another sales rep — you cannot log activities here. Choose one of your accounts or an unowned account."
+],
+"act.interest": [
+"Mức độ quan tâm",
+"Interest Level"
+],
+"act.linked": [
+"Đã gắn dự án",
+"Linked to Opportunity"
+],
+"act.log": [
+"Ghi hoạt động",
+"Log Activity"
+],
+"act.logAccount": [
+"Ghi hoạt động khách hàng",
+"Log Account Activity"
+],
+"act.msg.attPending": [
+"Chưa đăng nhập SharePoint nên {n} tệp đính kèm chưa được tải lên.",
+"Not signed in to SharePoint, so {n} attachment(s) were not uploaded."
+],
+"act.msg.delFailed": [
+"CHƯA xoá được trên SharePoint: {e}. Hoạt động vẫn còn.",
+"NOT deleted on SharePoint: {e}. The activity still exists."
+],
+"act.msg.delLocal": [
+"Đã bỏ khỏi màn hình, nhưng CHƯA đăng nhập SharePoint nên chưa xoá thật — tải lại trang sẽ thấy lại.",
+"Removed from the screen, but not signed in to SharePoint so it was not actually deleted — it will reappear on reload."
+],
+"act.msg.deleted": [
+"Đã xoá hoạt động.",
+"Activity deleted."
+],
+"act.msg.enterAccount": [
+"Nhập tên khách hàng.",
+"Enter an account name."
+],
+"act.msg.localOnly": [
+"Đã lưu trên máy bạn nhưng CHƯA lên SharePoint — quản lý chưa thấy hoạt động này. Phần mềm sẽ tự thử lại ở lần đăng nhập sau.",
+"Saved on your device but NOT on SharePoint — your manager cannot see this activity yet. The app will retry at your next sign-in."
+],
+"act.msg.noDelPerm": [
+"Bạn không có quyền xoá hoạt động này.",
+"You do not have permission to delete this activity."
+],
+"act.msg.noEditPerm": [
+"Bạn không có quyền sửa hoạt động này.",
+"You do not have permission to edit this activity."
+],
+"act.msg.saved": [
+"Đã lưu thay đổi hoạt động.",
+"Activity changes saved."
+],
+"act.msg.savedFree": [
+"Đã lưu hoạt động. Có thể tạo dự án từ hoạt động này bất cứ lúc nào.",
+"Activity saved. You can create an opportunity from it at any time."
+],
+"act.msg.savedLinked": [
+"Đã lưu hoạt động và gắn vào dự án — đã thông báo người liên quan.",
+"Activity saved and linked to the opportunity — related people have been notified."
+],
+"act.newestFirst": [
+"Gần nhất trước",
+"Newest first"
+],
+"act.nextPh": [
+"Bước tiếp theo…",
+"Next step…"
+],
+"act.nextStep": [
+"Bước tiếp theo",
+"Next Step"
+],
+"act.noOppLinked": [
+"Chưa gắn dự án nào",
+"No opportunity linked"
+],
+"act.notif.added": [
+"đã thêm bạn vào hoạt động với <b>{c}</b> ({t}, {d}) — đã vào kế hoạch tuần của bạn",
+"added you to an activity with <b>{c}</b> ({t}, {d}) — it is now in your weekly plan"
+],
+"act.notif.logged": [
+"đã ghi hoạt động vào <b>{name}</b>: {note}",
+"logged an activity on <b>{name}</b>: {note}"
+],
+"act.objective": [
+"Mục tiêu",
+"Objective"
+],
+"act.objectivePh": [
+"Mục tiêu buổi làm việc…",
+"Meeting objective…"
+],
+"act.oldestFirst": [
+"Xa nhất trước",
+"Oldest first"
+],
+"act.otherOpp": [
+"Dự án khác",
+"Other opportunity"
+],
+"act.otherOppHint": [
+"Dự án do sales khác phụ trách",
+"Opportunity owned by another sales rep"
+],
+"act.owner.me": [
+"Bạn đang quản lý khách hàng này.",
+"You own this account."
+],
+"act.owner.none": [
+"Khách hàng chưa có người tiếp quản.",
+"This account has no owner yet."
+],
+"act.owner.other": [
+"Khách hàng đang được quản lý bởi <b>{o}</b>.",
+"This account is owned by <b>{o}</b>."
+],
+"act.pending": [
+"chưa đồng bộ",
+"not synced"
+],
+"act.pendingHint": [
+"Đã lưu trên máy bạn, chưa lên SharePoint — quản lý chưa thấy. Sẽ tự thử lại ở lần đăng nhập sau.",
+"Saved on your device, not yet on SharePoint — your manager cannot see it. It will retry at your next sign-in."
+],
+"act.pickMany": [
+"chọn một hoặc nhiều",
+"select one or more"
+],
+"act.related": [
+"Người liên quan",
+"Related People"
+],
+"act.relatedHint": [
+"hoạt động sẽ vào kế hoạch tuần & báo cáo của họ",
+"the activity will appear in their weekly plan & report"
+],
+"act.rowHint": [
+"Bấm để xem & sửa hoạt động",
+"Click to view & edit this activity"
+],
+"act.savePlan": [
+"Lưu kế hoạch",
+"Save Plan"
+],
+"act.searchAria": [
+"Tìm theo sale hoặc khách hàng",
+"Search by sales rep or account"
+],
+"act.searchPh": [
+"Sale, Khách hàng",
+"Sales rep, account"
+],
+"act.sortAria": [
+"Sắp xếp theo ngày",
+"Sort by date"
+],
+"act.t.call": [
+"Cuộc gọi",
+"Call"
+],
+"act.t.exhibition": [
+"Hội chợ",
+"Trade Show"
+],
+"act.t.meeting": [
+"Gặp / Họp",
+"Meeting"
+],
+"act.t.note": [
+"Ghi chú",
+"Note"
+],
+"act.type": [
+"Loại hoạt động",
+"Activity Type"
+],
+"act.unlinked": [
+"Chưa có dự án",
+"No Opportunity"
+],
+"act.workPlan": [
+"Kế hoạch làm việc",
+"Work Plan"
+],
+"adm.addUser": [
+"Thêm người dùng",
+"Add User"
+],
+"adm.allManagers": [
+"Tất cả quản lý",
+"All managers"
+],
+"adm.byO365": [
+"(theo tên O365)",
+"(from O365 name)"
+],
+"adm.col.role": [
+"Vai trò",
+"Role"
+],
+"adm.col.staff": [
+"Nhân viên",
+"Employee"
+],
+"adm.confirmDemote": [
+"Bạn đang tự hạ quyền của mình xuống {r}. Sau khi lưu bạn sẽ không vào được màn hình phân quyền nữa. Tiếp tục?",
+"You are lowering your own role to {r}. After saving you will no longer be able to access the permissions screen. Continue?"
+],
+"adm.confirmRemove": [
+"Xoá {u} khỏi danh sách phân quyền?\n\nNgười này sẽ không đăng nhập được nữa. Dự án và hoạt động của họ vẫn giữ nguyên.",
+"Remove {u} from the permissions list?\n\nThey will no longer be able to sign in. Their opportunities and activities are kept."
+],
+"adm.editUser": [
+"Sửa người dùng",
+"Edit User"
+],
+"adm.empty": [
+"Chưa có người dùng nào",
+"No users yet"
+],
+"adm.emptyHint": [
+"Thêm người đầu tiên để phân quyền cho đội.",
+"Add the first user to start assigning team permissions."
+],
+"adm.enterEmailFirst": [
+"Nhập email trước đã.",
+"Enter an email first."
+],
+"adm.fillPic": [
+"Điền tên như nó nằm trong dữ liệu vào ô PIC bên dưới — app sẽ tự đổi sang tên đầy đủ khi hiển thị.",
+"Enter the name exactly as it appears in the data in the PIC field below — the app will display the full name automatically."
+],
+"adm.found": [
+"Tìm thấy <b>{n}</b>",
+"Found <b>{n}</b>"
+],
+"adm.fullName": [
+"Tên đầy đủ (O365)",
+"Full Name (O365)"
+],
+"adm.fullNamePh": [
+"Tự điền sau khi tra O365",
+"Auto-filled after O365 lookup"
+],
+"adm.lookupO365": [
+"Tra O365",
+"Look Up in O365"
+],
+"adm.msg.added": [
+"Đã thêm {u}.",
+"Added {u}."
+],
+"adm.msg.cannotDelete": [
+"Chưa nối được list {l} — không xoá được.",
+"Not connected to the {l} list — cannot delete."
+],
+"adm.msg.dupEmail": [
+"Email này đã có trong danh sách.",
+"This email is already in the list."
+],
+"adm.msg.invalidEmail": [
+"Nhập email Microsoft 365 hợp lệ.",
+"Enter a valid Microsoft 365 email."
+],
+"adm.msg.removed": [
+"Đã xoá {u}.",
+"Removed {u}."
+],
+"adm.msg.roleChanged": [
+"Đã đổi vai trò của {u} thành {r}.",
+"Changed the role of {u} to {r}."
+],
+"adm.msg.sessionOnly": [
+"Chưa nối được list {l} — thay đổi chỉ nằm trong phiên này.",
+"Not connected to the {l} list — changes only apply to this session."
+],
+"adm.msg.updated": [
+"Đã cập nhật {u}.",
+"Updated {u}."
+],
+"adm.nearest": [
+"Gần nhất: <b>{x}</b>",
+"Closest: <b>{x}</b>"
+],
+"adm.noList": [
+"Chưa đọc được list <b>{l}</b> trên SharePoint — thay đổi ở đây sẽ mất khi tải lại trang. Tạo list rồi đăng nhập lại để lưu được.",
+"Could not read the <b>{l}</b> list on SharePoint — changes here will be lost on reload. Create the list and sign in again to save."
+],
+"adm.noPicMatch": [
+"Chưa có dự án nào ghi PIC là \"{n}\"",
+"No opportunity has PIC \"{n}\""
+],
+"adm.noReps": [
+"Chưa có sales nào trong dữ liệu.",
+"No sales reps in the data yet."
+],
+"adm.notFoundO365": [
+"Không tìm thấy <b>{m}</b> trên O365. Vẫn thêm được, nhưng hãy tự điền tên PIC cho khớp cột PIC trong dữ liệu.",
+"<b>{m}</b> was not found in O365. You can still add the user, but enter the PIC name to match the PIC column in the data."
+],
+"adm.picAlias": [
+"Dữ liệu ghi {a} → hiển thị \"{f}\"",
+"Data says {a} → displayed as \"{f}\""
+],
+"adm.picFromO365": [
+"PIC lấy theo tên O365 khi đăng nhập",
+"PIC is taken from the O365 name at sign-in"
+],
+"adm.picMatches": [
+"Tên này khớp cột PIC trong dữ liệu — để trống ô PIC bên dưới.",
+"This name matches the PIC column in the data — leave the PIC field below empty."
+],
+"adm.picName": [
+"Tên PIC như trong dữ liệu",
+"PIC Name (as in the data)"
+],
+"adm.reportsTo": [
+"Báo cáo cho",
+"Reports To"
+],
+"adm.roleOf": [
+"Vai trò của {u}",
+"Role of {u}"
+],
+"adm.saveSp": [
+"Lưu lên SharePoint",
+"Save to SharePoint"
+],
+"adm.searchRepsPh": [
+"Tìm sales…",
+"Search sales reps…"
+],
+"adm.searching": [
+"Đang tìm trên Microsoft 365…",
+"Searching Microsoft 365…"
+],
+"adm.supports": [
+"Hỗ trợ các sales",
+"Supports Sales Reps"
+],
+"adm.you": [
+"bạn",
+"you"
+],
+"att.add": [
+"Đính kèm tệp",
+"Attach file"
+],
+"att.attached": [
+"Đã đính kèm {f}.",
+"Attached {f}."
+],
+"att.cannotAttach": [
+"Không đính kèm được:",
+"Cannot attach:"
+],
+"att.confirmDel": [
+"Xoá tệp \"{f}\"? Không hoàn tác.",
+"Delete file \"{f}\"? This cannot be undone."
+],
+"att.delFail": [
+"Không xoá được:",
+"Could not delete:"
+],
+"att.delete": [
+"Xoá tệp",
+"Delete file"
+],
+"att.deleted": [
+"Đã xoá tệp.",
+"File deleted."
+],
+"att.err.noFile": [
+"chưa chọn tệp",
+"no file selected"
+],
+"att.err.tooBig": [
+"tệp quá 15MB ({n}MB)",
+"file exceeds 15 MB ({n} MB)"
+],
+"att.err.type": [
+"định dạng không hỗ trợ (chỉ pdf, word, excel, powerpoint, ảnh, zip)",
+"unsupported format (PDF, Word, Excel, PowerPoint, images, ZIP only)"
+],
+"att.hint": [
+"Tối đa 15MB · pdf, word, excel, ppt, ảnh, zip",
+"Max 15 MB · PDF, Word, Excel, PPT, images, ZIP"
+],
+"att.nAttached": [
+"Đã đính kèm {n} tệp.",
+"Attached {n} file(s)."
+],
+"att.none": [
+"Chưa có tệp đính kèm.",
+"No attachments yet."
+],
+"att.pendingUpload": [
+"chờ tải khi lưu",
+"uploads on save"
+],
+"att.remove": [
+"Bỏ tệp",
+"Remove file"
+],
+"att.someFailed": [
+"Có {n} tệp chưa tải được: {e}",
+"{n} file(s) failed to upload: {e}"
+],
+"att.title": [
+"Tệp đính kèm",
+"Attachments"
+],
+"att.uploadFail": [
+"Không tải được:",
+"Upload failed:"
+],
+"att.uploading": [
+"Đang tải {f}…",
+"Uploading {f}…"
+],
+"att.willUpload": [
+"Sẽ tải lên khi bạn bấm Lưu.",
+"Will upload when you click Save."
+],
+"auth.backHome": [
+"← Quay lại trang chủ",
+"← Back to Home"
+],
+"auth.guest": [
+"Khách",
+"Guest"
+],
+"auth.msg.failed": [
+"Đăng nhập lỗi:",
+"Sign-in failed:"
+],
+"auth.msg.loadingM365": [
+"Đang tải Microsoft 365… Nếu không mở được cửa sổ đăng nhập, tải lại trang.",
+"Loading Microsoft 365… If the sign-in window does not open, reload the page."
+],
+"auth.msg.needHttp": [
+"Đăng nhập Microsoft cần chạy qua http(s) (GitHub Pages/localhost), không mở file trực tiếp.",
+"Microsoft sign-in requires http(s) (GitHub Pages/localhost) — it will not work when opening the file directly."
+],
+"auth.msg.noMsal": [
+"Chưa tải được MSAL. Tải lại trang (F5); nếu vẫn lỗi, kiểm tra mạng/chặn CDN.",
+"Microsoft sign-in library (MSAL) failed to load. Reload the page (F5); if it persists, check your network or CDN blocking."
+],
+"auth.msg.noStore": [
+"Thiếu js/store.js — không tải được dữ liệu.",
+"js/store.js is missing — data cannot be loaded."
+],
+"auth.msg.notInUsers": [
+"Tài khoản {user} chưa có trong list Users trên SharePoint. Nhờ quản trị thêm dòng: Email · Tên PIC · Vai trò.",
+"Account {user} is not in the SharePoint Users list. Ask an admin to add a row: Email · PIC Name · Role."
+],
+"auth.msg.redirect": [
+"Redirect URI chưa khớp. Thêm '{uri}' vào App Registration → Authentication (SPA).",
+"Redirect URI mismatch. Add '{uri}' under App Registration → Authentication (SPA)."
+],
+"auth.msg.resumeFailed": [
+"Không mở lại được phiên đăng nhập: {e}. Hãy đăng nhập lại.",
+"Could not restore your session: {e}. Please sign in again."
+],
+"auth.signIn": [
+"Đăng nhập",
+"Sign In"
+],
+"auth.signInCompany": [
+"Đăng nhập bằng tài khoản công ty <b>@fisaigon.vn</b>.",
+"Sign in with your company account <b>@fisaigon.vn</b>."
+],
+"auth.signInFisgEmail": [
+"Đăng nhập bằng tài khoản Email FISG",
+"Sign in with your FISG email account"
+],
+"auth.signInM365": [
+"Đăng nhập bằng Microsoft 365",
+"Sign in with Microsoft 365"
+],
+"auth.signOut": [
+"Đăng xuất",
+"Sign Out"
+],
+"ch.noVol": [
+"Chưa có khối lượng từ dự án đang chạy hoặc thắng",
+"No volume from open or won opportunities yet"
+],
+"ch.noVolSupplier": [
+"NCC này chưa có khối lượng từ dự án đang chạy hoặc đã thắng.",
+"This supplier has no volume from open or won opportunities yet."
+],
+"ch.pickYear": [
+"Chọn năm",
+"Select year"
+],
+"ch.volByProduct": [
+"Sản lượng theo mặt hàng",
+"Volume by Product"
+],
+"ch.volError": [
+"Không thể hiển thị biểu đồ khối lượng. Vui lòng thử lại.",
+"Could not display the volume chart. Please try again."
+],
+"ch.volSub": [
+"Dự án đang chạy + thắng · tổng {n} KG",
+"Open + won opportunities · total {n} KG"
+],
+"ck.allReps": [
+"Tất cả sales",
+"All sales reps"
+],
+"ck.allTypes": [
+"Tất cả loại",
+"All types"
+],
+"ck.approxDate": [
+"Ngày ước tính từ lần cập nhật cuối — bản ghi cũ không lưu ngày đóng",
+"Estimated from the last update — older records did not store a close date"
+],
+"ck.clearAll": [
+"Xoá toàn bộ bộ lọc",
+"Clear All Filters"
+],
+"ck.custEmpty": [
+"Không có khách hàng nào khớp bộ lọc",
+"No accounts match the filters"
+],
+"ck.custEmptySub": [
+"Đang lọc theo nhà cung cấp, tín hiệu hoặc từ khoá tìm kiếm.",
+"Filtered by supplier, signal or search term."
+],
+"ck.daysAgo": [
+"{n} ngày trước",
+"{n} days ago"
+],
+"ck.daysAgo.one": [
+"{n} ngày trước",
+"{n} day ago"
+],
+"ck.feed": [
+"Dòng thời gian",
+"Timeline"
+],
+"ck.feedEmpty": [
+"Kỳ này chưa có hoạt động nào",
+"No activity in this period"
+],
+"ck.feedEmptySub": [
+"Không có bản ghi nào khớp bộ lọc trong {n} ngày qua.",
+"No records match the filters in the last {n} days."
+],
+"ck.filterRep": [
+"Lọc theo sales",
+"Filter by sales rep"
+],
+"ck.filterType": [
+"Lọc theo loại sự kiện",
+"Filter by event type"
+],
+"ck.fullHistory": [
+"Xem toàn bộ lịch sử dự án",
+"View Full Opportunity History"
+],
+"ck.kgPotential": [
+"KG tiềm năng",
+"Potential KG"
+],
+"ck.kind.close": [
+"Đóng",
+"Closed"
+],
+"ck.kind.new": [
+"Dự án mới",
+"New Opportunity"
+],
+"ck.kind.update": [
+"Cập nhật",
+"Update"
+],
+"ck.lastTouch": [
+"Lần chạm gần nhất:",
+"Last touchpoint:"
+],
+"ck.nEvents": [
+"{n} sự kiện",
+"{n} events"
+],
+"ck.nEvents.one": [
+"{n} sự kiện",
+"{n} event"
+],
+"ck.nTasks": [
+"{n} việc",
+"{n} tasks"
+],
+"ck.nTasks.one": [
+"{n} việc",
+"{n} task"
+],
+"ck.next": [
+"Tiếp theo:",
+"Next:"
+],
+"ck.noActLogged": [
+"Chưa có hoạt động nào được ghi nhận.",
+"No activity has been logged."
+],
+"ck.noActYet": [
+"Chưa ghi nhận hoạt động nào",
+"No activity logged yet"
+],
+"ck.noApp": [
+"Chưa ghi ứng dụng.",
+"No application recorded."
+],
+"ck.noOpenOpps": [
+"Không có dự án nào đang chạy.",
+"No open opportunities."
+],
+"ck.noRep": [
+"Chưa gán sales.",
+"No sales rep assigned."
+],
+"ck.none": [
+"Chưa có",
+"None"
+],
+"ck.periodAria": [
+"Chọn cửa sổ thời gian",
+"Select time window"
+],
+"ck.productsOffered": [
+"Sản phẩm đang chào",
+"Products Offered"
+],
+"ck.range": [
+"Kỳ đang xem:",
+"Viewing period:"
+],
+"ck.recent": [
+"Gần đây",
+"Recent"
+],
+"ck.scheduled": [
+"Đã lên lịch {d}",
+"Scheduled {d}"
+],
+"ck.scheduledHint": [
+"Hoạt động gần nhất nằm ở tương lai — đã đặt lịch",
+"The latest activity is in the future — already scheduled"
+],
+"ck.searchAccounts": [
+"Tìm khách hàng",
+"Search accounts"
+],
+"ck.searchAccountsPh": [
+"Tìm khách hàng…",
+"Search accounts…"
+],
+"ck.segApp": [
+"Segment & ứng dụng",
+"Segments & Applications"
+],
+"ck.sig.acts": [
+"Hoạt động trong kỳ",
+"Activities in Period"
+],
+"ck.sig.actsSub": [
+"Cuộc gọi, ghé thăm, email và cập nhật tiến độ trong kỳ đang xem",
+"Calls, visits, emails and progress updates in the selected period"
+],
+"ck.sig.closed": [
+"Dự án đã đóng",
+"Closed Opportunities"
+],
+"ck.sig.overdue": [
+"Dự án quá hạn",
+"Overdue Opportunities"
+],
+"ck.sig.overdueSub": [
+"Đang chạy nhưng đã qua ngày đóng dự kiến · tính đến hôm nay",
+"Open but past the expected close date · as of today"
+],
+"ck.sig.silent": [
+"Khách hàng chưa tương tác",
+"Inactive Accounts"
+],
+"ck.sig.silentSub": [
+"Có dự án đang chạy, hơn {n} ngày không ai chạm · tính đến hôm nay",
+"Open opportunities with no touchpoint for over {n} days · as of today"
+],
+"ck.signalsAria": [
+"Tín hiệu cần chú ý",
+"Signals to watch"
+],
+"ck.switchedSupplier": [
+"Đã chuyển sang {s} — lịch sử chi tiết xem theo từng nhà cung cấp.",
+"Switched to {s} — detailed history is shown per supplier."
+],
+"ck.touchedToday": [
+"Vừa chạm hôm nay",
+"Touched today"
+],
+"ck.upEmpty": [
+"Chưa có việc nào được lên lịch",
+"Nothing scheduled yet"
+],
+"ck.upEmptySub": [
+"Hoạt động sales đặt cho {n} ngày tới sẽ hiện ở đây.",
+"Sales activities scheduled for the next {n} days will appear here."
+],
+"ck.upcoming": [
+"Sắp tới",
+"Upcoming"
+],
+"ck.upcomingNote": [
+"Hoạt động sales đã lên lịch, chưa diễn ra",
+"Scheduled sales activities not yet completed"
+],
+"ck.viewNDays": [
+"Xem {n} ngày",
+"View {n} days"
+],
+"ck.wonClosed": [
+"Thắng / đã đóng",
+"Won / closed"
+],
+"cl.confirmNotify": [
+"Xác nhận đóng & thông báo",
+"Confirm Close & Notify"
+],
+"cl.reason": [
+"Lý do / ghi chú",
+"Reason / Notes"
+],
+"cl.reasonPh": [
+"Lý do đóng dự án…",
+"Reason for closing…"
+],
+"common.account": [
+"Khách hàng",
+"Account"
+],
+"common.actions": [
+"Thao tác",
+"Actions"
+],
+"common.activity": [
+"Hoạt động",
+"Activity"
+],
+"common.add": [
+"Thêm",
+"Add"
+],
+"common.all": [
+"Tất cả",
+"All"
+],
+"common.application": [
+"Ứng dụng",
+"Application"
+],
+"common.backTo": [
+"Quay lại {x}",
+"Back to {x}"
+],
+"common.backToTop": [
+"Lên đầu trang",
+"Back to top"
+],
+"common.cancel": [
+"Huỷ",
+"Cancel"
+],
+"common.clear": [
+"Xoá",
+"Clear"
+],
+"common.clearFilters": [
+"Xoá bộ lọc",
+"Clear Filters"
+],
+"common.clearSearch": [
+"Xoá nội dung tìm",
+"Clear search"
+],
+"common.close": [
+"Đóng",
+"Close"
+],
+"common.closeEsc": [
+"Đóng (Esc)",
+"Close (Esc)"
+],
+"common.closeLower": [
+"đóng",
+"close"
+],
+"common.createdDate": [
+"Ngày tạo",
+"Created"
+],
+"common.date": [
+"Ngày",
+"Date"
+],
+"common.dayAfterTomorrow": [
+"Ngày kia",
+"In 2 days"
+],
+"common.delete": [
+"Xoá",
+"Delete"
+],
+"common.deleting": [
+"Đang xoá…",
+"Deleting…"
+],
+"common.deselectAll": [
+"Bỏ chọn",
+"Clear"
+],
+"common.edit": [
+"Sửa",
+"Edit"
+],
+"common.expectedClose": [
+"Ngày đóng dự kiến",
+"Expected Close Date"
+],
+"common.exportExcel": [
+"Xuất Excel",
+"Export to Excel"
+],
+"common.filter": [
+"Lọc",
+"Filter"
+],
+"common.industry": [
+"Ngành",
+"Industry"
+],
+"common.language": [
+"Ngôn ngữ hiển thị",
+"Display language"
+],
+"common.loading": [
+"Đang tải…",
+"Loading…"
+],
+"common.msg.noChanges": [
+"Chưa có thay đổi nào.",
+"No changes to save."
+],
+"common.noData": [
+"Không có dữ liệu",
+"No data"
+],
+"common.noResults": [
+"Không tìm thấy kết quả",
+"No results found"
+],
+"common.opportunity": [
+"Dự án",
+"Opportunity"
+],
+"common.optional": [
+"(Tùy chọn)",
+"(Optional)"
+],
+"common.or": [
+"hoặc",
+"or"
+],
+"common.otherLower": [
+"khác",
+"other"
+],
+"common.owner": [
+"PIC",
+"Owner"
+],
+"common.ownerFull": [
+"Người phụ trách",
+"Owner"
+],
+"common.participants": [
+"Người tham gia",
+"Participants"
+],
+"common.product": [
+"Sản phẩm",
+"Product"
+],
+"common.quickSearch": [
+"Tìm nhanh",
+"Quick search"
+],
+"common.removeFilter": [
+"Bỏ lọc",
+"Remove filter"
+],
+"common.removeX": [
+"Bỏ {x}",
+"Remove {x}"
+],
+"common.save": [
+"Lưu",
+"Save"
+],
+"common.saveChanges": [
+"Lưu thay đổi",
+"Save Changes"
+],
+"common.saveLower": [
+"lưu",
+"save"
+],
+"common.saving": [
+"Đang lưu…",
+"Saving…"
+],
+"common.segment": [
+"Phân khúc",
+"Segment"
+],
+"common.segmentGroup": [
+"Nhóm ngành",
+"Segment Group"
+],
+"common.selectAll": [
+"Chọn tất cả",
+"Select All"
+],
+"common.send": [
+"Gửi",
+"Send"
+],
+"common.sending": [
+"Đang gửi…",
+"Sending…"
+],
+"common.stage": [
+"Giai đoạn",
+"Stage"
+],
+"common.status": [
+"Trạng thái",
+"Status"
+],
+"common.supplier": [
+"Nhà cung cấp",
+"Supplier"
+],
+"common.supplierShort": [
+"NCC",
+"Supplier"
+],
+"common.today": [
+"Hôm nay",
+"Today"
+],
+"common.toggle": [
+"Thu gọn / mở rộng",
+"Collapse / expand"
+],
+"common.tomorrow": [
+"Ngày mai",
+"Tomorrow"
+],
+"common.total": [
+"Tổng cộng",
+"Total"
+],
+"common.value": [
+"Giá trị",
+"Value"
+],
+"common.volume": [
+"Sản lượng",
+"Volume"
+],
+"common.yesterday": [
+"Hôm qua",
+"Yesterday"
+],
+"cu.add": [
+"Thêm khách hàng",
+"New Account"
+],
+"cu.allTiers": [
+"Mọi phân loại",
+"All tiers"
+],
+"cu.col.lastAct": [
+"Hoạt động gần nhất",
+"Last Activity"
+],
+"cu.col.opps": [
+"Dự án",
+"Opportunities"
+],
+"cu.col.owner": [
+"Sales phụ trách",
+"Account Owner"
+],
+"cu.confirmDel": [
+"Xoá khách hàng \"{c}\" khỏi danh bạ?",
+"Remove account \"{c}\" from the directory?"
+],
+"cu.confirmDelUsed": [
+"Khách \"{c}\" đang gắn với {n} dự án/hoạt động. Xoá khỏi danh bạ sẽ KHÔNG xoá các bản ghi đó, nhưng khách sẽ biến mất khỏi danh sách. Tiếp tục?",
+"Account \"{c}\" is linked to {n} opportunities/activities. Removing it from the directory will NOT delete those records, but the account will disappear from the list. Continue?"
+],
+"cu.create": [
+"Tạo khách hàng",
+"Create Account"
+],
+"cu.delete": [
+"Xoá khách hàng",
+"Delete Account"
+],
+"cu.displayName": [
+"Tên hiển thị",
+"Display Name"
+],
+"cu.editHint": [
+"Xem & sửa thông tin khách hàng",
+"View & edit account details"
+],
+"cu.empty.dir": [
+"Danh bạ khách hàng đang trống",
+"The account directory is empty"
+],
+"cu.empty.dirHint": [
+"Nhập list Customers trên SharePoint (kèm cột Người phụ trách) để danh bạ hiện ở đây. Xem docs/SharePoint_Setup.md.",
+"Import the SharePoint Customers list (with the Owner column) to populate the directory. See docs/SharePoint_Setup.md."
+],
+"cu.empty.filter": [
+"Không có khách hàng khớp bộ lọc",
+"No accounts match the filters"
+],
+"cu.empty.filterHint": [
+"Thử bỏ bớt bộ lọc hoặc ô tìm kiếm.",
+"Try removing some filters or clearing the search."
+],
+"cu.empty.tier": [
+"Chưa có khách hàng nhóm {t}",
+"No {t} accounts yet"
+],
+"cu.empty.tierHint": [
+"Mở một khách hàng và chọn “Phân loại” để đưa vào nhóm này.",
+"Open an account and set its “Tier” to add it here."
+],
+"cu.foreign": [
+"Khách của sales khác",
+"Another rep’s account"
+],
+"cu.inferred": [
+"Chưa phân loại chính thức (đang tạm tính)",
+"Not officially tiered (provisional)"
+],
+"cu.legalName": [
+"Tên đầy đủ",
+"Legal Name"
+],
+"cu.legalPh": [
+"Tên đầy đủ trên giấy phép",
+"Full name as on the business license"
+],
+"cu.logFor": [
+"Ghi hoạt động cho {c}",
+"Log activity for {c}"
+],
+"cu.msg.added": [
+"Đã thêm khách hàng {c}.",
+"Account {c} added."
+],
+"cu.msg.delFailed": [
+"KHÔNG xoá được trên SharePoint: {e}",
+"Could NOT delete on SharePoint: {e}"
+],
+"cu.msg.deleted": [
+"Đã xoá khách hàng {c}.",
+"Account {c} deleted."
+],
+"cu.msg.missingCols": [
+"Đã lưu, NHƯNG list Customers chưa có cột: {c} — phân loại chưa được ghi. Nhờ quản trị thêm cột trên SharePoint.",
+"Saved, BUT the Customers list is missing columns: {c} — the tier was not saved. Ask an admin to add the columns in SharePoint."
+],
+"cu.msg.noDelPerm": [
+"Bạn không có quyền xoá khách hàng này.",
+"You do not have permission to delete this account."
+],
+"cu.msg.noSignInDel": [
+"Chưa đăng nhập Microsoft 365 — không xoá được.",
+"Not signed in to Microsoft 365 — cannot delete."
+],
+"cu.msg.noSignInSave": [
+"Chưa đăng nhập Microsoft 365 — không lưu được.",
+"Not signed in to Microsoft 365 — cannot save."
+],
+"cu.msg.notFound": [
+"Không tìm thấy khách hàng.",
+"Account not found."
+],
+"cu.msg.saveFailed": [
+"KHÔNG lưu được lên SharePoint: {e}",
+"Could NOT save to SharePoint: {e}"
+],
+"cu.msg.saved": [
+"Đã lưu khách hàng.",
+"Account saved."
+],
+"cu.namePh": [
+"Tên khách hàng…",
+"Account name…"
+],
+"cu.openLower": [
+"đang chạy",
+"open"
+],
+"cu.oppShort": [
+"Dự án",
+"Opportunity"
+],
+"cu.readOnly": [
+"Bạn chỉ xem được khách hàng này. Chỉ người phụ trách hoặc quản trị mới sửa được.",
+"View only. Only the account owner or an administrator can edit this account."
+],
+"cu.searchPh": [
+"Tìm khách hàng, sales…",
+"Search accounts, sales reps…"
+],
+"cu.tier": [
+"Phân loại khách hàng",
+"Account Tier"
+],
+"cu.tier.keyHint": [
+"Khách lớn / chính thức, đang kinh doanh thường xuyên",
+"Major, established accounts with regular business"
+],
+"cu.tier.prospectHint": [
+"Khách tiềm năng, chưa phát sinh đơn hàng",
+"Potential accounts with no orders yet"
+],
+"cu.tier.strategicHint": [
+"Khách hàng chiến lược, trọng yếu",
+"Strategic, business-critical accounts"
+],
+"cu.tierAria": [
+"Phân loại khách hàng",
+"Account tier"
+],
+"cu.unassigned": [
+"Chưa giao",
+"Unassigned"
+],
+"cu.unowned": [
+"Chưa ai quản lý",
+"Unassigned"
+],
+"cu.untiered": [
+"{n} khách chưa phân loại",
+"{n} untiered accounts"
+],
+"cu.untieredHint": [
+"Các khách này chưa có cột Phân loại — đang tạm tính theo Trạng thái (hoặc Prospect).",
+"These accounts have no Tier value — tier is inferred from Status (or Prospect)."
+],
+"cu.viewAll": [
+"Xem tất cả khách hàng",
+"View All Accounts"
+],
+"cu.you": [
+"Bạn",
+"You"
+],
+"dash.allGroups": [
+"Tất cả nhóm",
+"All Groups"
+],
+"dash.atStage": [
+"Đang dừng tại giai đoạn này",
+"Currently at this stage"
+],
+"dash.badge.lost": [
+"Thua",
+"Lost"
+],
+"dash.badge.open": [
+"Chạy",
+"Open"
+],
+"dash.badge.won": [
+"Thắng",
+"Won"
+],
+"dash.ch.detail": [
+"Chi tiết Cơ hội",
+"Opportunity Details"
+],
+"dash.ch.market": [
+"Cơ cấu Thị trường",
+"Market Breakdown"
+],
+"dash.ch.pareto": [
+"Danh mục Sản phẩm (Pareto 80/20)",
+"Product Mix (Pareto 80/20)"
+],
+"dash.ch.stages": [
+"Giai đoạn Pipeline",
+"Pipeline by Stage"
+],
+"dash.ch.team": [
+"Hiệu suất Đội ngũ (PIC)",
+"Team Performance (by Owner)"
+],
+"dash.ch.top": [
+"Top Dự án Chủ lực",
+"Top Opportunities"
+],
+"dash.col.accountProduct": [
+"Khách hàng / Sản phẩm",
+"Account / Product"
+],
+"dash.col.st": [
+"TT",
+"Status"
+],
+"dash.cumulative": [
+"Luỹ kế",
+"Cumulative"
+],
+"dash.drillHint": [
+"Bấm để xem các phân khúc của nhóm này",
+"Click to see segments in this group"
+],
+"dash.emptyHint": [
+"Thử bỏ bớt bộ lọc hoặc bấm “Xoá bộ lọc”.",
+"Try removing some filters or click “Clear Filters”."
+],
+"dash.estSuffix": [
+"(ước tính)",
+"(estimated)"
+],
+"dash.idLabel": [
+"Mã {id}",
+"ID {id}"
+],
+"dash.in80": [
+"Nằm trong nhóm tạo 80% đóng góp",
+"Part of the top 80% contributors"
+],
+"dash.kpi.avgAge": [
+"Tuổi TB <b>{n}</b> ngày",
+"Avg. age <b>{n}</b> days"
+],
+"dash.kpi.openBop": [
+"BOP đang chạy",
+"Open Opportunities"
+],
+"dash.kpi.pipeline": [
+"Tổng pipeline",
+"Pipeline Value"
+],
+"dash.kpi.weightedFormula": [
+"Σ ({m} × % thành công)",
+"Σ ({m} × win probability)"
+],
+"dash.kpi.weightedVal": [
+"Giá trị trọng số",
+"Weighted Value"
+],
+"dash.kpi.weightedVol": [
+"Sản lượng trọng số",
+"Weighted Volume"
+],
+"dash.kpi.winLoss": [
+"<b>{w}</b> thắng / <b>{l}</b> thua · TB {avg}/dự án",
+"<b>{w}</b> won / <b>{l}</b> lost · avg {avg}/opportunity"
+],
+"dash.kpi.winRate": [
+"Tỷ lệ thắng",
+"Win Rate"
+],
+"dash.metric": [
+"Chỉ số",
+"Metric"
+],
+"dash.metricVal": [
+"Giá trị (₫)",
+"Value (₫)"
+],
+"dash.metricVol": [
+"Sản lượng (KG)",
+"Volume (KG)"
+],
+"dash.nOpps": [
+"{n} cơ hội",
+"{n} opportunities"
+],
+"dash.nOpps.one": [
+"{n} cơ hội",
+"{n} opportunity"
+],
+"dash.nOppsB": [
+"<b>{n}</b> cơ hội",
+"<b>{n}</b> opportunities"
+],
+"dash.nOppsShort": [
+"{n} dự án",
+"{n} opps"
+],
+"dash.nOppsShort.one": [
+"{n} dự án",
+"{n} opp"
+],
+"dash.nOverdue": [
+"{n} trễ hạn",
+"{n} overdue"
+],
+"dash.noEcharts": [
+"Không tải được thư viện biểu đồ (ECharts). KPI và bảng chi tiết vẫn dùng bình thường — kiểm tra kết nối mạng rồi tải lại trang.",
+"Could not load the charting library (ECharts). KPIs and the details table still work — check your connection and reload the page."
+],
+"dash.noPrice": [
+"Chưa nhập đơn giá cho cơ hội này",
+"No unit price entered for this opportunity"
+],
+"dash.onTrack": [
+"đúng hạn",
+"on track"
+],
+"dash.openOpp": [
+"Mở dự án {id}",
+"Open opportunity {id}"
+],
+"dash.oppCount": [
+"Số dự án",
+"Opportunities"
+],
+"dash.outOfPipe": [
+"{n} dự án đã thắng / thua / tạm hoãn — không nằm trong pipeline đang chạy",
+"{n} opportunities are won / lost / on hold — not in the active pipeline"
+],
+"dash.overdueLower": [
+"trễ hạn",
+"overdue"
+],
+"dash.pctOfTotal": [
+"{p}% của tổng",
+"{p}% of total"
+],
+"dash.period": [
+"Kỳ",
+"Period"
+],
+"dash.period.both": [
+"Tổng",
+"Total"
+],
+"dash.period.bothFull": [
+"Tổng (năm nay + năm sau)",
+"Total (this year + next year)"
+],
+"dash.period.bothHint": [
+"Sản lượng năm nay + tiềm năng năm sau",
+"This year’s volume + next year’s potential"
+],
+"dash.period.next": [
+"Năm sau",
+"Next Year"
+],
+"dash.period.nextFull": [
+"Tiềm năng năm sau",
+"Next year’s potential"
+],
+"dash.period.nextHint": [
+"Chỉ tiềm năng năm sau",
+"Next year’s potential only"
+],
+"dash.period.this": [
+"Năm nay",
+"This Year"
+],
+"dash.period.thisFull": [
+"Sản lượng năm nay",
+"This year’s volume"
+],
+"dash.period.thisHint": [
+"Chỉ sản lượng năm nay",
+"This year’s volume only"
+],
+"dash.periodAria": [
+"Kỳ số liệu",
+"Reporting period"
+],
+"dash.priceCoverage": [
+"{a}/{b} cơ hội chưa nhập đơn giá nên chưa tính vào Giá trị (phần đã có đơn giá chiếm {p}% sản lượng).",
+"{a}/{b} opportunities have no unit price and are excluded from Value (priced opportunities cover {p}% of volume)."
+],
+"dash.renderError": [
+"Lỗi khi dựng dashboard:",
+"Dashboard failed to render:"
+],
+"dash.segmentOf": [
+"Phân khúc thuộc {g}",
+"Segment in {g}"
+],
+"dash.share": [
+"Tỉ trọng",
+"Share"
+],
+"dash.shareOf": [
+"Tỉ trọng {m}",
+"Share of {m}"
+],
+"dash.shareOpps": [
+"Tỉ trọng dự án",
+"Share of opportunities"
+],
+"dash.showingFirst": [
+"hiện {n} dòng đầu",
+"showing first {n} rows"
+],
+"dash.valLower": [
+"giá trị",
+"value"
+],
+"dash.viewMode": [
+"Chế độ xem",
+"View"
+],
+"dash.volLower": [
+"sản lượng",
+"volume"
+],
+"db.byRep": [
+"Hiệu suất theo Sales",
+"Performance by Sales Rep"
+],
+"db.chartError": [
+"Không thể hiển thị biểu đồ. Vui lòng thử lại.",
+"Could not display the chart. Please try again."
+],
+"db.clearLookup": [
+"Xoá tra cứu",
+"Clear Lookup"
+],
+"db.clickDetails": [
+"click để xem chi tiết",
+"click for details"
+],
+"db.clickFilterFunnel": [
+"click để lọc funnel",
+"click to filter the pipeline"
+],
+"db.clickGroupSeg": [
+"click một nhóm để xem segment bên trong",
+"click a group to see its segments"
+],
+"db.clickOpen": [
+"click để mở dự án",
+"click to open opportunity"
+],
+"db.clickSegHistory": [
+"click segment để xem lịch sử dự án",
+"click a segment to see opportunity history"
+],
+"db.clickSliceSeg": [
+"click một lát để mở segment bên trong",
+"click a slice to open its segments"
+],
+"db.closingSoon": [
+"Sắp đến hạn đóng",
+"Closing Soon"
+],
+"db.funnelByStage": [
+"Funnel theo giai đoạn (đang chạy)",
+"Pipeline by Stage (open)"
+],
+"db.hover": [
+"di chuột để xem chi tiết",
+"hover for details"
+],
+"db.hoverPoint": [
+"di chuột lên điểm để xem chi tiết",
+"hover a point for details"
+],
+"db.ins.potential": [
+"Tiềm năng: <b>{kg}</b> KG/năm",
+"Potential: <b>{kg}</b> KG/yr"
+],
+"db.ins.total": [
+"Tổng: <b>{n}</b> dự án",
+"Total: <b>{n}</b> opportunities"
+],
+"db.ins.wonLost": [
+"Thắng: <b>{w}</b> · Thua: <b>{l}</b> (<b>{p}%</b> win)",
+"Won: <b>{w}</b> · Lost: <b>{l}</b> (<b>{p}%</b> win rate)"
+],
+"db.kpi.actionNeeded": [
+"cần xử lý",
+"action needed"
+],
+"db.kpi.openSub": [
+"{kg} KG tiềm năng {y}",
+"{kg} KG potential in {y}"
+],
+"db.kpi.overdue": [
+"Quá hạn",
+"Overdue"
+],
+"db.kpi.pastClose": [
+"ngày đóng đã qua",
+"close date passed"
+],
+"db.kpi.total": [
+"Tổng dự án",
+"Total Opportunities"
+],
+"db.kpi.totalSub": [
+"toàn bộ pipeline",
+"entire pipeline"
+],
+"db.lookup": [
+"Tra cứu chi tiết & lịch sử",
+"Details & History Lookup"
+],
+"db.lookupEmpty": [
+"Chọn một khách hàng, phân khúc hoặc sales để xem toàn bộ lịch sử dự án theo timeline.",
+"Select an account, segment or sales rep to see the full opportunity history timeline."
+],
+"db.lookupPh": [
+"Gõ khách hàng, sản phẩm, phân khúc, sales hoặc giai đoạn… (vd: Bibica, NUTRIOSE, DAIRY, Thu, TESTING)",
+"Type an account, product, segment, sales rep or stage… (e.g. Bibica, NUTRIOSE, DAIRY, Thu, TESTING)"
+],
+"db.lookupPhShort": [
+"Tìm khách hàng, sản phẩm, phân khúc, sales, giai đoạn",
+"Search accounts, products, segments, reps, stages"
+],
+"db.lookupSub": [
+"Khách hàng · Segment · Sales",
+"Account · Segment · Sales Rep"
+],
+"db.marketSegments": [
+"Phân khúc thị trường",
+"Market Segments"
+],
+"db.monthNew": [
+"Tháng {m} · {n} dự án mới",
+"{m} · {n} new opportunities"
+],
+"db.moreOpps": [
+"+ {n} dự án khác…",
+"+ {n} more…"
+],
+"db.nDays": [
+"{n} ngày",
+"{n} days"
+],
+"db.nDays.one": [
+"{n} ngày",
+"{n} day"
+],
+"db.nGroups": [
+"{n} nhóm ngành",
+"{n} segment groups"
+],
+"db.nLost": [
+"{n} thua",
+"{n} lost"
+],
+"db.nOpen": [
+"{n} đang chạy",
+"{n} open"
+],
+"db.nWon": [
+"{n} thắng",
+"{n} won"
+],
+"db.needInternet": [
+"Cần internet để tải biểu đồ (Chart.js CDN).",
+"An internet connection is required to load charts (Chart.js CDN)."
+],
+"db.newByMonth": [
+"Dự án tạo mới theo tháng",
+"New Opportunities by Month"
+],
+"db.noCloseDate": [
+"Chưa có ngày đóng",
+"No close date"
+],
+"db.noDataFilter": [
+"Chưa có dữ liệu theo bộ lọc này.",
+"No data for this filter yet."
+],
+"db.noNewOpps": [
+"Chưa có dự án được tạo theo bộ lọc này.",
+"No opportunities created for this filter yet."
+],
+"db.noOppsScope": [
+"Không có dự án nào (trong phạm vi quyền xem của bạn).",
+"No opportunities (within your access scope)."
+],
+"db.noUpcoming": [
+"Không có dự án sắp đến hạn.",
+"No opportunities closing soon."
+],
+"db.oppsLower": [
+"dự án",
+"opportunities"
+],
+"db.pctPipeline": [
+"{p}% tổng pipeline",
+"{p}% of pipeline"
+],
+"db.pctWon": [
+"{p}% thắng",
+"{p}% won"
+],
+"db.segCellSub": [
+"{a} đang chạy · {p}% thắng · {kg} KG",
+"{a} open · {p}% won · {kg} KG"
+],
+"db.segDonutHint": [
+"click một lát để xem lịch sử dự án",
+"click a slice to see opportunity history"
+],
+"db.segHint": [
+"click một nhóm để xem 13 segment bên trong",
+"click a group to see its 13 segments"
+],
+"db.segShare": [
+"Tỷ trọng phân khúc",
+"Segment Share"
+],
+"db.statusClick": [
+"{x}: xem chi tiết qua tooltip hoặc tra cứu trong Dashboard.",
+"{x}: see details in the tooltip or use the Dashboard lookup."
+],
+"db.statusShare": [
+"Tỷ trọng trạng thái",
+"Status Breakdown"
+],
+"db.tag.account": [
+"KHÁCH HÀNG",
+"ACCOUNT"
+],
+"db.tag.group": [
+"NHÓM NGÀNH",
+"SEGMENT GROUP"
+],
+"db.tag.product": [
+"SẢN PHẨM",
+"PRODUCT"
+],
+"db.topProducts": [
+"Top sản phẩm theo tiềm năng KG",
+"Top Products by Potential Volume (KG)"
+],
+"db.totalN": [
+"tổng {n} dự án",
+"{n} opportunities in total"
+],
+"demo.badge": [
+"Dữ liệu demo · thao tác thử không lưu",
+"Demo data · practice changes are not saved"
+],
+"demo.toast": [
+"Đang xem {n} dự án demo. Chỉnh sửa chỉ lưu tạm trong trình duyệt.",
+"Viewing {n} demo opportunities. Edits are saved only in this browser."
+],
+"dl.viewingActs": [
+"Đang xem hoạt động của khách hàng: {q}",
+"Viewing activities for account: {q}"
+],
+"dp.next": [
+"Tháng sau",
+"Next month"
+],
+"dp.open": [
+"Mở lịch chọn ngày",
+"Open date picker"
+],
+"dp.prev": [
+"Tháng trước",
+"Previous month"
+],
+"dt.addParticipant": [
+"Thêm người tham gia…",
+"Add participant…"
+],
+"dt.commentPh": [
+"Viết trao đổi… (Enter để gửi)",
+"Write a comment… (Enter to send)"
+],
+"dt.discussion": [
+"Trao đổi trong dự án",
+"Opportunity discussion"
+],
+"dt.excelNote": [
+"Ghi chú từ Excel: “{x}”",
+"Note from Excel: “{x}”"
+],
+"dt.info": [
+"Thông tin & tiến độ",
+"Details & Progress"
+],
+"dt.kgNext": [
+"KG năm sau",
+"KG Next Year"
+],
+"dt.kgThis": [
+"KG năm nay",
+"KG This Year"
+],
+"dt.logForOpp": [
+"Ghi hoạt động cho dự án này",
+"Log activity for this opportunity"
+],
+"dt.logForOppTitle": [
+"Ghi hoạt động cho dự án",
+"Log Opportunity Activity"
+],
+"dt.msg.createFailed": [
+"KHÔNG lưu được lên SharePoint: {e}. Dự án chỉ đang nằm trên màn hình, tải lại trang là mất — hãy chụp lại thông tin trước khi rời đi.",
+"Could NOT save to SharePoint: {e}. The opportunity exists only on screen and will be lost on reload — note the details before leaving."
+],
+"dt.msg.localOnly": [
+"Chưa đăng nhập Microsoft 365 — dự án này chỉ nằm trên máy bạn và sẽ mất khi tải lại trang.",
+"Not signed in to Microsoft 365 — this opportunity only exists on your device and will be lost on reload."
+],
+"dt.msg.notOnSp": [
+"Dự án này chưa có trên SharePoint nên thay đổi chưa được lưu lại.",
+"This opportunity is not on SharePoint yet, so changes were not saved."
+],
+"dt.msg.notYours": [
+"Dự án này thuộc sales khác. Bạn cần được thêm vào mục Người liên quan để xem.",
+"This opportunity belongs to another sales rep. You need to be added as a related person to view it."
+],
+"dt.msg.savedNotify": [
+"Đã lưu. Thông báo gửi qua Email & Microsoft Teams đến: {to}.",
+"Saved. Email & Microsoft Teams notification sent to: {to}."
+],
+"dt.msg.savedSp": [
+"Đã lưu {id} lên SharePoint.",
+"Saved {id} to SharePoint."
+],
+"dt.msg.updateFailed": [
+"Thay đổi CHƯA lên được SharePoint: {e}",
+"Changes were NOT saved to SharePoint: {e}"
+],
+"dt.nMessages": [
+"{n} tin nhắn",
+"{n} messages"
+],
+"dt.nMessages.one": [
+"{n} tin nhắn",
+"{n} message"
+],
+"dt.noActs": [
+"Chưa có hoạt động nào gắn vào dự án này.",
+"No activities linked to this opportunity yet."
+],
+"dt.noComments": [
+"Chưa có trao đổi nào.",
+"No discussion yet."
+],
+"dt.notif.comment": [
+"đã trao đổi trong <b>{name}</b>: “{x}”",
+"commented on <b>{name}</b>: “{x}”"
+],
+"dt.notif.updated": [
+"đã cập nhật <b>{name}</b>: {x}",
+"updated <b>{name}</b>: {x}"
+],
+"dt.progress": [
+"Tiến độ dự án",
+"Opportunity Progress"
+],
+"dt.relatedActs": [
+"Hoạt động khách hàng liên quan",
+"Related Account Activities"
+],
+"dt.saveNotify": [
+"Lưu thay đổi & thông báo",
+"Save & Notify"
+],
+"err.listEmpty": [
+"list {list} rỗng",
+"list {list} is empty"
+],
+"err.noAccountName": [
+"thiếu tên khách hàng",
+"account name is required"
+],
+"err.noAccountRow": [
+"thiếu mã dòng khách hàng",
+"missing account row ID"
+],
+"err.noOwnerCol": [
+"list Customers thiếu cột \"Người phụ trách\" (Owner). Xem docs/SharePoint_Setup.md mục 3f.",
+"The Customers list is missing the \"Người phụ trách\" (Owner) column. See docs/SharePoint_Setup.md section 3f."
+],
+"err.noReportId": [
+"thiếu mã báo cáo",
+"missing report ID"
+],
+"err.notSignedIn": [
+"chưa đăng nhập Microsoft 365",
+"not signed in to Microsoft 365"
+],
+"err.oppNotOnSp": [
+"dự án này chưa có trên SharePoint",
+"this opportunity is not on SharePoint yet"
+],
+"err.usersListDelete": [
+"chưa đọc được list {list} nên không xoá được",
+"list {list} has not loaded, so nothing can be deleted"
+],
+"err.usersListWrite": [
+"chưa đọc được list {list} nên không ghi được",
+"list {list} has not loaded, so it cannot be written"
+],
+"ex.accountOpps": [
+"Dự án của khách hàng",
+"Account Opportunities"
+],
+"ex.actHistory": [
+"Lịch sử hoạt động ({n})",
+"Activity History ({n})"
+],
+"ex.addSupplier": [
+"Thêm nhà cung cấp",
+"Add Supplier"
+],
+"ex.err.dup": [
+"Nhà cung cấp này đã có.",
+"This supplier already exists."
+],
+"ex.err.name": [
+"Nhập tên nhà cung cấp.",
+"Enter a supplier name."
+],
+"ex.err.pipeline": [
+"Chọn một mô hình pipeline.",
+"Select a pipeline template."
+],
+"ex.id": [
+"Mã",
+"ID"
+],
+"ex.lostLower": [
+"thua",
+"lost"
+],
+"ex.msg.added": [
+"Đã thêm \"{n}\" theo mô hình {p}.",
+"Added \"{n}\" using the {p} template."
+],
+"ex.nStages": [
+"{n} giai đoạn",
+"{n} stages"
+],
+"ex.noOpps": [
+"Chưa có dự án nào.",
+"No opportunities yet."
+],
+"ex.noSegData": [
+"Chưa có dữ liệu segment.",
+"No segment data yet."
+],
+"ex.pickPipeline": [
+"Chọn mô hình pipeline để áp dụng",
+"Choose a pipeline template to apply"
+],
+"ex.segShare": [
+"Tỷ trọng Segment",
+"Segment Share"
+],
+"ex.supplierName": [
+"Tên nhà cung cấp",
+"Supplier Name"
+],
+"ex.wonLower": [
+"thắng",
+"won"
+],
+"fn.addOpp": [
+"Thêm dự án",
+"New Opportunity"
+],
+"fn.clearStage": [
+"Bỏ lọc giai đoạn",
+"Clear stage filter"
+],
+"fn.closed": [
+"Đã đóng",
+"Closed"
+],
+"fn.closes": [
+"đóng",
+"closes"
+],
+"fn.emptyHint": [
+"Thử đổi bộ lọc, hoặc bấm \"Thêm dự án\" để tạo mới.",
+"Try changing the filters, or click \"New Opportunity\" to create one."
+],
+"fn.exportHint": [
+"Bản thật: xuất Excel 18 cột đúng format Roquette từ SharePoint List.",
+"Production build: exports an 18-column Excel file in Roquette format from the SharePoint list."
+],
+"fn.kgPerYear": [
+"KG/năm",
+"KG/yr"
+],
+"fn.major.closed": [
+"ĐÃ ĐÓNG",
+"CLOSED"
+],
+"fn.major.open": [
+"ĐANG CHẠY",
+"IN PROGRESS"
+],
+"fn.msg.closed": [
+"Đã đóng {id} ({outcome}). Thông báo gửi qua Email & Teams đến: {to}.",
+"Closed {id} ({outcome}). Email & Teams notification sent to: {to}."
+],
+"fn.msg.exported": [
+"Đã xuất {n} dự án ra Excel.",
+"Exported {n} opportunities to Excel."
+],
+"fn.msg.nothingToExport": [
+"Không có dự án nào để xuất.",
+"No opportunities to export."
+],
+"fn.msg.progress": [
+"Tiến độ dự án {name}: {a}% → {b}%. Đã thông báo người liên quan.",
+"Progress for {name}: {a}% → {b}%. Related people have been notified."
+],
+"fn.notif.closed": [
+"đã đóng dự án <b>{name}</b> — kết quả: <b>{outcome}</b>. Lý do: {reason}",
+"closed <b>{name}</b> — outcome: <b>{outcome}</b>. Reason: {reason}"
+],
+"fn.notif.progress": [
+"đã cập nhật Tiến độ dự án <b>{name}</b>: {a}% → {b}%",
+"updated the progress of <b>{name}</b>: {a}% → {b}%"
+],
+"fn.openWorkspace": [
+"Mở không gian dự án kiểu Salesforce",
+"Open the Salesforce-style opportunity workspace"
+],
+"fn.potential": [
+"Tiềm năng",
+"Potential"
+],
+"fn.sfView": [
+"Giao diện Salesforce",
+"Salesforce View"
+],
+"fn.stageDist": [
+"Phân bố giai đoạn",
+"Stage Distribution"
+],
+"fn.statusRail": [
+"Trạng thái dự án",
+"Opportunity status"
+],
+"fn.sub.later": [
+"{y} trở đi",
+"{y} and later"
+],
+"fn.sub.nextQ": [
+"Quý sau (Q{q}/{y})",
+"Next quarter (Q{q}/{y})"
+],
+"fn.sub.overdue": [
+"Quá hạn — cần xử lý",
+"Overdue — action needed"
+],
+"fn.sub.restOfYear": [
+"Còn lại trong {y}",
+"Rest of {y}"
+],
+"fn.sub.thisQ": [
+"Đóng trong quý này (Q{q}/{y})",
+"Closing this quarter (Q{q}/{y})"
+],
+"gs.allOpps": [
+"Toàn bộ dự án",
+"All opportunities"
+],
+"gs.btn": [
+"Khách xem chia sẻ",
+"Guest: View Shared Link"
+],
+"gs.checking": [
+"Đang kiểm tra…",
+"Checking…"
+],
+"gs.code": [
+"Mã chia sẻ",
+"Share code"
+],
+"gs.codeHint": [
+"Mã do nhân viên FI SAIGON cung cấp.",
+"The code is provided by FI SAIGON staff."
+],
+"gs.connFail": [
+"Không kết nối được máy chủ chia sẻ.",
+"Could not connect to the sharing server."
+],
+"gs.enterCode": [
+"Nhập mã chia sẻ",
+"Enter Share Code"
+],
+"gs.enterCodeMsg": [
+"Nhập mã chia sẻ.",
+"Enter a share code."
+],
+"gs.exit": [
+"Thoát",
+"Exit"
+],
+"gs.expired": [
+"Mã đã hết hạn.",
+"This code has expired."
+],
+"gs.expiredOn": [
+"Mã đã hết hạn ngày {d}.",
+"This code expired on {d}."
+],
+"gs.expires": [
+"Hết hạn {d}",
+"Expires {d}"
+],
+"gs.loadFail": [
+"Không tải được dữ liệu.",
+"Could not load data."
+],
+"gs.locked": [
+"Nhập sai nhiều lần. Thử lại sau {n} giây.",
+"Too many incorrect attempts. Try again in {n} seconds."
+],
+"gs.noServer": [
+"Chưa cấu hình máy chủ chia sẻ. Báo lại FI SAIGON.",
+"The sharing server is not configured. Please contact FI SAIGON."
+],
+"gs.readOnly": [
+"Chế độ khách: chỉ xem, không chỉnh sửa.",
+"Guest mode: view only, no editing."
+],
+"gs.revoked": [
+"Mã này đã bị thu hồi.",
+"This code has been revoked."
+],
+"gs.tag": [
+"Chế độ khách · chỉ xem",
+"Guest mode · view only"
+],
+"gs.tooMany": [
+"Sai quá 5 lần. Chờ 30 giây.",
+"More than 5 incorrect attempts. Wait 30 seconds."
+],
+"gs.view": [
+"Xem dự án",
+"View Opportunities"
+],
+"gs.viewing": [
+"Đang xem ở chế độ khách — chỉ xem.",
+"Viewing in guest mode — read only."
+],
+"gs.wrong": [
+"Mã không đúng.",
+"Incorrect code."
+],
+"hdr.account": [
+"Tài khoản",
+"Account"
+],
+"hdr.allSuppliersHint": [
+"Xem dự án và hoạt động của mọi nhà cung cấp",
+"View opportunities and activities across all suppliers"
+],
+"hdr.hello": [
+"Xin chào, {name}",
+"Hello, {name}"
+],
+"hdr.noDirectory": [
+"Chưa lấy được danh bạ O365.",
+"Could not load the O365 directory."
+],
+"hdr.quickFilter": [
+"Lọc nhanh funnel…",
+"Quick filter pipeline…"
+],
+"hdr.quickFilterShort": [
+"Lọc nhanh funnel",
+"Quick filter pipeline"
+],
+"imp.clickUpdate": [
+"Bấm “Cập nhật lên SharePoint” để ghi.",
+"Click “Update SharePoint” to write."
+],
+"imp.cust.cols": [
+"Cột nhận diện: Title · Owner (Người phụ trách) · LegalName (Tên pháp nhân) · Segment · Region · CustomerStatus · Tier (Phân loại). Sheet phụ (Cần rà, Còn trống) tự bỏ qua.",
+"Recognized columns: Title · Owner · LegalName · Segment · Region · CustomerStatus · Tier. Helper sheets (“Cần rà”, “Còn trống”) are skipped."
+],
+"imp.cust.confirm": [
+"Cập nhật {n} dòng lên list Customers?\n\nKhách đã có sẽ được cập nhật, khách mới sẽ được tạo. Chạy lại nhiều lần vẫn an toàn.",
+"Write {n} rows to the Customers list?\n\nExisting accounts will be updated and new ones created. Safe to re-run."
+],
+"imp.cust.desc": [
+"File gồm cả khách cũ lẫn mới. App tự đối chiếu: khách đã có thì cập nhật Người phụ trách + Tên pháp nhân, khách mới thì tạo. Chạy lại vẫn an toàn.",
+"The file may contain both existing and new accounts. The app reconciles automatically: existing accounts get their Owner + Legal Name updated, new ones are created. Safe to re-run."
+],
+"imp.cust.done": [
+"Xong: <b>{u}</b> cập nhật · <b>{c}</b> tạo mới",
+"Done: <b>{u}</b> updated · <b>{c}</b> created"
+],
+"imp.cust.failedRows": [
+"Dòng chưa ghi được (thử lại lần nữa thường là xong):",
+"Rows not written (retrying usually works):"
+],
+"imp.cust.noRows": [
+"Không tìm thấy dòng khách hàng nào (cần cột Title + Owner/LegalName).",
+"No account rows found (requires Title + Owner/LegalName columns)."
+],
+"imp.cust.read": [
+"Đã đọc {n} dòng từ {f}. Bấm “Xem trước” để đối chiếu.",
+"Read {n} rows from {f}. Click “Preview” to reconcile."
+],
+"imp.cust.reconciled": [
+"Đối chiếu xong {f}: <b>{u}</b> cập nhật · <b>{c}</b> tạo mới",
+"Reconciled {f}: <b>{u}</b> to update · <b>{c}</b> to create"
+],
+"imp.cust.reconciling": [
+"Đang đối chiếu với list Customers trên SharePoint…",
+"Reconciling with the SharePoint Customers list…"
+],
+"imp.cust.title": [
+"Nhập / cập nhật khách hàng từ Excel",
+"Import / Update Accounts from Excel"
+],
+"imp.failedRows": [
+"Dòng chưa ghi được:",
+"Rows not written:"
+],
+"imp.nFailed": [
+"{n} lỗi",
+"{n} failed"
+],
+"imp.nSkipped": [
+"{n} bỏ qua",
+"{n} skipped"
+],
+"imp.noXlsx": [
+"Chưa tải được thư viện đọc Excel. Kiểm tra mạng rồi thử lại.",
+"The Excel reader library failed to load. Check your connection and try again."
+],
+"imp.pickFile": [
+"Chọn file Excel…",
+"Choose Excel file…"
+],
+"imp.preview": [
+"Xem trước",
+"Preview"
+],
+"imp.readFail": [
+"Không đọc được file:",
+"Could not read the file:"
+],
+"imp.readFailShort": [
+"Không đọc được file.",
+"Could not read the file."
+],
+"imp.reading": [
+"Đang đọc {f}…",
+"Reading {f}…"
+],
+"imp.reconcileFail": [
+"Không đối chiếu được:",
+"Reconciliation failed:"
+],
+"imp.skippedNoName": [
+"{n} bỏ qua (thiếu tên)",
+"{n} skipped (no name)"
+],
+"imp.stopped": [
+"Dừng giữa chừng:",
+"Stopped midway:"
+],
+"imp.sup.cols": [
+"Cột nhận diện: Title / Supplier / Nhà cung cấp (hoặc cột đầu tiên).",
+"Recognized columns: Title / Supplier / Nhà cung cấp (or the first column)."
+],
+"imp.sup.confirm": [
+"Cập nhật {n} nhà cung cấp lên list Suppliers?\n\nTên đã có sẽ bỏ qua, tên mới sẽ được tạo. Chạy lại vẫn an toàn.",
+"Write {n} suppliers to the Suppliers list?\n\nExisting names are skipped and new ones created. Safe to re-run."
+],
+"imp.sup.desc": [
+"File một cột tên NCC. App tự đối chiếu list Suppliers: tên mới thì tạo, tên đã có thì bỏ qua. Chạy lại vẫn an toàn.",
+"A single column of supplier names. The app reconciles with the Suppliers list: new names are created, existing ones skipped. Safe to re-run."
+],
+"imp.sup.done": [
+"Xong: <b>{c}</b> tạo mới · {s} bỏ qua",
+"Done: <b>{c}</b> created · {s} skipped"
+],
+"imp.sup.noRows": [
+"Không tìm thấy tên nhà cung cấp nào trong file.",
+"No supplier names found in the file."
+],
+"imp.sup.read": [
+"Đã đọc {n} nhà cung cấp từ {f}. Bấm “Xem trước”.",
+"Read {n} suppliers from {f}. Click “Preview”."
+],
+"imp.sup.reconciled": [
+"Đối chiếu xong: <b>{c}</b> tạo mới · {s} đã có (bỏ qua). Bấm “Cập nhật lên SharePoint”.",
+"Reconciled: <b>{c}</b> to create · {s} already exist (skipped). Click “Update SharePoint”."
+],
+"imp.sup.reconciling": [
+"Đang đối chiếu với list Suppliers…",
+"Reconciling with the Suppliers list…"
+],
+"imp.sup.title": [
+"Nhập nhà cung cấp từ Excel",
+"Import Suppliers from Excel"
+],
+"imp.update": [
+"Cập nhật lên SharePoint",
+"Update SharePoint"
+],
+"imp.writing": [
+"Đang ghi… {a}/{b}",
+"Writing… {a}/{b}"
+],
+"msg.actsDeleted": [
+"Đã xoá {n} hoạt động khỏi SharePoint.",
+"Deleted {n} activities from SharePoint."
+],
+"msg.loadFailed": [
+"Không tải được dữ liệu SharePoint:",
+"Could not load SharePoint data:"
+],
+"nav.accounts": [
+"Khách hàng",
+"Accounts"
+],
+"nav.activities": [
+"Hoạt động khách hàng",
+"Account Activities"
+],
+"nav.collapse": [
+"Thu gọn thanh điều hướng",
+"Collapse sidebar"
+],
+"nav.expand": [
+"Mở rộng thanh điều hướng",
+"Expand sidebar"
+],
+"nav.openFunnel": [
+"Mở trang Sales Funnel",
+"Open Sales Funnel"
+],
+"nav.overview": [
+"Tổng quan",
+"Overview"
+],
+"nav.reports": [
+"Báo cáo",
+"Reports"
+],
+"nav.sec.admin": [
+"Quản trị",
+"Administration"
+],
+"nav.sec.exec": [
+"Điều hành",
+"Executive"
+],
+"nav.sec.work": [
+"Làm việc",
+"Workspace"
+],
+"nav.users": [
+"Người dùng & phân quyền",
+"Users & Permissions"
+],
+"nav.weeklyPlan": [
+"Kế hoạch tuần",
+"Weekly Plan"
+],
+"notif.empty": [
+"Chưa có thông báo nào.",
+"No notifications yet."
+],
+"notif.noRecipients": [
+"(chưa có người nhận)",
+"(no recipients)"
+],
+"notif.noRelated": [
+"(chưa có người liên quan)",
+"(no related people)"
+],
+"notif.reportReplied": [
+"đã phản hồi <b>báo cáo tuần {w}</b>",
+"replied to <b>weekly report {w}</b>"
+],
+"notif.reportSent": [
+"đã gửi <b>báo cáo tuần {w}</b>",
+"submitted <b>weekly report {w}</b>"
+],
+"notif.sentTo": [
+"Gửi đến:",
+"Sent to:"
+],
+"notif.title": [
+"Thông báo",
+"Notifications"
+],
+"num.billionVnd": [
+"{v} tỷ ₫",
+"{v} B ₫"
+],
+"num.millionVnd": [
+"{v} triệu ₫",
+"{v} M ₫"
+],
+"pf.accountLbl": [
+"Khách hàng:",
+"Account:"
+],
+"pf.accountPh": [
+"Chọn / nhập khách hàng…",
+"Select / enter an account…"
+],
+"pf.addRelated": [
+"Thêm người liên quan",
+"Add related person"
+],
+"pf.applicationPh": [
+"Nhập ứng dụng...",
+"Enter an application…"
+],
+"pf.ctxAria": [
+"Bối cảnh dự án",
+"Opportunity context"
+],
+"pf.err.account": [
+"Chọn hoặc nhập khách hàng.",
+"Select or enter an account."
+],
+"pf.err.application": [
+"Nhập ứng dụng.",
+"Enter an application."
+],
+"pf.err.dup": [
+"Khách này đã có dự án đang chạy với sản phẩm này ({id} · {stage}). Bấm Lưu lần nữa nếu vẫn muốn tạo mới.",
+"This account already has an open opportunity for this product ({id} · {stage}). Click Save again to create a new one anyway."
+],
+"pf.err.product": [
+"Nhập sản phẩm.",
+"Enter a product."
+],
+"pf.err.segment": [
+"Chọn segment.",
+"Select a segment."
+],
+"pf.err.stage": [
+"Chọn giai đoạn.",
+"Select a stage."
+],
+"pf.err.supplier": [
+"Chọn nhà cung cấp.",
+"Select a supplier."
+],
+"pf.fromActivity": [
+"từ hoạt động",
+"from activity"
+],
+"pf.inherited": [
+"Kế thừa từ dòng đã chọn",
+"Inherited from the selected row"
+],
+"pf.initialNote": [
+"Ghi chú ban đầu",
+"Initial Note"
+],
+"pf.kgNext": [
+"Tiềm năng năm sau (KG)",
+"Potential Next Year (KG)"
+],
+"pf.kgThis": [
+"Tiềm năng năm nay (KG)",
+"Potential This Year (KG)"
+],
+"pf.moreDetails": [
+"Bổ sung dự báo & Chi tiết",
+"Forecast & Details"
+],
+"pf.msg.created": [
+"Đã tạo dự án {name} ({stage}) — đang lưu lên SharePoint…",
+"Created opportunity {name} ({stage}) — saving to SharePoint…"
+],
+"pf.nFilled": [
+"{n} mục đã nhập",
+"{n} filled"
+],
+"pf.nFilled.one": [
+"{n} mục đã nhập",
+"{n} filled"
+],
+"pf.notePh": [
+"Bối cảnh, nhu cầu của khách... (không bắt buộc)",
+"Context and customer needs… (optional)"
+],
+"pf.notif.created": [
+"đã tạo dự án mới <b>{name}</b>",
+"created a new opportunity <b>{name}</b>"
+],
+"pf.pickSegment": [
+"Chọn segment…",
+"Select a segment…"
+],
+"pf.productPh": [
+"Nhập tên sản phẩm / hoạt chất...",
+"Enter a product / active ingredient…"
+],
+"pf.related": [
+"Người liên quan đến dự án",
+"Related People"
+],
+"pf.save": [
+"Lưu dự án",
+"Save Opportunity"
+],
+"pf.segment": [
+"Nhóm ngành / Segment",
+"Segment Group / Segment"
+],
+"pf.stage": [
+"Giai đoạn (Stage)",
+"Stage"
+],
+"pf.suggestedPrev": [
+"gợi ý từ dự án trước",
+"suggested from a previous opportunity"
+],
+"pf.supplierLbl": [
+"NCC:",
+"Supplier:"
+],
+"pf.titleNew": [
+"Thêm dự án mới",
+"New Opportunity"
+],
+"pf.toSave": [
+"để lưu",
+"to save"
+],
+"role.hint.director": [
+"Thấy toàn đội ở chế độ chỉ đọc; không nhập liệu, không đóng dự án; được phép xoá khách hàng",
+"Read-only view of the whole team; no data entry, cannot close opportunities; may delete accounts"
+],
+"role.hint.manager": [
+"Thấy toàn đội, đóng được dự án, có Kế hoạch tuần; xoá được khách hàng; TỰ SOẠN báo cáo tuần của mình và ĐỌC báo cáo của đội; không sửa phân quyền",
+"Sees the whole team, can close opportunities, has the Weekly Plan; can delete accounts; WRITES their own weekly report and READS the team’s; cannot change permissions"
+],
+"role.hint.none": [
+"Vai trò không hợp lệ — liên hệ quản trị",
+"Invalid role — contact an administrator"
+],
+"role.hint.rnd": [
+"Thấy toàn bộ khách hàng và dự án; ghi được hoạt động với mọi khách; chỉ sửa dự án mình phụ trách R&D, không đóng dự án; KHÔNG xoá được khách hàng",
+"Sees all accounts and opportunities; can log activities for any account; edits only opportunities where they are the R&D owner; cannot close opportunities; CANNOT delete accounts"
+],
+"role.hint.sales": [
+"Chỉ thấy dự án và hoạt động của mình; KHÔNG xoá được khách hàng",
+"Sees only their own opportunities and activities; CANNOT delete accounts"
+],
+"role.hint.salesupport": [
+"Hỗ trợ các sales được chỉ định: thấy và sửa dự án/hoạt động/khách của họ, nhưng KHÔNG xoá",
+"Supports assigned sales reps: views and edits their opportunities/activities/accounts, but CANNOT delete"
+],
+"role.hint.superadmin": [
+"Toàn quyền, xem được mọi màn hình",
+"Full access to every screen"
+],
+"role.hint.teamlead": [
+"Trưởng nhóm (cao hơn Sales/Sale Support/R&D, thấp hơn Manager): thấy dự án/hoạt động/khách của các sale báo cáo cho mình ở chế độ CHỈ ĐỌC, đọc báo cáo tuần của team; tự nhập và quản lý việc của chính mình; KHÔNG xoá khách hàng",
+"Team Leader (above Sales/Sale Support/R&D, below Manager): READ-ONLY view of the opportunities/activities/accounts of reps reporting to them, reads the team’s weekly reports; manages their own work; CANNOT delete accounts"
+],
+"role.none": [
+"Chưa phân quyền",
+"No Role Assigned"
+],
+"rp.actMix": [
+"Cơ cấu hoạt động",
+"Activity Mix"
+],
+"rp.actTypes": [
+"Phân loại hoạt động",
+"Activity Types"
+],
+"rp.actsLower": [
+"hoạt động",
+"activities"
+],
+"rp.all": [
+"Tất cả báo cáo",
+"All Reports"
+],
+"rp.allWeeks": [
+"Tất cả các tuần",
+"All weeks"
+],
+"rp.chg.new": [
+"Tạo mới",
+"New"
+],
+"rp.chg.update": [
+"Cập nhật",
+"Update"
+],
+"rp.clearFilters": [
+"Xoá bộ lọc",
+"Clear filters"
+],
+"rp.col.action": [
+"Thao tác",
+"Actions"
+],
+"rp.col.acts": [
+"Hoạt động hoàn thành",
+"Completed Activities"
+],
+"rp.col.changes": [
+"Cập nhật dự án",
+"Project Updates"
+],
+"rp.col.rep": [
+"Sales",
+"Sales Rep"
+],
+"rp.col.submitted": [
+"Ngày gửi",
+"Submitted"
+],
+"rp.col.summary": [
+"Nội dung",
+"Summary"
+],
+"rp.col.week": [
+"Tuần báo cáo",
+"Reporting Week"
+],
+"rp.confirmDiscard": [
+"Bỏ bản nháp và nội dung đã gõ?",
+"Discard the draft and what you typed?"
+],
+"rp.confirmLeave": [
+"Bản nháp có nhận xét chưa gửi. Rời khỏi và bỏ nội dung đã gõ?",
+"The draft has unsent notes. Leave and discard what you typed?"
+],
+"rp.content": [
+"Nội dung báo cáo",
+"Report Content"
+],
+"rp.contentPh": [
+"Nội dung báo cáo tuần…",
+"Weekly report content…"
+],
+"rp.count": [
+"{n} báo cáo",
+"{n} reports"
+],
+"rp.count.one": [
+"{n} báo cáo",
+"{n} report"
+],
+"rp.discussion": [
+"Trao đổi",
+"Discussion"
+],
+"rp.doneActs": [
+"Hoạt động đã làm",
+"Completed Activities"
+],
+"rp.draft": [
+"Nháp",
+"Draft"
+],
+"rp.draftMeta": [
+"Bản nháp · số liệu chốt khi bấm gửi",
+"Draft · figures are locked when you send"
+],
+"rp.draftStats": [
+"{d} đã làm · {c} thay đổi dự án",
+"{d} done · {c} opportunity changes"
+],
+"rp.draftWeek": [
+"Bản nháp — tuần {w}",
+"Draft — week {w}"
+],
+"rp.edit": [
+"Sửa báo cáo",
+"Edit Report"
+],
+"rp.edited": [
+"đã sửa",
+"edited"
+],
+"rp.empty": [
+"Chưa có báo cáo nào",
+"No reports yet"
+],
+"rp.emptyActsHint": [
+"Hoạt động được đánh dấu hoàn thành trong tuần sẽ hiển thị tại đây.",
+"Activities marked done during the week will show up here."
+],
+"rp.emptyChanges": [
+"Không có thay đổi dự án trong tuần",
+"No project updates this week"
+],
+"rp.emptyChangesHint": [
+"Dự án mới, cập nhật tiến độ và dự án đã đóng sẽ hiển thị tại đây.",
+"New opportunities, progress updates and closures appear here."
+],
+"rp.emptyCompose": [
+"Soạn báo cáo tuần để gửi cho quản lý.",
+"Write a weekly report to send to your manager."
+],
+"rp.emptyLead": [
+"Báo cáo do sales gửi sẽ hiện ở đây.",
+"Reports submitted by sales reps will appear here."
+],
+"rp.emptyMissed": [
+"Không có kế hoạch bị bỏ lỡ",
+"No missed plans"
+],
+"rp.emptyStageHint": [
+"Dự án đang chạy của sales này sẽ được thống kê tại đây.",
+"This rep’s open opportunities will be broken down here."
+],
+"rp.filterWeek": [
+"Lọc theo tuần",
+"Filter by week"
+],
+"rp.manager": [
+"Quản lý",
+"Manager"
+],
+"rp.missedPlans": [
+"Kế hoạch chưa hoàn thành",
+"Incomplete Plans"
+],
+"rp.msg.authorOnly": [
+"Chỉ người gửi mới sửa được báo cáo này.",
+"Only the author can edit this report."
+],
+"rp.msg.editLocal": [
+"Đã lưu trên máy này (chưa đăng nhập SharePoint nên quản lý chưa thấy bản sửa).",
+"Saved on this device (not signed in to SharePoint, so your manager cannot see the edit)."
+],
+"rp.msg.enterReply": [
+"Nhập nội dung phản hồi.",
+"Enter a reply."
+],
+"rp.msg.leadReadOnly": [
+"Quản lý chỉ đọc báo cáo của đội, không soạn báo cáo.",
+"Managers read team reports but do not write them."
+],
+"rp.msg.noReplyPerm": [
+"Bạn không có quyền phản hồi báo cáo này.",
+"You do not have permission to reply to this report."
+],
+"rp.msg.notFound": [
+"Không tìm thấy báo cáo.",
+"Report not found."
+],
+"rp.msg.notFoundExport": [
+"Không tìm thấy báo cáo để xuất.",
+"Report to export not found."
+],
+"rp.msg.replyFailed": [
+"CHƯA gửi được phản hồi lên SharePoint: {e}",
+"Reply NOT sent to SharePoint: {e}"
+],
+"rp.msg.replyNoSignIn": [
+"Chưa đăng nhập Microsoft 365 — chưa gửi được phản hồi.",
+"Not signed in to Microsoft 365 — reply not sent."
+],
+"rp.msg.replySent": [
+"Đã gửi phản hồi.",
+"Reply sent."
+],
+"rp.msg.salesOnly": [
+"Chỉ tài khoản sales mới soạn được báo cáo tuần.",
+"Only sales accounts can write weekly reports."
+],
+"rp.msg.saveFailed": [
+"CHƯA lưu được lên SharePoint: {e}.",
+"NOT saved to SharePoint: {e}."
+],
+"rp.msg.savedLocal": [
+"Đã lưu báo cáo trên máy này (chưa đăng nhập SharePoint nên quản lý chưa nhận được).",
+"Report saved on this device (not signed in to SharePoint, so your manager has not received it)."
+],
+"rp.msg.sendFailed": [
+"CHƯA gửi được lên SharePoint: {e}. Bản nháp vẫn còn để gửi lại.",
+"NOT sent to SharePoint: {e}. The draft is kept so you can resend."
+],
+"rp.msg.sent": [
+"Đã gửi báo cáo tuần {w}.",
+"Weekly report {w} sent."
+],
+"rp.msg.updated": [
+"Đã cập nhật báo cáo tuần {w}.",
+"Weekly report {w} updated."
+],
+"rp.msg.xlsxLoading": [
+"Thư viện Excel chưa tải xong, thử lại sau giây lát.",
+"The Excel library is still loading — try again in a moment."
+],
+"rp.nMissed": [
+"{n} chưa làm",
+"{n} missed"
+],
+"rp.nReplies": [
+"{n} phản hồi",
+"{n} replies"
+],
+"rp.nReplies.one": [
+"{n} phản hồi",
+"{n} reply"
+],
+"rp.noContent": [
+"Không có nội dung.",
+"No content."
+],
+"rp.noDoneActs": [
+"Chưa có hoạt động nào được đánh dấu hoàn thành trong tuần.",
+"No activities marked done this week."
+],
+"rp.noItems": [
+"Không có mục nào.",
+"No items."
+],
+"rp.noMatch": [
+"Không có báo cáo phù hợp",
+"No reports match your filters"
+],
+"rp.noMatchHint": [
+"Thử chọn tuần khác hoặc xoá từ khoá tìm kiếm.",
+"Try a different week or clear the search."
+],
+"rp.noReplies": [
+"Chưa có phản hồi nào.",
+"No replies yet."
+],
+"rp.notDone": [
+"Chưa hoàn thành",
+"Not Completed"
+],
+"rp.openByStage": [
+"Dự án đang chạy theo giai đoạn",
+"Open Opportunities by Stage"
+],
+"rp.pick": [
+"Chọn một báo cáo để đọc",
+"Select a report to read"
+],
+"rp.pickCompose": [
+"Hoặc soạn báo cáo mới cho tuần này.",
+"Or write a new report for this week."
+],
+"rp.pickLead": [
+"Bấm một dòng bên trái để xem chi tiết tuần làm việc của sales.",
+"Click a row on the left to see the rep’s week in detail."
+],
+"rp.repWeek": [
+"{p} — tuần {w}",
+"{p} — week {w}"
+],
+"rp.replyMgr": [
+"Trả lời quản lý…",
+"Reply to your manager…"
+],
+"rp.replyTo": [
+"Phản hồi cho {p}…",
+"Reply to {p}…"
+],
+"rp.searchAria": [
+"Tìm báo cáo",
+"Search reports"
+],
+"rp.searchPh": [
+"Tìm sales, tuần, khách hàng…",
+"Search rep, week, account…"
+],
+"rp.sendReply": [
+"Gửi phản hồi",
+"Send Reply"
+],
+"rp.sendToMgr": [
+"Gửi cho quản lý",
+"Send to Manager"
+],
+"rp.sentOn": [
+"Đã gửi {d}",
+"Sent {d}"
+],
+"rp.showingOf": [
+"Hiển thị {n}/{t}",
+"Showing {n} of {t}"
+],
+"rp.stats": [
+"{d} đã làm · {m} chưa đánh dấu · {c} thay đổi dự án",
+"{d} done · {m} unmarked · {c} opportunity changes"
+],
+"rp.totalUnit": [
+"Tổng {n} {u}",
+"Total {n} {u}"
+],
+"rp.unsent": [
+"chưa gửi",
+"not sent"
+],
+"rp.view": [
+"Xem chi tiết",
+"View Detail"
+],
+"rp.x.author": [
+"Người thực hiện",
+"Prepared by"
+],
+"rp.x.changes": [
+"THAY ĐỔI DỰ ÁN",
+"OPPORTUNITY CHANGES"
+],
+"rp.x.content": [
+"NỘI DUNG BÁO CÁO",
+"REPORT CONTENT"
+],
+"rp.x.doneActs": [
+"HOẠT ĐỘNG ĐÃ LÀM",
+"COMPLETED ACTIVITIES"
+],
+"rp.x.missed": [
+"KẾ HOẠCH CHƯA HOÀN THÀNH",
+"INCOMPLETE PLANS"
+],
+"rp.x.note": [
+"Nội dung",
+"Details"
+],
+"rp.x.sentDate": [
+"Ngày gửi",
+"Sent on"
+],
+"rp.x.sheet": [
+"Báo cáo",
+"Report"
+],
+"rp.x.title": [
+"BÁO CÁO TUẦN",
+"WEEKLY REPORT"
+],
+"rp.x.type": [
+"Loại",
+"Type"
+],
+"rpx.allSent": [
+"Cả đội đã gửi đủ tuần này.",
+"The whole team has submitted this week."
+],
+"rpx.allWeeks": [
+"Tất cả tuần",
+"All weeks"
+],
+"rpx.brand": [
+"Báo cáo tuần",
+"Weekly Reports"
+],
+"rpx.checkingAccess": [
+"Đang kiểm tra quyền truy cập…",
+"Checking access…"
+],
+"rpx.contactAdmin": [
+"Liên hệ với Administrator.",
+"Contact your administrator."
+],
+"rpx.deniedTitle": [
+"Bạn không có quyền xem trang này",
+"You do not have access to this page"
+],
+"rpx.doneTypes": [
+"Phân loại hoạt động đã làm",
+"Completed Activities by Type"
+],
+"rpx.file": [
+"TỆP",
+"FILE"
+],
+"rpx.footer": [
+"FI SAIGON — Sales Funnel · Báo cáo tuần",
+"FI SAIGON — Sales Funnel · Weekly Reports"
+],
+"rpx.loadFail": [
+"Không tải được dữ liệu:",
+"Could not load data:"
+],
+"rpx.loading": [
+"Đang tải báo cáo…",
+"Loading reports…"
+],
+"rpx.missingLbl": [
+"Chưa gửi:",
+"Missing:"
+],
+"rpx.nMissing": [
+"{n} chưa gửi",
+"{n} missing"
+],
+"rpx.nSent": [
+"{n} đã gửi",
+"{n} submitted"
+],
+"rpx.noAccess": [
+"Tài khoản của bạn ({r}) không có quyền xem báo cáo toàn đội. Trang này chỉ dành cho Manager, Director hoặc Super Admin.",
+"Your account ({r}) cannot view team reports. This page is for Managers, Directors and Super Admins only."
+],
+"rpx.noMatch": [
+"Không có báo cáo khớp bộ lọc hiện tại.",
+"No reports match the current filters."
+],
+"rpx.notFoundAll": [
+"Không tìm thấy báo cáo — hiển thị tất cả.",
+"Report not found — showing all."
+],
+"rpx.otherAccount": [
+"Đăng nhập tài khoản khác",
+"Sign in with a different account"
+],
+"rpx.pageTitle": [
+"Báo cáo tuần · FI SAIGON",
+"Weekly Reports · FI SAIGON"
+],
+"rpx.replyFail": [
+"CHƯA gửi được phản hồi:",
+"Reply NOT sent:"
+],
+"rpx.replySent": [
+"Đã gửi phản hồi. Sales sẽ nhận email thông báo.",
+"Reply sent. The sales rep will get an email notification."
+],
+"rpx.signInMs": [
+"Đăng nhập Microsoft",
+"Sign in with Microsoft"
+],
+"rpx.signInTitle": [
+"Đăng nhập để xem báo cáo",
+"Sign in to view reports"
+],
+"rpx.sumN": [
+"<em>{a}</em>/{b} đã gửi",
+"<em>{a}</em>/{b} submitted"
+],
+"rpx.sumTitle": [
+"Gửi báo cáo · tuần {w}",
+"Report submissions · week {w}"
+],
+"rpx.thisWeek": [
+"Tuần này",
+"This week"
+],
+"rpx.unknownWeek": [
+"(không rõ tuần)",
+"(unknown week)"
+],
+"rpx.week": [
+"Tuần {w}",
+"Week {w}"
+],
+"rpx.weekLbl": [
+"Tuần",
+"Week"
+],
+"sf.allSuppliers": [
+"Tất cả nhà cung cấp",
+"All Suppliers"
+],
+"sf.autoBySegment": [
+"tự động theo Segment",
+"auto-set from Segment"
+],
+"sf.backToApp": [
+"Về app chính",
+"Back to main app"
+],
+"sf.backToList": [
+"Danh sách",
+"List"
+],
+"sf.brandTag": [
+"Project workspace",
+"Project workspace"
+],
+"sf.brandTagDemo": [
+"Demo training",
+"Training Demo"
+],
+"sf.card.estValue": [
+"Giá trị ước tính",
+"Estimated Deal Value"
+],
+"sf.card.other": [
+"Thông tin khác",
+"Additional Details"
+],
+"sf.card.partner": [
+"Đối tác & phân khúc",
+"Account & Segment"
+],
+"sf.changeStatus": [
+"Đổi trạng thái dự án",
+"Change opportunity status"
+],
+"sf.close.confirm": [
+"Xác nhận đóng",
+"Confirm & Close"
+],
+"sf.close.lostHint": [
+"LOST — dừng theo đuổi",
+"Deal lost — stop pursuing"
+],
+"sf.close.reasonPh": [
+"Lý do / ghi chú đóng dự án…",
+"Reason / closing notes…"
+],
+"sf.close.wonHint": [
+"WON — chốt được đơn",
+"Deal won — order confirmed"
+],
+"sf.closeOpp": [
+"Đóng dự án",
+"Close Opportunity"
+],
+"sf.col.accountOpp": [
+"Khách hàng · Dự án",
+"Account · Opportunity"
+],
+"sf.col.segmentProduct": [
+"Nhóm ngành · Sản phẩm",
+"Segment Group · Product"
+],
+"sf.col.stageClose": [
+"Tiến độ · Hạn chốt",
+"Stage · Close Date"
+],
+"sf.col.value": [
+"Giá trị",
+"Value"
+],
+"sf.col.volume": [
+"Sản lượng",
+"Volume"
+],
+"sf.collapseAll": [
+"Thu gọn tất cả",
+"Collapse All"
+],
+"sf.copyId": [
+"Sao chép mã dự án",
+"Copy opportunity ID"
+],
+"sf.daysLate": [
+"trễ {n} ngày",
+"{n} days overdue"
+],
+"sf.daysLeft": [
+"còn {n} ngày",
+"{n} days left"
+],
+"sf.demoReset": [
+"Làm lại dữ liệu demo",
+"Reset Demo Data"
+],
+"sf.demoResetHint": [
+"Bỏ mọi thao tác thử, nạp lại dữ liệu demo gốc",
+"Discard all practice changes and reload the original demo data"
+],
+"sf.dueLabel": [
+"Hạn:",
+"Due:"
+],
+"sf.dueToday": [
+"đến hạn hôm nay",
+"due today"
+],
+"sf.empty.hint": [
+"Thử đổi nhà cung cấp, bộ lọc trạng thái, hoặc từ khoá tìm kiếm.",
+"Try a different supplier, status filter, or search term."
+],
+"sf.empty.title": [
+"Không có dự án nào",
+"No opportunities found"
+],
+"sf.expandAll": [
+"Mở rộng tất cả",
+"Expand All"
+],
+"sf.filterStatus": [
+"Lọc trạng thái",
+"Filter by status"
+],
+"sf.industrySegment": [
+"Ngành / Segment",
+"Industry / Segment"
+],
+"sf.life.holdHint": [
+"Giữ trong pipeline, tạm dừng hoạt động",
+"Kept in the pipeline, activity paused"
+],
+"sf.life.lostHint": [
+"Đã đóng — Closed Lost",
+"Deal closed — Closed Lost"
+],
+"sf.life.openHint": [
+"Dự án đang trong pipeline",
+"Active in the pipeline"
+],
+"sf.life.wonHint": [
+"Đã chốt — Closed Won",
+"Deal closed — Closed Won"
+],
+"sf.msg.actLocal": [
+"Đã ghi hoạt động (lưu tạm trong trình duyệt).",
+"Activity logged (saved locally in this browser)."
+],
+"sf.msg.actSyncing": [
+"Đã ghi hoạt động — đang đồng bộ lên tracker…",
+"Activity logged — syncing to tracker…"
+],
+"sf.msg.closeOnlyOwner": [
+"Chỉ PIC hoặc Manager mới đóng được dự án.",
+"Only the owner (PIC) or a Manager can close this opportunity."
+],
+"sf.msg.closed": [
+"Đã đóng {name} — {outcome}.",
+"Closed {name} — {outcome}."
+],
+"sf.msg.copied": [
+"Đã sao chép mã {id}",
+"Copied ID {id}"
+],
+"sf.msg.copyFailed": [
+"Không sao chép được — mã: {id}",
+"Could not copy — ID: {id}"
+],
+"sf.msg.defaultName": [
+"Đã dùng lại tên mặc định.",
+"Reverted to the default name."
+],
+"sf.msg.dlNotFound": [
+"Không tìm thấy dự án {id} (hoặc bạn không có quyền xem).",
+"Opportunity {id} not found (or you do not have access)."
+],
+"sf.msg.enterReason": [
+"Nhập lý do đóng dự án.",
+"Enter a reason for closing this opportunity."
+],
+"sf.msg.noActPerm": [
+"Bạn không có quyền thêm hoạt động.",
+"You do not have permission to add activities."
+],
+"sf.msg.noEditPerm": [
+"Bạn không có quyền sửa dự án này.",
+"You do not have permission to edit this opportunity."
+],
+"sf.msg.noRiskPerm": [
+"Bạn không có quyền cập nhật rủi ro.",
+"You do not have permission to update risks."
+],
+"sf.msg.noStagePerm": [
+"Bạn không có quyền đổi giai đoạn dự án này.",
+"You do not have permission to change this opportunity’s stage."
+],
+"sf.msg.noValuePerm": [
+"Bạn không có quyền cập nhật giá trị.",
+"You do not have permission to update the value."
+],
+"sf.msg.notSynced": [
+"(chưa đồng bộ SharePoint)",
+"(not yet synced to SharePoint)"
+],
+"sf.msg.noteSavedLocal": [
+"Đã ghi chú nhanh (lưu tạm trong trình duyệt).",
+"Note added (saved locally in this browser)."
+],
+"sf.msg.pickOutcome": [
+"Chọn kết quả Thắng hoặc Thua.",
+"Select an outcome: Closed Won or Closed Lost."
+],
+"sf.msg.putOnHold": [
+"Đã chuyển dự án sang Tạm hoãn.",
+"Opportunity put on hold."
+],
+"sf.msg.readOnly": [
+"Dự án này ở chế độ chỉ xem.",
+"This opportunity is read-only."
+],
+"sf.msg.renamed": [
+"Đã đổi tên dự án (lưu tạm trong trình duyệt).",
+"Opportunity renamed (saved locally in this browser)."
+],
+"sf.msg.reopenBeforeHold": [
+"Mở lại dự án trước khi chuyển sang tạm hoãn.",
+"Reopen the opportunity before putting it on hold."
+],
+"sf.msg.reopenOnlyOwner": [
+"Chỉ PIC hoặc Manager mới mở lại được dự án.",
+"Only the owner (PIC) or a Manager can reopen this opportunity."
+],
+"sf.msg.reopened": [
+"Đã mở lại dự án.",
+"Opportunity reopened."
+],
+"sf.msg.resumed": [
+"Dự án đã trở lại trạng thái Đang chạy.",
+"Opportunity is back In Progress."
+],
+"sf.msg.riskCleared": [
+"Đã xoá ghi nhận rủi ro.",
+"Risk cleared."
+],
+"sf.msg.riskSaved": [
+"Đã cập nhật rủi ro (lưu tạm trong trình duyệt — cột Rủi ro sẽ đồng bộ ở Phase 2).",
+"Risk updated (saved locally — the Risk column will sync in Phase 2)."
+],
+"sf.msg.saveFailed": [
+"Không lưu được lên SharePoint:",
+"Could not save to SharePoint:"
+],
+"sf.msg.saved": [
+"Đã lưu thay đổi dự án {name}.",
+"Saved changes to {name}."
+],
+"sf.msg.stageMoved": [
+"Đã chuyển {name} sang {stage}.",
+"Moved {name} to {stage}."
+],
+"sf.msg.syncFailed": [
+"Chưa đồng bộ được lên SharePoint:",
+"Could not sync to SharePoint:"
+],
+"sf.msg.valueCleared": [
+"Đã xoá giá trị ước tính.",
+"Estimated value cleared."
+],
+"sf.msg.valueSaved": [
+"Đã cập nhật giá trị ước tính (lưu tạm trong trình duyệt).",
+"Estimated value updated (saved locally in this browser)."
+],
+"sf.nAccounts": [
+"{n} khách hàng",
+"{n} accounts"
+],
+"sf.nAccounts.one": [
+"{n} khách hàng",
+"{n} account"
+],
+"sf.nOpps": [
+"{n} dự án",
+"{n} opportunities"
+],
+"sf.nOpps.one": [
+"{n} dự án",
+"{n} opportunity"
+],
+"sf.noRisk": [
+"Chưa ghi nhận rủi ro.",
+"No risks logged."
+],
+"sf.noValue": [
+"Chưa nhập giá trị",
+"No value entered"
+],
+"sf.openActHint": [
+"Mở hoạt động này trên tracker.fisaigon.vn",
+"Open this activity on tracker.fisaigon.vn"
+],
+"sf.oppType": [
+"Loại cơ hội",
+"Opportunity Type"
+],
+"sf.out.holdD": [
+"Vẫn trong pipeline nhưng chưa có hoạt động tiếp theo.",
+"Still in the pipeline, but no next activity is scheduled."
+],
+"sf.out.holdT": [
+"Dự án đang tạm hoãn",
+"On Hold"
+],
+"sf.out.lostD": [
+"Không còn nằm trong pipeline đang chạy.",
+"No longer in the active pipeline."
+],
+"sf.out.lostT": [
+"Dự án đã đóng (Thua)",
+"Closed Lost"
+],
+"sf.out.wonD": [
+"Toàn bộ quy trình đã hoàn tất.",
+"All pipeline stages completed."
+],
+"sf.out.wonT": [
+"Dự án đã chốt (Thắng)",
+"Closed Won"
+],
+"sf.overdue": [
+"Trễ hạn",
+"Overdue"
+],
+"sf.pageTitle": [
+"FI SAIGON — Sales Funnel",
+"FI SAIGON — Sales Funnel"
+],
+"sf.pageTitleDemo": [
+"FI SAIGON — Sales Funnel · Demo training",
+"FI SAIGON — Sales Funnel · Training Demo"
+],
+"sf.path": [
+"Tiến trình dự án",
+"Opportunity path"
+],
+"sf.perKg": [
+"đ/KG",
+"₫/KG"
+],
+"sf.pickSupplier": [
+"Chọn nhà cung cấp",
+"Select supplier"
+],
+"sf.potentialYear": [
+"Tiềm năng {y}",
+"{y} Potential"
+],
+"sf.probability": [
+"Xác suất",
+"Probability"
+],
+"sf.ql.hint": [
+"Enter để lưu · Shift+Enter xuống dòng",
+"Enter to save · Shift+Enter for new line"
+],
+"sf.ql.log": [
+"Ghi nhật ký",
+"Log"
+],
+"sf.ql.ph": [
+"Ghi nhanh nội dung trao đổi…",
+"Quick-log a call, meeting or note…"
+],
+"sf.renameHint": [
+"Bấm để đổi tên dự án",
+"Click to rename this opportunity"
+],
+"sf.risk": [
+"Rủi ro",
+"Risks"
+],
+"sf.riskPh": [
+"Ghi nhận rủi ro…",
+"Log a risk…"
+],
+"sf.searchPh": [
+"Tìm khách hàng, sản phẩm, ứng dụng, PIC…",
+"Search accounts, products, applications, owners…"
+],
+"sf.sec.progressOwner": [
+"Tiến độ & phụ trách",
+"Progress & Ownership"
+],
+"sf.sec.timeline": [
+"Nhật ký Hoạt động",
+"Activity Timeline"
+],
+"sf.tl.empty": [
+"Chưa có trao đổi nào. Dùng ô “Ghi nhanh” phía trên để bắt đầu nhật ký.",
+"No activity yet. Use the quick-log box above to start the timeline."
+],
+"sf.unitPrice": [
+"Đơn giá",
+"Unit Price"
+],
+"sf.viewDash": [
+"Dashboard",
+"Dashboard"
+],
+"sf.viewList": [
+"Danh sách",
+"List"
+],
+"sf.winProb": [
+"Xác suất thắng",
+"Win probability"
+],
+"sh.allOf": [
+"Toàn bộ {s}",
+"All of {s}"
+],
+"sh.copied": [
+"Đã sao chép",
+"Copied"
+],
+"sh.copyCode": [
+"Sao chép mã",
+"Copy Code"
+],
+"sh.copyLink": [
+"Sao chép link",
+"Copy Link"
+],
+"sh.create": [
+"Tạo mã chia sẻ",
+"Create Share Code"
+],
+"sh.created": [
+"Đã tạo mã chia sẻ",
+"Share code created"
+],
+"sh.doneDesc": [
+"Khách xem được <b>{w}</b>, hết hạn <b>{d}</b>.<br>Khách <b>không cần đăng nhập</b> — mở link rồi nhập mã, hoặc bấm “Khách xem chia sẻ”.",
+"The client can view <b>{w}</b>, expiring <b>{d}</b>.<br>No <b>sign-in required</b> — open the link and enter the code, or click “Guest: View Shared Link”."
+],
+"sh.err.key": [
+"KEY phải gồm 4–12 ký tự chữ hoặc số.",
+"The key must be 4–12 letters or digits."
+],
+"sh.err.keyUsed": [
+"KEY này đang được dùng. Chọn mã khác.",
+"This key is already in use. Choose another."
+],
+"sh.err.needWriteKey": [
+"Cần mã ghi để tạo link cho khách.",
+"A write key is required to create a client link."
+],
+"sh.err.noLink": [
+"Chưa cấu hình đường dẫn chia sẻ.",
+"The share link is not configured."
+],
+"sh.err.noWorker": [
+"Chưa cấu hình SHARE_WORKER_URL trong js/sp-config.js",
+"SHARE_WORKER_URL is not configured in js/sp-config.js"
+],
+"sh.err.noWorkerHtml": [
+"Chưa cấu hình <b>SHARE_WORKER_URL</b> trong <code>js/sp-config.js</code>. Deploy Share Gateway theo <code>FISG_Share_Worker.js</code> rồi dán URL vào đó.",
+"<b>SHARE_WORKER_URL</b> is not configured in <code>js/sp-config.js</code>. Deploy the Share Gateway from <code>FISG_Share_Worker.js</code> and paste its URL there."
+],
+"sh.err.noWriteKey": [
+"Chưa có mã ghi Worker.",
+"No Worker write key yet."
+],
+"sh.err.pickOne": [
+"Chọn ít nhất một dự án.",
+"Select at least one opportunity."
+],
+"sh.err.save": [
+"Lưu lỗi:",
+"Save error:"
+],
+"sh.expiry": [
+"Hết hạn",
+"Expires"
+],
+"sh.keyHint": [
+"Mã 6 chữ số, hoặc tự đặt 4–12 ký tự (chữ và số).",
+"A 6-digit code, or set your own 4–12 alphanumeric characters."
+],
+"sh.keyId": [
+"KEY ID cho khách",
+"Client Key ID"
+],
+"sh.listErr": [
+"Chưa đọc được danh sách mã. Kiểm tra <b>SHARE_WORKER_URL</b> trong <code>js/sp-config.js</code> và mã ghi Worker.",
+"Could not load the code list. Check <b>SHARE_WORKER_URL</b> in <code>js/sp-config.js</code> and the Worker write key."
+],
+"sh.mgr": [
+"Mã chia sẻ cho khách",
+"Client Share Codes"
+],
+"sh.noData": [
+"Chưa có dữ liệu dự án để chia sẻ.",
+"No opportunity data to share yet."
+],
+"sh.noOppsSupplier": [
+"Không có dự án nào của nhà cung cấp này.",
+"This supplier has no opportunities."
+],
+"sh.none": [
+"Chưa có mã chia sẻ nào.",
+"No share codes yet."
+],
+"sh.notePh": [
+"Tên khách hoặc công ty",
+"Client or company name"
+],
+"sh.pickOpps": [
+"Chọn dự án",
+"Select Opportunities"
+],
+"sh.preparing": [
+"Đang chuẩn bị…",
+"Preparing…"
+],
+"sh.promptKey": [
+"Nhập mã ghi của Share Gateway (WRITE_KEY đã đặt trong Cloudflare Worker).\nChỉ cần nhập một lần trên máy này.",
+"Enter the Share Gateway write key (WRITE_KEY set in the Cloudflare Worker).\nYou only need to enter it once on this device."
+],
+"sh.pushing": [
+"Đang đẩy dữ liệu cho khách…",
+"Publishing data for the client…"
+],
+"sh.regen": [
+"Tạo mã khác",
+"Generate New Code"
+],
+"sh.revoke": [
+"Thu hồi",
+"Revoke"
+],
+"sh.revokeErr": [
+"Thu hồi lỗi:",
+"Revoke failed:"
+],
+"sh.revoked": [
+"Đã thu hồi mã.",
+"Code revoked."
+],
+"sh.scope": [
+"Phạm vi",
+"Scope"
+],
+"sh.scope.all": [
+"Toàn bộ dự án của tất cả nhà cung cấp",
+"All opportunities of all suppliers"
+],
+"sh.scope.one": [
+"Toàn bộ dự án của 1 nhà cung cấp",
+"All opportunities of one supplier"
+],
+"sh.scope.pick": [
+"Chọn từng dự án",
+"Select specific opportunities"
+],
+"sh.share": [
+"Chia sẻ",
+"Share"
+],
+"sh.sharedWith": [
+"Chia sẻ cho",
+"Shared With"
+],
+"sh.sharedWithNote": [
+"Chia sẻ cho (ghi chú)",
+"Shared with (note)"
+],
+"sh.st.active": [
+"Đang hiệu lực",
+"Active"
+],
+"sh.st.expired": [
+"Hết hạn",
+"Expired"
+],
+"sh.st.revoked": [
+"Đã thu hồi",
+"Revoked"
+],
+"sh.title": [
+"Chia sẻ dự án cho khách",
+"Share Opportunities with a Client"
+],
+"sh.what.all": [
+"tất cả nhà cung cấp",
+"all suppliers"
+],
+"sh.what.one": [
+"toàn bộ dự án của {s}",
+"all opportunities of {s}"
+],
+"sh.what.pick": [
+"{n} dự án của {s}",
+"{n} opportunities of {s}"
+],
+"status.inProgress": [
+"Đang chạy",
+"In Progress"
+],
+"status.lost": [
+"Thua",
+"Closed Lost"
+],
+"status.onHold": [
+"Tạm hoãn",
+"On Hold"
+],
+"status.won": [
+"Thắng",
+"Closed Won"
+],
+"unit.bn": [
+"tỷ",
+"B"
+],
+"unit.bnVnd": [
+"tỷ ₫",
+"B ₫"
+],
+"unit.mn": [
+"tr",
+"M"
+],
+"unit.mnVnd": [
+"tr ₫",
+"M ₫"
+],
+"wc.cal": [
+"Lịch tuần",
+"Weekly Calendar"
+],
+"wc.clickToAdd": [
+"bấm để thêm việc",
+"click to add a task"
+],
+"wc.clickToOpen": [
+"bấm để mở",
+"click to open"
+],
+"wc.closeAria": [
+"Đóng màn hình tổng quan tuần",
+"Close weekly overview"
+],
+"wc.composeReport": [
+"Soạn báo cáo tuần",
+"Write Weekly Report"
+],
+"wc.dayStamp": [
+"{w}, ngày {d}",
+"{w}, {d}"
+],
+"wc.done": [
+"Đã làm",
+"Done"
+],
+"wc.empty.noChanges": [
+"Không có dự án nào đổi trạng thái tuần này",
+"No opportunities changed status this week"
+],
+"wc.empty.noPriority": [
+"Không có việc nào nổi lên cần ưu tiên",
+"Nothing urgent stands out"
+],
+"wc.empty.noneBooked": [
+"Tuần này chưa có gì trong lịch",
+"Nothing scheduled this week"
+],
+"wc.empty.noneDone": [
+"Tuần này chưa ghi nhận hoạt động nào",
+"No activity logged this week"
+],
+"wc.fromSuggestion": [
+"Từ gợi ý tuần này",
+"From this week’s suggestions"
+],
+"wc.goFunnel": [
+"Vào Sales Funnel",
+"Go to Sales Funnel"
+],
+"wc.grp.done": [
+"Đã làm trong tuần",
+"Done This Week"
+],
+"wc.grp.doneEmpty": [
+"Chưa có việc nào được đánh dấu hoàn thành.",
+"Nothing marked as done yet."
+],
+"wc.grp.missed": [
+"Chưa đánh dấu — đã qua ngày",
+"Not Marked — Date Passed"
+],
+"wc.grp.missedEmpty": [
+"Không có việc nào bị bỏ quên.",
+"Nothing has slipped through."
+],
+"wc.grp.planned": [
+"Đã lên kế hoạch — còn lại trong tuần",
+"Planned — Rest of Week"
+],
+"wc.grp.plannedEmpty": [
+"Chưa đặt lịch việc nào cho những ngày còn lại.",
+"Nothing scheduled for the rest of the week."
+],
+"wc.grp.today": [
+"Đang làm hôm nay",
+"In Progress Today"
+],
+"wc.grp.todayEmpty": [
+"Hôm nay chưa có việc nào trên lịch.",
+"Nothing on the calendar today."
+],
+"wc.hello": [
+"Chào {name}",
+"Hi {name}"
+],
+"wc.hideCalHint": [
+"Bấm để thu gọn khung lịch tuần",
+"Click to collapse the weekly calendar"
+],
+"wc.later": [
+"Để sau",
+"Later"
+],
+"wc.logNew": [
+"Ghi hoạt động mới",
+"Log New Activity"
+],
+"wc.markDone": [
+"Hoàn thành",
+"Mark Done"
+],
+"wc.markDoneHint": [
+"bấm \"Hoàn thành\" để báo cáo cuối tuần tính đúng",
+"click \"Mark Done\" so the weekly report counts correctly"
+],
+"wc.mode.end": [
+"Cuối tuần",
+"End of Week"
+],
+"wc.mode.endSub": [
+"Nhìn lại và báo cáo",
+"Review and report"
+],
+"wc.mode.mid": [
+"Giữa tuần",
+"Mid-Week"
+],
+"wc.mode.midSub": [
+"Bám việc đã lên lịch",
+"Stay on scheduled work"
+],
+"wc.mode.start": [
+"Đầu tuần",
+"Start of Week"
+],
+"wc.mode.startSub": [
+"Lên kế hoạch cho tuần",
+"Plan the week"
+],
+"wc.modeAria": [
+"Chế độ {m} — {s}. Bấm để chuyển chế độ xem thử.",
+"{m} mode — {s}. Click to preview another mode."
+],
+"wc.modeTitle": [
+"Chế độ hôm nay, suy từ {d}. Bấm để xem thử chế độ khác.",
+"Today’s mode, based on {d}. Click to preview another mode."
+],
+"wc.msg.actNotFound": [
+"Không tìm thấy hoạt động để đổi lịch.",
+"Activity to reschedule was not found."
+],
+"wc.msg.dateNotSaved": [
+"CHƯA lưu được ngày mới lên SharePoint. Kiểm tra cột \"Ngày\" của list Activities.",
+"The new date was NOT saved to SharePoint. Check the \"Ngày\" (Date) column in the Activities list."
+],
+"wc.msg.done": [
+"Đã ghi nhận hoàn thành. Bấm \"Hoàn tác\" ở mục Đã làm trong tuần nếu nhầm.",
+"Marked as done. Click \"Undo\" under Done This Week if this was a mistake."
+],
+"wc.msg.doneNotSaved": [
+"CHƯA lưu được lên SharePoint: {e}. Quản lý chưa thấy trạng thái này.",
+"NOT saved to SharePoint: {e}. Your manager cannot see this status yet."
+],
+"wc.msg.localOnly": [
+"Đã đổi tạm trên máy này — CHƯA lưu lên SharePoint (chưa đăng nhập Microsoft 365).",
+"Changed on this device only — NOT saved to SharePoint (not signed in to Microsoft 365)."
+],
+"wc.msg.noDoneCol": [
+"Đã lưu trên máy bạn. Trạng thái này chưa dùng chung được vì list Activities thiếu cột \"Ngày hoàn thành\" — xem docs/SharePoint_Setup.md.",
+"Saved on your device. This status cannot be shared yet because the Activities list is missing the \"Ngày hoàn thành\" (Completed Date) column — see docs/SharePoint_Setup.md."
+],
+"wc.msg.rescheduled": [
+"Đã đổi lịch: {c} → {d}",
+"Rescheduled: {c} → {d}"
+],
+"wc.msg.roLog": [
+"Chế độ chỉ đọc — đăng nhập bằng tài khoản sales để ghi hoạt động.",
+"Read-only mode — sign in with a sales account to log activities."
+],
+"wc.msg.roResched": [
+"Chế độ chỉ đọc — không đổi được lịch.",
+"Read-only mode — cannot reschedule."
+],
+"wc.msg.saveErrRevert": [
+"Lỗi lưu SharePoint: {e}. Đã hoàn lại ngày cũ.",
+"SharePoint save error: {e}. The previous date has been restored."
+],
+"wc.msg.undone": [
+"Đã bỏ đánh dấu hoàn thành.",
+"Marked as not done."
+],
+"wc.nextWeek": [
+"Tuần kế tiếp",
+"Next Week"
+],
+"wc.nextWeekAria": [
+"Bảy ngày tuần kế tiếp",
+"Seven days of next week"
+],
+"wc.noStorage": [
+"Trình duyệt đang chặn lưu trữ — việc bạn nhập sẽ mất khi tải lại trang.",
+"Your browser is blocking storage — anything you enter will be lost on reload."
+],
+"wc.noTasksOn": [
+"Không có việc ngày {d}",
+"No tasks on {d}"
+],
+"wc.note.end": [
+"Báo cáo là ảnh chụp số liệu tại thời điểm gửi.",
+"The report is a snapshot of the data at the time it is sent."
+],
+"wc.note.mid": [
+"Bấm \"Hoàn thành\" khi xong việc để báo cáo cuối tuần tính đúng.",
+"Click \"Mark Done\" when finished so the weekly report counts correctly."
+],
+"wc.note.start": [
+"Đặt lịch xong, việc sẽ hiện ở dải bảy ngày phía trên.",
+"Once scheduled, tasks appear in the seven-day strip above."
+],
+"wc.openFunnel": [
+"Mở Sales Funnel",
+"Open Sales Funnel"
+],
+"wc.openOpp": [
+"Mở dự án",
+"Open Opportunity"
+],
+"wc.planned": [
+"Kế hoạch",
+"Planned"
+],
+"wc.preview": [
+"xem thử",
+"preview"
+],
+"wc.previewTitle": [
+"Đang xem thử chế độ {m}. Bấm để xem chế độ tiếp theo.",
+"Previewing {m} mode. Click to see the next mode."
+],
+"wc.readOnly": [
+"Bạn đang xem ở chế độ chỉ đọc. Chỉ tài khoản sales mới ghi được hoạt động.",
+"You are in read-only mode. Only sales accounts can log activities."
+],
+"wc.resched": [
+"Đổi lịch",
+"Reschedule"
+],
+"wc.reschedAria": [
+"Đổi lịch hoạt động sang ngày khác",
+"Reschedule this activity to another day"
+],
+"wc.schedule": [
+"Đặt lịch",
+"Schedule"
+],
+"wc.scheduleWith": [
+"Đặt lịch với {c}",
+"Schedule with {c}"
+],
+"wc.sec.booked": [
+"Đã có trong lịch tuần này",
+"Already Scheduled This Week"
+],
+"wc.sec.oppChanges": [
+"Thay đổi dự án",
+"Opportunity Changes"
+],
+"wc.sec.todo": [
+"Việc nên làm tuần này",
+"Recommended This Week"
+],
+"wc.sec.todoHint": [
+"xếp theo mức cấp thiết, hoà thì KG lớn trước",
+"sorted by urgency, then by largest KG"
+],
+"wc.sec.topNow": [
+"Việc đáng làm nhất lúc này",
+"Top Priorities Right Now"
+],
+"wc.sec.topNowHint": [
+"gợi ý theo mức cấp thiết",
+"suggested by urgency"
+],
+"wc.sec.unmarkedPlan": [
+"Kế hoạch chưa đánh dấu",
+"Unmarked Plans"
+],
+"wc.sec.update": [
+"Cập nhật hoạt động",
+"Update Activities"
+],
+"wc.showCal": [
+"Hiện lịch tuần",
+"Show Weekly Calendar"
+],
+"wc.showCalHint": [
+"Bấm để hiện khung lịch tuần",
+"Click to show the weekly calendar"
+],
+"wc.tasksOn": [
+"{n} việc ngày {d}",
+"{n} tasks on {d}"
+],
+"wc.tasksOn.one": [
+"{n} việc ngày {d}",
+"{n} task on {d}"
+],
+"wc.teamReports": [
+"Xem báo cáo đội",
+"View Team Reports"
+],
+"wc.undo": [
+"Hoàn tác",
+"Undo"
+],
+"wc.unmarked": [
+"Chưa đánh dấu",
+"Not marked"
+],
+"wc.weekAria": [
+"Bảy ngày trong tuần",
+"Seven days of the week"
+],
+"wc.weekOf": [
+"Tuần <b>{w}</b>",
+"Week <b>{w}</b>"
+],
+"wc.you": [
+"bạn",
+"there"
+],
+"wd.fri": [
+"Thứ Sáu",
+"Friday"
+],
+"wd.mon": [
+"Thứ Hai",
+"Monday"
+],
+"wd.sat": [
+"Thứ Bảy",
+"Saturday"
+],
+"wd.short.fri": [
+"T6",
+"Fr"
+],
+"wd.short.mon": [
+"T2",
+"Mo"
+],
+"wd.short.sat": [
+"T7",
+"Sa"
+],
+"wd.short.sun": [
+"CN",
+"Su"
+],
+"wd.short.thu": [
+"T5",
+"Th"
+],
+"wd.short.tue": [
+"T3",
+"Tu"
+],
+"wd.short.wed": [
+"T4",
+"We"
+],
+"wd.sun": [
+"Chủ Nhật",
+"Sunday"
+],
+"wd.thu": [
+"Thứ Năm",
+"Thursday"
+],
+"wd.tue": [
+"Thứ Ba",
+"Tuesday"
+],
+"wd.wed": [
+"Thứ Tư",
+"Wednesday"
+],
+"wk.reason.closing": [
+"Đóng dự kiến sau {n} ngày",
+"Expected to close in {n} days"
+],
+"wk.reason.noUpdates": [
+"Chưa có cập nhật nào",
+"No updates yet"
+],
+"wk.reason.overdue": [
+"Quá hạn ngày đóng {n} ngày",
+"{n} days past close date"
+],
+"wk.reason.silent": [
+"Im lặng {n} ngày",
+"Silent for {n} days"
+],
+"wk.reason.stale": [
+"Chưa cập nhật {n} ngày",
+"No update for {n} days"
+]
+}

@@ -1,7 +1,7 @@
 function recipientsOf(r){
   const set=new Set([r.pic,...(r.related||[])].filter(Boolean));
   set.delete(me.pic||me.name);
-  return [...set].length?[...set]:['(chưa có người liên quan)'];
+  return [...set].length?[...set]:[T('notif.noRelated')];
 }
 function notify(rec,action){
   NOTIFS.unshift({who:me.pic||me.name,action,to:recipientsOf(rec),at:nowStr()});
@@ -9,7 +9,7 @@ function notify(rec,action){
 }
 
 function notifyPlain(action,to){
-  NOTIFS.unshift({who:me.pic||me.name,action,to:(to&&to.length?to:['(chưa có người nhận)']),at:nowStr()});
+  NOTIFS.unshift({who:me.pic||me.name,action,to:(to&&to.length?to:[T('notif.noRecipients')]),at:nowStr()});
   renderNotifs();
 }
 function managerNames(){
@@ -52,7 +52,7 @@ function _notifCandidates(){
       && (isTL ? addressed.some(t=>picKey(t)===meKey)
                : (addressed.length===0 || addressed.some(t=>picKey(t)===meKey)));
     if(forLead)
-      out.push({ key:'R:'+r.id, who:r.pic, action:'đã gửi <b>báo cáo tuần '+r.weekLabel+'</b>',
+      out.push({ key:'R:'+r.id, who:r.pic, action:T('notif.reportSent',{w:r.weekLabel}),
                  at:r.createdAt, report:r.id });
     (r.comments||[]).forEach(c=>{
       if(picKey(c.by)===meKey) return;
@@ -63,7 +63,7 @@ function _notifCandidates(){
                   : (picKey(r.pic)===meKey);
       if(forMe)
         out.push({ key:_cmtKey(r.id,c), who:c.by,
-                   action:'đã phản hồi <b>báo cáo tuần '+r.weekLabel+'</b>: "'
+                   action:T('notif.reportReplied',{w:r.weekLabel})+': "'
                         + (c.text||'').slice(0,50) + ((c.text||'').length>50?'…':'') + '"',
                    at:c.at, report:r.id });
     });
@@ -107,16 +107,16 @@ function renderNotifs(){
     const who = (window.picLabel?picLabel(n.who):n.who)||'—';
     return `<button class="notif notif-btn" onclick="openReportNotif('${(n.report||'').replace(/'/g,"\\'")}')">
       <span class="avatar" style="width:28px;height:28px;font-size:10px;background:${u?u.color:'#8A90A4'}">${String(who).slice(0,2).toUpperCase()}</span>
-      <div><b>${who}</b> ${n.action}<small>${n.at?new Date(n.at).toLocaleDateString('vi-VN'):''}</small></div></button>`;
+      <div><b>${who}</b> ${n.action}<small>${n.at?new Date(n.at).toLocaleDateString(I18N.locale()):''}</small></div></button>`;
   }).join('');
 
   const memHtml = NOTIFS.map(n=>{
     const u=USERS.find(x=>(x.pic||x.name)===n.who);
     return `<div class="notif"><span class="avatar" style="width:28px;height:28px;font-size:10px;background:${u?u.color:'#8A90A4'}">${n.who.slice(0,2).toUpperCase()}</span>
-    <div><b>${n.who}</b> ${n.action}<small>Gửi đến: ${n.to.join(', ')} · ${n.at}</small></div></div>`;
+    <div><b>${n.who}</b> ${n.action}<small>${T('notif.sentTo')} ${n.to.join(', ')} · ${n.at}</small></div></div>`;
   }).join('');
 
-  box.innerHTML = (rpHtml + memHtml) || '<div class="notif">Chưa có thông báo nào.</div>';
+  box.innerHTML = (rpHtml + memHtml) || '<div class="notif">'+T('notif.empty')+'</div>';
 }
 function toggleNotif(e){e.stopPropagation();document.getElementById('notifPanel').classList.toggle('open');}
 document.addEventListener('click',e=>{if(!e.target.closest('.notif-panel')&&!e.target.closest('.icon-btn'))document.getElementById('notifPanel').classList.remove('open');});

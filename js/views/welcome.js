@@ -2,18 +2,19 @@ let wcModeOverride = null;
 let wcLastFocus = null;
 
 const WC_MODES = [
-  { id:'start', label:'Đầu tuần',  sub:'Lên kế hoạch cho tuần',
+  { id:'start', get label(){ return I18N.t('wc.mode.start'); }, get sub(){ return I18N.t('wc.mode.startSub'); },
     c:'var(--marine)',  bg:'var(--marine-soft)', bd:'var(--marine-line)',
     icon:'<path d="M12 5v14M5 12h14"/>' },
-  { id:'mid',   label:'Giữa tuần', sub:'Bám việc đã lên lịch',
+  { id:'mid',   get label(){ return I18N.t('wc.mode.mid'); }, get sub(){ return I18N.t('wc.mode.midSub'); },
     c:'var(--bas)',     bg:'var(--bas-bg)',      bd:'rgba(14,116,144,.28)',
     icon:'<path d="M5 12l5 5L20 7"/>' },
-  { id:'end',   label:'Cuối tuần', sub:'Nhìn lại và báo cáo',
+  { id:'end',   get label(){ return I18N.t('wc.mode.end'); }, get sub(){ return I18N.t('wc.mode.endSub'); },
     c:'var(--prog)',    bg:'var(--prog-bg)',     bd:'var(--prog-bd)',
     icon:'<path d="M4 19V9M10 19V5M16 19v-7M4 19h16"/>' }
 ];
 function wcModeMeta(id){ return WC_MODES.filter(function(m){ return m.id === id; })[0] || WC_MODES[1]; }
-const WC_DAY_ABBR = ['CN','T2','T3','T4','T5','T6','T7'];
+const WC_DAY_ABBR = { get length(){ return 7; } };
+['sun','mon','tue','wed','thu','fri','sat'].forEach((d,i)=>Object.defineProperty(WC_DAY_ABBR, i, { get(){ return I18N.t('wd.short.'+d); } }));
 
 function wcMode(){ return wcModeOverride || dayMode(todayISO()); }
 function wcCanAct(){ return !!(me && me.pic && myCap().edit); }
@@ -76,8 +77,8 @@ function wcApplyCal(){
   cal.classList.toggle('collapsed', wcCalMin);
   btn.setAttribute('aria-expanded', wcCalMin ? 'false' : 'true');
   const lbl = btn.querySelector('span');
-  if(lbl) lbl.textContent = wcCalMin ? 'Hiện lịch tuần' : 'Lịch tuần';
-  btn.setAttribute('title', wcCalMin ? 'Bấm để hiện khung lịch tuần' : 'Bấm để thu gọn khung lịch tuần');
+  if(lbl) lbl.textContent = wcCalMin ? I18N.t('wc.showCal') : I18N.t('wc.cal');
+  btn.setAttribute('title', wcCalMin ? I18N.t('wc.showCalHint') : I18N.t('wc.hideCalHint'));
 }
 function wcToggleCal(){
   wcCalMin = !wcCalMinGet();
@@ -104,9 +105,9 @@ function renderWelcome(){
   const T = todayISO();
 
   document.getElementById('wcTitle').textContent =
-    'Chào ' + ((me && (me.pic || me.name)) || 'bạn');
+    I18N.t('wc.hello', {name:(me && (me.pic || me.name)) || I18N.t('wc.you')});
   document.getElementById('wcDay').textContent = dayStampVI(T);
-  document.getElementById('wcWhen').innerHTML = 'Tuần <b>' + mw.label + '</b>';
+  document.getElementById('wcWhen').innerHTML = I18N.t('wc.weekOf', {w:mw.label});
   wcRenderModeChip(mode);
 
   wcRenderWeek(mw);
@@ -116,8 +117,8 @@ function renderWelcome(){
 
   const body = document.getElementById('wcBody');
   body.innerHTML =
-    (LS.available() ? '' : `<div class="ck-badge warn" style="margin-bottom:12px">Trình duyệt đang chặn lưu trữ — việc bạn nhập sẽ mất khi tải lại trang.</div>`) +
-    (wcCanAct() ? '' : `<div class="ck-badge" style="margin-bottom:12px">Bạn đang xem ở chế độ chỉ đọc. Chỉ tài khoản sales mới ghi được hoạt động.</div>`) +
+    (LS.available() ? '' : `<div class="ck-badge warn" style="margin-bottom:12px">${I18N.t('wc.noStorage')}</div>`) +
+    (wcCanAct() ? '' : `<div class="ck-badge" style="margin-bottom:12px">${I18N.t('wc.readOnly')}</div>`) +
     (mode === 'start' ? wcBodyStart(mw) : mode === 'mid' ? wcBodyMid(mw) : wcBodyEnd(mw));
 
   wcRenderFoot(mode);
@@ -133,12 +134,11 @@ function wcRenderModeChip(mode){
   btn.innerHTML =
     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${m.icon}</svg>
      <span><b>${m.label}</b><small>${m.sub}</small></span>
-     ${preview ? '<span class="revert">xem thử</span>' : ''}`;
+     ${preview ? '<span class="revert">'+I18N.t('wc.preview')+'</span>' : ''}`;
   btn.setAttribute('title', preview
-    ? 'Đang xem thử chế độ ' + m.label.toLowerCase() + '. Bấm để xem chế độ tiếp theo.'
-    : 'Chế độ hôm nay, suy từ ' + dayStampVI(todayISO()) + '. Bấm để xem thử chế độ khác.');
-  btn.setAttribute('aria-label', (preview ? 'Đang xem thử chế độ ' : 'Chế độ ') + m.label +
-    ' — ' + m.sub + '. Bấm để chuyển chế độ xem thử.');
+    ? I18N.t('wc.previewTitle', {m:m.label.toLowerCase()})
+    : I18N.t('wc.modeTitle', {d:dayStampVI(todayISO())}));
+  btn.setAttribute('aria-label', I18N.t('wc.modeAria', {m:m.label,s:m.sub}));
 }
 
 function wcWeekStripHtml(mw){
@@ -161,10 +161,10 @@ function wcWeekStripHtml(mw){
     const shown = dots.slice(0,5);
     const cls = iso === T ? ' now' : (iso < T ? ' past' : '');
     const label = dots.length
-      ? dots.length + ' việc ngày ' + ckVN(iso)
-      : 'Không có việc ngày ' + ckVN(iso);
+      ? I18N.t('wc.tasksOn', {n:dots.length,d:ckVN(iso)})
+      : I18N.t('wc.noTasksOn', {d:ckVN(iso)});
     html += `<button type="button" class="wc-day${cls}" data-iso="${iso}"
-      onclick="wcDayMenu(event,'${iso}')" aria-label="${ckEsc(label)} — bấm để thêm việc">
+      onclick="wcDayMenu(event,'${iso}')" aria-label="${ckEsc(label)} — ${I18N.t('wc.clickToAdd')}">
       <span class="wc-day-n">${WC_DAY_ABBR[d.getDay()]}</span>
       <span class="wc-day-d">${iso.slice(8,10)}</span>
       <span class="wc-dots">${shown.map(c => `<i class="wc-dot ${c}"></i>`).join('')}${
@@ -196,9 +196,9 @@ function wcDayMenu(ev, iso){
   pop.innerHTML =
     '<div class="wc-daypop-h">' + dayStampVI(iso) + '</div>' +
     '<button type="button" class="wc-daypop-b" data-act="log">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tạo hoạt động</button>' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' + I18N.t('act.create') + '</button>' +
     '<button type="button" class="wc-daypop-b" data-act="proj">' +
-      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>Tạo dự án</button>';
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18l-7 8v6l-4 2v-8L3 4z"/></svg>' + I18N.t('fn.addOpp') + '</button>';
   document.body.appendChild(pop);
   const r = anchor.getBoundingClientRect();
   const pw = pop.offsetWidth, ph = pop.offsetHeight;
@@ -226,15 +226,15 @@ window.wcQuickLog = wcQuickLog; window.wcQuickProject = wcQuickProject;
 
 function wcRenderStats(mw){
   const cards = [
-    { v: mw.stats.done,    k:'Đã làm',        c:'var(--wc-done)', go:'done' },
-    { v: mw.stats.planned, k:'Kế hoạch',      c:'var(--wc-plan)', go:'planned' },
-    { v: mw.stats.missed,  k:'Chưa đánh dấu', c:'var(--wc-miss)', go:'missed' },
-    { v: mw.stats.overdue, k:'Dự án quá hạn', c:'var(--overdue)', go:'overdue' },
-    { v: mw.stats.open,    k:'Đang chạy',     c:'var(--marine)',  go:'open' }
+    { v: mw.stats.done,    k:I18N.t('wc.done'),        c:'var(--wc-done)', go:'done' },
+    { v: mw.stats.planned, k:I18N.t('wc.planned'),      c:'var(--wc-plan)', go:'planned' },
+    { v: mw.stats.missed,  k:I18N.t('wc.unmarked'), c:'var(--wc-miss)', go:'missed' },
+    { v: mw.stats.overdue, k:I18N.t('ck.sig.overdue'), c:'var(--overdue)', go:'overdue' },
+    { v: mw.stats.open,    k:I18N.t('status.inProgress'),     c:'var(--marine)',  go:'open' }
   ];
   document.getElementById('wcStats').innerHTML = cards.map(c =>
     `<button type="button" class="wc-stat" style="--sc:${c.c}" onclick="wcStatClick('${c.go}')"
-       aria-label="${ckEsc(c.k)}: ${c.v} — bấm để mở">
+       aria-label="${ckEsc(c.k)}: ${c.v} — ${I18N.t('wc.clickToOpen')}">
        <b>${c.v}</b><span>${c.k}</span></button>`).join('');
 }
 
@@ -263,8 +263,8 @@ function wcEmpty(msg, btnLabel, btnCall){
 
 function wcSuggestRow(s){
   const acts = wcCanAct() ? `<div class="wc-acts">
-    <button class="wc-btn pri" onclick="wcSchedule('${ckAttr(s.custKey)}','${s.projectId||''}','${ckAttr(s.ncc||'')}')">Đặt lịch</button>
-    ${s.projectId ? `<button class="wc-btn" onclick="wcOpenProject('${s.projectId}')">Mở dự án</button>` : ''}
+    <button class="wc-btn pri" onclick="wcSchedule('${ckAttr(s.custKey)}','${s.projectId||''}','${ckAttr(s.ncc||'')}')">${I18N.t('wc.schedule')}</button>
+    ${s.projectId ? `<button class="wc-btn" onclick="wcOpenProject('${s.projectId}')">${I18N.t('wc.openOpp')}</button>` : ''}
   </div>` : '';
   return `<div class="wc-item">
     <div class="wc-item-t">
@@ -291,16 +291,16 @@ function wcAutoAction(a){
 function wcActRow(a, action){
   let btn = '';
   if(wcCanAct() && action === 'done')
-    btn = `<button class="wc-btn ok" onclick="wcMarkDone('${ckAttr(a.id)}',1)">Hoàn thành</button>`;
+    btn = `<button class="wc-btn ok" onclick="wcMarkDone('${ckAttr(a.id)}',1)">${I18N.t('wc.markDone')}</button>`;
   if(wcCanAct() && action === 'undo')
-    btn = `<button class="wc-btn" onclick="wcMarkDone('${ckAttr(a.id)}',0)">Hoàn tác</button>`;
+    btn = `<button class="wc-btn" onclick="wcMarkDone('${ckAttr(a.id)}',0)">${I18N.t('wc.undo')}</button>`;
   // "Đổi lịch" hiện trước "Hoàn thành" cho mọi hoạt động chưa hoàn thành.
   const resched = (wcCanAct() && !LS.isDone(a))
     ? `<button class="wc-btn resched" onclick="wcReschedule('${ckAttr(a.id)}',event)"
-         aria-label="Đổi lịch hoạt động sang ngày khác">
-         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M14 14l-2.5 2.5"/></svg>Đổi lịch</button>` : '';
+         aria-label="${I18N.t('wc.reschedAria')}">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M14 14l-2.5 2.5"/></svg>${I18N.t('wc.resched')}</button>` : '';
   const open = a.projectId
-    ? `<button class="wc-btn" onclick="wcOpenProject('${ckAttr(a.projectId)}')">Mở dự án</button>` : '';
+    ? `<button class="wc-btn" onclick="wcOpenProject('${ckAttr(a.projectId)}')">${I18N.t('wc.openOpp')}</button>` : '';
   return `<div class="wc-item">
     <div class="wc-item-t">
       <span class="wc-item-n">${ckEsc(custLabel(a.customer))}</span>
@@ -309,7 +309,7 @@ function wcActRow(a, action){
       ${a.ncc ? `<span class="ck-badge">${ckEsc(a.ncc)}</span>` : ''}
     </div>
     <div class="wc-item-r">${ckEsc(a.note || '—')}${
-      a.next && a.next !== '—' ? ` · <b>Tiếp theo:</b> ${ckEsc(a.next)}` : ''}</div>
+      a.next && a.next !== '—' ? ` · <b>${I18N.t('ck.next')}</b> ${ckEsc(a.next)}` : ''}</div>
     ${(resched||btn||open) ? `<div class="wc-acts">${resched}${btn}${open}</div>` : ''}
   </div>`;
 }
@@ -317,9 +317,9 @@ function wcActRow(a, action){
 // Bật lịch nhỏ (dùng lại datepicker) ngay cạnh nút để chọn ngày mới.
 function wcReschedule(id, ev){
   if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-  if(!wcCanAct()){ toast('Chế độ chỉ đọc — không đổi được lịch.'); return; }
+  if(!wcCanAct()){ toast(I18N.t('wc.msg.roResched')); return; }
   const a = ACTIVITIES.find(x => x.id === id);
-  if(!a){ toast('Không tìm thấy hoạt động để đổi lịch.'); return; }
+  if(!a){ toast(I18N.t('wc.msg.actNotFound')); return; }
   const anchor = ev && ev.currentTarget;
   const old = document.getElementById('wcRsWrap'); if(old) old.remove();
 
@@ -350,28 +350,28 @@ function wcApplyReschedule(a, iso){
   const prev = normDate(a.date) || '';
   a.date = iso;
   renderWelcome();
-  toast('Đã đổi lịch: ' + custLabel(a.customer) + ' → ' + ckVN(iso));
+  toast(I18N.t('wc.msg.rescheduled', {c:custLabel(a.customer),d:ckVN(iso)}));
   if(!a.spId || !window.FISG_STORE || !FISG_STORE.setActivityDate) return;
   if(!(FISG_STORE.canWrite && FISG_STORE.canWrite())){
-    toast('Đã đổi tạm trên máy này — CHƯA lưu lên SharePoint (chưa đăng nhập Microsoft 365).');
+    toast(I18N.t('wc.msg.localOnly'));
     return;
   }
   FISG_STORE.setActivityDate(a.spId, iso).then(function(ok){
-    if(ok === false){ toast('CHƯA lưu được ngày mới lên SharePoint. Kiểm tra cột "Ngày" của list Activities.'); return; }
+    if(ok === false){ toast(I18N.t('wc.msg.dateNotSaved')); return; }
     if(typeof invalidateCockpit === 'function') invalidateCockpit();
     if(window.renderActs) renderActs();
   }).catch(function(e){
     a.date = prev; renderWelcome();
-    toast('Lỗi lưu SharePoint: ' + (e && (e.message||e)) + '. Đã hoàn lại ngày cũ.');
+    toast(I18N.t('wc.msg.saveErrRevert', {e:e && (e.message||e)}));
   });
 }
 window.wcApplyReschedule = wcApplyReschedule;
 
 function wcChangeRow(c){
   const m = c.kind === 'close'
-    ? (c.status === 'WON' ? { l:'Thắng', v:'var(--won)', b:'var(--won-bg)' } : { l:'Thua', v:'var(--lost)', b:'var(--lost-bg)' })
-    : c.kind === 'new' ? { l:'Dự án mới', v:'var(--ck-new)', b:'var(--accent-soft)' }
-    : { l:'Cập nhật', v:'var(--ck-update)', b:'rgba(10,92,143,.10)' };
+    ? (c.status === 'WON' ? { l:I18N.t('status.won'), v:'var(--won)', b:'var(--won-bg)' } : { l:I18N.t('status.lost'), v:'var(--lost)', b:'var(--lost-bg)' })
+    : c.kind === 'new' ? { l:I18N.t('ck.kind.new'), v:'var(--ck-new)', b:'var(--accent-soft)' }
+    : { l:I18N.t('ck.kind.update'), v:'var(--ck-update)', b:'rgba(10,92,143,.10)' };
   return `<div class="wc-item">
     <div class="wc-item-t">
       <span class="wc-item-n">${ckEsc(c.custLabel)}</span>
@@ -379,7 +379,7 @@ function wcChangeRow(c){
       <span class="wc-kg">${ckVN(c.ts)}</span>
     </div>
     <div class="wc-item-r">${ckEsc(c.product || '')}${c.text ? ' — ' + ckEsc(c.text.slice(0,110)) : ''}</div>
-    <div class="wc-acts"><button class="wc-btn" onclick="wcOpenProject('${ckAttr(c.projectId)}')">Mở dự án</button></div>
+    <div class="wc-acts"><button class="wc-btn" onclick="wcOpenProject('${ckAttr(c.projectId)}')">${I18N.t('wc.openOpp')}</button></div>
   </div>`;
 }
 
@@ -387,14 +387,14 @@ function wcBodyStart(mw){
   const sg = suggestWork(mw.pic, 5);
   const booked = mw.today.concat(mw.planned);
   return (sg.length
-      ? wcSection('Việc nên làm tuần này', sg.length, sg.map(wcSuggestRow).join(''),
-          'xếp theo mức cấp thiết, hoà thì KG lớn trước')
-      : wcSection('Việc nên làm tuần này', 0,
-          wcEmpty('Không có việc nào nổi lên cần ưu tiên', 'Mở Sales Funnel', 'wcGo(\'funnel\')')))
-    + wcSection('Đã có trong lịch tuần này', booked.length,
+      ? wcSection(I18N.t('wc.sec.todo'), sg.length, sg.map(wcSuggestRow).join(''),
+          I18N.t('wc.sec.todoHint'))
+      : wcSection(I18N.t('wc.sec.todo'), 0,
+          wcEmpty(I18N.t('wc.empty.noPriority'), I18N.t('wc.openFunnel'), 'wcGo(\'funnel\')')))
+    + wcSection(I18N.t('wc.sec.booked'), booked.length,
         booked.length ? booked.map(a => wcActRow(a, wcAutoAction(a))).join('')
-                      : wcEmpty('Tuần này chưa có gì trong lịch',
-                          wcCanAct() ? 'Ghi hoạt động mới' : '', 'wcSchedule()'));
+                      : wcEmpty(I18N.t('wc.empty.noneBooked'),
+                          wcCanAct() ? I18N.t('wc.logNew') : '', 'wcSchedule()'));
 }
 
 function wcBodyMid(mw){
@@ -410,62 +410,62 @@ function wcBodyMid(mw){
        ${count ? items.map(render).join('') : `<div class="wc-grp-e">${emptyMsg}</div>`}
      </div>`;
 
-  const board = wcSection('Cập nhật hoạt động', total,
-      group('Đang làm hôm nay', doing.length, doing,
+  const board = wcSection(I18N.t('wc.sec.update'), total,
+      group(I18N.t('wc.grp.today'), doing.length, doing,
             a => wcActRow(a, 'done'),
-            'Hôm nay chưa có việc nào trên lịch.')
-    + group('Chưa đánh dấu — đã qua ngày', mw.missed.length, mw.missed,
+            I18N.t('wc.grp.todayEmpty'))
+    + group(I18N.t('wc.grp.missed'), mw.missed.length, mw.missed,
             a => wcActRow(a, 'done'),
-            'Không có việc nào bị bỏ quên.')
-    + group('Đã lên kế hoạch — còn lại trong tuần', mw.planned.length, mw.planned,
+            I18N.t('wc.grp.missedEmpty'))
+    + group(I18N.t('wc.grp.planned'), mw.planned.length, mw.planned,
             a => wcActRow(a, null),
-            'Chưa đặt lịch việc nào cho những ngày còn lại.')
-    + group('Đã làm trong tuần', done.length, done,
+            I18N.t('wc.grp.plannedEmpty'))
+    + group(I18N.t('wc.grp.done'), done.length, done,
             a => wcActRow(a, 'undo'),
-            'Chưa có việc nào được đánh dấu hoàn thành.')
+            I18N.t('wc.grp.doneEmpty'))
     + (wcCanAct()
-        ? `<div class="wc-grp-act"><button class="wc-btn pri" onclick="wcSchedule()">Ghi hoạt động mới</button></div>`
+        ? `<div class="wc-grp-act"><button class="wc-btn pri" onclick="wcSchedule()">${I18N.t('wc.logNew')}</button></div>`
         : ''),
-    total ? 'bấm "Hoàn thành" để báo cáo cuối tuần tính đúng' : '');
+    total ? I18N.t('wc.markDoneHint') : '');
 
   if(total) return board;
   const sg = suggestWork(mw.pic, 3);
   return board + (sg.length
-    ? wcSection('Việc đáng làm nhất lúc này', sg.length, sg.map(wcSuggestRow).join(''),
-                'gợi ý theo mức cấp thiết')
+    ? wcSection(I18N.t('wc.sec.topNow'), sg.length, sg.map(wcSuggestRow).join(''),
+                I18N.t('wc.sec.topNowHint'))
     : '');
 }
 
 function wcBodyEnd(mw){
   const done = mw.done.concat(mw.today.filter(LS.isDone));
-  return wcSection('Đã làm trong tuần', done.length,
+  return wcSection(I18N.t('wc.grp.done'), done.length,
       done.length ? done.map(a => wcActRow(a, null)).join('')
-                  : wcEmpty('Tuần này chưa ghi nhận hoạt động nào',
-                      wcCanAct() ? 'Ghi hoạt động' : '', 'wcSchedule()'))
-    + (mw.missed.length ? wcSection('Kế hoạch chưa đánh dấu', mw.missed.length,
+                  : wcEmpty(I18N.t('wc.empty.noneDone'),
+                      wcCanAct() ? I18N.t('act.log') : '', 'wcSchedule()'))
+    + (mw.missed.length ? wcSection(I18N.t('wc.sec.unmarkedPlan'), mw.missed.length,
         mw.missed.map(a => wcActRow(a, 'done')).join('')) : '')
-    + wcSection('Thay đổi dự án', mw.projectChanges.length,
+    + wcSection(I18N.t('wc.sec.oppChanges'), mw.projectChanges.length,
         mw.projectChanges.length ? mw.projectChanges.slice(0,12).map(wcChangeRow).join('')
-                                 : wcEmpty('Không có dự án nào đổi trạng thái tuần này',
-                                     'Mở Sales Funnel', 'wcGo(\'funnel\')'));
+                                 : wcEmpty(I18N.t('wc.empty.noChanges'),
+                                     I18N.t('wc.openFunnel'), 'wcGo(\'funnel\')'));
 }
 
 function wcRenderFoot(mode){
-  const note = mode === 'start' ? 'Đặt lịch xong, việc sẽ hiện ở dải bảy ngày phía trên.'
-    : mode === 'mid' ? 'Bấm "Hoàn thành" khi xong việc để báo cáo cuối tuần tính đúng.'
-    : 'Báo cáo là ảnh chụp số liệu tại thời điểm gửi.';
+  const note = mode === 'start' ? I18N.t('wc.note.start')
+    : mode === 'mid' ? I18N.t('wc.note.mid')
+    : I18N.t('wc.note.end');
 
   const canCompose = (typeof rpCanCompose === 'function') && rpCanCompose();
   const main = mode === 'end'
     ? (canCompose
-        ? `<button class="wc-btn pri" onclick="wcOpenReports()">Soạn báo cáo tuần</button>`
-        : `<button class="wc-btn pri" onclick="wcGo('reports')">Xem báo cáo đội</button>`)
-    : `<button class="wc-btn pri" onclick="wcGo('funnel')">Vào Sales Funnel</button>`;
+        ? `<button class="wc-btn pri" onclick="wcOpenReports()">${I18N.t('wc.composeReport')}</button>`
+        : `<button class="wc-btn pri" onclick="wcGo('reports')">${I18N.t('wc.teamReports')}</button>`)
+    : `<button class="wc-btn pri" onclick="wcGo('funnel')">${I18N.t('wc.goFunnel')}</button>`;
   const extra = (mode === 'start' && wcCanAct())
-    ? `<button class="wc-btn" onclick="wcSchedule()">Ghi hoạt động mới</button>` : '';
+    ? `<button class="wc-btn" onclick="wcSchedule()">${I18N.t('wc.logNew')}</button>` : '';
   document.getElementById('wcFoot').innerHTML =
     `<span class="wc-note-line">${note}</span>
-     <span class="grow"><button class="wc-btn" onclick="closeWelcome()">Để sau</button>${extra}${main}</span>`;
+     <span class="grow"><button class="wc-btn" onclick="closeWelcome()">${I18N.t('wc.later')}</button>${extra}${main}</span>`;
 }
 
 function wcNextWorkday(){
@@ -480,10 +480,10 @@ function wcNextWorkday(){
 }
 
 function wcSchedule(custKey, projectId, ncc){
-  if(!wcCanAct()){ toast('Chế độ chỉ đọc — đăng nhập bằng tài khoản sales để ghi hoạt động.'); return; }
+  if(!wcCanAct()){ toast(I18N.t('wc.msg.roLog')); return; }
   openActForm({
-    title: custKey ? 'Đặt lịch với ' + custLabel(custKey) : 'Ghi hoạt động khách hàng',
-    sub: custKey ? 'Từ gợi ý tuần này' : '',
+    title: custKey ? I18N.t('wc.scheduleWith', {c:custLabel(custKey)}) : I18N.t('act.logAccount'),
+    sub: custKey ? I18N.t('wc.fromSuggestion') : '',
     customer: custKey ? custLabel(custKey) : '',
     ncc: ncc || undefined,
     date: wcNextWorkday(),
@@ -508,19 +508,17 @@ function wcMarkDone(id, on){
   LS.markDone(id, iso);
   if(a) a.doneAt = iso || '';
   renderWelcome();
-  toast(on ? 'Đã ghi nhận hoàn thành. Bấm "Hoàn tác" ở mục Đã làm trong tuần nếu nhầm.'
-           : 'Đã bỏ đánh dấu hoàn thành.');
+  toast(on ? I18N.t('wc.msg.done')
+           : I18N.t('wc.msg.undone'));
   if(!a || !window.FISG_STORE || !FISG_STORE.setActivityDone) return;
   FISG_STORE.setActivityDone(a.spId, iso).then(res => {
     if(res === 'nocol' && a.spId)
-      toast('Đã lưu trên máy bạn. Trạng thái này chưa dùng chung được vì list Activities '
-          + 'thiếu cột "Ngày hoàn thành" — xem docs/SharePoint_Setup.md.');
+      toast(I18N.t('wc.msg.noDoneCol'));
     if(typeof invalidateCockpit === 'function') invalidateCockpit();
     if(window.renderActs) renderActs();
   }).catch(e => {
     console.warn('[welcome] không ghi được trạng thái hoàn thành:', e && (e.message || e));
-    toast('CHƯA lưu được lên SharePoint: ' + (e.message || e)
-        + '. Quản lý chưa thấy trạng thái này.');
+    toast(I18N.t('wc.msg.doneNotSaved', {e:e.message || e}));
   });
 }
 window.wcMarkDone = wcMarkDone;

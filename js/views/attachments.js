@@ -24,7 +24,7 @@
 
     var savedHtml = saved.map(function (a) {
       var del = (canDel(a) && canWrite)
-        ? '<button class="att-del" title="Xoá tệp" aria-label="Xoá tệp" onclick="FISG_ATTACH.del(\'' + host + '\',\'' + ckAttr(a.spId) + '\')">×</button>' : "";
+        ? '<button class="att-del" title="' + ckEsc(T("att.delete")) + '" aria-label="' + ckEsc(T("att.delete")) + '" onclick="FISG_ATTACH.del(\'' + host + '\',\'' + ckAttr(a.spId) + '\')">×</button>' : "";
       return '<div class="att-item"><a class="att-link" href="' + ckEsc(a.webUrl || "#") + '" target="_blank" rel="noopener">'
         + '<span class="att-ext">' + ckEsc((a.fileType || "?").toUpperCase()) + '</span>'
         + '<span class="att-nm">' + ckEsc(a.fileName) + '</span></a>'
@@ -36,19 +36,19 @@
       return '<div class="att-item att-pend"><span class="att-link">'
         + '<span class="att-ext">' + ckEsc(extOf(f.name)) + '</span>'
         + '<span class="att-nm">' + ckEsc(f.name) + '</span></span>'
-        + '<span class="att-meta">' + fmtSize(f.size) + ' · <b>chờ tải khi lưu</b></span>'
-        + '<button class="att-del" title="Bỏ tệp" aria-label="Bỏ tệp" onclick="FISG_ATTACH.unpick(\'' + host + '\',' + i + ')">×</button></div>';
+        + '<span class="att-meta">' + fmtSize(f.size) + ' · <b>' + T('att.pendingUpload') + '</b></span>'
+        + '<button class="att-del" title="' + ckEsc(T("att.remove")) + '" aria-label="' + ckEsc(T("att.remove")) + '" onclick="FISG_ATTACH.unpick(\'' + host + '\',' + i + ')">×</button></div>';
     }).join("");
 
     var count = saved.length + (r.pending || []).length;
-    var body = (savedHtml + pendHtml) || '<div class="att-empty">Chưa có tệp đính kèm.</div>';
+    var body = (savedHtml + pendHtml) || '<div class="att-empty">' + T('att.none') + '</div>';
 
     var uploader = "";
     if (r.canUpload)
       uploader = '<label class="att-add"><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip" onchange="FISG_ATTACH.pick(this,\'' + host + '\')">'
-        + '<span>+ Đính kèm tệp</span></label><span class="att-hint">Tối đa 15MB · pdf, word, excel, ppt, ảnh, zip</span>';
+        + '<span>+ ' + T('att.add') + '</span></label><span class="att-hint">' + T('att.hint') + '</span>';
 
-    el.innerHTML = '<div class="att-h">Tệp đính kèm' + (count ? ' <span>' + count + '</span>' : '') + '</div>'
+    el.innerHTML = '<div class="att-h">' + T('att.title') + (count ? ' <span>' + count + '</span>' : '') + '</div>'
       + '<div class="att-list">' + body + '</div>'
       + '<div class="att-foot">' + uploader + '</div>'
       + '<div class="att-status" id="' + host + '-st"></div>';
@@ -71,15 +71,15 @@
     var file = input.files && input.files[0]; input.value = "";
     if (!file) return;
     var bad = (window.FISG_STORE && FISG_STORE.attValidate) ? FISG_STORE.attValidate(file) : "";
-    if (bad) { say(host, "err", "Không đính kèm được: " + bad); return; }
+    if (bad) { say(host, "err", T("att.cannotAttach") + " " + bad); return; }
 
-    if (!r.id) { r.pending.push(file); render(host); say(host, "", "Sẽ tải lên khi bạn bấm Lưu."); return; }
+    if (!r.id) { r.pending.push(file); render(host); say(host, "", T("att.willUpload")); return; }
 
-    say(host, "", "Đang tải " + file.name + "…");
+    say(host, "", T("att.uploading", { f: file.name }));
     FISG_STORE.uploadAttachment(r.type, r.id, r.ctx, file).then(function () {
-      render(host); say(host, "ok", "Đã đính kèm " + file.name + ".");
+      render(host); say(host, "ok", T("att.attached", { f: file.name }));
       if (r.onChange) try { r.onChange(); } catch (e) {}
-    }).catch(function (e) { say(host, "err", "Không tải được: " + (e && (e.message || e))); });
+    }).catch(function (e) { say(host, "err", T("att.uploadFail") + " " + (e && (e.message || e))); });
   }
 
   function unpick(host, i) {
@@ -91,11 +91,11 @@
     var r = REG[host]; if (!r) return;
     var att = FISG_STORE.attachmentsOf(r.type, r.id).filter(function (x) { return String(x.spId) === String(spId); })[0];
     if (!att) return;
-    if (typeof confirm === "function" && !confirm('Xoá tệp "' + att.fileName + '"? Không hoàn tác.')) return;
+    if (typeof confirm === "function" && !confirm(T("att.confirmDel", { f: att.fileName }))) return;
     FISG_STORE.deleteAttachment(att).then(function () {
       render(host); if (r.onChange) try { r.onChange(); } catch (e) {}
-      if (window.toast) toast("Đã xoá tệp.");
-    }).catch(function (e) { if (window.toast) toast("Không xoá được: " + (e && (e.message || e))); });
+      if (window.toast) toast(T("att.deleted"));
+    }).catch(function (e) { if (window.toast) toast(T("att.delFail") + " " + (e && (e.message || e))); });
   }
 
   function flush(host, info) {
@@ -116,8 +116,8 @@
     }, Promise.resolve()).then(function () {
       try { render(host); } catch (e) {}
       if (errs.length && window.toast)
-        toast("Có " + errs.length + " tệp chưa tải được: " + errs[0]);
-      else if (done && window.toast) toast("Đã đính kèm " + done + " tệp.");
+        toast(T("att.someFailed", { n: errs.length, e: errs[0] }));
+      else if (done && window.toast) toast(T("att.nAttached", { n: done }));
       if (r.onChange) try { r.onChange(); } catch (e) {}
       return done;
     });
@@ -141,8 +141,8 @@
           .catch(function (e) { errs.push(f.name + ": " + (e && (e.message || e))); });
       });
     }, Promise.resolve()).then(function () {
-      if (errs.length && window.toast) toast("Có " + errs.length + " tệp chưa tải được: " + errs[0]);
-      else if (done && window.toast) toast("Đã đính kèm " + done + " tệp.");
+      if (errs.length && window.toast) toast(T("att.someFailed", { n: errs.length, e: errs[0] }));
+      else if (done && window.toast) toast(T("att.nAttached", { n: done }));
       return done;
     });
   }

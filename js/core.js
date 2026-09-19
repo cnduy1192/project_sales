@@ -6,7 +6,7 @@ function loginAs(i){
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='block';
   document.getElementById('sideUser').innerHTML=`<span class="avatar" style="background:${me.color}">${initials(me.name)}</span><span><b>${me.name}</b><small>${roleVI(me.role)}</small></span>`;
-  document.getElementById('hiName').innerHTML=`Xin chào, ${me.name}<small>${roleVI(me.role)} · FI SAIGON JSC</small>`;
+  document.getElementById('hiName').innerHTML=`${T('hdr.hello',{name:me.name})}<small>${roleVI(me.role)} · FI SAIGON JSC</small>`;
   const av=document.getElementById('hAvatar'); av.textContent=initials(me.name); av.style.background=me.color;
 
   const c = myCap();
@@ -25,7 +25,7 @@ function loginAs(i){
 
 function rebuildNccTabs(){
   const box=document.getElementById('nccTabs'); if(!box)return;
-  box.innerHTML=`<button class="ncc-tab ncc-tab-all${isAllNcc()?' on':''}" data-ncc="${ALL_NCC}" onclick="setNcc('${ALL_NCC}')" title="Xem dự án và hoạt động của mọi nhà cung cấp">${ALL_NCC_LABEL}</button>`
+  box.innerHTML=`<button class="ncc-tab ncc-tab-all${isAllNcc()?' on':''}" data-ncc="${ALL_NCC}" onclick="setNcc('${ALL_NCC}')" title="${T('hdr.allSuppliersHint')}">${ALL_NCC_LABEL}</button>`
     +NCCS.map(n=>
     `<button class="ncc-tab${n===nccFilter?' on':''}" data-ncc="${n.replace(/"/g,'&quot;')}" onclick="setNcc('${n.replace(/'/g,"\\'")}')">${n}</button>`).join('');
 }
@@ -51,7 +51,7 @@ function toggleSidebar(force){
   const btn=document.getElementById('sideToggle');
   if(btn){
     btn.setAttribute('aria-expanded',String(!min));
-    btn.setAttribute('aria-label',min?'Mở rộng thanh điều hướng':'Thu gọn thanh điều hướng');
+    btn.setAttribute('aria-label',min?T('nav.expand'):T('nav.collapse'));
   }
   try{localStorage.setItem('fisg_side',min?'min':'full');}catch(e){}
 
@@ -100,16 +100,36 @@ function grp(r){
 const _Q = Math.floor(TODAY.getMonth()/3)+1, _Y = TODAY.getFullYear();
 const _NQ = _Q===4 ? {q:1,y:_Y+1} : {q:_Q+1,y:_Y};
 const MAJORS=[
-  {id:'run', title:'ĐANG CHẠY', color:'#1E3A8A', subs:[
-    {id:'overdue', title:'Quá hạn — cần xử lý', color:'var(--overdue)'},
-    {id:'thisq', title:'Đóng trong quý này (Q'+_Q+'/'+_Y+')', color:'var(--prog)'},
-    {id:'nextq', title:'Quý sau (Q'+_NQ.q+'/'+_NQ.y+')', color:'#B45309'},
-    {id:'thisyear', title:'Còn lại trong '+_Y, color:'var(--sbg)'},
-    {id:'later', title:(_Y+1)+' trở đi', color:'var(--text-3)'},
+  {id:'run', get title(){return T('fn.major.open');}, color:'#1E3A8A', subs:[
+    {id:'overdue', get title(){return T('fn.sub.overdue');}, color:'var(--overdue)'},
+    {id:'thisq', get title(){return T('fn.sub.thisQ',{q:_Q,y:_Y});}, color:'var(--prog)'},
+    {id:'nextq', get title(){return T('fn.sub.nextQ',{q:_NQ.q,y:_NQ.y});}, color:'#B45309'},
+    {id:'thisyear', get title(){return T('fn.sub.restOfYear',{y:_Y});}, color:'var(--sbg)'},
+    {id:'later', get title(){return T('fn.sub.later',{y:_Y+1});}, color:'var(--text-3)'},
   ]},
-  {id:'closed', title:'ĐÃ ĐÓNG', color:'#565668', subs:[
-    {id:'closed-won', title:'Thắng', color:'var(--won)'},
-    {id:'closed-lost', title:'Thua', color:'var(--lost)'},
+  {id:'closed', get title(){return T('fn.major.closed');}, color:'#565668', subs:[
+    {id:'closed-won', get title(){return T('status.won');}, color:'var(--won)'},
+    {id:'closed-lost', get title(){return T('status.lost');}, color:'var(--lost)'},
   ]},
 ];
 
+/* ---------- i18n: re-render the current view in place on EN | VI switch ---------- */
+if (window.I18N) I18N.onChange(function(){
+  if (typeof me === 'undefined' || !me) return;
+  try {
+    document.getElementById('sideUser').innerHTML=`<span class="avatar" style="background:${me.color}">${initials(me.name)}</span><span><b>${me.name}</b><small>${roleVI(me.role)}</small></span>`;
+    document.getElementById('hiName').innerHTML=`${T('hdr.hello',{name:me.name})}<small>${roleVI(me.role)} · FI SAIGON JSC</small>`;
+    rebuildNccTabs();
+    const shell=document.querySelector('.shell');
+    const btn=document.getElementById('sideToggle');
+    if(shell&&btn) btn.setAttribute('aria-label',shell.classList.contains('side-min')?T('nav.expand'):T('nav.collapse'));
+    const cur=(VIEWS.filter(x=>{const el=document.getElementById('view-'+x);return el&&el.style.display!=='none';})[0])||'funnel';
+    go(cur);
+    if(typeof buildForm==='function') buildForm();
+    if(typeof buildUsers==='function' && cur==='users') buildUsers();
+    const dov=document.getElementById('dov');
+    if(dov && dov.classList.contains('open') && typeof curRec!=='undefined' && curRec){ if(typeof dRenderComments==='function') dRenderComments(); if(typeof dRenderActs==='function') dRenderActs(); }
+    if(typeof wcIsOpen==='function' && wcIsOpen()){ renderWelcome(); if(typeof wcApplyCal==='function') wcApplyCal(); }
+    if(window.refreshNotifs) refreshNotifs(); else if(typeof renderNotifs==='function') renderNotifs();
+  } catch(e){ console.error('[i18n] re-render', e); }
+});
