@@ -78,7 +78,7 @@
     } catch (e) {
       if (e.status === 410) { msg(e.message || T("gs.expired"), true); return false; }
       if (e.status && e.status !== 404) { msg(e.message || T("gs.loadFail"), true); return false; }
-      if (e.status !== 404 && !/HTTP|Chưa cấu hình/.test(e.message || "")) {
+      if (e.status !== 404 && !/HTTP|Chưa cấu hình|not configured/i.test(e.message || "")) {
         msg(T("gs.connFail"), true); return false;
       }
 
