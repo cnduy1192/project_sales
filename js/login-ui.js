@@ -43,13 +43,11 @@
     const card = login.querySelector(".login-card");
     login.appendChild(shell);
     const actions = shell.querySelector("#lgActions");
-    /* EN | VI switch on the rebuilt sign-in screen (the old card that held it is hidden) */
+    /* EN | VI switch — compact utility pill anchored top-right (styled in login.css) */
     const pane = shell.querySelector(".lg-pane");
     if (pane && window.I18N && I18N.mountSwitch) {
       const sw = document.createElement("div");
       sw.setAttribute("data-lang-switch", "");
-      sw.style.cssText = "position:absolute;top:18px;right:18px";
-      pane.style.position = pane.style.position || "relative";
       pane.appendChild(sw);
       I18N.mountSwitch(sw);
     }

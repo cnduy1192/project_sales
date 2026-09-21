@@ -38,6 +38,40 @@
 .lg-h2 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; }
 .lg-actions { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
 
+/* ── EN | VI switcher — compact utility pill, anchored top-right ─────────────
+   Desktop : 24px down / 32px in from the true top-right of the white area.
+             .lg-pane intentionally stays static here, so the fixed
+             .login-shell is the positioning context and the pill hugs the
+             viewport corner instead of drifting with the 620px content column.
+   Mobile  : at ≤900px the layout stacks to one column; .lg-pane becomes the
+             positioning context, so the pill sits top-right of the white
+             section below the brand header — it can never overlap the brand
+             logo or form fields (z-20 guards stacking). */
+.lg-pane .lang-switch{
+  position:absolute; top:24px; right:32px; z-index:20;
+  height:auto; gap:2px; padding:4px; border-radius:9999px;
+  background:rgba(255,255,255,.9); border:1px solid #E2E8F0;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);
+  -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.lg-pane .lang-switch:hover{ border-color:#CBD5E1 }
+.lg-pane .lang-switch:focus-within{
+  border-color:#94A3B8;
+  box-shadow:0 1px 2px rgba(15,23,42,.06), 0 0 0 3px rgba(148,163,184,.22);
+}
+.lg-pane .lang-switch .ls-thumb{ display:none }   /* active badge replaces the sliding thumb */
+.lg-pane .lang-switch .ls-globe{ width:14px; height:14px; margin-right:6px; color:#64748B }
+.lg-pane .lang-switch .ls-opt{
+  width:auto; height:auto; padding:2px 8px; border:0; background:none; border-radius:9999px;
+  font-size:12px; font-weight:500; letter-spacing:.025em; color:#64748B; cursor:pointer;
+  transition:color .15s ease, background-color .15s ease;
+}
+.lg-pane .lang-switch .ls-opt:hover{ color:#0F172A }
+.lg-pane .lang-switch .ls-opt[aria-pressed="true"],
+.lg-pane .lang-switch .ls-opt[aria-pressed="true"]:hover{ background:#0F172A; color:#fff; padding:2px 10px }
+.lg-pane .lang-switch .ls-opt:focus-visible{ outline:2px solid #0F172A; outline-offset:2px }
+
 .login-shell .ms-btn {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
   padding: 13px 16px; border-radius: 11px; cursor: pointer;
@@ -100,9 +134,13 @@
   .lg-brand { padding: 26px 24px 28px; }
   .lg-slogan { margin-top: 12px; font-size: 13.5px; }
   .lg-title { font-size: 32px; margin-top: 20px; }
-  .lg-pane { padding: 30px 24px 40px; max-width: none; }
+  /* Stacked view: the pane becomes the positioning context so the language
+     pill anchors top-right of the white section, below the brand header. */
+  .lg-pane { position: relative; padding: 30px 24px 40px; max-width: none; }
+  .lg-pane .lang-switch { top: 16px; right: 16px; }
   .login-shell #roleRow { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .login-shell .guest-btn, .lg-arrow { transition: none; }
+  .login-shell .guest-btn, .lg-arrow,
+  .lg-pane .lang-switch, .lg-pane .lang-switch .ls-opt { transition: none; }
 }
