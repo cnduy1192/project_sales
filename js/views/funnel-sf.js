@@ -613,7 +613,15 @@
         "<div><dt>" + T("common.createdDate") + "</dt><dd class=\"num\">" + viDate(r.created) + "</dd></div>" +
         '<div><dt>' + T("common.expectedClose") + '</dt><dd>' +
           (editable
-            ? '<input class="sf-inline-date num" type="date" id="sfClosing" value="' + (r.closing || "") + '">'
+            /* Ô ngày: hiển thị luôn DD/MM/YYYY (không phụ thuộc locale trình duyệt),
+               input date gốc phủ trong suốt để vẫn dùng lịch native + giữ value ISO. */
+            ? '<span class="sf-dfield" data-f="closing">' +
+                '<span class="sf-dtext num" id="sfClosingTxt">' + (r.closing ? viDate(r.closing) : T("common.pickDate")) + "</span>" +
+                '<svg class="sf-dcal" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>' +
+                '<input type="date" class="sf-dinput" id="sfClosing" value="' + (r.closing || "") + '"' +
+                  ' aria-label="' + esc(T("common.expectedClose")) + '"' +
+                  ' onclick="try{this.showPicker()}catch(e){}" oninput="SF.syncClosing()">' +
+              "</span>"
             : '<span class="num">' + viDate(r.closing) + "</span>") +
           (r.status === "IN PROGRESS" ? hint : "") +
         "</dd></div>" +
@@ -659,6 +667,11 @@
     if (!el) return;
     el.style.height = "auto";
     el.style.height = Math.min(el.scrollHeight, 168) + "px";
+  }
+  /* Cập nhật nhãn DD/MM/YYYY khi chọn ngày đóng dự kiến (ô date bị che) */
+  function syncClosing() {
+    var i = document.getElementById("sfClosing"), t = document.getElementById("sfClosingTxt");
+    if (i && t) t.textContent = i.value ? viDate(i.value) : T("common.pickDate");
   }
 
   /* Chevron path liền mạch (kiểu Salesforce Path) — click để đổi giai đoạn trực tiếp */
@@ -1116,6 +1129,6 @@
     openActivityLink: openActivityLink, fmtAmountInput: fmtAmountInput,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose,
     amountFocus: amountFocus, amountBlur: amountBlur, qlType: qlType, qlGrow: qlGrow,
-    stMenu: stMenu, setLifecycle: setLifecycle
+    stMenu: stMenu, setLifecycle: setLifecycle, syncClosing: syncClosing
   };
 })();

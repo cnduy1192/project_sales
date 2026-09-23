@@ -400,6 +400,11 @@
     var avg = rs.length ? total / rs.length : 0;
     var age = act.length ? Math.round(ageSum / act.length) : 0;
 
+    /* Nhãn nút "Sản lượng" bám theo đúng đơn vị đang hiển thị (KG ↔ MT) — dùng
+       cùng ngưỡng 1e6 với splitM() để nhãn và số liệu KPI/biểu đồ luôn khớp. */
+    var mvBtn = $("mVol");
+    if (mvBtn) mvBtn.textContent = (volT >= 1e6) ? T("dash.metricVolMt") : T("dash.metricVol");
+
     var a = splitM(total);
     countTo($("k1"), a.v, a.d); $("k1_u").textContent = " " + a.u;
     $("k1_s").innerHTML = PERIODS[period].full + " · " + T("dash.nOppsB", { n: num(rs.length) });

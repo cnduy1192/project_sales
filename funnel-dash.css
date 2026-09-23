@@ -56,7 +56,7 @@ body:not(.sf-view-dash) #sfDash{display:none;}
 
 /* segmented control dùng chung: bộ chọn Kỳ và bộ chọn Chỉ số */
 .sf-seg2{display:inline-flex;background:#EEF1F6;border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px;flex:none;}
-.sf-seg2 b{font-size:12.5px;font-weight:600;color:var(--ink-3);padding:5px 12px;border-radius:7px;cursor:pointer;
+.sf-seg2 b{font-size:12.5px;font-weight:600;color:#475569;padding:5px 12px;border-radius:7px;cursor:pointer;
   transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap;}
 .sf-seg2 b:hover{color:var(--marine-ink);}
 .sf-seg2 b.on{background:#fff;color:var(--pri);box-shadow:var(--shadow);}
@@ -78,7 +78,7 @@ body:not(.sf-view-dash) #sfDash{display:none;}
 .sf-chip button:hover{background:var(--pri);color:#fff;}
 
 /* ---------- Lưới ---------- */
-.sf-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;margin-top:14px;}
+.sf-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;margin-top:14px;}
 .sf-card{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:none;
   display:flex;flex-direction:column;min-width:0;overflow:hidden;}
 .sf-card-h{display:flex;align-items:center;gap:10px;padding:13px 16px 6px;min-height:22px;}
@@ -106,11 +106,11 @@ body:not(.sf-view-dash) #sfDash{display:none;}
 
 /* ---------- KPI ---------- */
 /* KPI tối giản: chỉ viền mảnh trung tính, không vạch màu trang trí */
-.sf-kpi{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:none;padding:15px 17px 14px;
+.sf-kpi{background:#fff;border:1px solid #E2E8F0;border-radius:12px;box-shadow:none;padding:17px 18px 16px;
   display:flex;flex-direction:column;gap:2px;min-width:0;overflow:hidden;}
 .sf-kpi-t{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:.045em;text-transform:uppercase;color:#64748B;}
-.sf-kpi-v{font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--marine-ink);
-  line-height:1.15;font-variant-numeric:tabular-nums;margin-top:5px;}
+.sf-kpi-v{font-family:'Inter','Plus Jakarta Sans',system-ui,sans-serif;font-size:29px;font-weight:800;letter-spacing:-.022em;color:var(--marine-ink);
+  line-height:1.12;font-variant-numeric:tabular-nums;margin-top:6px;}
 .sf-kpi-v small{font-size:14px;font-weight:700;color:var(--ink-2);margin-left:3px;letter-spacing:0;}
 .sf-kpi-s{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin-top:3px;}
 .sf-kpi-s b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums;}
@@ -167,6 +167,13 @@ table.sf-tbl .sub{display:block;font-size:11px;font-weight:500;color:var(--ink-3
 /* ---------- Responsive ---------- */
 @media (max-width:1280px){
   .c7{grid-column:span 12;} .c5{grid-column:span 12;} .c4{grid-column:span 6;}
+  /* Thanh lọc: dồn gọn để không xuống dòng lộn xộn dưới 1280px.
+     (Không dùng cuộn ngang cho cả thanh vì sẽ cắt mất popup của dropdown lọc.) */
+  .sf-dbar{gap:8px;row-gap:10px;}
+  .sf-dbar .sf-dbar-l{display:none;}
+  .sf-metric{margin-left:0;}
+  .sf-seg2 b{padding:5px 10px;}
+  .sf-dd-btn{padding:6px 9px;}
 }
 @media (max-width:760px){
   .c4{grid-column:span 12;}

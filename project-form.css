@@ -100,3 +100,9 @@
   .pf-foot .btn-ghost,.pf-save{flex:1}
 }
 @media (prefers-reduced-motion:reduce){.pf-caret{transition:none}}
+
+/* Footer modal: 2 nút cùng chiều cao cố định 36px — không cao theo padding +
+   line-height (trước đây "Huỷ" 36px vs "Lưu dự án" 35px, lệch thêm khi font fallback) */
+.pf-foot .btn-ghost,.pf-foot .pf-save{height:36px;padding-top:0;padding-bottom:0;line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}
+.pf-save svg{display:block;flex:none;}

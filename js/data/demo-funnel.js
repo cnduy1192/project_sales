@@ -130,14 +130,9 @@
     build();
     document.body.classList.add("sf-demo");
     if (window.loginAs) loginAs(0);
-    // huy hiệu demo
+    // Chỉ báo môi trường demo giờ là tag "Demo training" trung tính cạnh logo
+    // (styled trong funnel-sf.css) — không còn huy hiệu vàng nổi trên header.
     var lg = document.getElementById("sfLogin"); if (lg) lg.style.display = "none";
-    if (!document.getElementById("sfDemoBadge")) {
-      var b = document.createElement("div");
-      b.id = "sfDemoBadge"; b.className = "sf-demo-badge";
-      b.setAttribute("data-i18n", "demo.badge"); b.textContent = T("demo.badge");
-      var top = document.querySelector(".sf-top"); if (top) top.appendChild(b);
-    }
     if (window.toast) toast(T("demo.toast", { n: RECORDS.length }));
   }
 

@@ -336,7 +336,7 @@ button.sf-stpill:focus-visible{outline:2px solid var(--pri-2);outline-offset:2px
    clip nên đường phân cách ôm sát chevron, không còn mảng trắng lẹm vào màu xanh. */
 .sf-step{--chev:11px;flex:1 1 0;min-width:88px;position:relative;display:flex;align-items:center;justify-content:center;
   height:32px;padding:0 8px 0 calc(var(--chev) + 8px);margin-right:0;border:none;cursor:pointer;
-  filter:drop-shadow(2px 0 0 #fff);
+  filter:drop-shadow(1.5px 0 0 var(--line));
   background:var(--step-bg);color:var(--step-fg);font-size:11.5px;font-weight:600;line-height:1.15;text-align:center;
   transition:background .15s,color .15s;
   clip-path:polygon(0 0,calc(100% - var(--chev)) 0,100% 50%,calc(100% - var(--chev)) 100%,0 100%,var(--chev) 50%);}
@@ -457,6 +457,17 @@ select.sf-prob-badge:focus{outline:2px solid var(--pri-2);outline-offset:1px;}
   transition:border-color .13s,background .13s,box-shadow .13s;}
 .sf-inline-date:hover{border-color:var(--line);background:#fff;}
 .sf-inline-date:focus{outline:none;border-color:var(--marine-2);background:#fff;box-shadow:0 0 0 3px var(--pri-ring);}
+/* Ô ngày che locale: luôn hiển thị DD/MM/YYYY, input date native phủ trong suốt */
+.sf-dfield{position:relative;display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  border:1px solid transparent;border-radius:7px;padding:3px 8px;margin:-3px -8px;
+  transition:border-color .13s,background .13s,box-shadow .13s;}
+.sf-dfield:hover{border-color:var(--line);background:#fff;}
+.sf-dfield:focus-within{border-color:var(--marine-2);background:#fff;box-shadow:0 0 0 3px var(--pri-ring);}
+.sf-dfield .sf-dtext{font-size:13.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+.sf-dfield .sf-dcal{color:var(--ink-3);flex:none;}
+.sf-dfield .sf-dinput{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;margin:0;padding:0;
+  cursor:pointer;font-size:16px;background:transparent;color:transparent;}
+.sf-dfield .sf-dinput::-webkit-calendar-picker-indicator{opacity:0;width:100%;height:100%;position:absolute;inset:0;cursor:pointer;}
 
 /* Quick log — ghi nhanh hoạt động/ghi chú ngay đầu nhật ký */
 /* Composer nhật ký: hàng điều khiển ở trên, vùng soạn tự giãn ở dưới */
@@ -583,3 +594,67 @@ select.sf-prob-badge:focus{outline:2px solid var(--pri-2);outline-offset:1px;}
 .sf-demo-reset:hover{border-color:var(--marine);color:var(--marine)}
 .sf-demo-reset:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
 .sf-demo-reset + .sf-user{margin-left:10px}
+
+/* ============================================================
+   Header restructuring (UI/UX refactor)
+   - "+ Thêm dự án" chuyển lên cụm tiện ích góc phải header (primary, 36px)
+   - Cụm phải gọn: [+ Thêm dự án] · [ngôn ngữ] · [làm lại demo] · [user]
+   - Huy hiệu demo: bỏ badge vàng nổi, dùng tag trung tính cạnh logo
+   ============================================================ */
+.sf-addproj-top{order:97;flex:none;height:36px;padding:0 14px;border-radius:8px;
+  display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;
+  background:var(--pri);color:#fff;border:1px solid transparent;
+  box-shadow:0 1px 2px var(--pri-ring);transition:background .15s,box-shadow .15s;}
+.sf-addproj-top svg{flex:none;}
+.sf-addproj-top:hover{background:var(--pri-hover);box-shadow:0 2px 8px var(--pri-ring);}
+.sf-addproj-top:focus-visible{outline:2px solid var(--pri-2);outline-offset:2px;}
+/* Neo cụm phải bằng 1 margin-left:auto duy nhất trên phần tử ngôn ngữ */
+.sf-top [data-lang-switch]{order:96;margin-left:auto;}
+.sf-top .sf-demo-reset{order:98;margin-left:0;}
+.sf-top .sf-user{order:99;margin-left:0;}
+
+/* Tag môi trường demo — bỏ huy hiệu vàng nổi; dùng chip trung tính cạnh logo.
+   Ghi đè kiểu vàng cũ của .sf-brand-demo bằng slate nhạt + chấm cảnh báo nhỏ. */
+.sf-brand-demo{display:inline-flex;align-items:center;gap:6px;color:#475569 !important;
+  background:#F1F5F9 !important;border:1px solid var(--line) !important;border-radius:16px !important;
+  padding:3px 10px 3px 8px !important;font-weight:600 !important;letter-spacing:.02em;white-space:nowrap;}
+.sf-brand-demo::before{content:"";width:6px;height:6px;border-radius:50%;background:#D97706;flex:none;}
+@media (max-width:900px){ .sf-brand-demo{display:none;} }
+@media (max-width:640px){
+  .sf-addproj-top{height:34px;padding:0 11px;}
+  .sf-addproj-top span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+}
+
+/* ============================================================
+   CONTROL HEIGHT SYSTEM — mọi nút cao cố định, không phụ thuộc font
+   Nguyên nhân lỗi cũ: nút cao theo padding + line-height:normal. Font
+   hiển thị (Outfit) không có bộ ký tự tiếng Việt → "ư/ổ/ậ" rơi sang
+   Plus Jakarta Sans; trên Windows line box lấy winAscent/winDescent
+   lớn nhất (1.652em thay vì 1.26em) → "Lưu thay đổi" cao hơn "Đóng".
+   ============================================================ */
+.sf-body{
+  --ctl-h:36px;      /* nút hành động: header, footer, dialog */
+  --ctl-h-sm:32px;   /* điều khiển nội dòng (ô ghi nhanh) */
+  /* Font hiển thị hỗ trợ tiếng Việt đầy đủ — không còn trộn 2 kiểu chữ */
+  --font-display:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+}
+
+/* Header — tất cả điều khiển cùng 36px */
+.sf-top .sf-home{width:var(--ctl-h);height:var(--ctl-h);border-radius:8px;}
+.sf-top .sf-ncc-btn{height:var(--ctl-h);border-radius:8px;}
+.sf-top .lang-switch{height:var(--ctl-h);padding:4px 3px 4px 9px;}
+.sf-top .lang-switch .ls-thumb{top:4px;}
+.sf-top .sf-addproj-top,
+.sf-top .sf-demo-reset{height:var(--ctl-h);padding:0 14px;border-radius:8px;
+  font-size:13px;font-weight:600;line-height:1;}
+.sf-top .sf-user{width:var(--ctl-h);height:var(--ctl-h);}
+
+/* Nút footer drawer + hộp thoại đóng dự án */
+.sf-btn{height:var(--ctl-h);padding:0 16px;line-height:1;font-family:inherit;
+  border-radius:8px;justify-content:center;white-space:nowrap;}
+.sf-btn svg,.sf-addproj-top svg,.sf-demo-reset svg{display:block;flex:none;}
+
+/* Hàng ghi nhanh — select loại + nút Ghi nhật ký cùng 32px */
+.sf-quicklog .sf-ql-type{height:var(--ctl-h-sm);padding-top:0;padding-bottom:0;}
+.sf-ql-btn{height:var(--ctl-h-sm);padding:0 14px;line-height:1;font-family:inherit;
+  display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}
