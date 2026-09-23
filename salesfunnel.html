@@ -3,9 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#01426A">
 <script src="js/lib/resume.js?v=1"></script>
 <title data-i18n="sf.pageTitle">FI SAIGON — Sales Funnel</title>
-<script src="js/i18n-dict.js?v=1"></script>
+<script src="js/i18n-dict.js?v=4"></script>
 <script src="js/i18n.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -15,6 +21,7 @@
 <link rel="stylesheet" href="funnel.css?v=21">
 <link rel="stylesheet" href="funnel-sf.css?v=23">
 <link rel="stylesheet" href="funnel-dash.css?v=8">
+<link rel="stylesheet" href="project-form.css?v=2">
 <!-- Dashboard analytics: ECharts (biểu đồ) + CountUp (số KPI) — có CDN dự phòng -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js';document.head.appendChild(s);"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.7/countUp.umd.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js';document.head.appendChild(s);"></script>
@@ -59,12 +66,72 @@
       <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm, ứng dụng, PIC…" data-i18n-placeholder="sf.searchPh" oninput="SF.render()" aria-label="Tìm nhanh" data-i18n-aria-label="common.quickSearch">
     </div>
     <button class="sf-expand" id="sfExpandAll" type="button" onclick="SF.toggleAll()" data-i18n="sf.expandAll">Mở rộng tất cả</button>
+    <button class="btn-primary sf-addproj" type="button" onclick="openCreateProjectModal()" data-i18n-title="fn.addOpp" title="Thêm dự án">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="fn.addOpp">Thêm dự án</span></button>
   </div>
 
   <main class="sf-main">
     <div class="sf-list" id="sfList"></div>
     <div class="sf-empty" id="sfEmpty" hidden></div>
   </main>
+</div>
+
+<!-- ══════════ THÊM DỰ ÁN (Quick Deal) ══════════ -->
+<div class="overlay" id="ov">
+  <form class="modal pf-modal" id="pfForm" role="dialog" aria-modal="true" aria-labelledby="pfTitle" novalidate autocomplete="off">
+    <div class="modal-head pf-head">
+      <div class="pf-head-main">
+        <button type="button" class="mh-back" id="f-back" onclick="closeForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span></span></button>
+        <h3 id="pfTitle" data-i18n="pf.titleNew">Thêm dự án mới</h3>
+        <div class="pf-ctx" id="pfCtx" aria-label="Bối cảnh dự án" data-i18n-aria-label="pf.ctxAria"></div>
+      </div>
+      <button type="button" class="pf-x" onclick="closeForm()" aria-label="Đóng" data-i18n-aria-label="common.close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <div class="modal-body pf-body">
+      <div class="pf-grid">
+        <div class="field" data-f="product"><label for="f-prod"><span data-i18n="common.product">Sản phẩm</span> <span class="req">*</span></label>
+          <input id="f-prod" list="dl-prod" placeholder="Nhập tên sản phẩm / hoạt chất..." data-i18n-placeholder="pf.productPh" aria-describedby="pfErr-product"><datalist id="dl-prod"></datalist>
+          <small class="pf-err" id="pfErr-product"></small></div>
+        <div class="field" data-f="application"><label for="f-app"><span data-i18n="common.application">Ứng dụng</span> <span class="req">*</span></label>
+          <input id="f-app" list="dl-app" placeholder="Nhập ứng dụng..." data-i18n-placeholder="pf.applicationPh" aria-describedby="pfErr-application"><datalist id="dl-app"></datalist>
+          <small class="pf-err" id="pfErr-application"></small></div>
+        <div class="field" data-f="segment"><label for="f-segment"><span data-i18n="pf.segment">Nhóm ngành / Segment</span> <span class="req">*</span> <span class="pf-hint" id="pfSegHint"></span></label>
+          <select id="f-segment" aria-describedby="pfErr-segment"></select>
+          <small class="pf-err" id="pfErr-segment"></small></div>
+        <div class="field" data-f="stage"><label for="f-stage"><span data-i18n="pf.stage">Giai đoạn (Stage)</span> <span class="req">*</span></label>
+          <select id="f-stage" aria-describedby="pfErr-stage"></select>
+          <small class="pf-err" id="pfErr-stage"></small></div>
+      </div>
+
+      <details class="pf-more" id="pfMore">
+        <summary>
+          <svg class="pf-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          <span data-i18n="pf.moreDetails">Bổ sung dự báo &amp; Chi tiết</span> <span class="pf-opt" data-i18n="common.optional">(Tùy chọn)</span>
+          <span class="pf-more-n" id="pfMoreN" hidden></span>
+        </summary>
+        <div class="pf-more-body">
+          <div class="pf-grid pf-grid-3">
+            <div class="field"><label for="f-closing" data-i18n="common.expectedClose">Ngày đóng dự kiến</label><input type="date" id="f-closing"></div>
+            <div class="field"><label for="f-kg1" data-i18n="pf.kgThis">Tiềm năng năm nay (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg1" placeholder="0"></div>
+            <div class="field"><label for="f-kg2" data-i18n="pf.kgNext">Tiềm năng năm sau (KG)</label><input type="number" min="0" step="any" inputmode="decimal" id="f-kg2" placeholder="0"></div>
+          </div>
+          <div class="field"><label for="f-rel" data-i18n="pf.related">Người liên quan đến dự án</label>
+            <div class="tags pf-tags" id="relTags"><select id="f-rel" aria-label="Thêm người liên quan" data-i18n-aria-label="pf.addRelated"></select></div></div>
+        </div>
+      </details>
+
+      <div class="field pf-note"><label for="f-desc"><span data-i18n="pf.initialNote">Mục tiêu dự án</span> <span class="pf-src" id="pfNoteSrc"></span></label>
+        <textarea id="f-desc" rows="2" placeholder="Mục tiêu / kết quả kỳ vọng của dự án... (không bắt buộc)" data-i18n-placeholder="pf.notePh"></textarea></div>
+    </div>
+
+    <div class="modal-foot pf-foot">
+      <span class="pf-kbd" aria-hidden="true"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> <span data-i18n="pf.toSave">để lưu</span></span>
+      <button type="button" class="btn-ghost" onclick="closeForm()" data-i18n="common.cancel">Huỷ</button>
+      <button type="submit" class="btn-primary pf-save" id="pfSave">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg><span data-i18n="pf.save">Lưu dự án</span></button>
+    </div>
+  </form>
 </div>
 
 <!-- ══════════ RECORD PAGE OVERLAY ══════════ -->
@@ -82,9 +149,25 @@
 <script src="js/lib/localstore.js?v=21"></script>
 <script src="js/graph.js?v=21"></script>
 <script src="js/store.js?v=27"></script>
-<script src="js/views/funnel-sf.js?v=24"></script>
+<script>
+/* Sales Funnel — nút "Thêm dự án": lưu dự án mới lên SharePoint khi đã đăng nhập, ngược lại giữ tạm ở phiên hiện tại */
+window.pushProject = function (rec) {
+  try {
+    if (window.FISG_STORE && typeof FISG_STORE.canWrite === "function" && FISG_STORE.canWrite()
+        && typeof FISG_STORE.createProject === "function") {
+      FISG_STORE.createProject(rec).then(function (spId) { if (spId) rec.spId = spId; })
+        .catch(function (e) {
+          console.warn("[pushProject] SharePoint save failed:", (e && e.message) || e);
+          if (typeof toast === "function") toast(T("pf.pushFailed"));
+        });
+    }
+  } catch (e) { console.warn("[pushProject]", e); }
+};
+</script>
+<script src="js/views/funnel-sf.js?v=25"></script>
 <script src="js/i18n-legacy.js?v=1"></script>
-<script src="js/views/funnel-dash.js?v=10"></script>
+<script src="js/views/funnel-dash.js?v=11"></script>
+<script src="js/views/project-form.js?v=2"></script>
 <script src="js/auth.js?v=23"></script>
 </body>
 </html>

@@ -228,9 +228,9 @@
         '<section class="sf-card c5"><div class="sf-card-h"><h3 data-i18n="dash.ch.market">Cơ cấu Thị trường</h3>' +
           '<button type="button" class="sf-back" id="segBack" hidden onclick="SFD.segUp()">← <span data-i18n="dash.allGroups">Tất cả nhóm</span></button></div>' +
           '<div class="sf-chart" id="chSeg" style="min-height:330px"></div></section>' +
-        '<section class="sf-card c12"><div class="sf-card-h"><h3 data-i18n="dash.ch.team">Hiệu suất Đội ngũ (PIC)</h3></div>' +
+        '<section class="sf-card c12"><div class="sf-card-h"><h3 data-i18n="dash.ch.team">Hiệu quả theo Nhân viên Sales</h3></div>' +
           '<div class="sf-chart" id="chPic" style="min-height:250px"></div></section>' +
-        '<section class="sf-card c12"><div class="sf-card-h"><h3 data-i18n="dash.ch.detail">Chi tiết Cơ hội</h3>' +
+        '<section class="sf-card c12"><div class="sf-card-h"><h3 data-i18n="dash.ch.detail">Chi tiết Dự án</h3>' +
           '<span class="sf-meta" id="tblSub"></span></div>' +
           '<div class="sf-tbl-wrap" id="sfTbl"></div></section>' +
       '</div>' +

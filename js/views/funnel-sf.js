@@ -133,7 +133,7 @@
   function renderNccTabs() {
     var box = document.getElementById("sfNcc"); if (!box) return;
     var open = box.classList.contains("open");
-    var items = [ALL_NCC].concat(NCCS);
+    var items = [ALL_NCC].concat((typeof supplierOptions === "function") ? supplierOptions() : NCCS);
     var opts = items.map(function (v, i) {
       var on = (v === ALL_NCC) ? isAllNcc() : (v === nccFilter);
       return (i === 1 ? '<div class="sf-ncc-sep"></div>' : "") +
