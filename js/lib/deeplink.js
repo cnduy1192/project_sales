@@ -87,7 +87,7 @@
         if (!actId) { clearInterval(iv); return; }
         var found = ACTIVITIES.some(function (x) { return x.id === actId; });
         if (found) {
-          if (typeof openActDrawer === "function") openActDrawer(actId);
+          if (typeof openActivityModal === "function") openActivityModal(actId);
           else if (typeof openActEdit === "function") openActEdit(actId);
           clearInterval(iv);
           return;

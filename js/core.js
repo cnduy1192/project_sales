@@ -31,8 +31,9 @@ function rebuildNccTabs(){
 }
 window.rebuildNccTabs=rebuildNccTabs;
 
-const VIEWS=['cockpit','funnel','customers','acts','dash','reports','users'];
+const VIEWS=['cockpit','funnel','customers','acts','reports','users'];   // menu Dashboard đã bỏ khỏi tracker
 function go(v){
+  if(VIEWS.indexOf(v)<0) v='funnel';   // link/bookmark cũ tới view đã bỏ (vd. 'dash')
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
   VIEWS.forEach(x=>document.getElementById('view-'+x).style.display = x===v?'block':'none');
 
@@ -41,11 +42,11 @@ function go(v){
   // Hoạt động khách hàng có ô tìm kiếm riêng trong bảng → ẩn ô "Lọc nhanh funnel" của header để không trùng
   const gs=document.querySelector('.gheader .gsearch');
   if(gs) gs.style.display = v==='acts' ? 'none' : '';
-  if(v!=='acts' && typeof closeActDrawer==='function') closeActDrawer(true);
+  if(v!=='acts' && typeof closeActivityModal==='function') closeActivityModal(true);
   if(v==='cockpit')renderCockpit();
   if(v==='reports')renderReports();
   if(v==='customers'&&window.renderCustomers)renderCustomers();
-  if(v==='funnel')render(); if(v==='dash')renderDash(); if(v==='acts')renderActs();
+  if(v==='funnel')render(); if(v==='acts')renderActs();
 }
 
 function toggleSidebar(force){
@@ -84,7 +85,7 @@ function visibleActs(){
 function setNcc(n){nccFilter=n;stageFilter=null;segDrill=null;
   if(typeof donutSegDrill!=='undefined')donutSegDrill=null;
   document.querySelectorAll('.ncc-tab').forEach(t=>t.classList.toggle('on',t.dataset.ncc===n));
-  render();renderDash();renderActs();}
+  render();renderActs();}
 function canEdit(r){ return capEdit(r, me); }
 function canClose(r){ return capClose(r, me); }
 

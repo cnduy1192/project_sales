@@ -19,6 +19,58 @@
 "Tất cả Sales",
 "All sales reps"
 ],
+"act.am.edit": [
+"Chỉnh sửa hoạt động",
+"Edit Activity"
+],
+"act.am.files": [
+"Tệp đính kèm",
+"Attachments"
+],
+"act.am.history": [
+"Lịch sử",
+"History"
+],
+"act.am.kbd": [
+"chuyển hoạt động",
+"switch activity"
+],
+"act.am.more": [
+"Thông tin bổ sung",
+"Additional Details"
+],
+"act.am.ncc": [
+"NCC",
+"Supplier"
+],
+"act.am.noNext": [
+"Chưa có bước tiếp theo",
+"No next step recorded"
+],
+"act.am.noOpp": [
+"Hoạt động này chưa gắn với dự án nào.",
+"This activity is not linked to an opportunity yet."
+],
+"act.am.openOpp": [
+"Mở dự án",
+"Open Opportunity"
+],
+"act.am.openSf": [
+"Mở trong Sales Funnel",
+"Open in Sales Funnel"
+],
+"act.am.timeline": [
+"Dòng thời gian khách hàng",
+"Account Timeline"
+],
+"act.am.upcoming": [
+"Sắp tới",
+"Upcoming"
+],
+"act.am.viewing": [
+"Đang xem",
+"Viewing"
+],
 "act.attachOpp": [
 "Gắn vào dự án đang chạy",
 "Link to an Open Opportunity"
@@ -67,18 +119,6 @@
 "Chi tiết hoạt động",
 "Activity Details"
 ],
-"act.dr.edit": [
-"Chỉnh sửa",
-"Edit"
-],
-"act.dr.info": [
-"Thông tin",
-"Details"
-],
-"act.dr.next": [
-"Hoạt động sau (↓)",
-"Next activity (↓)"
-],
 "act.dr.none": [
 "Không có",
 "None"
@@ -86,10 +126,6 @@
 "act.dr.opp": [
 "Dự án liên kết",
 "Linked Opportunity"
-],
-"act.dr.prev": [
-"Hoạt động trước (↑)",
-"Previous activity (↑)"
 ],
 "act.empty": [
 "Chưa có hoạt động nào",
@@ -308,23 +344,23 @@
 "Sorted: {d}. Click to reverse."
 ],
 "act.t.call": [
-"Cuộc gọi",
+"Call",
 "Call"
 ],
 "act.t.exhibition": [
-"Hội chợ",
+"Trade Show",
 "Trade Show"
 ],
 "act.t.meeting": [
-"Gặp / Họp",
-"Meeting"
+"Visit",
+"Visit"
 ],
 "act.t.note": [
 "Ghi chú",
 "Note"
 ],
 "act.t.visit": [
-"Thăm khách",
+"Visit",
 "Visit"
 ],
 "act.tabsAria": [

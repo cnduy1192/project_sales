@@ -734,7 +734,8 @@
 
   /* Nhật ký hoạt động — hoạt động khách hàng + ghi chú, mới nhất lên đầu.
      Không còn mốc “Tạo dự án” / “Mục tiêu chốt” (đã có ở khối Tiến độ). */
-  var TYPE_VI = { Call: "Call", Visit: "Meeting", Email: "Email", get Exhibition() { return T("act.t.exhibition"); } };
+  /* Hình thức tương tác giữ nguyên tiếng Anh ở cả 2 ngôn ngữ (đồng bộ với tracker) */
+  var TYPE_VI = { Call: "Call", Visit: "Visit", Meeting: "Visit", Email: "Email", Exhibition: "Trade Show", Seminar: "Trade Show", "Trade Show": "Trade Show" };
   function timelineHTML(r) {
     var ev = [];
     (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })

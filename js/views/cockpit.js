@@ -409,20 +409,17 @@ function closeCustomer(){
 }
 window.closeCustomer = closeCustomer;
 
+/* "Xem toàn bộ lịch sử dự án" → danh sách dự án của khách hàng trên Sales Funnel
+   (trước đây mở tab Dashboard của tracker — tab này đã bỏ). */
 function ckOpenHistory(){
   const p = _cachedIndex().get(ckCust);
   if(!p) return;
-  const byNcc = {};
-  p.projects.forEach(r => byNcc[r.ncc] = (byNcc[r.ncc]||0)+1);
-  const best = Object.keys(byNcc).sort((a,b) => byNcc[b]-byNcc[a])[0];
-  const label = p.label;
+  const nccs = Object.keys(p.projects.reduce((m, r) => (m[r.ncc] = 1, m), {}));
   closeCustomer();
-  if(best && best !== nccFilter){
-    setNcc(best);
-    if(Object.keys(byNcc).length > 1)
-      toast(T('ck.switchedSupplier',{s:best}));
-  }
-  showInsight('kh', label);
+  const url = typeof salesFunnelUrl === 'function'
+    ? salesFunnelUrl({ ncc: nccs.length === 1 ? nccs[0] : '', q: p.label, status: '' })
+    : 'salesfunnel.html?q=' + encodeURIComponent(p.label) + '&from=index';
+  location.href = url;
 }
 window.ckOpenHistory = ckOpenHistory;
 

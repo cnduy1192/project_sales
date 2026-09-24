@@ -196,7 +196,7 @@
         ? '<ol class="cust-tl">' + acts.slice()
             .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
             .map(a => '<li><span class="tl-d">' + viDay(a.date) + '</span><span class="tl-b">' +
-              '<span class="tl-head"><span class="tl-type">' + esc(a.type || '—') + '</span>' +
+              '<span class="tl-head"><span class="tl-type">' + esc(window.actTypeText ? actTypeText(a.type) : (a.type || '—')) + '</span>' +
               (a.pic ? '<span class="tl-pic">' + esc(a.pic) + '</span>' : '') + '</span>' +
               (a.note ? '<span class="tl-note">' + esc(a.note) + "</span>" : "") +
               (a.next ? '<span class="tl-next">→ ' + esc(a.next) + "</span>" : "") +

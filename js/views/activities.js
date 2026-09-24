@@ -5,7 +5,7 @@
  *  renderActivityList(data)     → vẽ bảng 6 cột, chia block theo tuần
  *  groupActivitiesByWeek(rows)  → [{key, year, week, start, end, rel, items}]
  *  isoWeekOf(date)              → {year, week, key} theo ISO-8601
- *  openActDrawer(id)            → Drawer xem trọn biên bản; "Chỉnh sửa" mở form cũ
+ *  openActivityModal(id)        → Modal giữa màn hình: chi tiết (trái) + timeline cùng khách hàng (phải)
  * Cột "Dự án liên kết": ĐÃ gắn → chip ↗ Tên dự án · Stage (deeplink salesfunnel.html);
  *                       CHƯA gắn → nút viền "+ Tạo dự án" (modal tạo nhanh).
  * ========================================================================== */
@@ -16,9 +16,7 @@ var actSort = 'desc';      // 'desc' = mới nhất trước
 var actPic = '';           // lọc theo Sales ('' = tất cả)
 var actLimit = 150;        // số dòng vẽ lần đầu, "Hiển thị thêm" tăng dần
 var actCollapsed = {};     // tuần đang thu gọn { '2026-W37': true }
-var actView = [];          // danh sách id theo đúng thứ tự đang hiển thị (drawer ‹ ›)
-var actDrawerId = null;
-var actDrawerReturn = null;
+var actView = [];          // danh sách id theo đúng thứ tự đang hiển thị trong bảng
 const ACT_PAGE = 150;
 
 function actEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -110,27 +108,26 @@ function actInterestBadge(v){
   return '<span class="al-int al-int-' + k + '"><i aria-hidden="true"></i>' + T('act.int.' + k) + '</span>';
 }
 
-const ACT_TYPE_MAP = { Seminar:'Exhibition', 'Khác':'Call' };
+/* Hình thức tương tác — GIỮ NGUYÊN tiếng Anh ở cả 2 ngôn ngữ, kèm icon nhận diện.
+   Giá trị lưu trữ không đổi (Call / Visit / Email / Exhibition); chỉ đổi nhãn hiển thị. */
+const ACT_TYPE_MAP = { Seminar:'Exhibition', 'Trade Show':'Exhibition', 'Khác':'Call', Meeting:'Visit' };
 function actType(v){ return ACT_TYPE_MAP[v] || v || 'Call'; }
-const ACT_TYPE_ICON = {
-  Call: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/>',
-  Visit: '<path d="M12 21s-7-6.2-7-11.5a7 7 0 0114 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
-  Meeting: '<circle cx="9" cy="8" r="3"/><path d="M3 19c.7-3 3.1-5 6-5s5.3 2 6 5M16 5.2a3 3 0 010 5.6M18 14.3c1.5.7 2.6 2.2 3 4.7"/>',
-  Email: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',
-  Exhibition: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8M7 9h4M7 12h7"/>',
-  Note: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'
+const ACT_TYPE_UI = {
+  Call:       { icon:'📞', label:'Call' },
+  Visit:      { icon:'🚗', label:'Visit' },
+  Email:      { icon:'✉️', label:'Email' },
+  Exhibition: { icon:'🏛️', label:'Trade Show' },
+  Note:       { icon:'📝', label:'Note' }
 };
-function actTypeLabel(t){
-  return ({ Call: T('act.t.call'), Visit: T('act.t.visit'), Meeting: T('act.t.meeting'),
-            Email: 'Email', Exhibition: T('act.t.exhibition'), Note: T('act.t.note') })[t] || tv(t);
-}
-function actTypeBadge(raw){
+function actTypeLabel(raw){ const t = actType(raw); return (ACT_TYPE_UI[t] || {}).label || String(t); }
+function actTypeIcon(raw){ const t = actType(raw); return (ACT_TYPE_UI[t] || {}).icon || '•'; }
+function actTypeText(raw){ return actTypeIcon(raw) + ' ' + actTypeLabel(raw); }
+function actTypeBadge(raw, cls){
   const t = actType(raw);
-  const ico = ACT_TYPE_ICON[t] || ACT_TYPE_ICON.Note;
-  return '<span class="al-type al-type-' + actEsc(String(t).toLowerCase()) + '">'
-    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ico + '</svg>'
-    + actEsc(actTypeLabel(t)) + '</span>';
+  return '<span class="al-type al-type-' + actEsc(String(t).toLowerCase()) + (cls ? ' ' + cls : '') + '">'
+    + '<span class="al-type-i" aria-hidden="true">' + actTypeIcon(t) + '</span>' + actEsc(actTypeLabel(t)) + '</span>';
 }
+Object.assign(window, { actType, actTypeLabel, actTypeIcon, actTypeText });
 
 function actUser(pic){ return (typeof USERS !== 'undefined' ? USERS : []).find(x => x.pic === pic) || null; }
 function actPicName(pic){
@@ -330,7 +327,7 @@ function actRowHtml(a){
   const picName = actPicName(a.pic);
   const future = d && d > TODAY;
   const tip = [note, next ? '→ ' + next : ''].filter(Boolean).join('\n');
-  return '<div class="al-row al-grid' + (a.id === actDrawerId ? ' is-open' : '') + '" role="row" tabindex="0" data-id="' + actEsc(a.id) + '" '
+  return '<div class="al-row al-grid' + (AM.open && a.id === AM.id ? ' is-open' : '') + '" role="row" tabindex="0" data-id="' + actEsc(a.id) + '" '
     + 'onclick="actRowClick(event,\'' + actEsc(a.id) + '\')" onkeydown="actRowKey(event,\'' + actEsc(a.id) + '\')">'
     + '<div class="al-c al-c-time" role="cell">'
       + '<span class="al-date">' + (d ? actFmtDate(d) : actEsc(T('act.week.noDate')))
@@ -379,7 +376,7 @@ function renderActivityList(data, opts){
     out += '<div class="al-more"><button type="button" class="btn-ghost" onclick="actShowMore()">'
       + actEsc(T('act.showMore', { n: Math.min(hidden, ACT_PAGE) })) + '</button></div>';
   box.innerHTML = out;
-  if(actDrawerId && document.getElementById('actDrawer').classList.contains('open')) actFillDrawer();
+  if(AM.open) amRefresh();
 }
 window.renderActivityList = renderActivityList;
 
@@ -387,12 +384,12 @@ window.renderActivityList = renderActivityList;
 function actRowClick(e, id){
   if(e.target.closest('a,button,input,select,label')) return;
   const sel = window.getSelection && String(window.getSelection());
-  if(sel && sel.length > 2) return;             // đang bôi đen để copy → không mở drawer
-  openActDrawer(id, e.currentTarget);
+  if(sel && sel.length > 2) return;             // đang bôi đen để copy → không mở modal
+  openActivityModal(id, e.currentTarget);
 }
 function actRowKey(e, id){
   if(e.target !== e.currentTarget) return;
-  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openActDrawer(id, e.currentTarget); }
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openActivityModal(id, e.currentTarget); }
   else if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
     const rows = Array.from(document.querySelectorAll('#actRows .al-row'));
     const i = rows.indexOf(e.currentTarget), nx = rows[i + (e.key === 'ArrowDown' ? 1 : -1)];
@@ -401,121 +398,231 @@ function actRowKey(e, id){
 }
 window.actRowClick = actRowClick; window.actRowKey = actRowKey;
 
-/* ---------- Drawer: trọn biên bản hoạt động ---------- */
-function openActDrawer(id, from){
+/* ==========================================================================
+   Modal "Chi tiết hoạt động" — giữa màn hình, 2 cột
+     Trái (58%)  : chi tiết hoạt động đang chọn
+     Phải (42%)  : timeline mọi hoạt động của CÙNG khách hàng (Sắp tới → Lịch sử)
+   Bấm một mốc timeline → cột trái + header đổi ngay, modal không đóng/mở lại.
+   ========================================================================== */
+var AM = { open: false, id: null, list: [], ret: null };
+
+function amCustKey(a){
+  if(a && a.customerId) return 'id:' + String(a.customerId);
+  return 'nm:' + actFold(a && a.customer).replace(/\s+/g, ' ');
+}
+/* Toàn bộ hoạt động cùng khách hàng mà người dùng được xem (mọi NCC), ngày giảm dần */
+function amTimelineOf(a){
+  const key = amCustKey(a), byName = 'nm:' + actFold(a.customer).replace(/\s+/g, ' ');
+  const pool = (typeof scopeActs === 'function' && typeof scopeRecords === 'function')
+    ? scopeActs(ACTIVITIES, me, scopeRecords(RECORDS, me)) : ACTIVITIES.slice();
+  const list = pool.filter(x => x === a || amCustKey(x) === key || 'nm:' + actFold(x.customer).replace(/\s+/g, ' ') === byName);
+  if(list.indexOf(a) < 0) list.push(a);
+  return list.sort((x, y) => {
+    const dx = x.date || '', dy = y.date || '';
+    if(dx === dy) return String(y.id).localeCompare(String(x.id));
+    if(!dx) return 1; if(!dy) return -1;
+    return dy.localeCompare(dx);
+  });
+}
+
+function openActivityModal(activityId, from){
+  const a = ACTIVITIES.find(x => x.id === activityId); if(!a) return;
+  const ov = document.getElementById('actModalOv');
+  if(!AM.open) AM.ret = from || document.activeElement;
+  AM.id = activityId;
+  AM.list = amTimelineOf(a);
+  AM.open = true;
+  amRenderHead(a); amRenderDetail(a); amRenderTimeline(true);
+  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
+  document.documentElement.classList.add('am-lock');
+  document.querySelectorAll('#actRows .al-row').forEach(r => r.classList.toggle('is-open', r.dataset.id === activityId));
+  document.getElementById('actModal').focus({ preventScroll: true });
+}
+/* Bấm một mốc trên timeline: chỉ cập nhật header + cột trái, giữ nguyên vị trí cuộn timeline */
+function amSelect(id){
+  if(!AM.open || id === AM.id) return;
   const a = ACTIVITIES.find(x => x.id === id); if(!a) return;
-  actDrawerId = id;
-  if(from) actDrawerReturn = from;
-  else if(!document.getElementById('actDrawer').classList.contains('open')) actDrawerReturn = document.activeElement;
-  actFillDrawer();
-  document.getElementById('actDrawerBd').classList.add('open');
-  const dr = document.getElementById('actDrawer');
-  dr.classList.add('open'); dr.setAttribute('aria-hidden', 'false');
-  document.querySelectorAll('#actRows .al-row').forEach(r => r.classList.toggle('is-open', r.dataset.id === id));
-  dr.focus({ preventScroll: true });
+  AM.id = id;
+  amRenderHead(a); amRenderDetail(a);
+  document.querySelectorAll('#amTimeline .am-tl-i').forEach(li => {
+    const on = li.dataset.id === id;
+    li.classList.toggle('is-active', on);
+    const b = li.querySelector('.am-tl-card'); if(b) b.setAttribute('aria-current', on ? 'true' : 'false');
+  });
+  amScrollActive();
+  const det = document.getElementById('amDetail');
+  if(det){ det.scrollTop = 0; det.classList.remove('am-swap'); void det.offsetWidth; det.classList.add('am-swap'); }
 }
-function closeActDrawer(keepFocus){
-  const dr = document.getElementById('actDrawer'); if(!dr || !dr.classList.contains('open')) return;
-  dr.classList.remove('open'); dr.setAttribute('aria-hidden', 'true');
-  document.getElementById('actDrawerBd').classList.remove('open');
+function closeActivityModal(keepFocus){
+  if(!AM.open) return;
+  const ov = document.getElementById('actModalOv');
+  ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true');
+  document.documentElement.classList.remove('am-lock');
   document.querySelectorAll('#actRows .al-row.is-open').forEach(r => r.classList.remove('is-open'));
-  const back = actDrawerId && document.querySelector('#actRows .al-row[data-id="' + CSS.escape(actDrawerId) + '"]');
-  actDrawerId = null;
-  if(!keepFocus){ const f = back || actDrawerReturn; if(f && f.focus) f.focus({ preventScroll: true }); }
-  actDrawerReturn = null;
+  const back = AM.id && document.querySelector('#actRows .al-row[data-id="' + CSS.escape(AM.id) + '"]');
+  AM.open = false;
+  if(!keepFocus){ const f = back || AM.ret; if(f && f.focus && document.contains(f)) f.focus({ preventScroll: true }); }
+  AM.ret = null;
 }
-function actDrawerStep(dir){
-  const i = actView.indexOf(actDrawerId), id = actView[i + dir];
-  if(!id) return;
-  openActDrawer(id);
-  const row = document.querySelector('#actRows .al-row[data-id="' + CSS.escape(id) + '"]');
-  if(row) row.scrollIntoView({ block: 'nearest' });
+/* Dữ liệu đổi (lưu / đồng bộ SharePoint) khi modal đang mở → vẽ lại, giữ hoạt động đang xem */
+function amRefresh(){
+  if(!AM.open) return;
+  const a = ACTIVITIES.find(x => x.id === AM.id);
+  if(!a){ closeActivityModal(true); return; }
+  const tl = document.getElementById('amTlScroll'), st = tl ? tl.scrollTop : 0;
+  AM.list = amTimelineOf(a);
+  amRenderHead(a); amRenderDetail(a); amRenderTimeline(false);
+  if(tl) tl.scrollTop = st;
 }
-function actDrawerEdit(){
-  const id = actDrawerId; closeActDrawer(true);
-  if(id) openActEdit(id);
+function amStep(dir){
+  const i = AM.list.findIndex(x => x.id === AM.id), nx = AM.list[i + dir];
+  if(nx) amSelect(nx.id);
 }
-function actDrawerCreateOpp(){
-  const id = actDrawerId; closeActDrawer(true);
-  if(id) createProjectFromAct(id);
-}
-Object.assign(window, { openActDrawer, closeActDrawer, actDrawerStep, actDrawerEdit, actDrawerCreateOpp });
+function amEdit(){ const id = AM.id; closeActivityModal(true); if(id) openActEdit(id); }
+function amCreateOpp(){ const id = AM.id; closeActivityModal(true); if(id) createProjectFromAct(id); }
+Object.assign(window, { openActivityModal, amSelect, closeActivityModal, amRefresh, amStep, amEdit, amCreateOpp,
+  openActDrawer: openActivityModal, closeActDrawer: closeActivityModal });   // tên cũ vẫn dùng được
 
-function actFillDrawer(){
-  const a = ACTIVITIES.find(x => x.id === actDrawerId);
-  if(!a){ closeActDrawer(); return; }
-  const d = actParseDate(a.date);
+function amDayText(d){
+  if(!d) return T('act.week.noDate');
+  let wd = '';
+  try { wd = d.toLocaleDateString(I18N.locale(), { weekday: 'long' }); } catch(e) {}
+  return (wd ? wd.charAt(0).toUpperCase() + wd.slice(1) + ', ' : '') + actFmtDate(d);
+}
+
+function amRenderHead(a){
+  const ncc = actNccList(a);
+  document.getElementById('amTitle').textContent = a.customer || '';
+  document.getElementById('amSub').innerHTML =
+    (ncc.length ? '<span class="am-sub-i"><span class="am-sub-l">' + actEsc(T('act.am.ncc')) + '</span>'
+      + actEsc(ncc.map(n => tv(n)).join(' · ')) + '</span>' : '')
+    + (a.pic ? '<span class="am-sub-i am-sub-pic">' + actAvatar(a.pic, 22) + '<span>' + actEsc(actPicName(a.pic)) + '</span></span>' : '');
+  document.getElementById('amBadges').innerHTML = actTypeBadge(a.type, 'am-badge') + actInterestBadge(a.potential);
+}
+
+function amRenderDetail(a){
+  const d = actParseDate(a.date), wk = d ? isoWeekOf(d) : null;
   const note = actClean(a.note), next = actClean(a.next);
-  const ncc = actNccList(a), rel = (a.related || []).filter(Boolean);
-  const wk = d ? isoWeekOf(d) : null;
-  let dayTxt = '';
-  if(d){
-    try { dayTxt = d.toLocaleDateString(I18N.locale(), { weekday: 'long' }); } catch(e) {}
-    dayTxt = (dayTxt ? dayTxt.charAt(0).toUpperCase() + dayTxt.slice(1) + ', ' : '') + actFmtDate(d);
-  }
-
-  document.getElementById('actDrawerTitle').textContent = a.customer || '';
-  document.getElementById('actDrawerSub').innerHTML =
-    '<span class="al-dr-date">' + actEsc(dayTxt || T('act.week.noDate')) + (wk ? ' · W' + actPad(wk.week) : '') + '</span>'
-    + actTypeBadge(a.type) + actInterestBadge(a.potential)
-    + (d && d > TODAY ? '<span class="al-plan">' + actEsc(T('act.planned')) + '</span>' : '');
-
-  const i = actView.indexOf(a.id);
-  const pv = document.getElementById('actDrPrev'), nx = document.getElementById('actDrNext');
-  if(pv) pv.disabled = i <= 0;
-  if(nx) nx.disabled = i < 0 || i >= actView.length - 1;
-  const pos = document.getElementById('actDrPos');
-  if(pos) pos.textContent = i >= 0 ? (i + 1) + ' / ' + actView.length : '';
-
+  const rel = (a.related || []).filter(Boolean);
   const p = actProjectOf(a);
+  const canCreate = actCanCreateOpp();
+  const muted = t => '<span class="al-none">' + actEsc(t) + '</span>';
+
   let opp;
   if(p.pr){
-    opp = actOppCell(a);
+    const pr = p.pr, stage = actProjectStage(pr);
+    const st = pr.status === 'WON' ? 'won' : pr.status === 'LOST' ? 'lost' : 'run';
+    opp = '<a class="am-opp am-opp-' + st + '" href="' + actEsc(actOppUrl(pr.id)) + '" onclick="return actOpenOpp(event,\'' + actEsc(pr.id) + '\')">'
+      + '<span class="am-opp-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></span>'
+      + '<span class="am-opp-t"><b>' + actEsc(actProjectName(pr)) + '</b>'
+      + '<span class="am-opp-m">' + (stage ? '<span class="am-opp-s">' + actEsc(stage) + '</span>' : '') + '<span>' + actEsc(pr.id) + (pr.ncc ? ' · ' + actEsc(tv(pr.ncc)) : '') + '</span></span></span>'
+      + '<span class="am-opp-go">' + actEsc(T('act.am.openSf')) + '</span></a>';
   } else if(p.locked){
-    opp = actOppCell(a);
-  } else if(actCanCreateOpp()){
-    opp = '<button type="button" class="al-new" onclick="actDrawerCreateOpp()">'
-      + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
-      + actEsc(T('act.createOpp')) + '</button>';
-  } else opp = '<span class="al-none">' + actEsc(T('act.noOppLinked')) + '</span>';
+    opp = '<div class="am-opp-empty">' + actOppCell(a) + '</div>';
+  } else {
+    opp = '<div class="am-opp-empty"><p>' + actEsc(T('act.am.noOpp')) + '</p>'
+      + (canCreate ? '<button type="button" class="am-btn am-btn-outline" onclick="amCreateOpp()">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+        + actEsc(T('act.createOpp')) + '</button>' : '') + '</div>';
+  }
 
-  const chips = arr => arr.length
-    ? '<span class="al-chips">' + arr.map(x => '<span class="al-chip">' + actEsc(x) + '</span>').join('') + '</span>'
-    : '<span class="al-none">' + actEsc(T('act.dr.none')) + '</span>';
-
-  document.getElementById('actDrawerBody').innerHTML =
-    '<section class="al-dr-sec"><h4>' + actEsc(T('act.col.content')) + '</h4>'
-      + (note ? '<div class="al-dr-note">' + actEsc(note) + '</div>' : '<p class="al-none">' + actEsc(T('act.noContent')) + '</p>')
+  const hasAtt = !!(window.FISG_ATTACH && a.spId);
+  document.getElementById('amDetail').innerHTML =
+    '<div class="am-date">'
+      + '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>'
+      + '<b>' + actEsc(amDayText(d)) + '</b>'
+      + (wk ? '<span class="al-wk-code">W' + actPad(wk.week) + '</span>' : '')
+      + (d && d > TODAY ? '<span class="am-pill am-pill-plan">' + actEsc(T('act.planned')) + '</span>' : '')
+      + (actPending(a) ? '<span class="am-pill am-pill-sync" title="' + actEsc(T('act.pendingHint')) + '">' + actEsc(T('act.pending')) + '</span>' : '')
+    + '</div>'
+    + '<section class="am-sec"><h4>' + actEsc(T('act.col.content')) + '</h4>'
+      + (note ? '<div class="am-note">' + actEsc(note) + '</div>' : '<div class="am-note is-empty">' + actEsc(T('act.noContent')) + '</div>')
     + '</section>'
-    + (next ? '<section class="al-dr-sec"><h4>' + actEsc(T('act.nextStep')) + '</h4>'
-      + '<div class="al-dr-next"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>' + actEsc(next) + '</span></div></section>' : '')
-    + '<section class="al-dr-sec"><h4>' + actEsc(T('act.dr.info')) + '</h4><dl class="al-dr-meta">'
-      + '<dt>' + actEsc(T('act.col.owner')) + '</dt><dd>' + (a.pic ? '<span class="al-dr-pic">' + actAvatar(a.pic, 22) + actEsc(actPicName(a.pic)) + '</span>' : '<span class="al-none">' + actEsc(T('act.dr.none')) + '</span>') + '</dd>'
-      + '<dt>' + actEsc(T('common.supplier')) + '</dt><dd>' + chips(ncc.map(n => tv(n))) + '</dd>'
-      + '<dt>' + actEsc(T('act.related')) + '</dt><dd>' + chips(rel.map(r => actPicName(r))) + '</dd>'
-      + '<dt>' + actEsc(T('act.dr.opp')) + '</dt><dd>' + opp + '</dd>'
-    + '</dl></section>'
-    + '<section class="al-dr-sec al-dr-att" id="actDrAttach"></section>';
+    + '<section class="am-sec"><h4>' + actEsc(T('act.nextStep')) + '</h4>'
+      + (next ? '<div class="am-next"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><p>' + actEsc(next) + '</p></div>'
+             : muted(T('act.am.noNext')))
+    + '</section>'
+    + '<section class="am-sec"><h4>' + actEsc(T('act.am.more')) + '</h4><dl class="am-meta">'
+      + '<dt>' + actEsc(T('act.related')) + '</dt><dd>' + (rel.length
+          ? '<span class="al-chips">' + rel.map(r => '<span class="al-chip">' + actEsc(actPicName(r)) + '</span>').join('') + '</span>'
+          : muted(T('act.dr.none'))) + '</dd>'
+      + (hasAtt ? '' : '<dt>' + actEsc(T('act.am.files')) + '</dt><dd>' + muted(T('act.dr.none')) + '</dd>')
+    + '</dl>' + (hasAtt ? '<div class="am-att" id="amAttach"></div>' : '') + '</section>'
+    + '<section class="am-sec"><h4>' + actEsc(T('act.dr.opp')) + '</h4>' + opp + '</section>';
 
-  const att = document.getElementById('actDrAttach');
-  if(att && window.FISG_ATTACH && a.spId){
-    FISG_ATTACH.mount('actDrAttach', { type: 'activity', id: a.spId,
-      ctx: { pic: a.pic, date: a.date, customer: a.customer }, canUpload: false });
-  } else if(att) att.remove();
+  if(hasAtt) FISG_ATTACH.mount('amAttach', { type: 'activity', id: a.spId,
+    ctx: { pic: a.pic, date: a.date, customer: a.customer }, canUpload: false });
 
-  const ed = document.getElementById('actDrEdit');
-  if(ed) ed.hidden = !canEditAct(a);
+  // Footer: Đóng · Chỉnh sửa hoạt động · (+ Tạo dự án | Mở dự án)
+  const ed = document.getElementById('amEditBtn'); if(ed) ed.hidden = !canEditAct(a);
+  const pb = document.getElementById('amPrimary');
+  if(pb){
+    if(p.pr){
+      pb.hidden = false;
+      pb.outerHTML = '<a class="am-btn am-btn-primary" id="amPrimary" href="' + actEsc(actOppUrl(p.pr.id)) + '" onclick="return actOpenOpp(event,\'' + actEsc(p.pr.id) + '\')">'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg>'
+        + actEsc(T('act.am.openOpp')) + '</a>';
+    } else {
+      pb.outerHTML = '<button type="button" class="am-btn am-btn-primary" id="amPrimary" onclick="amCreateOpp()"' + (!p.locked && canCreate ? '' : ' hidden') + '>'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>'
+        + actEsc(T('act.createOpp')) + '</button>';
+    }
+  }
+}
+
+function amRenderTimeline(scrollToActive){
+  const box = document.getElementById('amTimeline'); if(!box) return;
+  const future = [], past = [];
+  AM.list.forEach(x => { const d = actParseDate(x.date); (d && d > TODAY ? future : past).push(x); });
+  document.getElementById('amTlCount').textContent = T('act.week.count', { n: AM.list.length });
+
+  const node = (x, isFuture) => {
+    const d = actParseDate(x.date), on = x.id === AM.id;
+    const sum = actClean(x.note) || actClean(x.next);
+    const ncc = actNccList(x).map(n => tv(n)).join(' · ');
+    return '<li class="am-tl-i' + (isFuture ? ' is-future' : '') + (on ? ' is-active' : '') + '" data-id="' + actEsc(x.id) + '">'
+      + '<span class="am-tl-dot" aria-hidden="true"></span>'
+      + '<button type="button" class="am-tl-card" aria-current="' + on + '" onclick="amSelect(\'' + actEsc(x.id) + '\')">'
+        + '<span class="am-tl-top"><time>' + (d ? actFmtDate(d) : actEsc(T('act.week.noDate'))) + '</time>'
+        + actTypeBadge(x.type, 'am-tl-tag') + '<span class="am-now">' + actEsc(T('act.am.viewing')) + '</span></span>'
+        + '<span class="am-tl-sum' + (sum ? '' : ' is-empty') + '">' + actEsc(sum || T('act.noContent')) + '</span>'
+        + '<span class="am-tl-meta">' + actEsc([ncc, actPicName(x.pic)].filter(Boolean).join(' · ')) + '</span>'
+      + '</button></li>';
+  };
+  const grp = (label, n, cls) => '<li class="am-tl-grp ' + cls + '"><span>' + actEsc(label) + '</span><b>' + n + '</b></li>';
+  box.innerHTML =
+    (future.length ? grp(T('act.am.upcoming'), future.length, 'is-future') + future.map(x => node(x, true)).join('') : '')
+    + (past.length ? grp(T('act.am.history'), past.length, 'is-past') + past.map(x => node(x, false)).join('') : '');
+  if(scrollToActive){
+    const sc = document.getElementById('amTlScroll'); if(sc) sc.scrollTop = 0;
+    amScrollActive();
+  }
+}
+function amScrollActive(){
+  const sc = document.getElementById('amTlScroll');
+  const li = document.querySelector('#amTimeline .am-tl-i.is-active');
+  if(!sc || !li) return;
+  const top = li.offsetTop - sc.offsetTop, h = li.offsetHeight;
+  if(top < sc.scrollTop + 8) sc.scrollTop = Math.max(0, top - 36);
+  else if(top + h > sc.scrollTop + sc.clientHeight - 8) sc.scrollTop = top + h - sc.clientHeight + 16;
 }
 
 document.addEventListener('keydown', e => {
-  const dr = document.getElementById('actDrawer');
-  if(!dr || !dr.classList.contains('open')) return;
+  if(!AM.open) return;
   if(document.querySelector('.overlay.open')) return;         // form khác đang mở phía trên
-  if(e.key === 'Escape'){ e.preventDefault(); closeActDrawer(); return; }
+  if(e.key === 'Escape'){ e.preventDefault(); closeActivityModal(); return; }
   const tag = (e.target && e.target.tagName) || '';
   if(/INPUT|TEXTAREA|SELECT/.test(tag)) return;
-  if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); actDrawerStep(1); }
-  if(e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); actDrawerStep(-1); }
+  if(e.key === 'ArrowDown' || e.key === 'j'){ e.preventDefault(); amStep(1); }
+  else if(e.key === 'ArrowUp' || e.key === 'k'){ e.preventDefault(); amStep(-1); }
+  else if(e.key === 'Tab'){                                   // giữ focus trong modal
+    const f = Array.from(document.querySelectorAll('#actModal a[href],#actModal button:not([disabled]):not([hidden])'))
+      .filter(el => el.offsetParent !== null);
+    if(!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && (document.activeElement === first || document.activeElement === document.getElementById('actModal'))){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
 });
 
 function _actProjIds(){

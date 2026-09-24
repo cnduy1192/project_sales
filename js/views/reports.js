@@ -98,7 +98,8 @@ function rpType(t){ return typeof actType === 'function' ? actType(t) : (t || 'C
 
 function rpTypeTag(type){
   const k = String(type || '').toLowerCase().replace(/[^a-z]/g, '');
-  return `<span class="rp-tag t-${ckEsc(k || 'other')}">${ckEsc(type || '—')}</span>`;
+  const lbl = typeof actTypeText === 'function' ? actTypeText(type) : type;
+  return `<span class="rp-tag t-${ckEsc(k || 'other')}">${ckEsc(lbl || '—')}</span>`;
 }
 
 function rpChangeTag(c){
@@ -317,7 +318,7 @@ function rpAnalytics(r){
   const byType = {};
   (r.doneActs || []).forEach(a => { const t = rpType(a.type); byType[t] = (byType[t] || 0) + 1; });
   const acts = Object.keys(byType).sort((a,b) => byType[b] - byType[a]).map((k,i) =>
-    ({ label:k, value:byType[k], color: RP_TYPE_COLORS[k] || RP_COLORS[(i + 3) % RP_COLORS.length] }));
+    ({ label: typeof actTypeLabel === 'function' ? actTypeLabel(k) : k, value:byType[k], color: RP_TYPE_COLORS[k] || RP_COLORS[(i + 3) % RP_COLORS.length] }));
 
   let stages = [];
   try{
