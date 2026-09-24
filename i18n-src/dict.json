@@ -43,6 +43,10 @@
 "NCC",
 "Supplier"
 ],
+"act.am.newer": [
+"Hoạt động mới hơn (phím ↑)",
+"Newer activity (↑ key)"
+],
 "act.am.noNext": [
 "Chưa có bước tiếp theo",
 "No next step recorded"
@@ -51,6 +55,10 @@
 "Hoạt động này chưa gắn với dự án nào.",
 "This activity is not linked to an opportunity yet."
 ],
+"act.am.older": [
+"Hoạt động cũ hơn (phím ↓)",
+"Older activity (↓ key)"
+],
 "act.am.openOpp": [
 "Mở dự án",
 "Open Opportunity"
@@ -58,6 +66,10 @@
 "act.am.openSf": [
 "Mở trong Sales Funnel",
 "Open in Sales Funnel"
+],
+"act.am.pos": [
+"{i} / {n} hoạt động của khách hàng",
+"{i} of {n} account activities"
 ],
 "act.am.timeline": [
 "Dòng thời gian khách hàng",
@@ -3443,6 +3455,10 @@
 "(chưa đồng bộ SharePoint)",
 "(not yet synced to SharePoint)"
 ],
+"sf.msg.noteSaved": [
+"Đã ghi chú vào nhật ký dự án.",
+"Note added to the opportunity log."
+],
 "sf.msg.noteSavedLocal": [
 "Đã ghi chú nhanh (lưu tạm trong trình duyệt).",
 "Note added (saved locally in this browser)."
@@ -3460,8 +3476,8 @@
 "This opportunity is read-only."
 ],
 "sf.msg.renamed": [
-"Đã đổi tên dự án (lưu tạm trong trình duyệt).",
-"Opportunity renamed (saved locally in this browser)."
+"Đã đổi tên dự án.",
+"Opportunity renamed."
 ],
 "sf.msg.reopenBeforeHold": [
 "Mở lại dự án trước khi chuyển sang tạm hoãn.",
@@ -3484,8 +3500,8 @@
 "Risk cleared."
 ],
 "sf.msg.riskSaved": [
-"Đã cập nhật rủi ro (lưu tạm trong trình duyệt — cột Rủi ro sẽ đồng bộ ở Phase 2).",
-"Risk updated (saved locally — the Risk column will sync in Phase 2)."
+"Đã cập nhật rủi ro.",
+"Risk updated."
 ],
 "sf.msg.saveFailed": [
 "Không lưu được lên SharePoint:",
@@ -3508,8 +3524,8 @@
 "Estimated value cleared."
 ],
 "sf.msg.valueSaved": [
-"Đã cập nhật giá trị ước tính (lưu tạm trong trình duyệt).",
-"Estimated value updated (saved locally in this browser)."
+"Đã cập nhật giá trị ước tính.",
+"Estimated value updated."
 ],
 "sf.nAccounts": [
 "{n} khách hàng",

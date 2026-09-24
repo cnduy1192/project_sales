@@ -423,10 +423,11 @@
   /* ghi SharePoint (nếu đã đăng nhập). Rollback khi lỗi. */
   function persist(r, patch, logText, okMsg, rollback) {
     if (!r.spId || !window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()) {
+      if (logText) { r.comments = r.comments || []; r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: logText }); if (curId === r.id) buildRecord(); }
       toast(okMsg + " " + T("sf.msg.notSynced")); return;
     }
     FISG_STORE.updateProject(r.spId, patch).then(function () {
-      if (logText) { r.comments = r.comments || []; r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: logText }); }
+      if (logText) { r.comments = r.comments || []; r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: logText }); if (curId === r.id) buildRecord(); }
       if (logText) FISG_STORE.addProjectUpdate(r.spId, logText, me.pic || me.name, todayISO()).catch(function () {});
       toast(okMsg);
     }).catch(function (e) {
@@ -565,14 +566,15 @@
       return;
     }
     if (!canReopen(r)) { toast(T('sf.msg.reopenOnlyOwner')); return; }
-    var prev = { status: r.status, prob: r.prob, closedAt: r.closedAt };
+    var prev = { status: r.status, prob: r.prob, closedAt: r.closedAt, closeReason: r.closeReason };
     r.status = "IN PROGRESS";
     r.prob = ((typeof STAGE_PROB !== "undefined" && STAGE_PROB[r.stage]) || 10) / 100;
-    r.closedAt = null; r.onHold = false;
+    r.closedAt = null; r.closeReason = ""; r.onHold = false;
     buildRecord(); render();
-    persist(r, { Status: "Open", Result: "", WinProbability: Math.round(r.prob * 100) },
+    persist(r, { Status: "Open", Result: "", WinProbability: Math.round(r.prob * 100),
+                 ClosedDate: null, CloseReason: "" },
       "[Mở lại dự án]", T("sf.msg.reopened"),
-      function () { r.status = prev.status; r.prob = prev.prob; r.closedAt = prev.closedAt; buildRecord(); });
+      function () { r.status = prev.status; r.prob = prev.prob; r.closedAt = prev.closedAt; r.closeReason = prev.closeReason; buildRecord(); });
   }
 
   function headerHTML(r, stClass) {
@@ -778,7 +780,12 @@
       r.comments = r.comments || [];
       r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: note });
       buildRecord();
-      toast(T('sf.msg.noteSavedLocal'));
+      var liveNote = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && r.spId;
+      if (!liveNote) { toast(T('sf.msg.noteSavedLocal')); return; }
+      // Ghi chú → list ProjectUpdates (cùng nguồn với timeline dự án)
+      FISG_STORE.addProjectUpdate(r.spId, note, me.pic || me.name, todayISO()).then(function (ok) {
+        toast(ok ? T('sf.msg.noteSaved') : T('sf.msg.syncFailed'));
+      });
       return;
     }
     var a = {
@@ -835,9 +842,15 @@
     var inp = document.getElementById("sfTitleInput"); if (!inp) return;
     var v = (inp.value || "").trim();
     var fallback = r.customer + " · " + r.product;
-    r.title = (v && v !== fallback) ? v : "";
-    buildRecord();
-    toast(r.title ? T("sf.msg.renamed") : T("sf.msg.defaultName"));
+    var prev = r.title || "";
+    var next = (v && v !== fallback) ? v : "";
+    if (next === prev) { buildRecord(); return; }
+    r.title = next;
+    buildRecord(); render();
+    persist(r, { ProjectName: next },
+      "[Đổi tên dự án] " + (prev || fallback) + " → " + (next || fallback),   // audit log text stays VI
+      next ? T("sf.msg.renamed") : T("sf.msg.defaultName"),
+      function () { r.title = prev; buildRecord(); render(); });
   }
   function cancelEditTitle() { buildRecord(); }
 
@@ -1026,18 +1039,30 @@
     var r = recById(curId); if (!r) return;
     if (!capEdit(r, me)) { toast(T('sf.msg.noRiskPerm')); return; }
     var v = (val("sfRisk") || "").trim();
+    var prev = r.risk || "";
+    if (v === prev) { toast(T('common.msg.noChanges')); return; }
     r.risk = v;
     buildRecord();
-    toast(v ? T("sf.msg.riskSaved") : T("sf.msg.riskCleared"));
+    persist(r, { RiskNote: v },
+      v ? "[Rủi ro] " + v : "[Rủi ro] (đã xoá)",
+      v ? T("sf.msg.riskSaved") : T("sf.msg.riskCleared"),
+      function () { r.risk = prev; buildRecord(); });
   }
 
   function saveAmount() {
     var r = recById(curId); if (!r) return;
     if (!capEdit(r, me)) { toast(T('sf.msg.noValuePerm')); return; }
     var v = (val("sfAmount") || "").replace(/[^0-9]/g, "");
-    r.amount = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
+    var prev = (r.amount == null) ? "" : r.amount;
+    var next = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
+    if (String(next) === String(prev)) { buildRecord(); return; }
+    r.amount = next;
     buildRecord(); render();
-    toast(r.amount === "" ? T("sf.msg.valueCleared") : T("sf.msg.valueSaved"));
+    var fmtV = function (x) { return (x === "" || x == null) ? "—" : groupNum(x) + " ₫"; };
+    persist(r, { EstimatedValue: next === "" ? null : next },
+      "[Giá trị ước tính] " + fmtV(prev) + " → " + fmtV(next),
+      next === "" ? T("sf.msg.valueCleared") : T("sf.msg.valueSaved"),
+      function () { r.amount = prev; buildRecord(); render(); });
   }
 
   /* ---------- close won/lost ---------- */
@@ -1083,10 +1108,10 @@
     var res = closePick, label = res === "WON" ? "Thắng" : "Thua";   // audit log text stays VI (shared SharePoint record)
     var uiLabel = res === "WON" ? T("status.won") : T("status.lost");
     r.status = res; r.prob = res === "WON" ? 1 : 0; r.closedAt = todayISO(); r.onHold = false;
-    r.comments = r.comments || [];
-    r.comments.push({ by: me.pic || me.name, at: nowStamp(), text: "[Đóng dự án — " + label + "] " + reason });
+    r.closeReason = reason;
     cancelClose(); buildRecord(); render();
-    persist(r, { Status: "Closed", Result: res, WinProbability: res === "WON" ? 100 : 0 },
+    persist(r, { Status: "Closed", Result: res, WinProbability: res === "WON" ? 100 : 0,
+                 ClosedDate: r.closedAt + "T12:00:00Z", CloseReason: reason, OnHold: false },
       "[Đóng dự án — " + label + "] " + reason,
       T("sf.msg.closed", { name: r.customer + " · " + r.product, outcome: uiLabel }), null);
   }

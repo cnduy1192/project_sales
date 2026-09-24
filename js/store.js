@@ -9,6 +9,9 @@
       PotentialKgThisYear: "KG năm nay", PotentialKgNextYear: "KG năm sau",
       PIC: "Sale phụ trách (PIC)", RnDOwner: "R&D phụ trách", RelatedPeople: "Người liên quan",
       CreationDate: "Ngày tạo", ClosingDate: "Ngày dự kiến chốt", LastUpdateDate: "Ngày cập nhật gần nhất",
+      // Phase 2 — các trường của Record Page (Sales Funnel)
+      EstimatedValue: "Giá trị ước tính", RiskNote: "Rủi ro", ProjectName: "Tên dự án",
+      ClosedDate: "Ngày đóng", CloseReason: "Lý do đóng",
     },
     Activities: {
       Customer: "Khách hàng", PIC: "Sale phụ trách", Supplier: "NCC quan tâm",
@@ -80,6 +83,8 @@
       if (!a) return undefined;
       let v = f[a];
       if (v === undefined) v = f[a + "LookupId"];
+      // tên nội bộ bắt đầu bằng "_" (vd. "_x0025_…") có thể được trả về với tiền tố "OData_"
+      if (v === undefined && a.charAt(0) === "_") v = f["OData_" + a];
       return v;
     }
 
@@ -205,6 +210,12 @@
     if (res === "LOST") return "LOST";
     if (st === "closed") return "LOST";
     return "IN PROGRESS";
+  }
+
+  function numOrBlank(v) {
+    if (v == null || v === "") return "";
+    const n = Number(v);
+    return isNaN(n) ? "" : n;
   }
 
   function uniqSorted(arr) {
@@ -574,6 +585,41 @@
     return dups;
   }
 
+  /* Kiểu cột (Graph columnDefinition) — để ghi đúng Lookup nhiều giá trị và
+     bỏ qua cột Person (app chỉ ghi được text). */
+  const _colDefs = {};
+  async function colDefs(list) {
+    if (_colDefs[list]) return _colDefs[list];
+    const m = {};
+    try {
+      const sid = await FISG_GRAPH.getSiteId();
+      const d = await FISG_GRAPH.api("/sites/" + sid + "/lists/" + encodeURIComponent(list) + "/columns?$top=300");
+      (d.value || []).forEach(c => { m[c.name] = c; });
+    } catch (e) { console.warn("[store] không đọc được kiểu cột của " + list + ":", e.message || e); }
+    _colDefs[list] = m;
+    return m;
+  }
+  function isMultiLookup(defs, name) {
+    const c = defs && defs[name];
+    return !!(c && c.lookup && c.lookup.allowMultipleValues);
+  }
+  function isPersonCol(defs, name) {
+    const c = defs && defs[name];
+    return !!(c && c.personOrGroup);
+  }
+  /* ghi lookup: cột đơn → XLookupId = id; cột nhiều giá trị → mảng id */
+  function putLookup(out, get, defs, key, id) {
+    const name = get.internal(key);
+    if (!name) return false;
+    if (isMultiLookup(defs, name)) {
+      out[name + "LookupId@odata.type"] = "Collection(Edm.Int32)";
+      out[name + "LookupId"] = [Number(id)];
+    } else out[name + "LookupId"] = id;
+    return true;
+  }
+  const SP_TEXT_MAX = 255;
+  function clip(s, n) { s = String(s == null ? "" : s); return s.length > n ? s.slice(0, n - 1) + "…" : s; }
+
   const _schema = {};
   async function schemaOf(list) {
     if (_schema[list]) return _schema[list];
@@ -587,6 +633,7 @@
   function forgetSchema() {
     Object.keys(_schema).forEach(k => delete _schema[k]);
     Object.keys(_lk).forEach(k => delete _lk[k]);
+    Object.keys(_colDefs).forEach(k => delete _colDefs[k]);
     console.info("[store] đã quên sơ đồ cột — lần ghi tới sẽ đọc lại từ SharePoint.");
     return true;
   }
@@ -1271,6 +1318,7 @@
   async function createProject(r) {
     if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Projects");
+    const defs = await colDefs("Projects");
     const miss = [], f = {};
     const set = (k, v, o) => { if (v != null && v !== "" && !put(f, get, k, v, o)) miss.push(k); };
 
@@ -1279,10 +1327,11 @@
       lookupId("Products", r.product, true),
       lookupId("Suppliers", r.ncc, false),
     ]);
-    f.Title = r.desc || (r.customer + " · " + r.product);
-    if (cusId) set("Customer", cusId, { lookup: true });
-    if (prodId) set("Products", prodId, { lookup: true });
-    if (supId) set("Supplier", supId, { lookup: true });
+    // Title là Single line (tối đa 255 ký tự) — mô tả dài vẫn được lưu đủ ở ProjectUpdates
+    f.Title = clip(r.desc || (r.customer + " · " + r.product), SP_TEXT_MAX);
+    if (cusId && !putLookup(f, get, defs, "Customer", cusId)) miss.push("Customer");
+    if (prodId && !putLookup(f, get, defs, "Products", prodId)) miss.push("Products");
+    if (supId && !putLookup(f, get, defs, "Supplier", supId)) miss.push("Supplier");
     set("Application", r.application);
     set("Segment", r.segment);
     set("SegmentGroup", r.group);
@@ -1296,22 +1345,48 @@
     putPic(f, get, r.pic);
     set("CreationDate", spDate(r.created));
     set("ClosingDate", spDate(r.closing));
+    if (r.boptype && get.internal("ProjectType")) set("ProjectType", r.boptype);
+    // Phase 2 — chỉ ghi khi list đã có cột (tránh lỗi trên tenant chưa tạo)
+    if (r.amount != null && r.amount !== "" && get.internal("EstimatedValue")) set("EstimatedValue", Number(r.amount) || 0);
+    if (r.title && get.internal("ProjectName")) set("ProjectName", clip(r.title, SP_TEXT_MAX));
+    if (r.risk && get.internal("RiskNote")) set("RiskNote", r.risk);
     warnMissing("Projects", miss);
 
     const rel = (r.related || []).join("; ");
-    if (rel && get.internal("RelatedPeople")) {
+    if (rel && get.internal("RelatedPeople") && isPersonCol(defs, get.internal("RelatedPeople"))) {
+      console.warn("[store] cột Projects.RelatedPeople đang là kiểu Person — app chỉ ghi được text. "
+        + "Tạo lại cột dạng Multiple lines of text để lưu Người liên quan.");
+    } else if (rel && get.internal("RelatedPeople")) {
       try {
         const f2 = Object.assign({}, f);
         f2[get.internal("RelatedPeople")] = rel;
-        const it = await FISG_GRAPH.createItem("Projects", f2);
+        const it = await createWithLookupRetry("Projects", f2);
         return it.id;
       } catch (e) {
         console.warn("[store] không ghi được \"Người liên quan\" (có thể là cột Person, "
           + "app chỉ ghi được cột text nhiều dòng). Dự án vẫn được tạo, thiếu cột này.", e.message || e);
       }
     }
-    const it = await FISG_GRAPH.createItem("Projects", f);
+    const it = await createWithLookupRetry("Projects", f);
     return it.id;
+  }
+
+  /* Graph nhận lookup nhiều giá trị theo 2 kiểu tuỳ tenant: mảng Int32 hoặc mảng String.
+     Thử Int32 trước, lỗi thì thử lại bằng String. */
+  async function createWithLookupRetry(list, f) {
+    try { return await FISG_GRAPH.createItem(list, f); }
+    catch (e) {
+      const keys = Object.keys(f).filter(k => /LookupId@odata\.type$/.test(k));
+      if (!keys.length) throw e;
+      const f2 = Object.assign({}, f);
+      keys.forEach(k => {
+        const base = k.replace(/@odata\.type$/, "");
+        f2[k] = "Collection(Edm.String)";
+        f2[base] = (f[base] || []).map(String);
+      });
+      console.warn("[store] thử lại lookup nhiều giá trị dạng String:", e.message || e);
+      return FISG_GRAPH.createItem(list, f2);
+    }
   }
 
   async function updateProject(spId, patch) {
@@ -1321,7 +1396,9 @@
     const miss = [], f = {};
     Object.keys(patch).forEach(k => {
       if (patch[k] === undefined) return;
-      if (!put(f, get, k, patch[k])) miss.push(k);
+      let v = patch[k];
+      if (k === "ProjectName" && v) v = clip(v, SP_TEXT_MAX);
+      if (!put(f, get, k, v)) miss.push(k);
     });
     warnMissing("Projects", miss);
     if (!Object.keys(f).length) return false;
@@ -1456,6 +1533,12 @@
 
           created: txt(gp(f, "CreationDate")).slice(0, 10),
           closing: txt(gp(f, "ClosingDate")).slice(0, 10),
+          // Phase 2 — Record Page
+          amount: numOrBlank(gp(f, "EstimatedValue")),
+          risk: txt(gp(f, "RiskNote")),
+          title: txt(gp(f, "ProjectName")),
+          closedAt: txt(gp(f, "ClosedDate")).slice(0, 10) || null,
+          closeReason: txt(gp(f, "CloseReason")),
           desc: title, id: code, spId: it.id,
           comments: upsBy[String(it.id)] || [],
         };
@@ -1614,7 +1697,7 @@
                         loadReports, sendReportToSP, updateReport, addReportComment,
                         loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,
                         createActivity, updateActivity, deleteActivity, setActivityDone, setActivityDate,
-                        createProject, updateProject, addProjectUpdate,
+                        createProject, updateProject, addProjectUpdate, colDefs,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
                         usersListName: USERS_LIST };
 })();

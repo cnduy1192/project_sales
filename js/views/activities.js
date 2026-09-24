@@ -432,7 +432,7 @@ function openActivityModal(activityId, from){
   AM.id = activityId;
   AM.list = amTimelineOf(a);
   AM.open = true;
-  amRenderHead(a); amRenderDetail(a); amRenderTimeline(true);
+  amRenderHead(a); amRenderDetail(a); amRenderTimeline(true); amSyncNav();
   ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
   document.documentElement.classList.add('am-lock');
   document.querySelectorAll('#actRows .al-row').forEach(r => r.classList.toggle('is-open', r.dataset.id === activityId));
@@ -449,7 +449,7 @@ function amSelect(id){
     li.classList.toggle('is-active', on);
     const b = li.querySelector('.am-tl-card'); if(b) b.setAttribute('aria-current', on ? 'true' : 'false');
   });
-  amScrollActive();
+  amScrollActive(); amSyncNav();
   const det = document.getElementById('amDetail');
   if(det){ det.scrollTop = 0; det.classList.remove('am-swap'); void det.offsetWidth; det.classList.add('am-swap'); }
 }
@@ -471,12 +471,20 @@ function amRefresh(){
   if(!a){ closeActivityModal(true); return; }
   const tl = document.getElementById('amTlScroll'), st = tl ? tl.scrollTop : 0;
   AM.list = amTimelineOf(a);
-  amRenderHead(a); amRenderDetail(a); amRenderTimeline(false);
+  amRenderHead(a); amRenderDetail(a); amRenderTimeline(false); amSyncNav();
   if(tl) tl.scrollTop = st;
 }
+/* dir = -1 → hoạt động mới hơn (↑), +1 → cũ hơn (↓), theo thứ tự timeline */
 function amStep(dir){
   const i = AM.list.findIndex(x => x.id === AM.id), nx = AM.list[i + dir];
   if(nx) amSelect(nx.id);
+}
+function amSyncNav(){
+  const i = AM.list.findIndex(x => x.id === AM.id), n = AM.list.length;
+  const up = document.getElementById('amNewer'), dn = document.getElementById('amOlder'), pos = document.getElementById('amNavPos');
+  if(up) up.disabled = i <= 0;
+  if(dn) dn.disabled = i < 0 || i >= n - 1;
+  if(pos) pos.textContent = n > 1 ? T('act.am.pos', { i: i + 1, n: n }) : '';
 }
 function amEdit(){ const id = AM.id; closeActivityModal(true); if(id) openActEdit(id); }
 function amCreateOpp(){ const id = AM.id; closeActivityModal(true); if(id) createProjectFromAct(id); }
