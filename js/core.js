@@ -38,6 +38,10 @@ function go(v){
 
   const tabs=document.getElementById('nccTabs');
   if(tabs) tabs.style.display = (v==='cockpit'||v==='customers') ? 'none' : '';
+  // Hoạt động khách hàng có ô tìm kiếm riêng trong bảng → ẩn ô "Lọc nhanh funnel" của header để không trùng
+  const gs=document.querySelector('.gheader .gsearch');
+  if(gs) gs.style.display = v==='acts' ? 'none' : '';
+  if(v!=='acts' && typeof closeActDrawer==='function') closeActDrawer(true);
   if(v==='cockpit')renderCockpit();
   if(v==='reports')renderReports();
   if(v==='customers'&&window.renderCustomers)renderCustomers();

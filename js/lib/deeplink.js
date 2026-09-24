@@ -18,7 +18,7 @@
     var ncc = extra.ncc != null ? extra.ncc
       : (typeof nccFilter !== "undefined" && nccFilter && !(typeof isAllNcc === "function" && isAllNcc()) ? nccFilter : "");
     if (ncc) p.set("ncc", ncc);
-    var st = extra.status || (typeof filter !== "undefined" && STATUS_OK[filter] ? filter : "");
+    var st = extra.status != null ? extra.status : (typeof filter !== "undefined" && STATUS_OK[filter] ? filter : "");
     if (st && STATUS_OK[st]) p.set("status", st);
     var qEl = document.getElementById("q");
     var q = extra.q != null ? extra.q : (qEl ? qEl.value.trim() : "");
@@ -87,7 +87,8 @@
         if (!actId) { clearInterval(iv); return; }
         var found = ACTIVITIES.some(function (x) { return x.id === actId; });
         if (found) {
-          if (typeof openActEdit === "function") openActEdit(actId);
+          if (typeof openActDrawer === "function") openActDrawer(actId);
+          else if (typeof openActEdit === "function") openActEdit(actId);
           clearInterval(iv);
           return;
         }

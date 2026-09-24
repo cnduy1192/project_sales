@@ -15,9 +15,37 @@
 "Thêm nhà cung cấp…",
 "Add supplier…"
 ],
+"act.allSales": [
+"Tất cả Sales",
+"All sales reps"
+],
 "act.attachOpp": [
 "Gắn vào dự án đang chạy",
 "Link to an Open Opportunity"
+],
+"act.clearFilters": [
+"Xoá bộ lọc",
+"Clear filters"
+],
+"act.col.account": [
+"Khách hàng & NCC",
+"Account & Supplier"
+],
+"act.col.content": [
+"Nội dung trao đổi",
+"Discussion Notes"
+],
+"act.col.opp": [
+"Dự án liên kết / Thao tác",
+"Opportunity / Action"
+],
+"act.col.owner": [
+"Sales phụ trách",
+"Sales Owner"
+],
+"act.col.time": [
+"Thời gian & Hình thức",
+"Date & Type"
 ],
 "act.confirmDel": [
 "Xoá hoạt động với \"{c}\" ngày {d}? Không thể hoàn tác.",
@@ -39,12 +67,36 @@
 "Chi tiết hoạt động",
 "Activity Details"
 ],
+"act.dr.edit": [
+"Chỉnh sửa",
+"Edit"
+],
+"act.dr.info": [
+"Thông tin",
+"Details"
+],
+"act.dr.next": [
+"Hoạt động sau (↓)",
+"Next activity (↓)"
+],
+"act.dr.none": [
+"Không có",
+"None"
+],
+"act.dr.opp": [
+"Dự án liên kết",
+"Linked Opportunity"
+],
+"act.dr.prev": [
+"Hoạt động trước (↑)",
+"Previous activity (↑)"
+],
 "act.empty": [
 "Chưa có hoạt động nào",
 "No activities yet"
 ],
 "act.emptyHint": [
-"Bấm \"Ghi hoạt động\" để bắt đầu.",
+"Bấm \"Tạo hoạt động\" để bắt đầu.",
 "Click \"New Activity\" to get started."
 ],
 "act.fromAct": [
@@ -54,6 +106,18 @@
 "act.gate": [
 "Khách hàng này do sales khác quản lý — bạn không tạo hoạt động ở đây. Hãy chọn khách của mình hoặc khách chưa ai quản lý.",
 "This account is owned by another sales rep — you cannot log activities here. Choose one of your accounts or an unowned account."
+],
+"act.int.high": [
+"Cao",
+"High"
+],
+"act.int.low": [
+"Thấp",
+"Low"
+],
+"act.int.medium": [
+"Trung bình",
+"Medium"
 ],
 "act.interest": [
 "Mức độ quan tâm",
@@ -127,6 +191,18 @@
 "Bước tiếp theo",
 "Next Step"
 ],
+"act.noContent": [
+"Chưa ghi nội dung",
+"No notes recorded"
+],
+"act.noMatch": [
+"Không có hoạt động phù hợp",
+"No matching activities"
+],
+"act.noMatchHint": [
+"Thử từ khoá khác hoặc bỏ bớt bộ lọc.",
+"Try another keyword or remove a filter."
+],
 "act.noOppLinked": [
 "Chưa gắn dự án nào",
 "No opportunity linked"
@@ -150,6 +226,10 @@
 "act.oldestFirst": [
 "Xa nhất trước",
 "Oldest first"
+],
+"act.openOpp": [
+"Mở dự án trong Sales Funnel",
+"Open in Sales Funnel"
 ],
 "act.otherOpp": [
 "Dự án khác",
@@ -183,6 +263,10 @@
 "chọn một hoặc nhiều",
 "select one or more"
 ],
+"act.planned": [
+"Kế hoạch",
+"Planned"
+],
 "act.related": [
 "Người liên quan",
 "Related People"
@@ -192,24 +276,36 @@
 "the activity will appear in their weekly plan & report"
 ],
 "act.rowHint": [
-"Bấm để xem & sửa hoạt động",
-"Click to view & edit this activity"
+"Bấm để xem chi tiết hoạt động",
+"Click to view activity details"
+],
+"act.salesAria": [
+"Lọc theo Sales",
+"Filter by sales rep"
 ],
 "act.savePlan": [
 "Lưu kế hoạch",
 "Save Plan"
 ],
 "act.searchAria": [
-"Tìm theo sale hoặc khách hàng",
-"Search by sales rep or account"
+"Tìm khách hàng, sales, nội dung",
+"Search accounts, sales reps or notes"
 ],
 "act.searchPh": [
-"Sale, Khách hàng",
-"Sales rep, account"
+"Tìm khách hàng, sales, nội dung…",
+"Search accounts, reps, notes…"
+],
+"act.showMore": [
+"Hiển thị thêm {n} hoạt động",
+"Show {n} more activities"
 ],
 "act.sortAria": [
 "Sắp xếp theo ngày",
 "Sort by date"
+],
+"act.sortToggle": [
+"Đang xếp: {d}. Bấm để đảo chiều.",
+"Sorted: {d}. Click to reverse."
 ],
 "act.t.call": [
 "Cuộc gọi",
@@ -227,6 +323,14 @@
 "Ghi chú",
 "Note"
 ],
+"act.t.visit": [
+"Thăm khách",
+"Visit"
+],
+"act.tabsAria": [
+"Lọc theo liên kết dự án",
+"Filter by opportunity link"
+],
 "act.type": [
 "Loại hoạt động",
 "Activity Type"
@@ -234,6 +338,38 @@
 "act.unlinked": [
 "Chưa có dự án",
 "No Opportunity"
+],
+"act.week.count": [
+"{n} hoạt động",
+"{n} activities"
+],
+"act.week.count.one": [
+"1 hoạt động",
+"1 activity"
+],
+"act.week.last": [
+"Tuần trước",
+"Last week"
+],
+"act.week.n": [
+"Tuần {w}",
+"Week {w}"
+],
+"act.week.next": [
+"Tuần tới",
+"Next week"
+],
+"act.week.noDate": [
+"Chưa có ngày",
+"No date"
+],
+"act.week.ny": [
+"Tuần {w}/{y}",
+"Week {w}/{y}"
+],
+"act.week.this": [
+"Tuần này",
+"This week"
 ],
 "act.workPlan": [
 "Kế hoạch làm việc",
@@ -947,6 +1083,10 @@
 "Người tham gia",
 "Participants"
 ],
+"common.pickDate": [
+"Chọn ngày",
+"Pick a date"
+],
 "common.product": [
 "Sản phẩm",
 "Product"
@@ -1256,7 +1396,7 @@
 "Won"
 ],
 "dash.ch.detail": [
-"Chi tiết Cơ hội",
+"Chi tiết Dự án",
 "Opportunity Details"
 ],
 "dash.ch.market": [
@@ -1272,8 +1412,8 @@
 "Pipeline by Stage"
 ],
 "dash.ch.team": [
-"Hiệu suất Đội ngũ (PIC)",
-"Team Performance (by Owner)"
+"Hiệu quả theo Nhân viên Sales",
+"Performance by Sales Rep"
 ],
 "dash.ch.top": [
 "Top Dự án Chủ lực",
@@ -1354,6 +1494,10 @@
 "dash.metricVol": [
 "Sản lượng (KG)",
 "Volume (KG)"
+],
+"dash.metricVolMt": [
+"Sản lượng (MT)",
+"Volume (MT)"
 ],
 "dash.nOpps": [
 "{n} cơ hội",
@@ -2444,8 +2588,8 @@
 "Inherited from the selected row"
 ],
 "pf.initialNote": [
-"Ghi chú ban đầu",
-"Initial Note"
+"Mục tiêu dự án",
+"Project Objective"
 ],
 "pf.kgNext": [
 "Tiềm năng năm sau (KG)",
@@ -2472,8 +2616,8 @@
 "{n} filled"
 ],
 "pf.notePh": [
-"Bối cảnh, nhu cầu của khách... (không bắt buộc)",
-"Context and customer needs… (optional)"
+"Mục tiêu / kết quả kỳ vọng của dự án... (không bắt buộc)",
+"Objective / expected outcome of the project… (optional)"
 ],
 "pf.notif.created": [
 "đã tạo dự án mới <b>{name}</b>",
@@ -2486,6 +2630,10 @@
 "pf.productPh": [
 "Nhập tên sản phẩm / hoạt chất...",
 "Enter a product / active ingredient…"
+],
+"pf.pushFailed": [
+"Đã lưu tạm cho phiên này — chưa đồng bộ được lên SharePoint.",
+"Saved for this session — could not sync to SharePoint."
 ],
 "pf.related": [
 "Người liên quan đến dự án",

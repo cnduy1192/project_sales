@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#01426A">
 <script src="js/lib/resume.js?v=1"></script>
 <title data-i18n="sf.pageTitle">FI SAIGON — Sales Funnel</title>
-<script src="js/i18n-dict.js?v=4"></script>
+<script src="js/i18n-dict.js?v=5"></script>
 <script src="js/i18n.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="customers.css?v=24">
 <link rel="stylesheet" href="project-form.css?v=2">
 <link rel="stylesheet" href="reports.css?v=2">
+<link rel="stylesheet" href="activities.css?v=1">
 </head>
 <body>
 
@@ -184,25 +185,43 @@
         <button class="btn-primary" onclick="openActForm()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="act.create">Tạo hoạt động</span></button>
       </div>
-      <div class="filters">
-        <button class="chip on" data-af="ALL" onclick="setAF('ALL')" data-i18n="common.all">Tất cả</button>
-        <button class="chip" data-af="LINKED" onclick="setAF('LINKED')" data-i18n="act.linked">Đã gắn dự án</button>
-        <button class="chip" data-af="FREE" onclick="setAF('FREE')" data-i18n="act.unlinked">Chưa có dự án</button>
-        <div class="act-tools" id="actTools" hidden>
-          <div class="act-search">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-            <input id="actSearch" type="search" placeholder="Sale, Khách hàng" data-i18n-placeholder="act.searchPh" oninput="setActSearch(this.value)" aria-label="Tìm theo sale hoặc khách hàng" data-i18n-aria-label="act.searchAria">
+      <!-- Bảng hoạt động: toolbar cục bộ · header cố định · block theo tuần (js/views/activities.js) -->
+      <div class="al-card">
+        <div class="al-toolbar">
+          <div class="al-tabs" id="actTabs" role="tablist" aria-label="Lọc theo liên kết dự án" data-i18n-aria-label="act.tabsAria">
+            <button type="button" role="tab" class="al-tab on" data-af="ALL" onclick="setAF('ALL')" aria-selected="true"><span data-i18n="common.all">Tất cả</span><span class="al-tab-n">0</span></button>
+            <button type="button" role="tab" class="al-tab" data-af="FREE" onclick="setAF('FREE')" aria-selected="false"><span data-i18n="act.unlinked">Chưa có dự án</span><span class="al-tab-n">0</span></button>
+            <button type="button" role="tab" class="al-tab" data-af="LINKED" onclick="setAF('LINKED')" aria-selected="false"><span data-i18n="act.linked">Đã gắn dự án</span><span class="al-tab-n">0</span></button>
           </div>
-          <div class="act-sort" role="group" aria-label="Sắp xếp theo ngày" data-i18n-aria-label="act.sortAria">
-            <span class="act-sort-lbl" data-i18n="common.date">Ngày</span>
-            <button type="button" class="act-sort-ar on" id="actSortDesc" onclick="setActSort('desc')" title="Gần nhất trước" data-i18n-title="act.newestFirst" aria-label="Gần nhất trước" data-i18n-aria-label="act.newestFirst">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></button>
-            <button type="button" class="act-sort-ar" id="actSortAsc" onclick="setActSort('asc')" title="Xa nhất trước" data-i18n-title="act.oldestFirst" aria-label="Xa nhất trước" data-i18n-aria-label="act.oldestFirst">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
+          <div class="al-tools">
+            <label class="al-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="actSearch" type="search" autocomplete="off" placeholder="Tìm khách hàng, sales, nội dung…" data-i18n-placeholder="act.searchPh" oninput="setActSearch(this.value)" aria-label="Tìm khách hàng, sales, nội dung" data-i18n-aria-label="act.searchAria">
+            </label>
+            <label class="al-select" id="actPicWrap" hidden>
+              <select id="actPic" onchange="setActPic(this.value)" aria-label="Lọc theo Sales" data-i18n-aria-label="act.salesAria"></select>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </label>
           </div>
         </div>
+        <div class="al-table" role="table" aria-label="Hoạt động khách hàng" data-i18n-aria-label="nav.activities">
+          <div class="al-head al-grid" role="row">
+            <div role="columnheader">
+              <button type="button" class="al-sort" id="actSortBtn" onclick="toggleActSort()" aria-sort="descending">
+                <span data-i18n="act.col.time">Thời gian &amp; Hình thức</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+                <span class="al-sort-state al-sr"></span>
+              </button>
+            </div>
+            <div role="columnheader" data-i18n="act.col.account">Khách hàng &amp; NCC</div>
+            <div role="columnheader" data-i18n="act.col.owner">Sales phụ trách</div>
+            <div role="columnheader" data-i18n="act.col.content">Nội dung trao đổi</div>
+            <div role="columnheader" data-i18n="act.interest">Mức độ quan tâm</div>
+            <div role="columnheader" data-i18n="act.col.opp">Dự án liên kết / Thao tác</div>
+          </div>
+          <div id="actRows" class="al-body"></div>
+        </div>
       </div>
-      <div class="major glass"><div id="actRows"></div></div>
     </section>
 
     <section id="view-dash" style="display:none">
@@ -429,9 +448,9 @@
       <div class="a-fields" id="a-fields" style="display:contents">
       <div class="field full"><label><span data-i18n="common.supplier">Nhà cung cấp</span> <span class="lbl-hint" data-i18n="act.pickMany">chọn một hoặc nhiều</span></label>
         <div class="tags" id="a-nccTags"><select id="a-ncc" onchange="aAddNcc()"></select></div></div>
-      <div class="field"><label data-i18n="act.type">Loại hoạt động</label><select id="a-type"><option>Call</option><option>Visit</option><option>Email</option><option>Exhibition</option></select></div>
+      <div class="field"><label data-i18n="act.type">Loại hoạt động</label><select id="a-type"><option value="Call" data-i18n="act.t.call">Cuộc gọi</option><option value="Visit" data-i18n="act.t.visit">Thăm khách</option><option value="Email">Email</option><option value="Exhibition" data-i18n="act.t.exhibition">Hội chợ</option></select></div>
       <div class="field"><label data-i18n="common.date">Ngày</label><input type="date" id="a-date"></div>
-      <div class="field"><label data-i18n="act.interest">Mức độ quan tâm</label><select id="a-pot"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
+      <div class="field"><label data-i18n="act.interest">Mức độ quan tâm</label><select id="a-pot"><option value="High" data-i18n="act.int.high">Cao</option><option value="Medium" data-i18n="act.int.medium">Trung bình</option><option value="Low" data-i18n="act.int.low">Thấp</option></select></div>
       <div class="field full"><label data-i18n="act.objective">Mục tiêu</label><textarea id="a-note" rows="2" placeholder="Mục tiêu buổi làm việc…" data-i18n-placeholder="act.objectivePh"></textarea></div>
       <div class="field full"><label data-i18n="act.action">Hành động</label><input id="a-next" placeholder="Bước tiếp theo…" data-i18n-placeholder="act.nextPh"></div>
       <div class="field full"><label><span data-i18n="act.related">Người liên quan</span> <span class="lbl-hint" data-i18n="act.relatedHint">hoạt động sẽ vào kế hoạch tuần &amp; báo cáo của họ</span></label>
@@ -462,6 +481,29 @@
     <button class="ck-link" onclick="ckOpenHistory()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
       <span data-i18n="ck.fullHistory">Xem toàn bộ lịch sử dự án</span></button>
+  </div>
+</aside>
+
+<div class="ck-bd" id="actDrawerBd" onclick="closeActDrawer()"></div>
+<aside class="ck-drawer al-drawer" id="actDrawer" role="dialog" aria-modal="true" aria-labelledby="actDrawerTitle" aria-hidden="true" tabindex="-1">
+  <div class="ck-dr-head al-dr-head">
+    <div class="al-dr-nav">
+      <button type="button" class="al-dr-step" id="actDrPrev" onclick="actDrawerStep(-1)" aria-label="Hoạt động trước" data-i18n-aria-label="act.dr.prev" title="Hoạt động trước (↑)" data-i18n-title="act.dr.prev">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg></button>
+      <button type="button" class="al-dr-step" id="actDrNext" onclick="actDrawerStep(1)" aria-label="Hoạt động sau" data-i18n-aria-label="act.dr.next" title="Hoạt động sau (↓)" data-i18n-title="act.dr.next">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <span class="al-dr-pos" id="actDrPos"></span>
+    </div>
+    <h3 id="actDrawerTitle"></h3>
+    <div class="ck-dr-sub al-dr-sub" id="actDrawerSub"></div>
+    <button type="button" class="ck-dr-x" onclick="closeActDrawer()" aria-label="Đóng" data-i18n-aria-label="common.close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="ck-dr-body al-dr-body" id="actDrawerBody"></div>
+  <div class="ck-dr-foot al-dr-foot">
+    <button type="button" class="btn-ghost" onclick="closeActDrawer()" data-i18n="common.close">Đóng</button>
+    <button type="button" class="btn-primary" id="actDrEdit" onclick="actDrawerEdit()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg><span data-i18n="act.dr.edit">Chỉnh sửa</span></button>
   </div>
 </aside>
 
@@ -575,7 +617,7 @@
 <script src="js/lib/roles.js?v=22"></script>
 <script src="js/lib/localstore.js?v=21"></script>
 <script src="js/lib/weekly.js?v=22"></script>
-<script src="js/core.js?v=22"></script>
+<script src="js/core.js?v=23"></script>
 <script src="js/views/funnel.js?v=22"></script>
 <script src="js/views/dashboard.js?v=22"></script>
 <script src="js/views/cockpit.js?v=22"></script>
@@ -587,7 +629,7 @@
 <script src="js/views/customer-import.js?v=24"></script>
 <script src="js/views/supplier-import.js?v=2"></script>
 <script src="js/views/attachments.js?v=2"></script>
-<script src="js/views/activities.js?v=22"></script>
+<script src="js/views/activities.js?v=23"></script>
 <script src="js/views/detail.js?v=24"></script>
 <script src="js/views/project-form.js?v=2"></script>
 <script src="js/components/notifications.js?v=22"></script>
@@ -605,6 +647,6 @@
 <script src="js/funnel-ui.js?v=22"></script>
 <script src="js/extras.js?v=22"></script>
 <script src="js/charts.js?v=22"></script>
-<script src="js/lib/deeplink.js?v=5"></script>
+<script src="js/lib/deeplink.js?v=6"></script>
 </body>
 </html>
