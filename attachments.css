@@ -1,0 +1,102 @@
+/* ═══════════════════════════════════════════════════════════════
+   Tệp đính kèm — FISG_ATTACH (Báo cáo · Hoạt động · Dự án)
+   Chỉ dùng token có sẵn trong styles.css (marine / line / surface / ink…)
+   ═══════════════════════════════════════════════════════════════ */
+
+.att-box{position:relative;display:flex;flex-direction:column;gap:8px;min-width:0;font-family:'Inter',system-ui,sans-serif}
+.att-h{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.att-n{font-size:11px;font-weight:600;color:var(--marine);background:var(--marine-soft);border-radius:20px;padding:1px 7px}
+.att-folder{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--marine-2);text-decoration:none;white-space:nowrap}
+.att-folder:hover{text-decoration:underline}
+.sf-card-files .att-h-t{font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+
+.att-list{display:flex;flex-direction:column;gap:6px;min-width:0}
+.att-empty{font-size:12.5px;color:var(--ink-3);font-style:italic;padding:4px 0}
+.att-grp{display:flex;flex-direction:column;gap:6px}
+.att-grp+.att-grp{margin-top:4px}
+.att-grp-h{font-size:11px;font-weight:600;color:var(--marine-label);display:flex;align-items:center;gap:5px}
+.att-grp-h span{color:var(--ink-3);font-weight:500}
+.att-grp-ro{padding-top:8px;border-top:1px dashed var(--line)}
+
+.att-item{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 6px 6px 8px;border:1px solid var(--line);
+  border-radius:8px;background:var(--surface);transition:border-color .12s,background .12s}
+.att-item:hover{border-color:var(--marine-line);background:var(--pearl-2)}
+.att-item.att-ro{background:var(--pearl-2)}
+.att-item.att-pend{border-style:dashed}
+.att-link{display:flex;align-items:center;gap:8px;min-width:0;flex:1;color:inherit;text-decoration:none}
+a.att-link:hover .att-nm{color:var(--marine);text-decoration:underline}
+a.att-link:focus-visible{outline:2px solid var(--marine);outline-offset:2px;border-radius:4px}
+.att-txt{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.att-nm{font-size:12.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att-meta{font-size:11px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att-meta b{font-weight:600;color:var(--prog)}
+
+.att-ext{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:20px;padding:0 4px;
+  border-radius:4px;font:700 9.5px/1 'Inter',system-ui,sans-serif;letter-spacing:.03em;
+  color:var(--ink-2);background:var(--line-2)}
+.att-ext.x-pdf{color:var(--lost);background:var(--lost-bg)}
+.att-ext.x-doc{color:var(--accent);background:var(--accent-soft)}
+.att-ext.x-xls{color:var(--won);background:var(--won-bg)}
+.att-ext.x-ppt{color:var(--prog);background:var(--prog-bg)}
+.att-ext.x-img{color:var(--bas);background:var(--bas-bg)}
+
+.att-chip-sel{flex:none;max-width:112px;height:24px;padding:0 4px;border:1px solid var(--line);border-radius:6px;
+  background:var(--surface);font-size:11px;color:var(--ink-2);cursor:pointer}
+.att-chip-sel:hover,.att-chip-sel:focus{border-color:var(--marine);outline:0}
+.att-del{flex:none;width:24px;height:24px;border:0;border-radius:6px;background:none;color:var(--ink-3);
+  font-size:16px;line-height:1;cursor:pointer}
+.att-del:hover{background:var(--lost-bg);color:var(--lost)}
+.att-del:focus-visible{outline:2px solid var(--marine);outline-offset:1px}
+
+.att-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.att-add{position:relative;display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px dashed var(--marine-line);
+  border-radius:8px;background:var(--marine-soft);color:var(--marine);font-size:12.5px;font-weight:600;cursor:pointer}
+.att-add:hover{border-color:var(--marine);background:var(--accent-soft)}
+.att-add:focus-within{outline:2px solid var(--marine);outline-offset:1px}
+.att-add input,.pf-att-btn input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+.att-catpick{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3)}
+.att-catpick select{height:30px;padding:0 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  font-size:12px;color:var(--ink);cursor:pointer}
+.att-catpick select:focus{border-color:var(--marine);outline:0;box-shadow:0 0 0 3px var(--marine-soft)}
+.att-hint{font-size:11px;color:var(--ink-3);flex-basis:100%}
+.att-status{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.att-status:empty{display:none}
+.att-status.ok{color:var(--won)}
+.att-status.err{color:var(--lost)}
+
+/* kéo thả */
+.att-drop-ov{display:none}
+.att-box.att-over{outline:2px dashed var(--marine);outline-offset:4px;border-radius:8px}
+.att-box.att-over .att-drop-ov{position:absolute;inset:-4px;display:flex;align-items:center;justify-content:center;
+  border-radius:8px;background:rgba(241,245,248,.92);color:var(--marine);font-size:13px;font-weight:700;z-index:2;pointer-events:none}
+
+/* ── Modal Thêm dự án: nút đính kèm ở footer + hàng chip tệp chờ ── */
+.pf-att-btn{position:relative;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 11px;
+  border:1px dashed var(--marine-line);border-radius:8px;color:var(--marine);font-size:12.5px;font-weight:600;cursor:pointer;flex:none}
+.pf-att-btn:hover{border-color:var(--marine);background:var(--marine-soft)}
+.pf-att-btn:focus-within{outline:2px solid var(--marine);outline-offset:2px}
+.pf-att-btn[hidden]{display:none}
+.pf-att-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--marine);color:#fff;
+  font-size:10.5px;display:inline-flex;align-items:center;justify-content:center}
+.pf-att-n[hidden]{display:none}
+.pf-files{display:flex;flex-wrap:wrap;gap:6px;max-height:76px;overflow-y:auto;flex:none}
+.pf-files[hidden]{display:none}
+.pf-file{display:inline-flex;align-items:center;gap:6px;max-width:100%;height:30px;flex:none;padding:0 4px 0 6px;
+  border:1px dashed var(--marine-line);border-radius:8px;background:var(--pearl-2);font-size:12px}
+.pf-file-nm{max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--ink)}
+.pf-modal .pf-file select{height:24px;padding:0 4px;border:1px solid var(--line);border-radius:6px;font-size:11px;
+  background:var(--surface);color:var(--ink-2);cursor:pointer}
+.pf-file-x{width:22px;height:22px;border:0;border-radius:6px;background:none;color:var(--ink-3);font-size:15px;line-height:1;cursor:pointer}
+.pf-file-x:hover{background:var(--lost-bg);color:var(--lost)}
+.pf-file-err{margin-top:-6px}
+.pf-drop-ov{display:none}
+.pf-modal.pf-dropping{outline:2px dashed var(--marine);outline-offset:-6px}
+.pf-modal.pf-dropping .pf-drop-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;background:rgba(241,245,248,.9);color:var(--marine);font-size:14px;font-weight:700;z-index:5;pointer-events:none}
+.pf-drop-ov span{display:inline-flex;align-items:center;gap:8px}
+
+@media (max-width:600px){
+  .pf-att-btn span{display:none}
+  .pf-file-nm{max-width:120px}
+}
+.pf-modal{position:relative}

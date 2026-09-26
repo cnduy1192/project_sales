@@ -3,14 +3,15 @@ function probOptions(sel,val){
 }
 /* Form "Thêm dự án mới" (buildForm/openForm/saveForm…) đã chuyển sang js/views/project-form.js */
 
+/* Trả về Promise<spId|null> để modal tải tệp đính kèm vào đúng dự án sau khi tạo xong */
 function pushProject(rec){
   if(!window.FISG_STORE || !FISG_STORE.canWrite || !FISG_STORE.canWrite()){
     toast(T('dt.msg.localOnly'));
-    return;
+    return Promise.resolve(null);
   }
-  FISG_STORE.createProject(rec).then(spId=>{
+  return FISG_STORE.createProject(rec).then(spId=>{
     const oldId=rec.id;
-    rec.spId=spId; rec.id='P-'+spId;
+    rec.spId=spId; rec.id=rec.code||rec.id;   // mã FI-xxxx chính thức do store cấp
 
     ACTIVITIES.forEach(a=>{
       if(a.projectId!==oldId) return;
@@ -22,9 +23,11 @@ function pushProject(rec){
     if(typeof invalidateCockpit==='function') invalidateCockpit();
     render(); cockpitRefresh(); if(window.renderActs) renderActs();
     toast(T('dt.msg.savedSp',{id:rec.id}));
+    return spId;
   }).catch(e=>{
     console.error('[detail] không tạo được dự án trên SharePoint:', e);
     toast(T('dt.msg.createFailed',{e:e.message||e}));
+    return null;
   });
 }
 

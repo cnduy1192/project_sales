@@ -31,7 +31,8 @@
     touched: {},          // người dùng đã tự chọn → không ghi đè bằng gợi ý
     dupAck: null,         // id dự án trùng đã được cảnh báo
     busy: false,
-    lastFocus: null
+    lastFocus: null,
+    files: []             // tệp chờ tải lên sau khi dự án được tạo
   };
 
   /* ───────────── Stage → % ───────────── */
@@ -223,6 +224,101 @@
     b.hidden = !n; b.textContent = n ? T("pf.nFilled", { n: n }) : "";
   }
 
+  /* ───────────── Tệp đính kèm (chờ tải khi Lưu) ─────────────
+     Nút ở footer + hàng chip chỉ hiện khi đã có tệp → không tốn chiều cao modal khi không dùng.
+     Chỉ bật khi có đường lưu thật (pushProject của salesfunnel.html) hoặc bản demo. */
+  var ICON_CLIP = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 01-7.8-7.8l8.6-8.6a3.7 3.7 0 015.2 5.2l-8.6 8.6a1.8 1.8 0 01-2.6-2.6l7.9-7.9"/></svg>';
+  function attReady() {
+    return !!(window.FISG_ATTACH && (typeof window.pushProject === "function" || FISG_ATTACH.isDemo()));
+  }
+  function renderFiles() {
+    var box = $("pfFiles"), n = $("pfAttN");
+    if (!box) return;
+    var A = window.FISG_ATTACH;
+    box.hidden = !PF.files.length;
+    if (n) { n.hidden = !PF.files.length; n.textContent = PF.files.length || ""; }
+    box.innerHTML = PF.files.map(function (f, i) {
+      var ext = A.extOf(f.name);
+      return '<span class="pf-file">' +
+        '<span class="att-ext ' + A.extCls(ext) + '">' + esc((ext || "?").toUpperCase().slice(0, 4)) + "</span>" +
+        '<span class="pf-file-nm" title="' + esc(f.name + " · " + A.fmtSize(f.size)) + '">' + esc(f.name) + "</span>" +
+        '<select data-i="' + i + '" aria-label="' + esc(T("att.catLabel")) + '">' + A.CATS.map(function (c) {
+          return '<option value="' + c + '"' + (c === (f.__cat || "OTHER") ? " selected" : "") + ">" + esc(A.catLabel(c)) + "</option>";
+        }).join("") + "</select>" +
+        '<button type="button" class="pf-file-x" data-rm="' + i + '" aria-label="' + esc(T("att.remove")) + '" title="' + esc(T("att.remove")) + '">×</button>' +
+        "</span>";
+    }).join("");
+    var err = $("pfFileErr"); if (err) err.textContent = "";
+  }
+  function addPfFiles(list) {
+    if (!attReady()) return;
+    var bad = [];
+    [].slice.call(list || []).forEach(function (f) {
+      var why = FISG_ATTACH.validate(f);
+      if (why) { bad.push(f.name + ": " + why); return; }
+      if (PF.files.some(function (x) { return x.name === f.name && x.size === f.size; })) return;
+      try { f.__cat = f.__cat || "OTHER"; } catch (e) {}
+      PF.files.push(f);
+    });
+    renderFiles();
+    var err = $("pfFileErr");
+    if (bad.length && err) err.textContent = T("att.cannotAttach") + " " + bad.join(" · ");
+  }
+  function initAttachUI(form) {
+    var foot = form.querySelector(".pf-foot"), body = form.querySelector(".pf-body");
+    if (!foot || !body || $("pfAttBtn")) return;
+    var btn = document.createElement("label");
+    btn.className = "pf-att-btn"; btn.id = "pfAttBtn"; btn.hidden = true;
+    btn.innerHTML = '<input type="file" multiple id="pfAttIn" accept="' + (window.FISG_ATTACH ? FISG_ATTACH.ACCEPT : "") + '">' +
+      ICON_CLIP + '<span data-i18n="att.add">' + esc(T("att.add")) + '</span><b class="pf-att-n" id="pfAttN" hidden></b>';
+    btn.title = T("att.dropHint") + " · " + T("att.hint");
+    foot.insertBefore(btn, foot.firstChild);
+    var box = document.createElement("div");
+    box.className = "pf-files"; box.id = "pfFiles"; box.hidden = true;
+    body.appendChild(box);
+    var err = document.createElement("small");
+    err.className = "pf-err pf-file-err"; err.id = "pfFileErr"; err.setAttribute("role", "alert");
+    body.appendChild(err);
+    var ov = document.createElement("div");
+    ov.className = "pf-drop-ov"; ov.setAttribute("aria-hidden", "true");
+    ov.innerHTML = '<span>' + ICON_CLIP + " " + esc(T("att.dropHereProject")) + "</span>";
+    form.appendChild(ov);
+
+    $("pfAttIn").addEventListener("change", function () { addPfFiles(this.files); this.value = ""; });
+    box.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-rm]"); if (!b) return;
+      PF.files.splice(+b.getAttribute("data-rm"), 1); renderFiles();
+    });
+    box.addEventListener("change", function (e) {
+      var sel = e.target.closest("select[data-i]"); if (!sel) return;
+      var f = PF.files[+sel.getAttribute("data-i")]; if (f) try { f.__cat = sel.value; } catch (x) {}
+    });
+    var depth = 0;
+    var hasFiles = function (e) { return e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], "Files") >= 0; };
+    form.addEventListener("dragenter", function (e) { if (!attReady() || !hasFiles(e)) return; e.preventDefault(); depth++; form.classList.add("pf-dropping"); });
+    form.addEventListener("dragover", function (e) { if (!attReady() || !hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+    form.addEventListener("dragleave", function () { depth = Math.max(0, depth - 1); if (!depth) form.classList.remove("pf-dropping"); });
+    form.addEventListener("drop", function (e) {
+      if (!attReady() || !hasFiles(e)) return;
+      e.preventDefault(); depth = 0; form.classList.remove("pf-dropping");
+      addPfFiles(e.dataTransfer.files);
+    });
+  }
+
+  /* Sau khi dự án được tạo: tải tệp vào FISG_Projects/{NCC}/{Khách hàng}/{Mã dự án} + ghi nhật ký */
+  function uploadProjectFiles(rec, files, pushed) {
+    if (!files.length || !window.FISG_ATTACH) return;
+    var go = function (key, spId) {
+      if (!key) { if (typeof toast === "function") toast(T("pf.att.notSaved", { n: files.length })); return; }
+      FISG_ATTACH.uploadFiles("project", key, FISG_ATTACH.projectCtx(rec, spId), files, {
+        onDone: function (names) { if (window.SF && SF.logFiles) SF.logFiles(rec, names); }
+      });
+    };
+    if (FISG_ATTACH.isDemo()) { go(FISG_ATTACH.projectKey(rec), null); return; }
+    Promise.resolve(pushed).then(function (spId) { go(spId ? String(spId) : "", spId); },
+                                 function () { go("", null); });
+  }
+
   /* ───────────── Lỗi inline ───────────── */
   function setErr(key, msg) {
     var el = $("pfErr-" + key); if (el) el.textContent = msg;
@@ -247,6 +343,7 @@
     $("pfNoteSrc").textContent = "";
     $("pfSegHint").textContent = "";
     PF.touched = {}; PF.dupAck = null; PF.busy = false;
+    PF.files = []; renderFiles();
     setBusy(false);
   }
   function setBusy(on) {
@@ -285,6 +382,7 @@
     }
     PF.createdDate = c.createdDate || (typeof isoOf === "function" ? isoOf(TODAY) : new Date().toISOString().slice(0, 10));
 
+    if ($("pfAttBtn")) $("pfAttBtn").hidden = !attReady();
     if (typeof NAV !== "undefined") { NAV.enter(c.origin); NAV.renderBack("f-back"); }
     $("ov").classList.add("open");
 
@@ -349,11 +447,22 @@
     }) || null;
   }
 
+  /* Mã dự án FI-0001, FI-0002… tịnh tiến. Đây là mã dự kiến; khi lưu SharePoint,
+     store kiểm tra lại với dữ liệu mới nhất và cấp mã chính thức. */
+  function nextProjectCode() {
+    if (window.FISG_STORE && FISG_STORE.nextProjectCode) return FISG_STORE.nextProjectCode();
+    var max = 0;
+    (typeof RECORDS !== "undefined" ? RECORDS : []).forEach(function (r) {
+      var m = /^FI-(\d+)$/.exec(String(r.id || "")); if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return "FI-" + String(max + 1).padStart(4, "0");
+  }
+
   /* Payload tương thích model RECORDS / FISG_STORE.createProject */
   function toRecord(p) {
     var mine = (typeof me !== "undefined" && me) ? (me.pic || me.name) : "";
     var rec = {
-      id: "PL-" + Date.now().toString(36).toUpperCase(),
+      id: nextProjectCode(),
       ncc: p.ncc, group: p.group, segment: p.segment,
       application: p.application, product: p.product, customer: p.customer,
       created: p.created, closing: p.closing, stage: p.stage,
@@ -393,6 +502,7 @@
 
     PF.busy = true; setBusy(true);
     var rec = toRecord(p);
+    var files = attReady() ? PF.files.slice() : [];
 
     [["customers", p.customer], ["products", p.product], ["applications", p.application]].forEach(function (x) {
       if (LISTS[x[0]] && LISTS[x[0]].indexOf(x[1]) < 0) LISTS[x[0]].push(x[1]);
@@ -414,7 +524,8 @@
     if (typeof renderCustomers === "function") try { renderCustomers(); } catch (err) {}
     if (typeof notify === "function") notify(rec, T("pf.notif.created", { name: esc(rec.customer) + " · " + esc(rec.product) }));
     if (typeof toast === "function") toast(T("pf.msg.created", { name: rec.customer + " · " + rec.product, stage: rec.stage }));
-    if (typeof pushProject === "function") pushProject(rec);
+    var pushed = (typeof pushProject === "function") ? pushProject(rec) : null;
+    if (files.length) uploadProjectFiles(rec, files, pushed);
     return rec;
   }
 
@@ -429,6 +540,7 @@
     form.dataset.pfReady = "1";
 
     form.addEventListener("submit", function (e) { e.preventDefault(); window.submitCreateProject(e); });
+    initAttachUI(form);
 
     $("f-stage").addEventListener("change", function () { PF.touched.stage = true; syncProb(); clearErr("stage"); });
     $("f-segment").addEventListener("change", function () {

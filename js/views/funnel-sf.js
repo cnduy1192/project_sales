@@ -474,6 +474,7 @@
         '<aside class="sf-rec-side">' + sideHTML(r, editable) + "</aside>" +
       "</div>" +
       footHTML(r, editable);
+    mountFiles(r);
   }
 
   /* Top header — chỉ định danh & hành động: ← Danh sách · mã dự án (copy) · badge trạng thái · × */
@@ -1000,7 +1001,54 @@
 
   /* Cột phải = 3 khối card, không phải 1 list phẳng trải dài */
   function sideHTML(r, editable) {
-    return cardMetricsHTML(r, editable) + cardPartnerHTML(r, editable) + cardInternalHTML(r, editable);
+    return cardMetricsHTML(r, editable) + cardPartnerHTML(r, editable) + cardInternalHTML(r, editable) + cardFilesHTML(r);
+  }
+
+  /* Khối 4 — tài liệu dự án. Lưu ở FISG_Projects/{NCC}/{Khách hàng}/{Mã dự án};
+     ai xem được dự án thì xem được tệp; người tải lên / Manager trở lên / Admin được xoá. */
+  function cardFilesHTML(r) {
+    if (!window.FISG_ATTACH) return "";
+    return '<section class="sf-card sf-card-files"><div id="sfRecAtt"></div></section>';
+  }
+  function mountFiles(r) {
+    if (!window.FISG_ATTACH || !document.getElementById("sfRecAtt")) return;
+    var key = FISG_ATTACH.projectKey(r);
+    FISG_ATTACH.mount("sfRecAtt", {
+      type: "project", id: key, ctx: FISG_ATTACH.projectCtx(r),
+      canUpload: !!key && capEdit(r, me),
+      categories: true, showFolder: true, title: T("sf.card.files"),
+      extra: function () { return activityFiles(r); },
+      onUploaded: function (names) { logFiles(r, names); },
+      onDeleted: function (name) { logFiles(r, [name], true); }
+    });
+  }
+  /* Tệp đã đính kèm ở các Hoạt động gắn với dự án (RelatedProject) — chỉ xem */
+  function activityFiles(r) {
+    var out = [];
+    (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).forEach(function (a) {
+      if (a.projectId !== r.id || !a.spId) return;
+      var d = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(a.date || ""));
+      var src = (TYPE_VI[a.type] || a.type || T("common.activity")) + (d ? " " + d[3] + "/" + d[2] : "");
+      FISG_ATTACH.list("activity", a.spId).forEach(function (x) { out.push(Object.assign({}, x, { src: src })); });
+    });
+    return out;
+  }
+  /* Dự án vừa tạo nhận mã FI chính thức khác mã dự kiến → cập nhật màn hình đang mở */
+  function remapId(oldId, newId) {
+    if (curId === oldId) curId = newId;
+    render();
+    if (curId) buildRecord();
+  }
+  /* Ghi 1 dòng nhật ký (timeline + ProjectUpdates) khi thêm / xoá tệp */
+  function logFiles(r, names, deleted) {
+    if (!r || !names || !names.length) return;
+    var text = (deleted ? "[Xoá tệp] " : "[Tệp đính kèm] ") + names.join(", ");
+    var who = (me && (me.pic || me.name)) || "";
+    r.comments = r.comments || [];
+    r.comments.push({ by: who, at: nowStamp(), text: text });
+    if (curId === r.id) buildRecord();
+    var live = r.spId && window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && !FISG_ATTACH.isDemo();
+    if (live) FISG_STORE.addProjectUpdate(r.spId, text, who, todayISO()).catch(function () {});
   }
 
   function footHTML(r, editable) {
@@ -1155,6 +1203,7 @@
     openActivityLink: openActivityLink, fmtAmountInput: fmtAmountInput,
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose,
     amountFocus: amountFocus, amountBlur: amountBlur, qlType: qlType, qlGrow: qlGrow,
-    stMenu: stMenu, setLifecycle: setLifecycle, syncClosing: syncClosing
+    stMenu: stMenu, setLifecycle: setLifecycle, syncClosing: syncClosing,
+    logFiles: logFiles, remapId: remapId
   };
 })();

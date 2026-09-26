@@ -50,13 +50,13 @@
   ];
 
   var RISKS = {
-    "P-1000": "Đối thủ chào CMC giá thấp hơn",
-    "P-1002": "Khách yêu cầu giảm 5% giá để chốt PO cuối năm",
-    "P-1004": "Ngân sách R&D 2027 của khách chưa duyệt",
-    "P-1007": "Thời gian test kéo dài, rủi ro trễ mùa vụ sản xuất",
-    "P-1011": "Điều khoản thanh toán 60 ngày chưa được duyệt",
-    "P-1015": "Đối thủ Danisco chào giá thấp hơn ~8%. Lead time Kimica 45 ngày — cần đặt hàng trước khi khách chốt PO.",
-    "P-1017": "Khách đang so sánh với alginate Trung Quốc giá rẻ"
+    "FI-0001": "Đối thủ chào CMC giá thấp hơn",
+    "FI-0003": "Khách yêu cầu giảm 5% giá để chốt PO cuối năm",
+    "FI-0005": "Ngân sách R&D 2027 của khách chưa duyệt",
+    "FI-0008": "Thời gian test kéo dài, rủi ro trễ mùa vụ sản xuất",
+    "FI-0012": "Điều khoản thanh toán 60 ngày chưa được duyệt",
+    "FI-0016": "Đối thủ Danisco chào giá thấp hơn ~8%. Lead time Kimica 45 ngày — cần đặt hàng trước khi khách chốt PO.",
+    "FI-0018": "Khách đang so sánh với alginate Trung Quốc giá rẻ"
   };
 
   function build() {
@@ -67,53 +67,53 @@
       if (status === "WON") cmts.push({ by: a[10], at: "30/06/2026 16:40", text: "[Đóng dự án — Thắng] Đã ký hợp đồng cung ứng." });
       if (status === "LOST") cmts.push({ by: a[10], at: "20/05/2026 11:20", text: "[Đóng dự án — Thua] Khách chọn NCC khác do giá." });
       return {
-        id: "P-" + (1000 + i), spId: null, ncc: a[0], customer: a[1], product: a[2], application: a[3],
+        id: "FI-" + String(i + 1).padStart(4, "0"), spId: null, ncc: a[0], customer: a[1], product: a[2], application: a[3],
         group: a[4], segment: a[5], stage: stage, status: status, boptype: "NEW BUSINESS",
         prob: prob, kgThis: a[8], kgNext: a[9], pic: a[10], rnd: "Khoa", related: a[13] || [],
         created: a[11], closing: a[12], desc: a[1] + " · " + a[2], comments: cmts,
-        risk: RISKS["P-" + (1000 + i)] || "",
+        risk: RISKS["FI-" + String(i + 1).padStart(4, "0")] || "",
         amount: Math.round((a[8] || 0) * 25000 / 1000) * 1000   // giá trị ước tính mẫu (VND)
 
       };
     });
 
     var acts = [
-      { id: "A-1", spId: null, ncc: "Roquette", customer: "Vinamilk", pic: "Thu", type: "Visit", date: "2026-08-12", note: "Thăm nhà máy, trao đổi sản lượng dự kiến Q4.", next: "Gửi báo giá 3 mức", potential: "High", related: ["Khoa"], projectId: "P-1002" },
-      { id: "A-2", spId: null, ncc: "Roquette", customer: "Bibica", pic: "Thu", type: "Call", date: "2026-08-05", note: "Gọi xác nhận kết quả test line bánh quy.", next: "Hẹn test lần 3", potential: "Medium", related: [], projectId: "P-1000" },
-      { id: "A-3", spId: null, ncc: "IFF", customer: "Acecook Vietnam", pic: "Hùng", type: "Email", date: "2026-08-01", note: "Gửi tài liệu kỹ thuật carrageenan cho gói súp.", next: "Chờ phản hồi test", potential: "High", related: ["Khoa"], projectId: "P-1007" },
-      { id: "A-4", spId: null, ncc: "IFF", customer: "Vinacafé Biên Hòa", pic: "Thu", type: "Visit", date: "2026-07-28", note: "Họp chốt kết quả test, khách xác nhận đạt.", next: "Chuẩn bị báo giá", potential: "High", related: ["Lan"], projectId: "P-1009" },
+      { id: "A-1", spId: null, ncc: "Roquette", customer: "Vinamilk", pic: "Thu", type: "Visit", date: "2026-08-12", note: "Thăm nhà máy, trao đổi sản lượng dự kiến Q4.", next: "Gửi báo giá 3 mức", potential: "High", related: ["Khoa"], projectId: "FI-0003" },
+      { id: "A-2", spId: null, ncc: "Roquette", customer: "Bibica", pic: "Thu", type: "Call", date: "2026-08-05", note: "Gọi xác nhận kết quả test line bánh quy.", next: "Hẹn test lần 3", potential: "Medium", related: [], projectId: "FI-0001" },
+      { id: "A-3", spId: null, ncc: "IFF", customer: "Acecook Vietnam", pic: "Hùng", type: "Email", date: "2026-08-01", note: "Gửi tài liệu kỹ thuật carrageenan cho gói súp.", next: "Chờ phản hồi test", potential: "High", related: ["Khoa"], projectId: "FI-0008" },
+      { id: "A-4", spId: null, ncc: "IFF", customer: "Vinacafé Biên Hòa", pic: "Thu", type: "Visit", date: "2026-07-28", note: "Họp chốt kết quả test, khách xác nhận đạt.", next: "Chuẩn bị báo giá", potential: "High", related: ["Lan"], projectId: "FI-0010" },
 
-      // P-1015 — Cầu Tre · Sodium Alginate: nhật ký đủ dày để xem Record Page
-      { id: "A-5", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Visit", date: "2026-08-19", note: "Làm việc tại nhà máy Củ Chi, gửi mẫu Sodium Alginate 500 G kèm TDS/COA cho phòng R&D. Chốt tiêu chí đánh giá: độ kết dính nhân và thất thoát sau cấp đông.", next: "Theo dõi lịch test của QA", potential: "High", related: ["Khoa"], projectId: "P-1015" },
-      { id: "A-6", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Call", date: "2026-08-28", note: "Gọi theo dõi sau khi gửi mẫu. QA xác nhận đã nhận hàng, đang xếp lịch test tuần 36.", next: "Chờ kết quả test", potential: "High", related: [], projectId: "P-1015" },
-      { id: "A-7", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Email", date: "2026-09-02", note: "Khách phản hồi kết quả test: độ kết dính nhân chả giò đạt yêu cầu, thất thoát sau cấp đông giảm rõ. Cầu Tre đề nghị gửi thêm 2 KG để chạy thử trên line 3.", next: "Gửi 2 KG mẫu chạy line 3", potential: "High", related: ["Khoa"], projectId: "P-1015" },
+      // FI-0016 — Cầu Tre · Sodium Alginate: nhật ký đủ dày để xem Record Page
+      { id: "A-5", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Visit", date: "2026-08-19", note: "Làm việc tại nhà máy Củ Chi, gửi mẫu Sodium Alginate 500 G kèm TDS/COA cho phòng R&D. Chốt tiêu chí đánh giá: độ kết dính nhân và thất thoát sau cấp đông.", next: "Theo dõi lịch test của QA", potential: "High", related: ["Khoa"], projectId: "FI-0016" },
+      { id: "A-6", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Call", date: "2026-08-28", note: "Gọi theo dõi sau khi gửi mẫu. QA xác nhận đã nhận hàng, đang xếp lịch test tuần 36.", next: "Chờ kết quả test", potential: "High", related: [], projectId: "FI-0016" },
+      { id: "A-7", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Email", date: "2026-09-02", note: "Khách phản hồi kết quả test: độ kết dính nhân chả giò đạt yêu cầu, thất thoát sau cấp đông giảm rõ. Cầu Tre đề nghị gửi thêm 2 KG để chạy thử trên line 3.", next: "Gửi 2 KG mẫu chạy line 3", potential: "High", related: ["Khoa"], projectId: "FI-0016" },
 
-      { id: "A-8", spId: null, ncc: "Kimica", customer: "Bel Vietnam", pic: "Thu", type: "Email", date: "2026-08-22", note: "Gửi hồ sơ kỹ thuật alginate cho bộ phận mua hàng, khách xác nhận đạt yêu cầu kỹ thuật.", next: "Chờ duyệt ngân sách", potential: "Medium", related: ["Khoa"], projectId: "P-1017" },
-      { id: "A-9", spId: null, ncc: "IFF", customer: "Cholimex Foods", pic: "Ngọc", type: "Call", date: "2026-08-14", note: "Đàm phán lại giá tương ớt, khách xin giữ mức giá đến hết Q4.", next: "Trình duyệt giá nội bộ", potential: "High", related: [], projectId: "P-1011" }
+      { id: "A-8", spId: null, ncc: "Kimica", customer: "Bel Vietnam", pic: "Thu", type: "Email", date: "2026-08-22", note: "Gửi hồ sơ kỹ thuật alginate cho bộ phận mua hàng, khách xác nhận đạt yêu cầu kỹ thuật.", next: "Chờ duyệt ngân sách", potential: "Medium", related: ["Khoa"], projectId: "FI-0018" },
+      { id: "A-9", spId: null, ncc: "IFF", customer: "Cholimex Foods", pic: "Ngọc", type: "Call", date: "2026-08-14", note: "Đàm phán lại giá tương ớt, khách xin giữ mức giá đến hết Q4.", next: "Trình duyệt giá nội bộ", potential: "High", related: [], projectId: "FI-0012" }
     ];
 
     RECORDS.length = 0; recs.forEach(function (r) { RECORDS.push(r); });
 
     // Task mẫu cho vài dự án (để minh hoạ khung "Cập nhật task")
     var TASKS = {
-      "P-1000": [
+      "FI-0001": [
         { id: "T-1", title: "Chốt kết quả test line bánh quy với R&D khách", due: "2026-09-05", who: "Thu", note: "", status: "DONE", by: "Thu", at: "28/08/2026 10:20" },
         { id: "T-2", title: "Gửi báo giá NUTRIOSE FB06 cho bộ phận mua", due: "2026-09-12", who: "Thu", note: "Báo giá 3 mức sản lượng — tham khảo hồ sơ Vinamilk.", status: "OPEN", by: "Thu", at: "01/09/2026 09:05" }
       ],
-      "P-1002": [
+      "FI-0003": [
         { id: "T-3", title: "Chuẩn bị hồ sơ kỹ thuật cho buổi visit Q4", due: "2026-08-11", who: "Khoa", note: "", status: "DONE", by: "Khoa", at: "08/08/2026 14:00" }
       ],
-      "P-1011": [
+      "FI-0012": [
         { id: "T-4", title: "Đàm phán điều khoản thanh toán 60 ngày", due: "2026-08-01", who: "Ngọc", note: "Khách chưa phản hồi — cần đẩy lại.", status: "OPEN", by: "Ngọc", at: "25/07/2026 11:30" }
       ],
-      // P-1015 — đủ 4 trạng thái badge: trễ hạn, sắp tới, sắp tới, đã xong
-      "P-1015": [
+      // FI-0016 — đủ 4 trạng thái badge: trễ hạn, sắp tới, sắp tới, đã xong
+      "FI-0016": [
         { id: "T-5", title: "Xin C/O & C/Q lô mẫu từ Kimica", due: "2026-09-05", who: "Lan", note: "Khách yêu cầu bộ chứng từ đầy đủ trước khi chạy thử line 3.", status: "OPEN", by: "Ngọc", at: "29/08/2026 08:40" },
         { id: "T-6", title: "Chốt lịch chạy thử line 3 với QA Cầu Tre", due: "2026-09-12", who: "Ngọc", note: "", status: "OPEN", by: "Ngọc", at: "02/09/2026 15:10" },
         { id: "T-7", title: "Gửi báo giá 45.000 KG cho phòng mua hàng", due: "2026-09-15", who: "Ngọc", note: "Bám theo đơn giá 9.783 đ/KG, xin duyệt chiết khấu sản lượng.", status: "OPEN", by: "Ngọc", at: "03/09/2026 09:25" },
         { id: "T-8", title: "Gửi mẫu 500 G kèm TDS/COA", due: "2026-08-19", who: "Ngọc", note: "", status: "DONE", by: "Ngọc", at: "12/08/2026 10:05" }
       ],
-      "P-1017": [
+      "FI-0018": [
         { id: "T-9", title: "Theo dõi tiến độ duyệt ngân sách của Bel", due: "2026-09-20", who: "Thu", note: "", status: "OPEN", by: "Thu", at: "22/08/2026 14:30" }
       ]
     };

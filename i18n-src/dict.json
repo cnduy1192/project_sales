@@ -4290,5 +4290,77 @@
 "wk.reason.stale": [
 "Chưa cập nhật {n} ngày",
 "No update for {n} days"
+],
+"att.cat.QUOTE": [
+"Báo giá",
+"Quotation"
+],
+"att.cat.SPEC": [
+"TDS / COA / Spec",
+"TDS / COA / Spec"
+],
+"att.cat.TEST": [
+"Kết quả thử mẫu",
+"Sample test result"
+],
+"att.cat.CONTRACT": [
+"Hợp đồng / PO",
+"Contract / PO"
+],
+"att.cat.OTHER": [
+"Khác",
+"Other"
+],
+"att.catLabel": [
+"Loại tài liệu",
+"Document type"
+],
+"att.fromActivities": [
+"Từ hoạt động liên quan",
+"From related activities"
+],
+"att.openFolder": [
+"Mở thư mục",
+"Open folder"
+],
+"att.dropHint": [
+"Kéo thả tệp vào đây",
+"Drag & drop files here"
+],
+"att.dropHere": [
+"Thả tệp để đính kèm",
+"Drop files to attach"
+],
+"att.dropHereProject": [
+"Thả tệp để đính kèm vào dự án",
+"Drop files to attach to this project"
+],
+"att.uploadingN": [
+"Đang tải {i}/{n}: {f}…",
+"Uploading {i}/{n}: {f}…"
+],
+"att.busy": [
+"Đang tải tệp khác, vui lòng chờ.",
+"Another upload is in progress, please wait."
+],
+"att.catSaved": [
+"Đã đổi loại tài liệu thành \"{c}\".",
+"Document type changed to \"{c}\"."
+],
+"att.catFail": [
+"Không đổi được loại tài liệu:",
+"Could not change document type:"
+],
+"att.err.noCatCol": [
+"list Attachments chưa có cột DocCategory",
+"the Attachments list has no DocCategory column"
+],
+"sf.card.files": [
+"Tài liệu dự án",
+"Project files"
+],
+"pf.att.notSaved": [
+"Dự án chưa lưu được lên SharePoint nên {n} tệp đính kèm chưa được tải. Mở lại dự án để đính kèm.",
+"The project was not saved to SharePoint, so {n} attachment(s) were not uploaded. Reopen the project to attach them."
 ]
 }

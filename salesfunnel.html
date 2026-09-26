@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#01426A">
 <script src="js/lib/resume.js?v=1"></script>
 <title data-i18n="sf.pageTitle">FI SAIGON — Sales Funnel</title>
-<script src="js/i18n-dict.js?v=7"></script>
+<script src="js/i18n-dict.js?v=8"></script>
 <script src="js/i18n.js?v=2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="funnel-sf.css?v=25">
 <link rel="stylesheet" href="funnel-dash.css?v=9">
 <link rel="stylesheet" href="project-form.css?v=3">
+<link rel="stylesheet" href="attachments.css?v=1">
 <!-- Dashboard analytics: ECharts (biểu đồ) + CountUp (số KPI) — có CDN dự phòng -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js';document.head.appendChild(s);"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.7/countUp.umd.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js';document.head.appendChild(s);"></script>
@@ -148,26 +149,36 @@
 <script src="js/lib/roles.js?v=22"></script>
 <script src="js/lib/localstore.js?v=21"></script>
 <script src="js/graph.js?v=21"></script>
-<script src="js/store.js?v=28"></script>
+<script src="js/store.js?v=30"></script>
 <script>
-/* Sales Funnel — nút "Thêm dự án": lưu dự án mới lên SharePoint khi đã đăng nhập, ngược lại giữ tạm ở phiên hiện tại */
+/* Sales Funnel — nút "Thêm dự án": lưu dự án mới lên SharePoint khi đã đăng nhập, ngược lại giữ tạm ở phiên hiện tại.
+   Trả về Promise<spId|null> để modal tải tệp đính kèm vào đúng dự án sau khi tạo xong. */
 window.pushProject = function (rec) {
   try {
     if (window.FISG_STORE && typeof FISG_STORE.canWrite === "function" && FISG_STORE.canWrite()
         && typeof FISG_STORE.createProject === "function") {
-      FISG_STORE.createProject(rec).then(function (spId) { if (spId) rec.spId = spId; })
+      return FISG_STORE.createProject(rec).then(function (spId) {
+          if (spId) rec.spId = spId;
+          /* mã FI chính thức (hiếm khi khác mã dự kiến — chỉ khi 2 người tạo cùng lúc) */
+          var old = FISG_STORE.adoptProjectCode ? FISG_STORE.adoptProjectCode(rec) : null;
+          if (old && window.SF && SF.remapId) SF.remapId(old, rec.id);
+          return spId || null;
+        })
         .catch(function (e) {
           console.warn("[pushProject] SharePoint save failed:", (e && e.message) || e);
           if (typeof toast === "function") toast(T("pf.pushFailed"));
+          return null;
         });
     }
   } catch (e) { console.warn("[pushProject]", e); }
+  return Promise.resolve(null);
 };
 </script>
-<script src="js/views/funnel-sf.js?v=28"></script>
+<script src="js/views/attachments.js?v=4"></script>
+<script src="js/views/funnel-sf.js?v=30"></script>
 <script src="js/i18n-legacy.js?v=1"></script>
 <script src="js/views/funnel-dash.js?v=12"></script>
-<script src="js/views/project-form.js?v=2"></script>
+<script src="js/views/project-form.js?v=4"></script>
 <script src="js/auth.js?v=23"></script>
 </body>
 </html>

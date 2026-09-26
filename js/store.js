@@ -60,6 +60,7 @@
       FileType: "Định dạng", Size: "Kích thước", WebUrl: "Đường dẫn",
       DriveItemId: "DriveItemId", FolderPath: "Thư mục",
       PICName: "Người tải", UploadDate: "Ngày tải",
+      DocCategory: "Loại tài liệu",
     },
   };
 
@@ -981,6 +982,22 @@
 
   const ATT_MAX = 15 * 1024 * 1024;
   const ATT_ROOT = "FISG_Attachments";
+  /* File dự án tách riêng: FISG_Projects/{NCC}/{Khách hàng}/{Mã dự án} — mã dự án không đổi
+     khi đổi tên dự án nên thư mục không bị lệch. */
+  const ATT_PROJ_ROOT = "FISG_Projects";
+  const ATT_CATS = ["QUOTE", "SPEC", "TEST", "CONTRACT", "OTHER"];
+  function attFolderOf(parentType, parentId, ctx) {
+    const seg = FISG_GRAPH.cleanSeg;
+    if (parentType === "project") {
+      const code = (ctx && ctx.code) || ("ID-" + parentId);
+      return [ATT_PROJ_ROOT, seg((ctx && ctx.ncc) || "Khác"),
+              seg((ctx && ctx.customer) || "Khách hàng"), seg(code)].join("/");
+    }
+    const pic = seg((ctx && ctx.pic) || "Chung");
+    const day = String((ctx && ctx.date) || todayISO()).slice(0, 10);
+    const leaf = parentType === "report" ? "Báo cáo" : seg((ctx && ctx.customer) || "Khách hàng");
+    return [ATT_ROOT, pic, day, leaf].join("/");
+  }
   const ATT_EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
                    "jpg", "jpeg", "png", "zip"];
   function attExt(name) { const m = /\.([a-z0-9]+)$/i.exec(String(name || "")); return m ? m[1].toLowerCase() : ""; }
@@ -1015,6 +1032,7 @@
         folderPath: txtOf(g, f, "FolderPath"),
         by: txt(f.PICName) || txtOf(g, f, "PICName"),
         at: (txtOf(g, f, "UploadDate") || "").slice(0, 10),
+        category: txtOf(g, f, "DocCategory"),
       });
     });
     return ATTACHMENTS.length;
@@ -1034,16 +1052,13 @@
     return "";
   }
 
-  async function uploadAttachment(parentType, parentId, ctx, file) {
+  /* meta (tuỳ chọn): { category } — mã loại tài liệu (QUOTE/SPEC/TEST/CONTRACT/OTHER) */
+  async function uploadAttachment(parentType, parentId, ctx, file, meta) {
     if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const bad = attValidate(file);
     if (bad) throw new Error(bad);
 
-    const pic = FISG_GRAPH.cleanSeg((ctx && ctx.pic) || "Chung");
-    const day = String((ctx && ctx.date) || todayISO()).slice(0, 10);
-    const leaf = parentType === "report" ? "Báo cáo"
-      : FISG_GRAPH.cleanSeg((ctx && ctx.customer) || "Khách hàng");
-    const folderPath = [ATT_ROOT, pic, day, leaf].join("/");
+    const folderPath = attFolderOf(parentType, parentId, ctx);
 
     const ext = attExt(file.name);
     const base = String(file.name).replace(/\.[a-z0-9]+$/i, "");
@@ -1066,6 +1081,8 @@
     set("FolderPath", folderPath);
     f.PICName = (typeof me !== "undefined" && me && (me.pic || me.name)) || "";
     set("UploadDate", spDate(todayISO()));
+    const cat = meta && meta.category;
+    if (cat) set("DocCategory", ATT_CATS.indexOf(cat) >= 0 ? cat : "OTHER");
     warnMissing("Attachments", miss);
 
     let spId = null;
@@ -1090,6 +1107,23 @@
     if (att.spId) await FISG_GRAPH.deleteItem("Attachments", att.spId);
     const i = ATTACHMENTS.findIndex(a => a.spId === att.spId);
     if (i >= 0) ATTACHMENTS.splice(i, 1);
+    return true;
+  }
+
+  /* Đổi loại tài liệu của tệp đã tải (cột DocCategory trên list Attachments) */
+  async function setAttachmentCategory(att, cat) {
+    if (!canWrite() || !att || !att.spId) return false;
+    const code = ATT_CATS.indexOf(cat) >= 0 ? cat : "OTHER";
+    const get = await schemaOf("Attachments");
+    const f = {};
+    if (!put(f, get, "DocCategory", code)) {
+      warnMissing("Attachments", ["DocCategory"]);
+      throw new Error(T("att.err.noCatCol"));
+    }
+    await FISG_GRAPH.updateItem("Attachments", att.spId, f);
+    att.category = code;
+    const hit = ATTACHMENTS.find(a => String(a.spId) === String(att.spId));
+    if (hit) hit.category = code;
     return true;
   }
 
@@ -1315,7 +1349,93 @@
     return r && r.spId ? r.spId : null;
   }
 
-  async function createProject(r) {
+  /* ── Mã dự án: FI-0001, FI-0002 … tịnh tiến, lưu ở đầu Title ("FI-0001 · mô tả").
+     Không cần cột riêng; list SharePoint và lookup "Dự án liên quan" đều thấy mã. ── */
+  const CODE_PREFIX = "FI-";
+  const CODE_SEP = " · ";
+  function fmtProjectCode(n) { return CODE_PREFIX + String(n).padStart(4, "0"); }
+  function codeNum(c) { const m = /^FI-(\d+)$/i.exec(String(c || "").trim()); return m ? parseInt(m[1], 10) : 0; }
+  /* Tách mã ở đầu Title. Nhận cả mã cũ P-123 để chuyển đổi. */
+  function splitTitle(title) {
+    const s = String(title == null ? "" : title);
+    const m = /^\s*((?:FI|P)-\d+)(?:\s*[·|:–-]\s*|\s+|$)/i.exec(s);
+    if (!m) return { code: "", desc: s.trim() };
+    return { code: m[1].toUpperCase(), desc: s.slice(m[0].length).trim() };
+  }
+  function maxCodeOf(titles) {
+    let max = 0;
+    titles.forEach(t => { max = Math.max(max, codeNum(splitTitle(t).code)); });
+    RECORDS.forEach(r => { if (r.spId) max = Math.max(max, codeNum(r.id)); });
+    return max;
+  }
+  /* Mã dự kiến cho dự án mới (tính từ dữ liệu đang nạp) — hiển thị ngay khi bấm Lưu */
+  function nextProjectCode() {
+    let max = 0;
+    RECORDS.forEach(r => { max = Math.max(max, codeNum(r.id)); });
+    return fmtProjectCode(max + 1);
+  }
+  async function freshMaxCode() {
+    const items = await FISG_GRAPH.listItems("Projects");
+    return maxCodeOf((items || []).map(it => (it.fields || {}).Title));
+  }
+  /* Sau khi tạo: nếu người khác vừa lấy cùng mã (ID nhỏ hơn) thì đổi sang mã kế tiếp */
+  async function settleProjectCode(spId, code, desc) {
+    try {
+      const items = await FISG_GRAPH.listItems("Projects");
+      const clash = (items || []).some(it => String(it.id) !== String(spId)
+        && Number(it.id) < Number(spId) && splitTitle((it.fields || {}).Title).code === code);
+      if (!clash) return code;
+      const next = fmtProjectCode(maxCodeOf((items || []).map(it => (it.fields || {}).Title)) + 1);
+      await FISG_GRAPH.updateItem("Projects", spId, { Title: clip(next + CODE_SEP + desc, SP_TEXT_MAX) });
+      console.warn("[store] mã " + code + " vừa bị trùng, đã đổi dự án #" + spId + " sang " + next);
+      return next;
+    } catch (e) {
+      console.warn("[store] không kiểm tra được mã trùng:", e.message || e);
+      return code;
+    }
+  }
+  /* Dự án cũ chưa có mã FI (P-xx hoặc không mã): cấp mã FI theo thứ tự tạo (ID tăng dần).
+     Chỉ chạy với tài khoản Admin, 1 lần là đủ. */
+  async function backfillProjectCodes(recs) {
+    const todo = recs.filter(r => !codeNum(r.id) && r.spId)
+      .sort((a, b) => Number(a.spId) - Number(b.spId));
+    if (!todo.length) return 0;
+    let max = 0;
+    recs.forEach(r => { max = Math.max(max, codeNum(r.id)); });
+    let n = 0;
+    for (const r of todo) {
+      const code = fmtProjectCode(max + 1);
+      try {
+        await FISG_GRAPH.updateItem("Projects", r.spId, { Title: clip(code + CODE_SEP + (r.desc || ""), SP_TEXT_MAX) });
+        max++; n++;
+        r.id = code;
+      } catch (e) {
+        console.warn("[store] không cấp được mã cho dự án #" + r.spId + ":", e.message || e);
+        break;
+      }
+    }
+    if (n) console.info("[store] đã cấp mã FI cho " + n + " dự án cũ.");
+    return n;
+  }
+  /* Nhận mã chính thức sau khi tạo; trả về id cũ nếu có đổi (để giao diện cập nhật) */
+  function adoptProjectCode(rec) {
+    if (!rec || !rec.code || rec.code === rec.id) return null;
+    const old = rec.id;
+    rec.id = rec.code;
+    ACTIVITIES.forEach(a => { if (a.projectId === old) a.projectId = rec.id; });
+    return old;
+  }
+
+  /* Tạo lần lượt để 2 dự án tạo liền nhau không lấy trùng mã */
+  let _projQ = Promise.resolve();
+  function createProject(r) {
+    const run = () => createProjectNow(r);
+    const p = _projQ.then(run, run);
+    _projQ = p.catch(() => {});
+    return p;
+  }
+
+  async function createProjectNow(r) {
     if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const get = await schemaOf("Projects");
     const defs = await colDefs("Projects");
@@ -1327,8 +1447,13 @@
       lookupId("Products", r.product, true),
       lookupId("Suppliers", r.ncc, false),
     ]);
-    // Title là Single line (tối đa 255 ký tự) — mô tả dài vẫn được lưu đủ ở ProjectUpdates
-    f.Title = clip(r.desc || (r.customer + " · " + r.product), SP_TEXT_MAX);
+    // Title = "FI-0001 · mô tả" (Single line, tối đa 255 ký tự) — mô tả dài vẫn được lưu đủ ở ProjectUpdates
+    const desc = r.desc || (r.customer + " · " + r.product);
+    let base;
+    try { base = await freshMaxCode(); }
+    catch (e) { base = codeNum(nextProjectCode()) - 1; console.warn("[store] không đọc được mã mới nhất, dùng mã dự kiến:", e.message || e); }
+    const code = fmtProjectCode(Math.max(base, 0) + 1);
+    f.Title = clip(code + CODE_SEP + desc, SP_TEXT_MAX);
     if (cusId && !putLookup(f, get, defs, "Customer", cusId)) miss.push("Customer");
     if (prodId && !putLookup(f, get, defs, "Products", prodId)) miss.push("Products");
     if (supId && !putLookup(f, get, defs, "Supplier", supId)) miss.push("Supplier");
@@ -1361,6 +1486,7 @@
         const f2 = Object.assign({}, f);
         f2[get.internal("RelatedPeople")] = rel;
         const it = await createWithLookupRetry("Projects", f2);
+        r.code = await settleProjectCode(it.id, code, desc);
         return it.id;
       } catch (e) {
         console.warn("[store] không ghi được \"Người liên quan\" (có thể là cột Person, "
@@ -1368,6 +1494,7 @@
       }
     }
     const it = await createWithLookupRetry("Projects", f);
+    r.code = await settleProjectCode(it.id, code, desc);
     return it.id;
   }
 
@@ -1510,8 +1637,9 @@
 
       const recs = projs.map((it, i) => {
         const f = it.fields || {};
-        const title = txt(f.Title);
-        const code = (title.match(/^(P-\d+)/) || [])[1] || ("P-" + (it.id || i));
+        const sp = splitTitle(txt(f.Title));
+        const title = sp.desc;
+        const code = sp.code || ("P-" + (it.id || i));
         return {
           ncc: lookupOf(gp, f, "Supplier", supMap),
           customer: lookupOf(gp, f, "Customer", cusMap),
@@ -1543,6 +1671,11 @@
           comments: upsBy[String(it.id)] || [],
         };
       });
+      // Chuyển mã cũ (P-xx) sang FI-xxxx — chỉ tài khoản Admin ghi được, chạy 1 lần
+      if (typeof myCap === "function" && myCap().admin) {
+        try { await backfillProjectCodes(recs); }
+        catch (e) { console.warn("[store] backfillProjectCodes", e); }
+      }
       const byItemId = {};
       recs.forEach(r => { byItemId[String(r.spId)] = r.id; });
 
@@ -1695,9 +1828,10 @@
                         bulkUpsertCustomers, previewCustomerUpsert, planCustomerUpsert, saveCustomer, deleteCustomer, customerMissingCols,
                         bulkUpsertSuppliers, previewSupplierUpsert,
                         loadReports, sendReportToSP, updateReport, addReportComment,
-                        loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate,
+                        loadAttachments, attachmentsOf, uploadAttachment, deleteAttachment, attValidate, attFolderOf, setAttachmentCategory,
                         createActivity, updateActivity, deleteActivity, setActivityDone, setActivityDate,
                         createProject, updateProject, addProjectUpdate, colDefs,
+                        nextProjectCode, adoptProjectCode, splitTitle, fmtProjectCode,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
                         usersListName: USERS_LIST };
 })();
