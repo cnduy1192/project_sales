@@ -384,6 +384,7 @@
         ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();SF.openRecord(' + jsq(r.id) + ')}">' +
 
         '<div class="sf-cc-proj"><b>' + esc(r.id) + "</b>" +
+          (window.RND ? RND.iconHTML(r.id) : "") +
           '<span class="pill ' + pillCls(r.stage) + ' sf-cc-stage"><span class="dot"></span>' + esc(stageShort(r.stage)) + "</span></div>" +
 
         '<div class="sf-cc-ncc">' + esc(r.ncc || "—") + "</div>" +
@@ -637,7 +638,10 @@
     Call: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.8a16 16 0 0 0 6 6l1.3-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.8 2.1z"/>',
     Visit: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',
     Email: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
-    Note: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'
+    Note: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+    LAB_TRIAL: '<path d="M9 3h6M10 3v6.5L4.6 18.2A2 2 0 0 0 6.3 21h11.4a2 2 0 0 0 1.7-2.8L14 9.5V3"/><path d="M7.5 14h9"/>',
+    JOINT_VISIT: '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c.6-3 3-5 6-5s5.4 2 6 5M14 15.2c.6-.1 1.3-.2 2-.2 3 0 5.4 2 6 5"/>',
+    SENSORY_TEST: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M12 11V3M9 5h6"/>'
   };
   function qlIcon(t) {
     return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -650,7 +654,9 @@
           '<span class="sf-ql-ic" id="sfQlIc">' + qlIcon("Call") + "</span>" +
           '<select id="sfQlType" class="sf-ql-type" aria-label="' + esc(T("act.type")) + '" onchange="SF.qlType(this.value)">' +
             '<option value="Call">' + T("act.t.call") + '</option><option value="Visit">' + T("act.t.meeting") + '</option>' +
-            '<option value="Email">Email</option><option value="Note">' + T("act.t.note") + '</option></select>' +
+            '<option value="Email">Email</option><option value="Note">' + T("act.t.note") + '</option>' +
+            '<optgroup label="R&amp;D"><option value="JOINT_VISIT">Joint Visit</option><option value="LAB_TRIAL">Lab Trial</option>' +
+            '<option value="SENSORY_TEST">Sensory Test</option></optgroup></select>' +
           '<span class="sf-ql-hint">' + T("sf.ql.hint") + '</span>' +
           '<button type="button" class="sf-ql-btn" onclick="SF.quickLog()">' + T("sf.ql.log") + '</button>' +
         "</div>" +
@@ -738,16 +744,20 @@
   /* Nhật ký hoạt động — hoạt động khách hàng + ghi chú, mới nhất lên đầu.
      Không còn mốc “Tạo dự án” / “Mục tiêu chốt” (đã có ở khối Tiến độ). */
   /* Hình thức tương tác giữ nguyên tiếng Anh ở cả 2 ngôn ngữ (đồng bộ với tracker) */
-  var TYPE_VI = { Call: "Call", Visit: "Visit", Meeting: "Visit", Email: "Email", Exhibition: "Trade Show", Seminar: "Trade Show", "Trade Show": "Trade Show" };
+  var TYPE_VI = { Call: "Call", Visit: "Visit", Meeting: "Visit", Email: "Email", Exhibition: "Trade Show", Seminar: "Trade Show", "Trade Show": "Trade Show",
+    LAB_TRIAL: "Lab Trial", JOINT_VISIT: "Joint Visit", SENSORY_TEST: "Sensory Test" };   // Phase 3 — hoạt động kỹ thuật
   function timelineHTML(r) {
     var ev = [];
     (typeof ACTIVITIES !== "undefined" ? ACTIVITIES : []).filter(function (a) { return a.projectId === r.id; })
       .forEach(function (a) {
-        ev.push({ d: parseWhen(a.date), tag: TYPE_VI[a.type] || a.type || T("common.activity"), who: a.pic,
+        ev.push({ d: parseWhen(a.date), tag: (TYPE_VI[a.type] || a.type || T("common.activity")) + (a.rdProjectId ? " · " + a.rdProjectId : ""), who: a.pic,
           text: a.note || "", next: a.next || "", kind: "act" });
       });
     (r.comments || []).forEach(function (c) {
-      ev.push({ d: parseWhen(c.at), tag: "Note", who: c.by, text: c.text || "", kind: "note" });
+      /* Dòng nhật ký do R&D ghi ngược về (đổi stage, mẻ thử, hoàn tất) → tag "R&D" */
+      var rd = /^\[R&D(?: ([^\]]+))?\]\s*/.exec(c.text || "");
+      ev.push({ d: parseWhen(c.at), tag: rd ? "R&D" + (rd[1] ? " · " + rd[1] : "") : "Note", who: c.by,
+        text: rd ? (c.text || "").slice(rd[0].length) : (c.text || ""), kind: rd ? "note rnd" : "note" });
     });
     ev.sort(function (a, b) { return (b.d ? b.d.getTime() : 0) - (a.d ? a.d.getTime() : 0); });
 
@@ -794,6 +804,9 @@
       product: r.product, type: type, date: todayISO(), note: note, next: "", potential: "Medium",
       related: [], projectId: r.id, id: "A-tmp" + Date.now(), spId: null
     };
+    /* Hoạt động kỹ thuật gắn luôn vào đề tài R&D đang chạy của dự án → hiện ở cả 2 timeline */
+    var rdTop = window.RND && /^(LAB_TRIAL|JOINT_VISIT|SENSORY_TEST)$/.test(type) ? RND.primaryOf(r.id) : null;
+    if (rdTop) { a.rdProjectId = rdTop.code; if (rdTop.pic && rdTop.pic !== a.pic) a.related.push(rdTop.pic); }
     ACTIVITIES.push(a);
     buildRecord();
     var live = window.FISG_STORE && FISG_STORE.canWrite && FISG_STORE.canWrite() && r.spId;
@@ -1001,7 +1014,14 @@
 
   /* Cột phải = 3 khối card, không phải 1 list phẳng trải dài */
   function sideHTML(r, editable) {
-    return cardMetricsHTML(r, editable) + cardPartnerHTML(r, editable) + cardInternalHTML(r, editable) + cardFilesHTML(r);
+    /* Phase 4: R&D chỉ xem Giá trị ước tính / Xác suất (roles.js → capEditFinance) */
+    var fin = editable && (typeof capEditFinance !== "function" || capEditFinance(r, me));
+    return cardMetricsHTML(r, fin) + cardRndHTML(r) + cardPartnerHTML(r, editable) + cardInternalHTML(r, editable) + cardFilesHTML(r);
+  }
+  /* Khối R&D (Phase 3): tiến độ đề tài R&D liên kết, hoặc nút "Yêu cầu R&D hỗ trợ" */
+  function cardRndHTML(r) {
+    if (!window.RND) return "";
+    return '<section class="sf-card sf-card-rnd" id="sfRecRnd">' + RND.widgetHTML(r) + "</section>";
   }
 
   /* Khối 4 — tài liệu dự án. Lưu ở FISG_Projects/{NCC}/{Khách hàng}/{Mã dự án};
@@ -1099,7 +1119,7 @@
 
   function saveAmount() {
     var r = recById(curId); if (!r) return;
-    if (!capEdit(r, me)) { toast(T('sf.msg.noValuePerm')); return; }
+    if (!capEdit(r, me) || (typeof capEditFinance === "function" && !capEditFinance(r, me))) { toast(T('sf.msg.noValuePerm')); return; }
     var v = (val("sfAmount") || "").replace(/[^0-9]/g, "");
     var prev = (r.amount == null) ? "" : r.amount;
     var next = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
@@ -1204,6 +1224,7 @@
     openClose: openClose, pickClose: pickClose, cancelClose: cancelClose, confirmClose: confirmClose,
     amountFocus: amountFocus, amountBlur: amountBlur, qlType: qlType, qlGrow: qlGrow,
     stMenu: stMenu, setLifecycle: setLifecycle, syncClosing: syncClosing,
-    logFiles: logFiles, remapId: remapId
+    logFiles: logFiles, remapId: remapId,
+    refreshRecord: function (id) { render(); if (curId && (!id || curId === id)) buildRecord(); }
   };
 })();

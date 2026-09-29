@@ -4296,8 +4296,8 @@
 "Quotation"
 ],
 "att.cat.SPEC": [
-"TDS / COA / Spec",
-"TDS / COA / Spec"
+"Spec / Yêu cầu kỹ thuật",
+"Spec / Technical Requirements"
 ],
 "att.cat.TEST": [
 "Kết quả thử mẫu",
@@ -4362,5 +4362,677 @@
 "pf.att.notSaved": [
 "Dự án chưa lưu được lên SharePoint nên {n} tệp đính kèm chưa được tải. Mở lại dự án để đính kèm.",
 "The project was not saved to SharePoint, so {n} attachment(s) were not uploaded. Reopen the project to attach them."
+],
+"att.cat.FORMULA": [
+"Công thức (Recipe)",
+"Formulation / Recipe"
+],
+"att.cat.SENSORY": [
+"Đánh giá cảm quan",
+"Sensory Evaluation"
+],
+"att.cat.TDS_COA": [
+"TDS / COA",
+"TDS / COA"
+],
+"rd.title": [
+"Dự án R&D",
+"R&D Projects"
+],
+"rd.pipeline.BRIEF": [
+"Tiếp nhận đề bài",
+"Brief"
+],
+"rd.pipeline.FORMULATION": [
+"Lên công thức",
+"Formulation"
+],
+"rd.pipeline.LAB_TEST": [
+"Thử nghiệm Lab & cảm quan",
+"Lab & Sensory Test"
+],
+"rd.pipeline.SAMPLE_SENT": [
+"Gửi mẫu đối chứng",
+"Sample Sent"
+],
+"rd.pipeline.PILOT_TRIAL": [
+"Chạy thử nhà máy (Pilot)",
+"Pilot Trial"
+],
+"rd.pipeline.COMPLETED": [
+"Hoàn tất – chuyển giao",
+"Completed"
+],
+"rd.pipeline.SUSPENDED": [
+"Tạm hoãn / Không khả thi",
+"Suspended"
+],
+"rd.type.ON_DEMAND": [
+"Theo yêu cầu Sales",
+"Sales Request"
+],
+"rd.type.INTERNAL": [
+"Nghiên cứu nội bộ",
+"Internal R&D"
+],
+"rd.status.IN_PROGRESS": [
+"Đang thực hiện",
+"In Progress"
+],
+"rd.status.DONE": [
+"Hoàn tất",
+"Done"
+],
+"rd.status.CANCELLED": [
+"Đã huỷ",
+"Cancelled"
+],
+"rd.benchmark": [
+"Tiêu chí đối chứng (Benchmark)",
+"Benchmark Criteria"
+],
+"rd.requestSupport": [
+"Yêu cầu hỗ trợ R&D",
+"Request R&D Support"
+],
+"rd.createInternal": [
+"Tạo dự án R&D nội bộ",
+"New Internal R&D Project"
+],
+"nav.rnd": [
+"R&D Workspace",
+"R&D Workspace"
+],
+"rdw.view.split": [
+"Workspace",
+"Workspace"
+],
+"rdw.view.matrix": [
+"Ma trận ứng dụng",
+"Application Matrix"
+],
+"rdw.viewAria": [
+"Chế độ hiển thị",
+"View mode"
+],
+"rdw.typeAria": [
+"Lọc theo loại hình",
+"Filter by type"
+],
+"rdw.listAria": [
+"Danh sách đề tài R&D",
+"R&D topic list"
+],
+"rdw.f.onDemand": [
+"Theo dự án Sales",
+"From Sales Opportunities"
+],
+"rdw.f.internal": [
+"R&D tự nghiên cứu",
+"Internal R&D"
+],
+"rdw.nccAll": [
+"Mọi nhà cung cấp",
+"All suppliers"
+],
+"rdw.other": [
+"Khác",
+"Other"
+],
+"rdw.searchPh": [
+"Tìm mã, đề tài, khách hàng, nguyên liệu…",
+"Search code, topic, account, ingredient…"
+],
+"rdw.create": [
+"Tạo đề tài R&D",
+"New R&D Topic"
+],
+"rdw.sync.local": [
+"Lưu cục bộ · chưa đồng bộ SharePoint",
+"Saved locally · not synced to SharePoint"
+],
+"rdw.sync.localHint": [
+"Đề tài R&D hiện chỉ lưu trên trình duyệt này (chưa có list R&D trên SharePoint). Đồng nghiệp chưa thấy được và dữ liệu mất nếu xoá dữ liệu trình duyệt.",
+"R&D topics are currently stored only in this browser (no R&D list on SharePoint yet). Colleagues cannot see them, and they are lost if browser data is cleared."
+],
+"rdw.sync.demo": [
+"Dữ liệu demo",
+"Demo data"
+],
+"rdw.count": [
+"{n} đề tài",
+"{n} topics"
+],
+"rdw.empty.title": [
+"Chưa có đề tài R&D",
+"No R&D topics yet"
+],
+"rdw.empty.body": [
+"Tạo đề tài từ một dự án Sales đang chạy, hoặc một đề tài nội bộ R&D tự nghiên cứu.",
+"Create a topic from an open Sales opportunity, or an internal R&D topic."
+],
+"rdw.noMatch": [
+"Không có đề tài khớp bộ lọc.",
+"No topics match the filters."
+],
+"rdw.pickOne": [
+"Chọn một đề tài ở cột trái để xem chi tiết",
+"Select a topic on the left to see its details"
+],
+"rdw.unsaved": [
+"Có thay đổi chưa lưu",
+"Unsaved changes"
+],
+"rdw.nChanges": [
+"{n} thay đổi chưa lưu",
+"{n} unsaved change(s)"
+],
+"rdw.save": [
+"Lưu thay đổi",
+"Save Changes"
+],
+"rdw.discard": [
+"Huỷ thay đổi",
+"Discard"
+],
+"rdw.saved": [
+"Đã lưu đề tài {c}.",
+"Saved {c}."
+],
+"rdw.err.persist": [
+"Không lưu được vào trình duyệt (bộ nhớ đầy hoặc bị chặn). Thay đổi chỉ còn đến khi tải lại trang.",
+"Could not save to this browser (storage full or blocked). Changes last only until the page is reloaded."
+],
+"rdw.err.title": [
+"Tên đề tài không được để trống.",
+"Topic name is required."
+],
+"rdw.titlePh": [
+"Tên đề tài",
+"Topic name"
+],
+"rdw.readOnly": [
+"Chỉ xem",
+"View only"
+],
+"rdw.stageAria": [
+"Giai đoạn R&D",
+"R&D stage"
+],
+"rdw.resume": [
+"Mở lại",
+"Resume"
+],
+"rdw.b1": [
+"Thông tin kỹ thuật & Benchmark",
+"Technical Specs & Benchmark"
+],
+"rdw.inherited": [
+"Kế thừa từ dự án Sales",
+"Inherited from the Sales opportunity"
+],
+"rdw.fld.application": [
+"Ứng dụng",
+"Application"
+],
+"rdw.fld.product": [
+"Sản phẩm / Nguyên liệu",
+"Product / Ingredient"
+],
+"rdw.fld.ncc": [
+"Nhà cung cấp",
+"Supplier"
+],
+"rdw.fld.segment": [
+"Segment",
+"Segment"
+],
+"rdw.fld.customer": [
+"Khách hàng",
+"Account"
+],
+"rdw.fld.origin": [
+"Dự án Sales liên kết",
+"Linked Sales Opportunity"
+],
+"rdw.fld.pic": [
+"R&D phụ trách",
+"R&D Owner"
+],
+"rdw.fld.collab": [
+"Phối hợp",
+"Collaborators"
+],
+"rdw.fld.created": [
+"Ngày tạo",
+"Created"
+],
+"rdw.fld.target": [
+"Hạn mục tiêu",
+"Target Date"
+],
+"rdw.fld.completed": [
+"Ngày hoàn tất",
+"Completed On"
+],
+"rdw.fld.desc": [
+"Mô tả / Ghi chú",
+"Description / Notes"
+],
+"rdw.benchPh": [
+"Tiêu chí đánh giá mẫu: độ giòn, độ nhớt, vị ngọt, màu sắc, hạn dùng…",
+"Sample evaluation criteria: crispness, viscosity, sweetness, color, shelf life…"
+],
+"rdw.noOrigin": [
+"Đề tài nội bộ — không gắn dự án Sales",
+"Internal topic — no linked opportunity"
+],
+"rdw.originMissing": [
+"{id} (ngoài phạm vi xem của bạn)",
+"{id} (outside your view)"
+],
+"rdw.openInFunnel": [
+"Mở trong Sales Funnel",
+"Open in Sales Funnel"
+],
+"rdw.b2": [
+"Nhật ký mẻ thử Lab",
+"Lab Batch Trials"
+],
+"rdw.b2sum": [
+"{n} mẻ · {p} đạt",
+"{n} batches · {p} passed"
+],
+"rdw.bt.no": [
+"Mẻ",
+"Batch"
+],
+"rdw.bt.date": [
+"Ngày",
+"Date"
+],
+"rdw.bt.ratio": [
+"Tỷ lệ (%)",
+"Ratio (%)"
+],
+"rdw.bt.temp": [
+"Nhiệt độ",
+"Temperature"
+],
+"rdw.bt.time": [
+"Thời gian",
+"Time"
+],
+"rdw.bt.result": [
+"Cảm quan",
+"Sensory"
+],
+"rdw.bt.note": [
+"Ghi chú",
+"Notes"
+],
+"rdw.bt.ratioPh": [
+"vd. 30% thay bột mì",
+"e.g. 30% flour replacement"
+],
+"rdw.bt.tempPh": [
+"vd. 180 °C",
+"e.g. 180 °C"
+],
+"rdw.bt.timePh": [
+"vd. 12 phút",
+"e.g. 12 min"
+],
+"rdw.bt.notePh": [
+"Nhận xét cảm quan, kết cấu…",
+"Sensory and texture notes…"
+],
+"rdw.bt.add": [
+"Ghi mẻ",
+"Log Batch"
+],
+"rdw.bt.added": [
+"Đã ghi mẻ #{n}.",
+"Batch #{n} logged."
+],
+"rdw.bt.del": [
+"Xoá mẻ",
+"Delete batch"
+],
+"rdw.bt.confirmDel": [
+"Xoá mẻ #{n}? Thao tác này không thể hoàn tác.",
+"Delete batch #{n}? This cannot be undone."
+],
+"rdw.bt.need": [
+"Nhập tỷ lệ, thông số hoặc ghi chú cho mẻ thử.",
+"Enter a ratio, process parameters or notes for the batch."
+],
+"rdw.bt.empty": [
+"Chưa có mẻ thử nào. Ghi mẻ đầu tiên ở form bên dưới.",
+"No batches yet. Log the first one with the form below."
+],
+"rdw.bt.none": [
+"Chưa có mẻ thử nào.",
+"No batches yet."
+],
+"rdw.res.PASS": [
+"Đạt",
+"Pass"
+],
+"rdw.res.FAIL": [
+"Chưa đạt",
+"Fail"
+],
+"rdw.res.PENDING": [
+"Chờ đánh giá",
+"Pending"
+],
+"rdw.b3att": [
+"Tài liệu R&D",
+"R&D Documents"
+],
+"rdw.attLocked": [
+"Tải tệp lên sẽ mở khi đề tài được lưu trên SharePoint. Hiện chỉ xem được tệp của dự án Sales liên kết.",
+"Uploading opens once the topic is stored on SharePoint. For now you can only view files from the linked Sales opportunity."
+],
+"rdw.b3acts": [
+"Hoạt động liên quan",
+"Related Activities"
+],
+"rdw.acts.internal": [
+"Đề tài nội bộ không gắn khách hàng nên không có hoạt động liên quan.",
+"Internal topics have no account, so there are no related activities."
+],
+"rdw.acts.none": [
+"Chưa có hoạt động nào gắn với dự án {id}.",
+"No activities are linked to {id} yet."
+],
+"rdw.acts.all": [
+"Xem tất cả ({n}) trong Hoạt động",
+"View all ({n}) in Activities"
+],
+"rdw.audit": [
+"Cập nhật {d} bởi {p}",
+"Updated {d} by {p}"
+],
+"rdw.log.title": [
+"Lịch sử thay đổi",
+"Change history"
+],
+"rdw.log.stage": [
+"{p} chuyển giai đoạn {a} → {b}",
+"{p} moved stage {a} → {b}"
+],
+"rdw.log.created": [
+"{p} tạo đề tài",
+"{p} created the topic"
+],
+"rdw.mx.legend": [
+"Dòng: nhóm ứng dụng · Cột: nhà cung cấp. Bấm một đề tài để mở trong Workspace.",
+"Rows: application group · Columns: supplier. Click a topic to open it in the Workspace."
+],
+"rdw.mx.corner": [
+"Ứng dụng \\ NCC",
+"Application \\ Supplier"
+],
+"rdw.mx.total": [
+"Tổng",
+"Total"
+],
+"rdw.mx.running": [
+"{n} đang thử nghiệm",
+"{n} in trial"
+],
+"rdw.mx.done": [
+"{n} công thức chuẩn",
+"{n} standard formula(s)"
+],
+"rdw.mx.susp": [
+"{n} tạm hoãn",
+"{n} suspended"
+],
+"rdw.mx.unmapped": [
+"Chưa phân loại",
+"Unclassified"
+],
+"rdw.m.title": [
+"Tạo đề tài R&D",
+"New R&D Topic"
+],
+"rdw.m.sub": [
+"Mã sẽ cấp: {c} · Giai đoạn đầu: Tiếp nhận đề bài",
+"Code to be assigned: {c} · First stage: Brief"
+],
+"rdw.m.type": [
+"Loại hình",
+"Type"
+],
+"rdw.m.origin": [
+"Dự án Sales",
+"Sales Opportunity"
+],
+"rdw.m.originPh": [
+"Chọn dự án đang chạy…",
+"Select an open opportunity…"
+],
+"rdw.m.noOpen": [
+"Không có dự án Sales đang chạy trong phạm vi của bạn.",
+"There are no open Sales opportunities in your scope."
+],
+"rdw.m.dup": [
+"Dự án này đã có đề tài {c} đang chạy.",
+"This opportunity already has an active topic, {c}."
+],
+"rdw.m.nccPh": [
+"Chọn nhà cung cấp…",
+"Select a supplier…"
+],
+"rdw.m.segPh": [
+"Chọn segment…",
+"Select a segment…"
+],
+"rdw.m.productPh": [
+"vd. NUTRIOSE FB06",
+"e.g. NUTRIOSE FB06"
+],
+"rdw.m.appPh": [
+"vd. Bánh quy giàu xơ",
+"e.g. High-fibre biscuit"
+],
+"rdw.m.picNone": [
+"— Chưa phân công —",
+"— Unassigned —"
+],
+"rdw.m.required": [
+"Điền đủ các trường bắt buộc (*).",
+"Fill in all required fields (*)."
+],
+"rdw.m.create": [
+"Tạo đề tài",
+"Create Topic"
+],
+"rdw.m.created": [
+"Đã tạo đề tài {c}.",
+"Created {c}."
+],
+"rdw.leave": [
+"Có đề tài R&D chưa lưu thay đổi.",
+"Some R&D topics have unsaved changes."
+],
+"rdw.suspend": [
+"Tạm hoãn",
+"Suspend"
+],
+"act.rd": [
+"Đề tài R&D",
+"R&D Topic"
+],
+"act.rdTopic": [
+"Đề tài R&D",
+"R&D Topic"
+],
+"act.rdNone": [
+"Không gắn đề tài R&D",
+"No R&D topic"
+],
+"rdw.acts.log": [
+"Ghi hoạt động",
+"Log Activity"
+],
+"rdw.acts.logTitle": [
+"Ghi hoạt động cho đề tài R&D",
+"Log Activity for R&D Topic"
+],
+"rdw.sync.sp": [
+"Đồng bộ SharePoint",
+"Synced to SharePoint"
+],
+"rnd.badge": [
+"R&D: {s} ({p}%)",
+"R&D: {s} ({p}%)"
+],
+"rnd.w.title": [
+"Hỗ trợ kỹ thuật R&D",
+"R&D Technical Support"
+],
+"rnd.w.none": [
+"Dự án chưa có đề tài R&D. Gửi đề bài để chuyên viên R&D nhận việc và theo dõi cùng.",
+"No R&D topic yet. Send a brief so an R&D specialist picks it up and follows the opportunity."
+],
+"rnd.w.badge": [
+"R&D: {s} ({p}%)",
+"R&D: {s} ({p}%)"
+],
+"rnd.w.owner": [
+"R&D phụ trách",
+"R&D owner"
+],
+"rnd.w.open": [
+"Xem đề tài R&D",
+"View R&D Topic"
+],
+"rnd.w.again": [
+"Gửi đề bài R&D mới",
+"Send a New R&D Brief"
+],
+"rnd.req.sub": [
+"Dự án {id} · mã đề tài dự kiến {c}",
+"Opportunity {id} · expected topic code {c}"
+],
+"rnd.req.pic": [
+"Chuyên viên R&D",
+"R&D Specialist"
+],
+"rnd.req.noRnd": [
+"Chưa có người dùng nào có vai trò R&D. Đề tài sẽ chờ phân công.",
+"No users have the R&D role yet. The topic will wait for assignment."
+],
+"rnd.req.brief": [
+"Đề bài tóm tắt",
+"Brief Summary"
+],
+"rnd.req.desc": [
+"Bối cảnh / yêu cầu của khách",
+"Context / customer requirements"
+],
+"rnd.req.descPh": [
+"Khách đang dùng gì, muốn cải thiện điểm nào, sản lượng dự kiến…",
+"What the customer uses today, what to improve, expected volume…"
+],
+"rnd.req.share": [
+"Khi gửi: chuyên viên R&D được thêm vào Người liên quan của dự án để cùng theo dõi, và nhận thông báo đề bài mới.",
+"On send: the R&D specialist is added to the opportunity's Related People to follow it, and is notified of the new brief."
+],
+"rnd.req.send": [
+"Gửi đề bài cho R&D",
+"Send Brief to R&D"
+],
+"rnd.msg.requested": [
+"Đã gửi đề bài {c} cho {p}.",
+"Brief {c} sent to {p}."
+],
+"rnd.msg.noPerm": [
+"Bạn không có quyền gửi yêu cầu R&D cho dự án này.",
+"You cannot request R&D support for this opportunity."
+],
+"rnd.msg.saveFailed": [
+"Chưa lưu được đề tài R&D:",
+"Could not save the R&D topic:"
+],
+"rnd.msg.migrated": [
+"Đã chuyển {n} đề tài lưu cục bộ lên SharePoint.",
+"Moved {n} locally saved topic(s) to SharePoint."
+],
+"rnd.notif.assigned": [
+"gửi bạn đề bài R&D {c}: {t}",
+"sent you R&D brief {c}: {t}"
+],
+"rnd.notif.stage": [
+"chuyển đề tài {c} sang \"{s}\"",
+"moved topic {c} to \"{s}\""
+],
+"rnd.notif.done": [
+"đã hoàn tất đề tài {c}: {t}",
+"completed topic {c}: {t}"
+],
+"rnd.log.requested": [
+"Sales gửi đề bài cho {p}: {t}",
+"Sales sent the brief to {p}: {t}"
+],
+"rnd.log.stage": [
+"Giai đoạn R&D: {a} → {b}",
+"R&D stage: {a} → {b}"
+],
+"rnd.log.completed": [
+"R&D đã hoàn thành thử nghiệm và bàn giao kết quả.",
+"R&D completed testing and handed over the results."
+],
+"rnd.log.batch": [
+"Mẻ thử #{n} ({x}): {r}",
+"Batch #{n} ({x}): {r}"
+],
+"rds.err.auth": [
+"Phiên đăng nhập Microsoft 365 đã hết hạn. Tải lại trang và đăng nhập lại để lưu lên SharePoint.",
+"Your Microsoft 365 session has expired. Reload the page and sign in again to save to SharePoint."
+],
+"rds.err.denied": [
+"Tài khoản không có quyền ghi vào list R&D trên SharePoint. Liên hệ quản trị site.",
+"Your account cannot write to the R&D list on SharePoint. Contact the site admin."
+],
+"rds.err.missing": [
+"Không tìm thấy list RD_Projects (hoặc đề tài đã bị xoá) trên SharePoint.",
+"The RD_Projects list (or this topic) was not found on SharePoint."
+],
+"rds.err.conflict": [
+"Đề tài vừa được người khác cập nhật. Tải lại trang rồi thử lại.",
+"Someone else just updated this topic. Reload the page and try again."
+],
+"rds.err.invalid": [
+"SharePoint từ chối dữ liệu — kiểm tra các cột Choice của list RD_Projects có đủ giá trị.",
+"SharePoint rejected the data — check that the RD_Projects Choice columns contain every value."
+],
+"rds.err.throttled": [
+"SharePoint đang bận, đã thử lại nhưng chưa được. Vui lòng thử lại sau ít phút.",
+"SharePoint is busy; retries failed. Please try again in a few minutes."
+],
+"rds.err.network": [
+"Mất kết nối mạng. Kiểm tra mạng rồi bấm Thử lại.",
+"Network connection lost. Check your connection and retry."
+],
+"rds.err.unknown": [
+"Lỗi không xác định khi lưu lên SharePoint (chi tiết trong Console).",
+"Unexpected error while saving to SharePoint (details in the Console)."
+],
+"rds.notSynced": [
+"Chưa lưu được lên SharePoint:",
+"Not saved to SharePoint:"
+],
+"rds.retry": [
+"Thử lại",
+"Retry"
+],
+"rds.financeRO": [
+"R&D chỉ xem thông tin tài chính / sản lượng của dự án Sales.",
+"R&D can only view the opportunity's financials and volumes."
 ]
 }

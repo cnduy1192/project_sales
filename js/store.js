@@ -24,6 +24,20 @@
       SupplierList: "Các NCC quan tâm",
 
       CompletedDate: "Ngày hoàn thành",
+      // Phase 3 — hoạt động gắn với đề tài R&D (mã RD-yyyy-nnn, Single line of text)
+      RnDProject: "Đề tài R&D",
+    },
+
+    /* Phase 4 — đề tài R&D (list RD_Projects). Nhãn hiển thị dùng chung cho list cũ RnDProjects (Phase 3)
+       nên app dò được cột theo tên hiển thị dù tên nội bộ khác. */
+    RD_Projects: {
+      RD_Code: "Mã đề tài", RD_Type: "Loại đề tài", OriginProject: "Dự án Sales", Customer: "Khách hàng",
+      Supplier: "NCC", Product: "Nguyên liệu", Application: "Ứng dụng", Segment: "Segment",
+      RDPic: "R&D phụ trách", Collaborators: "Phối hợp", RD_Stage: "Giai đoạn", Status: "Trạng thái",
+      TargetDate: "Hạn mục tiêu", CompletedDate: "Ngày hoàn tất", BenchmarkCriteria: "Tiêu chí benchmark",
+      Notes: "Mô tả", BatchesJson: "Mẻ thử", LogJson: "Nhật ký", StartDate: "Ngày tạo", UpdatedBy: "Người cập nhật",
+      // tên nội bộ của list Phase 3 (RnDProjects)
+      RdType: "Loại đề tài", PICName: "R&D phụ trách", Stage: "Giai đoạn", RdStatus: "Trạng thái", Benchmark: "Tiêu chí benchmark",
     },
 
     Pipelines: {
@@ -985,9 +999,17 @@
   /* File dự án tách riêng: FISG_Projects/{NCC}/{Khách hàng}/{Mã dự án} — mã dự án không đổi
      khi đổi tên dự án nên thư mục không bị lệch. */
   const ATT_PROJ_ROOT = "FISG_Projects";
-  const ATT_CATS = ["QUOTE", "SPEC", "TEST", "CONTRACT", "OTHER"];
+  // Giữ đồng bộ với CATS trong js/views/attachments.js (thêm FORMULA / SENSORY / TDS_COA cho R&D)
+  const ATT_CATS = ["QUOTE", "SPEC", "TEST", "CONTRACT", "FORMULA", "SENSORY", "TDS_COA", "OTHER"];
+  /* Phase 4 — tài liệu đề tài R&D (Formula / Sensory / TDS-COA…) nằm cạnh dự án Sales:
+     FISG_Projects/{NCC}/{Khách hàng | "RND_Internal"}/{RD_Code}  — vd. FISG_Projects/IFF/Acecook Vietnam/RD-2026-003 */
+  const ATT_RND_INTERNAL = "RND_Internal";
   function attFolderOf(parentType, parentId, ctx) {
     const seg = FISG_GRAPH.cleanSeg;
+    if (parentType === "rnd") {
+      return [ATT_PROJ_ROOT, seg((ctx && ctx.ncc) || "Khác"), seg((ctx && ctx.customer) || ATT_RND_INTERNAL),
+              seg((ctx && ctx.code) || parentId)].join("/");
+    }
     if (parentType === "project") {
       const code = (ctx && ctx.code) || ("ID-" + parentId);
       return [ATT_PROJ_ROOT, seg((ctx && ctx.ncc) || "Khác"),
@@ -1052,7 +1074,7 @@
     return "";
   }
 
-  /* meta (tuỳ chọn): { category } — mã loại tài liệu (QUOTE/SPEC/TEST/CONTRACT/OTHER) */
+  /* meta (tuỳ chọn): { category } — mã loại tài liệu (xem ATT_CATS) */
   async function uploadAttachment(parentType, parentId, ctx, file, meta) {
     if (!canWrite()) throw new Error(T("err.notSignedIn"));
     const bad = attValidate(file);
@@ -1275,6 +1297,7 @@
 
     if (a.related && a.related.length) set("RelatedPeople", a.related.join("; "));
     if (a.nccs && a.nccs.length) set("SupplierList", a.nccs.join("; "));
+    if (a.rdProjectId) set("RnDProject", a.rdProjectId);
     warnMissing("Activities", miss);
 
     const it = await FISG_GRAPH.createItem("Activities", f);
@@ -1702,6 +1725,7 @@
           projectId: byItemId[String(
             (ga.internal("RelatedProject") ? f[ga.internal("RelatedProject") + "LookupId"] : null)
             || f.RelatedProjectLookupId || "")] || "",
+          rdProjectId: txt(ga(f, "RnDProject")),
           id: "A-" + (it.id || i), spId: it.id,
         };
       });
@@ -1724,6 +1748,7 @@
 
       try { await loadReports(); } catch (e) { console.warn("[store] loadReports", e); }
       try { await loadAttachments(); } catch (e) { console.warn("[store] loadAttachments", e); }
+      try { await fetchRdProjects(); } catch (e) { console.warn("[R&D Store] fetchRdProjects", e); }
 
       if (window.LS && LS.mergeActs) LS.mergeActs();
 
@@ -1819,6 +1844,315 @@
     return { cols, own, sample: items[0] && items[0].fields, count: items.length };
   }
 
+  /* ═══════════════ Phase 4 — Đề tài R&D · SharePoint list RD_Projects ═══════════════
+     JS field            ← cột (tên nội bộ)                 kiểu
+     title               ← Title                            Single line
+     code                ← RD_Code                          Single line   (RD-{YEAR}-{INDEX})
+     type                ← RD_Type                          Choice ON_DEMAND / INTERNAL
+     originProjectId     ← OriginProject (…LookupId)        Lookup → Projects (đọc ra mã FI-xxxx)
+     customer / ncc / product / application / segment ← Customer / Supplier / Product / Application / Segment
+     pic                 ← RDPic                            Single line
+     collaborators       ← Collaborators                    Multiple lines (JSON array)
+     stage               ← RD_Stage                         Choice BRIEF … SUSPENDED
+     status              ← Status                           Choice IN_PROGRESS / DONE / CANCELLED
+     targetDate / completedDate ← TargetDate / CompletedDate  DateTime
+     benchmarkCriteria   ← BenchmarkCriteria                Multiple lines
+     desc                ← Notes                            Multiple lines
+     batches / log       ← BatchesJson / LogJson            Multiple lines (JSON) — mẻ thử Lab, lịch sử stage
+     created / updatedAt ← Created / Modified (có sẵn)       (StartDate / UpdatedBy nếu list có)
+     Tương thích list Phase 3 "RnDProjects" (Title "RD-… · tên", cột RdType/Stage/RdStatus/PICName/Benchmark).
+     Chế độ demo (window.FISG_DEMO_AUTO): thao tác trên mảng DEMO_RD_LIST, không gọi Microsoft Graph. */
+  const RD_LOG = "[R&D Store]";
+  const RD_LIST_NAMES = Array.from(new Set([CFG && CFG.RND_LIST, "RD_Projects", "RnDProjects"].filter(Boolean)));
+  RD_LIST_NAMES.forEach(n => { if (!LABELS[n]) LABELS[n] = LABELS.RD_Projects; });
+  const RD_COLS = {            // khoá JS → các tên cột chấp nhận (ưu tiên theo thứ tự)
+    code: ["RD_Code"], type: ["RD_Type", "RdType"], originProjectId: ["OriginProject"],
+    customer: ["Customer"], ncc: ["Supplier"], product: ["Product"], application: ["Application"], segment: ["Segment"],
+    pic: ["RDPic", "PICName"], collaborators: ["Collaborators"], stage: ["RD_Stage", "Stage"], status: ["Status", "RdStatus"],
+    targetDate: ["TargetDate"], completedDate: ["CompletedDate"], benchmarkCriteria: ["BenchmarkCriteria", "Benchmark"],
+    desc: ["Notes"], batches: ["BatchesJson"], log: ["LogJson"], created: ["StartDate"], updatedBy: ["UpdatedBy"],
+  };
+  const RD_OPTIONAL = { batches: 1, log: 1, created: 1, updatedBy: 1, code: 1 };   // thiếu thì bỏ qua, không cảnh báo mỗi lần ghi
+  const RD_DATES = { targetDate: 1, completedDate: 1, created: 1 };
+  const RD_CODE_RE = /^(RD-\d{4}-\d+)\s*·?\s*(.*)$/;
+  let _rd = { list: null, get: null, defs: null, state: "unknown", error: null, warned: {} };
+
+  function rdState() { return isDemoRd() ? "ok" : _rd.state; }
+  function rdError() { return _rd.error; }
+  function rdListName() { return _rd.list; }
+  function isDemoRd() { return !!window.FISG_DEMO_AUTO; }
+  function demoList() { if (!Array.isArray(window.DEMO_RD_LIST)) window.DEMO_RD_LIST = []; return window.DEMO_RD_LIST; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  /* ── Phân loại lỗi Graph / MSAL → thông điệp thân thiện + log [R&D Store] ── */
+  function rdErrorOf(e) {
+    const msg = String((e && (e.message || e.errorCode || e)) || "");
+    const m = /Graph (\d{3})/.exec(msg), st = m ? +m[1] : 0;
+    let kind = "unknown";
+    if (e && e.rdKind) kind = e.rdKind;
+    else if (st === 401 || /interaction_required|login_required|consent_required|token_expired|InteractionRequired|popup_window_error|user_cancelled|monitor_window_timeout|no_account/i.test(msg)
+             || msg === T("err.notSignedIn")) kind = "auth";
+    else if (st === 403) kind = "denied";
+    else if (st === 404) kind = "missing";
+    else if (st === 409 || st === 412) kind = "conflict";
+    else if (st === 400) kind = "invalid";
+    else if (st === 429 || st === 503 || st === 504) kind = "throttled";
+    else if (/Failed to fetch|NetworkError|network|ERR_INTERNET|Load failed/i.test(msg)) kind = "network";
+    return { kind, status: st, message: msg.slice(0, 300) };
+  }
+  function rdFail(op, e) {
+    const info = rdErrorOf(e);
+    console.error(RD_LOG, op + " thất bại (" + info.kind + (info.status ? " " + info.status : "") + "):", info.message);
+    const err = new Error(T("rds.err." + info.kind));
+    err.rdKind = info.kind; err.status = info.status; err.cause = e;
+    return err;
+  }
+  /* Thử lại khi mạng chập chờn / Graph bận (graph.js đã tự chờ Retry-After cho 429) */
+  async function rdRetry(op, fn) {
+    let last;
+    for (let i = 0; i < 3; i++) {
+      try { return await fn(); }
+      catch (e) {
+        last = e;
+        const k = rdErrorOf(e).kind;
+        if ((k !== "network" && k !== "throttled") || i === 2) break;
+        console.warn(RD_LOG, op + " lỗi " + k + ", thử lại lần " + (i + 1) + "…");
+        await new Promise(r => setTimeout(r, 800 * (i + 1)));
+      }
+    }
+    throw last;
+  }
+  function rdGuard(op) {
+    if (!canWrite()) { const e = new Error(T("err.notSignedIn")); e.rdKind = "auth"; throw rdFail(op, e); }
+  }
+
+  /* ── Xác định list + sơ đồ cột ── */
+  async function rdResolve() {
+    if (_rd.list && _rd.get) return _rd;
+    let lastErr = null;
+    for (const name of RD_LIST_NAMES) {
+      try {
+        const cols = await FISG_GRAPH.columns(name);
+        _rd.list = name; _rd.get = makeGetter(name, cols); _rd.get.cols = cols;
+        _rd.defs = await colDefs(name);
+        _rd.state = "ok"; _rd.error = null;
+        return _rd;
+      } catch (e) { lastErr = e; if (rdErrorOf(e).kind !== "missing") break; }
+    }
+    const info = rdErrorOf(lastErr);
+    _rd.state = info.kind === "missing" ? "missing" : info.kind === "denied" ? "denied" : "error";
+    _rd.error = info;
+    throw lastErr;
+  }
+  function rdCol(field) {
+    const keys = RD_COLS[field] || [];
+    for (const k of keys) { const n = _rd.get && _rd.get.internal(k); if (n) return n; }
+    return null;
+  }
+  function rdIsLookup(name) { const c = _rd.defs && _rd.defs[name]; return !!(c && c.lookup); }
+  function rdWarnMissing(fields) {
+    const miss = fields.filter(f => !rdCol(f) && !RD_OPTIONAL[f] && !_rd.warned[f]);
+    miss.forEach(f => { _rd.warned[f] = 1; });
+    if (miss.length) console.warn(RD_LOG, "list " + _rd.list + " thiếu cột cho: " + miss.join(", ") + " — xem SharePoint_Setup.md mục 10.");
+  }
+  function projectCodeBySpId(id) {
+    const r = (typeof RECORDS !== "undefined" ? RECORDS : []).find(x => String(x.spId) === String(id));
+    return r ? r.id : "";
+  }
+  function projectSpIdByCode(code) {
+    const r = (typeof RECORDS !== "undefined" ? RECORDS : []).find(x => x.id === code);
+    return r && r.spId ? r.spId : null;
+  }
+  function parseList(v) {
+    const s = txt(v).trim();
+    if (s.charAt(0) === "[") { try { const a = JSON.parse(s); if (Array.isArray(a)) return a.map(x => String(x).trim()).filter(Boolean); } catch (e) {} }
+    return nameList(s);
+  }
+  function jsonArr(v) { try { const a = JSON.parse(txt(v) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+
+  function rdFromItem(it) {
+    const f = it.fields || {};
+    const g = field => { const n = rdCol(field); return n ? f[n] : undefined; };
+    const t = txt(f.Title).trim(), m = RD_CODE_RE.exec(t);
+    const code = txt(g("code")).trim() || (m ? m[1] : "RD-ID-" + it.id);
+    const title = txt(g("code")).trim() ? t : (m ? m[2] : t);
+    let origin = "";
+    const on = rdCol("originProjectId");
+    if (on) origin = f[on + "LookupId"] != null ? projectCodeBySpId(f[on + "LookupId"]) : txt(f[on]).trim();
+    const log = jsonArr(g("log"));
+    const last = log.length ? log[log.length - 1] : null;
+    return {
+      id: code, code: code, spId: String(it.id), title: title,
+      type: txt(g("type")) || "ON_DEMAND", originProjectId: origin || null,
+      customer: txt(g("customer")), ncc: txt(g("ncc")), product: txt(g("product")),
+      application: txt(g("application")), segment: txt(g("segment")),
+      pic: txt(g("pic")), collaborators: parseList(g("collaborators")),
+      stage: txt(g("stage")) || "BRIEF", status: txt(g("status")) || "IN_PROGRESS",
+      created: (txt(g("created")) || txt(f.Created) || txt(it.createdDateTime)).slice(0, 10),
+      targetDate: txt(g("targetDate")).slice(0, 10) || null, completedDate: txt(g("completedDate")).slice(0, 10) || null,
+      benchmarkCriteria: txt(g("benchmarkCriteria")), desc: txt(g("desc")),
+      batches: jsonArr(g("batches")), log: log,
+      updatedAt: (txt(f.Modified) || txt(it.lastModifiedDateTime)).slice(0, 10),
+      updatedBy: txt(g("updatedBy")) || (last && last.by) || "",
+    };
+  }
+
+  /* JS → cột SharePoint (chỉ các trường được truyền) */
+  async function rdFieldsOf(obj, keys) {
+    const out = {};
+    for (const k of keys) {
+      if (k === "title") { out.Title = clip(obj.title || "", SP_TEXT_MAX); continue; }
+      const n = rdCol(k); if (!n) continue;
+      let v = obj[k];
+      if (k === "originProjectId") {
+        if (rdIsLookup(n)) {
+          const sp = v ? projectSpIdByCode(v) : null;
+          if (v && !sp) console.warn(RD_LOG, "dự án " + v + " chưa có trên SharePoint — bỏ trống OriginProject.");
+          out[n + "LookupId"] = sp ? Number(sp) : null;
+        } else out[n] = v || "";
+        continue;
+      }
+      if (k === "customer" && rdIsLookup(n)) {
+        const id = v ? await lookupId("Customers", v, false) : null;
+        out[n + "LookupId"] = id ? Number(id) : null; continue;
+      }
+      if (k === "collaborators") v = JSON.stringify(v || []);
+      else if (k === "batches") v = JSON.stringify(v || []);
+      else if (k === "log") v = JSON.stringify((v || []).slice(-200));
+      else if (RD_DATES[k]) v = v ? spDate(v) : null;
+      else v = v == null ? "" : v;
+      out[n] = v;
+    }
+    /* List Phase 3 không có RD_Code → mã nằm ở đầu Title */
+    if ("title" in out && !rdCol("code") && obj.code) out.Title = clip(obj.code + CODE_SEP + (obj.title || ""), SP_TEXT_MAX);
+    return out;
+  }
+
+  async function rdMaxIndex(year) {
+    const codeCol = rdCol("code");
+    const items = await FISG_GRAPH.listItems(_rd.list, "select=Title" + (codeCol ? "," + codeCol : ""));
+    let n = 0;
+    items.forEach(it => {
+      const f = it.fields || {};
+      const c = (codeCol && txt(f[codeCol])) || txt(f.Title);
+      const m = /^RD-(\d{4})-(\d+)/.exec(c);
+      if (m && m[1] === String(year)) n = Math.max(n, +m[2]);
+    });
+    return n;
+  }
+  function fmtRdCode(year, n) { return "RD-" + year + "-" + String(n).padStart(3, "0"); }
+
+  /* ════ API ════ */
+
+  /* Đọc toàn bộ đề tài. apply=true (mặc định) → thay RD_PROJECTS. Trả về mảng, hoặc null khi không đọc được. */
+  async function fetchRdProjects(opts) {
+    const apply = !opts || opts.apply !== false;
+    if (isDemoRd()) return clone(demoList());
+    if (!canWrite() || typeof RD_PROJECTS === "undefined") return null;
+    try {
+      await rdResolve();
+      const items = await rdRetry("fetchRdProjects", () => FISG_GRAPH.listItems(_rd.list));
+      rdWarnMissing(Object.keys(RD_COLS));
+      const out = (items || []).map(rdFromItem);
+      if (apply) {
+        RD_PROJECTS.length = 0; out.forEach(r => RD_PROJECTS.push(r));
+        if (window.RND && RND.onLoaded) try { RND.onLoaded(); } catch (e) { console.error(RD_LOG, "onLoaded", e); }
+      }
+      console.info(RD_LOG, "đã tải " + out.length + " đề tài từ list " + _rd.list + ".");
+      return out;
+    } catch (e) {
+      const info = rdErrorOf(e);
+      _rd.error = info;
+      if (info.kind === "missing") { _rd.state = "missing"; console.warn(RD_LOG, "chưa có list " + RD_LIST_NAMES.join(" / ") + " — đề tài R&D đang lưu cục bộ trên trình duyệt."); }
+      else { if (_rd.state === "unknown") _rd.state = info.kind === "denied" ? "denied" : "error"; rdFail("fetchRdProjects", e); }
+      return null;
+    }
+  }
+
+  /* Tạo đề tài. Tự cấp mã RD-{YEAR}-{INDEX} theo số lớn nhất ĐANG CÓ trên SharePoint (không tin mã tạm ở trình duyệt).
+     Trả về { spId, code }. */
+  async function createRdProject(payload) {
+    const p = Object.assign({}, payload);
+    const year = String(p.created || todayISO()).slice(0, 4);
+    if (isDemoRd()) {
+      const L = demoList();
+      let n = 0; L.forEach(x => { const m = /^RD-(\d{4})-(\d+)$/.exec(x.code || ""); if (m && m[1] === year) n = Math.max(n, +m[2]); });
+      p.code = fmtRdCode(year, n + 1); p.id = p.code; p.spId = "demo-rd-" + Date.now().toString(36);
+      L.push(clone(p));
+      return { spId: p.spId, code: p.code };
+    }
+    rdGuard("createRdProject");
+    try {
+      await rdResolve();
+      const n = await rdRetry("createRdProject.index", () => rdMaxIndex(year));
+      p.code = fmtRdCode(year, n + 1); p.id = p.code;
+      const f = await rdFieldsOf(p, ["title"].concat(Object.keys(RD_COLS)));
+      if (!f.Title) f.Title = p.code;
+      const it = await FISG_GRAPH.createItem(_rd.list, f);   // không tự thử lại: tránh tạo trùng
+      /* Hai người tạo cùng lúc → cùng mã: bản tạo sau tự nhảy sang số kế tiếp */
+      try {
+        const again = await rdMaxIndex(year);
+        const dupe = (await FISG_GRAPH.listItems(_rd.list, "select=Title" + (rdCol("code") ? "," + rdCol("code") : "")))
+          .filter(x => { const ff = x.fields || {}; const c = (rdCol("code") && txt(ff[rdCol("code")])) || txt(ff.Title); return c.indexOf(p.code) === 0 && Number(x.id) < Number(it.id); });
+        if (dupe.length) {
+          p.code = fmtRdCode(year, again + 1); p.id = p.code;
+          await FISG_GRAPH.updateItem(_rd.list, it.id, await rdFieldsOf(p, ["title", "code"]));
+          console.warn(RD_LOG, "mã trùng khi tạo đồng thời — đổi sang " + p.code + ".");
+        }
+      } catch (e) { console.warn(RD_LOG, "không kiểm tra được mã trùng:", e.message || e); }
+      console.info(RD_LOG, "đã tạo " + p.code + " (item " + it.id + ").");
+      return { spId: String(it.id), code: p.code };
+    } catch (e) { throw rdFail("createRdProject", e); }
+  }
+
+  /* Cập nhật một phần. fields = { stage, status, targetDate, completedDate, desc, benchmarkCriteria, pic, … }.
+     batches / log được GỘP với bản mới nhất trên SharePoint (theo id / theo mốc) để 2 người ghi cùng lúc
+     không làm mất dữ liệu của nhau; opts.removedBatchIds = các mẻ bị xoá.
+     Trả về { batches, log } sau khi gộp (nếu có). */
+  async function updateRdProject(spId, fields, opts) {
+    const patch = Object.assign({}, fields); opts = opts || {};
+    const removed = new Set(opts.removedBatchIds || []);
+    const mergeBatches = (remote, local) => {
+      const by = {}; (remote || []).forEach(b => { if (b && b.id) by[b.id] = b; });
+      (local || []).forEach(b => { if (b && b.id) by[b.id] = b; });
+      return Object.keys(by).map(k => by[k]).filter(b => !removed.has(b.id)).sort((a, b) => (+a.no || 0) - (+b.no || 0));
+    };
+    const logKey = e => [e.at, e.kind, e.by, e.from, e.to].join("|");
+    const mergeLog = (remote, local) => {
+      const seen = {}, out = [];
+      (remote || []).concat(local || []).forEach(e => { if (!e) return; const k = logKey(e); if (!seen[k]) { seen[k] = 1; out.push(e); } });
+      return out.sort((a, b) => String(a.at || "").localeCompare(String(b.at || "")));
+    };
+    if (isDemoRd()) {
+      const hit = demoList().find(x => String(x.spId) === String(spId));
+      if (!hit) { const e = new Error("Graph 404: demo item"); throw rdFail("updateRdProject", e); }
+      if (patch.batches) patch.batches = mergeBatches(hit.batches, patch.batches);
+      if (patch.log) patch.log = mergeLog(hit.log, patch.log);
+      Object.assign(hit, clone(patch));
+      return { batches: hit.batches, log: hit.log };
+    }
+    rdGuard("updateRdProject");
+    if (!spId) throw rdFail("updateRdProject", Object.assign(new Error("Graph 404: no spId"), { rdKind: "missing" }));
+    try {
+      await rdResolve();
+      if ((patch.batches && rdCol("batches")) || (patch.log && rdCol("log"))) {
+        const sid = await FISG_GRAPH.getSiteId();
+        const cur = await rdRetry("updateRdProject.read", () =>
+          FISG_GRAPH.api("/sites/" + sid + "/lists/" + encodeURIComponent(_rd.list) + "/items/" + spId + "?$expand=fields"));
+        const cf = (cur && cur.fields) || {};
+        if (patch.batches) patch.batches = mergeBatches(jsonArr(cf[rdCol("batches")]), patch.batches);
+        if (patch.log) patch.log = mergeLog(jsonArr(cf[rdCol("log")]), patch.log);
+      }
+      if (!("updatedBy" in patch) && rdCol("updatedBy") && typeof me !== "undefined" && me) patch.updatedBy = me.pic || me.name || "";
+      const keys = Object.keys(patch).filter(k => k === "title" || RD_COLS[k]);
+      rdWarnMissing(keys.filter(k => k !== "title"));
+      const f = await rdFieldsOf(patch, keys);
+      if (!Object.keys(f).length) return { batches: patch.batches, log: patch.log };
+      await rdRetry("updateRdProject", () => FISG_GRAPH.updateItem(_rd.list, spId, f));
+      return { batches: patch.batches, log: patch.log };
+    } catch (e) { throw rdFail("updateRdProject", e); }
+  }
+
   window.FISG_STORE = { syncFromGraph, debug, loadUsers, profileFor, picMatchReport,
                         findDuplicateCustomers, buildLists,
                         saveUser, deleteUser, lookupUser, canWriteUsers,
@@ -1833,5 +2167,6 @@
                         createProject, updateProject, addProjectUpdate, colDefs,
                         nextProjectCode, adoptProjectCode, splitTitle, fmtProjectCode,
                         pushPendingActs, pushPendingDone, canWrite, forgetSchema,
+                        fetchRdProjects, createRdProject, updateRdProject, rdState, rdError, rdErrorOf, rdListName,
                         usersListName: USERS_LIST };
 })();

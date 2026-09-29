@@ -89,7 +89,11 @@
       { id: "A-7", spId: null, ncc: "Kimica", customer: "Cầu Tre", pic: "Ngọc", type: "Email", date: "2026-09-02", note: "Khách phản hồi kết quả test: độ kết dính nhân chả giò đạt yêu cầu, thất thoát sau cấp đông giảm rõ. Cầu Tre đề nghị gửi thêm 2 KG để chạy thử trên line 3.", next: "Gửi 2 KG mẫu chạy line 3", potential: "High", related: ["Khoa"], projectId: "FI-0016" },
 
       { id: "A-8", spId: null, ncc: "Kimica", customer: "Bel Vietnam", pic: "Thu", type: "Email", date: "2026-08-22", note: "Gửi hồ sơ kỹ thuật alginate cho bộ phận mua hàng, khách xác nhận đạt yêu cầu kỹ thuật.", next: "Chờ duyệt ngân sách", potential: "Medium", related: ["Khoa"], projectId: "FI-0018" },
-      { id: "A-9", spId: null, ncc: "IFF", customer: "Cholimex Foods", pic: "Ngọc", type: "Call", date: "2026-08-14", note: "Đàm phán lại giá tương ớt, khách xin giữ mức giá đến hết Q4.", next: "Trình duyệt giá nội bộ", potential: "High", related: [], projectId: "FI-0012" }
+      { id: "A-9", spId: null, ncc: "IFF", customer: "Cholimex Foods", pic: "Ngọc", type: "Call", date: "2026-08-14", note: "Đàm phán lại giá tương ớt, khách xin giữ mức giá đến hết Q4.", next: "Trình duyệt giá nội bộ", potential: "High", related: [], projectId: "FI-0012" },
+
+      // Phase 3 — hoạt động kỹ thuật Sales & R&D, gắn cả dự án Sales lẫn đề tài R&D
+      { id: "A-10", spId: null, ncc: "IFF", customer: "Acecook Vietnam", pic: "Khoa", type: "LAB_TRIAL", date: "2026-09-16", note: "Chạy mẫu gói súp tại lab khách với carrageenan 0,5% — gel ổn định sau hoàn nguyên.", next: "Gửi báo cáo cảm quan cho Hùng", potential: "High", related: ["Hùng"], projectId: "FI-0008", rdProjectId: "RD-2026-003" },
+      { id: "A-11", spId: null, ncc: "Roquette", customer: "Bibica", pic: "Thu", type: "JOINT_VISIT", date: "2026-09-10", note: "Thu & Khoa làm việc với QA Bibica, chốt lịch chạy pilot line bánh quy.", next: "Chạy pilot tuần 40", potential: "High", related: ["Khoa"], projectId: "FI-0001", rdProjectId: "RD-2026-001" }
     ];
 
     RECORDS.length = 0; recs.forEach(function (r) { RECORDS.push(r); });
@@ -120,6 +124,78 @@
     recs.forEach(function (r) { if (TASKS[r.id]) r.tasks = TASKS[r.id]; });
 
     ACTIVITIES.length = 0; acts.forEach(function (a) { ACTIVITIES.push(a); });
+
+    /* ── R&D (Phase 1 + 2) — 7 đề tài mẫu (mã RD-{năm}-{số thứ tự 3 chữ số}), phủ đủ 7 stage của CATALOG.rdPipelines ──
+       ON_DEMAND: originProjectId trỏ vào cơ hội Sales trong D (customer/ncc/product/application/segment khớp record gốc).
+       INTERNAL : tự nghiên cứu, chưa có khách → originProjectId null, customer "".
+       stage COMPLETED ↔ status DONE (có completedDate); SUSPENDED ↔ CANCELLED; còn lại IN_PROGRESS. */
+    var rd = [
+      { id: "RD-2026-001", code: "RD-2026-001", spId: "demo-rd-1", batches: [
+          { id: "B1", no: 1, date: "2026-03-18", ratio: "20% thay bột mì", temp: "180 °C", time: "12 phút", result: "PASS", note: "Giòn đạt, xơ 4,8 g/100 g — chưa đủ claim.", by: "Khoa" },
+          { id: "B2", no: 2, date: "2026-04-09", ratio: "30% thay bột mì", temp: "180 °C", time: "12 phút", result: "FAIL", note: "Đạt 6,2 g xơ nhưng bề mặt sẫm màu.", by: "Khoa" },
+          { id: "B3", no: 3, date: "2026-05-06", ratio: "30% + giảm đường khử 15%", temp: "175 °C", time: "13 phút", result: "PASS", note: "Màu đạt, độ giòn tương đương mẫu chuẩn (−4%).", by: "Khoa" }
+        ], type: "ON_DEMAND", originProjectId: "FI-0001",
+        title: "Bánh quy giàu xơ Bibica — thay 30% bột mì bằng NUTRIOSE",
+        customer: "Bibica", ncc: "Roquette", product: "NUTRIOSE FB06", application: "Bánh quy giàu chất xơ", segment: "CONFECTIONARY",
+        pic: "Khoa", collaborators: ["Thu"], stage: "PILOT_TRIAL", status: "IN_PROGRESS",
+        created: "2026-02-20", targetDate: "2026-10-15", completedDate: null,
+        benchmarkCriteria: "Độ giòn không kém mẫu đối chứng hiện hành (Texture Analyzer, ±10%); đạt claim giàu xơ ≥ 6 g/100 g; không sẫm màu sau nướng; hạn dùng 9 tháng.",
+        desc: "Lab đạt ở tỉ lệ thay thế 30%. Đang chạy thử line bánh quy tại nhà máy Bibica cùng Sales (Thu)." },
+      { id: "RD-2026-002", code: "RD-2026-002", spId: "demo-rd-2", batches: [
+          { id: "B1", no: 1, date: "2026-08-20", ratio: "KLEPTOSE 40% · maltitol 60%", temp: "145 °C", time: "8 phút", result: "FAIL", note: "Kết tinh bề mặt sau 2 tuần.", by: "Khoa" },
+          { id: "B2", no: 2, date: "2026-09-10", ratio: "KLEPTOSE 55% · maltitol 45%", temp: "142 °C", time: "9 phút", result: "PENDING", note: "Đang theo dõi độ ổn định 30 °C / 75% RH.", by: "Khoa" }
+        ], type: "ON_DEMAND", originProjectId: "FI-0002",
+        title: "Kẹo không đường Kinh Đô — nền KLEPTOSE",
+        customer: "Mondelez Kinh Đô", ncc: "Roquette", product: "KLEPTOSE Linecaps", application: "Kẹo không đường", segment: "SWEET FOOD",
+        pic: "Khoa", collaborators: ["Ngọc"], stage: "FORMULATION", status: "IN_PROGRESS",
+        created: "2026-03-12", targetDate: "2026-11-10", completedDate: null,
+        benchmarkCriteria: "Thay 100% sucrose; độ ngọt cảm quan ≥ 90% mẫu chuẩn; không kết tinh lại sau 3 tháng ở 30 °C / 75% RH.",
+        desc: "Đang thử 3 công thức với tỉ lệ polyol khác nhau để cân bằng độ ngọt và độ dẻo." },
+      { id: "RD-2026-003", code: "RD-2026-003", spId: "demo-rd-3", log: [{ at: "2026-09-22 15:00", by: "Khoa", kind: "stage", from: "FORMULATION", to: "LAB_TEST" }], batches: [
+          { id: "B1", no: 1, date: "2026-08-02", ratio: "Carrageenan 0,3%", temp: "95 °C", time: "3 phút", result: "FAIL", note: "Tách nước nhẹ sau 24 giờ.", by: "Khoa" },
+          { id: "B2", no: 2, date: "2026-08-16", ratio: "Carrageenan 0,5%", temp: "95 °C", time: "3 phút", result: "PASS", note: "Độ nhớt 1.050 cP, không tách nước.", by: "Khoa" }
+        ], type: "ON_DEMAND", originProjectId: "FI-0008",
+        title: "Ổn định gel gói súp Acecook bằng Carrageenan",
+        customer: "Acecook Vietnam", ncc: "IFF", product: "GRINDSTED Carrageenan", application: "Gói súp mì ăn liền", segment: "NOODLES",
+        pic: "Khoa", collaborators: ["Hùng"], stage: "LAB_TEST", status: "IN_PROGRESS",
+        created: "2026-01-22", targetDate: "2026-10-05", completedDate: null,
+        benchmarkCriteria: "Gel ổn định sau hoàn nguyên 3 phút ở 95 °C; không tách nước sau 24 giờ; độ nhớt 800–1.200 cP.",
+        desc: "Đang test độ ổn định gel và cảm quan gói súp ở 2 mức liều 0,3% và 0,5%." },
+      { id: "RD-2026-004", code: "RD-2026-004", spId: "demo-rd-4", log: [{ at: "2026-09-18 10:20", by: "Hùng", kind: "created", to: "Khoa" }], type: "ON_DEMAND", originProjectId: "FI-0020",
+        title: "Mì bổ sung xơ Acecook — khảo sát ban đầu",
+        customer: "Acecook Vietnam", ncc: "Roquette", product: "NUTRIOSE FB06", application: "Mì giảm béo bổ sung xơ", segment: "NOODLES",
+        pic: "Khoa", collaborators: ["Hùng"], stage: "BRIEF", status: "IN_PROGRESS",
+        created: "2026-09-18", targetDate: "2027-01-10", completedDate: null,
+        benchmarkCriteria: "Giữ độ dai sợi sau chiên và sau nấu 3 phút tương đương mẫu hiện hành; bổ sung ≥ 3 g xơ/khẩu phần.",
+        desc: "Sales (Hùng) vừa chuyển đề bài; chờ khách gửi mẫu mì đối chứng và thông số line." },
+      { id: "RD-2026-005", code: "RD-2026-005", spId: "demo-rd-5", type: "INTERNAL", originProjectId: null,
+        title: "Chả chay plant-based từ đạm đậu nành",
+        customer: "", ncc: "IFF", product: "SUPRO Soy Protein", application: "Chả chay (plant-based meat analogue)", segment: "VEGAN",
+        pic: "Khoa", collaborators: ["Lan"], stage: "SAMPLE_SENT", status: "IN_PROGRESS",
+        created: "2026-04-15", targetDate: "2026-10-30", completedDate: null,
+        benchmarkCriteria: "Kết cấu thớ và độ dai tương đương chả heo (±10%); protein ≥ 15%; không còn mùi đậu sau hấp.",
+        desc: "Đã gửi mẫu cho team Sales dùng làm demo tại các buổi thăm khách nhóm VEGAN / PROCESSED FOOD." },
+      { id: "RD-2026-006", code: "RD-2026-006", spId: "demo-rd-6", batches: [
+          { id: "B1", no: 1, date: "2026-05-12", ratio: "Giảm 30% đường + NUTRIOSE 3%", temp: "85 °C", time: "15 giây (thanh trùng)", result: "PASS", note: "Tam giác n=30: không khác biệt (p=0,41).", by: "Khoa" }
+        ], type: "INTERNAL", originProjectId: null,
+        title: "Trà sữa giảm 30% đường",
+        customer: "", ncc: "Roquette", product: "NUTRIOSE FM06", application: "Trà sữa pha sẵn giảm đường", segment: "BEVERAGE",
+        pic: "Khoa", collaborators: ["Thu", "Ngọc"], stage: "COMPLETED", status: "DONE",
+        created: "2026-03-02", targetDate: "2026-08-31", completedDate: "2026-08-28",
+        benchmarkCriteria: "Giảm ≥ 30% đường tổng; độ ngọt không khác biệt có ý nghĩa so với mẫu gốc (phép thử tam giác, n = 30); cảm giác đầy miệng ≥ 7/9.",
+        desc: "Hoàn tất và đã chuyển giao công thức cho Sales để chào nhóm khách BEVERAGE." },
+      { id: "RD-2026-007", code: "RD-2026-007", spId: "demo-rd-7", log: [{ at: "2026-06-20 16:10", by: "Khoa", kind: "stage", from: "LAB_TEST", to: "SUSPENDED" }], type: "INTERNAL", originProjectId: null,
+        title: "Sữa hạt đạm đậu Hà Lan tiệt trùng UHT",
+        customer: "", ncc: "Roquette", product: "NUTRALYS Pea Protein", application: "Sữa hạt UHT", segment: "DAIRY",
+        pic: "Khoa", collaborators: [], stage: "SUSPENDED", status: "CANCELLED",
+        created: "2026-03-10", targetDate: "2026-07-31", completedDate: null,
+        benchmarkCriteria: "Không kết tủa sau UHT và sau 6 tháng bảo quản ở nhiệt độ thường; độ nhớt < 30 cP.",
+        desc: "Tạm dừng: kết tủa sau UHT ở mọi công thức thử; chờ grade đạm mới từ NCC rồi đánh giá lại." }
+    ];
+    if (typeof RD_PROJECTS !== "undefined") { RD_PROJECTS.length = 0; rd.forEach(function (x) { RD_PROJECTS.push(x); }); }
+    /* Phase 4: "máy chủ" giả lập cho FISG_STORE.fetch/create/updateRdProject ở chế độ demo (không gọi Graph) */
+    window.DEMO_RD_LIST = JSON.parse(JSON.stringify(rd));
+
     USERS.length = 0; USERS_DEMO.forEach(function (u) { USERS.push(u); });
     if (window.rebuildDerived) try { rebuildDerived(); } catch (e) {}
   }

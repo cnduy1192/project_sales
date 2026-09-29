@@ -68,6 +68,8 @@ function _notifCandidates(){
                    at:c.at, report:r.id });
     });
   });
+  /* Phase 3 — R&D: đề bài mới cho chuyên viên R&D · đổi stage / hoàn tất cho Sales theo dõi dự án */
+  if(window.RND && RND.notifCandidates) try{ RND.notifCandidates().forEach(n=>out.push(n)); }catch(e){}
   out.sort((a,b)=>(b.at||'').localeCompare(a.at||''));
   return out;
 }
@@ -88,6 +90,15 @@ function markReportsSeen(){
 }
 window.markReportsSeen = markReportsSeen;
 
+/* Bấm thông báo R&D → đánh dấu đã xem + mở đề tài trong R&D Workspace */
+function openRndNotif(key, code){
+  const seen=_seenSet(); seen.add(key); _saveSeen(seen);
+  document.getElementById('notifPanel').classList.remove('open');
+  refreshNotifs();
+  if(window.RND) RND.openTopic(code);
+}
+window.openRndNotif = openRndNotif;
+
 function openReportNotif(code){
   document.getElementById('notifPanel').classList.remove('open');
   if(window.go){ go('reports'); }
@@ -105,7 +116,9 @@ function renderNotifs(){
   const rpHtml = rp.map(n=>{
     const u=USERS.find(x=>(x.pic||x.name)===n.who);
     const who = (window.picLabel?picLabel(n.who):n.who)||'—';
-    return `<button class="notif notif-btn" onclick="openReportNotif('${(n.report||'').replace(/'/g,"\\'")}')">
+    const q = s => String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const click = n.rd ? `openRndNotif('${q(n.key)}','${q(n.rd)}')` : `openReportNotif('${q(n.report)}')`;
+    return `<button class="notif notif-btn${n.rd?' notif-rd':''}" onclick="${click}">
       <span class="avatar" style="width:28px;height:28px;font-size:10px;background:${u?u.color:'#8A90A4'}">${String(who).slice(0,2).toUpperCase()}</span>
       <div><b>${who}</b> ${n.action}<small>${n.at?new Date(n.at).toLocaleDateString(I18N.locale()):''}</small></div></button>`;
   }).join('');

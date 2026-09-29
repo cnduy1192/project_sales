@@ -8,7 +8,9 @@
 (function () {
   "use strict";
   var REG = {};
-  var CATS = ["QUOTE", "SPEC", "TEST", "CONTRACT", "OTHER"];
+  // FORMULA / SENSORY / TDS_COA: tài liệu chuyên ngành R&D (Phase 1). OTHER luôn đứng cuối (mặc định).
+  // Giữ đồng bộ với ATT_CATS trong store.js.
+  var CATS = ["QUOTE", "SPEC", "TEST", "CONTRACT", "FORMULA", "SENSORY", "TDS_COA", "OTHER"];
   var EXT = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "jpg", "jpeg", "png", "zip"];
   var ACCEPT = "." + EXT.join(",.");
   var MAX = 15 * 1024 * 1024;
@@ -57,6 +59,8 @@
   var DEMO_LIST = [], demoSeq = 0;
   function demoFolder(type, id, ctx) {
     ctx = ctx || {};
+    if (type === "rnd")   /* khớp store.attFolderOf: FISG_Projects/{NCC}/{Khách hàng | RND_Internal}/{RD_Code} */
+      return ["FISG_Projects", ctx.ncc || "Khác", ctx.customer || "RND_Internal", ctx.code || id].join("/");
     if (type === "project")
       return ["FISG_Projects", ctx.ncc || "Khác", ctx.customer || "Khách hàng", ctx.code || id].join("/");
     return ["FISG_Attachments", ctx.pic || "Chung", String(ctx.date || todayISO_()).slice(0, 10),

@@ -2,38 +2,45 @@ var ROLE_DEF = {
   sales: {
     label:'Sales', scope:'own-pic',
     edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    rd:'request',
     get hint(){ return T('role.hint.sales'); }
   },
   salesupport: {
     label:'Sale Support', scope:'support',
     edit:true,  close:true,  del:false, delCustomer:false, admin:false, cockpit:false, weekly:true,  weeklyAuto:false, report:true,
+    rd:'request',
     get hint(){ return T('role.hint.salesupport'); }
   },
   rnd: {
 
     label:'R&D', scope:'own-rnd', viewAll:true,
     edit:true,  close:false, del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    rd:'member', finance:false,   // Phase 4: sửa đề tài mình là PIC/phối hợp · chỉ xem giá trị/KG/xác suất của dự án Sales
     get hint(){ return T('role.hint.rnd'); }
   },
   teamlead: {
     label:'Team Leader', scope:'team', lead:true,
     edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    rd:'request',
     get hint(){ return T('role.hint.teamlead'); }
   },
   manager: {
     label:'Manager', scope:'all',
     edit:true,  close:true,  del:true,  delCustomer:true, admin:false, cockpit:true,  weekly:true,  weeklyAuto:false, report:true,
+    rd:'manage',
     get hint(){ return T('role.hint.manager'); }
   },
   director: {
     label:'Director', scope:'all',
     edit:false, close:false, del:false, delCustomer:true, admin:false, cockpit:true,  weekly:false, weeklyAuto:false, report:false,
+    rd:'view',
     get hint(){ return T('role.hint.director'); }
   },
   superadmin: {
     label:'Super Admin', scope:'all',
 
     edit:true,  close:true,  del:true,  delCustomer:true, admin:true,  cockpit:true,  weekly:true, weeklyAuto:false, report:false,
+    rd:'manage',
     get hint(){ return T('role.hint.superadmin'); }
   }
 };
@@ -225,6 +232,60 @@ function capClose(r, u){
   if(c.scope === 'all') return true;
   return !!u.pic && isMine(r.pic, u);
 }
+
+/* ═══════════ Phase 4 — quyền phân hệ R&D ═══════════
+   cap(role).rd:  'manage'  Manager / Super Admin — toàn quyền: sửa mọi đề tài, đổi stage, phân công R&D PIC
+                  'member'  R&D — sửa đề tài mình là PIC hoặc phối hợp; tạo đề tài INTERNAL và ON_DEMAND
+                  'request' Sales / Sale Support / Team Leader — gửi yêu cầu R&D (ON_DEMAND) cho dự án mình sửa được;
+                            xem tiến độ; KHÔNG đổi stage / thông số nội bộ của R&D
+                  'view'    Director — chỉ xem
+   cap(role).finance === false (R&D): chỉ xem Giá trị ước tính, KG, Xác suất của dự án Sales. */
+function rdLevel(u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!u || u.role === 'guest') return 'none';
+  return cap(u.role).rd || 'none';
+}
+function rdIsMember(rd, u){
+  if(!rd || !u) return false;
+  return isMine(rd.pic, u) || (rd.collaborators || []).some(function(c){ return isMine(c, u); });
+}
+function rdCanView(rd, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!rd || rdLevel(u) === 'none') return false;
+  if(canViewAll(u) || rdIsMember(rd, u)) return true;
+  var src = (rd.originProjectId && typeof RECORDS !== 'undefined') ? RECORDS.find(function(r){ return r.id === rd.originProjectId; }) : null;
+  return !!(src && scopeRecords([src], u).length);
+}
+function rdCanEdit(rd, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  var lv = rdLevel(u);
+  if(!rd || !u || !cap(u.role).edit) return false;
+  if(lv === 'manage') return true;
+  if(lv === 'member') return rdIsMember(rd, u);
+  return false;
+}
+function rdCanCreate(type, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  var lv = rdLevel(u);
+  if(!u || !cap(u.role).edit) return false;
+  if(type === 'INTERNAL') return lv === 'manage' || lv === 'member';
+  return lv === 'manage' || lv === 'member' || lv === 'request';
+}
+/* Gửi yêu cầu R&D cho 1 dự án Sales: Sales phải sửa được dự án đó; R&D / Manager thì luôn được */
+function rdCanRequest(rec, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  if(!rec || !rdCanCreate('ON_DEMAND', u)) return false;
+  var lv = rdLevel(u);
+  return lv === 'manage' || lv === 'member' || capEdit(rec, u);
+}
+function rdCanAssign(u){ u = u || (typeof me !== 'undefined' ? me : null); return rdLevel(u) === 'manage' && !!cap(u.role).edit; }
+function capEditFinance(r, u){
+  u = u || (typeof me !== 'undefined' ? me : null);
+  return !!u && capEdit(r, u) && cap(u.role).finance !== false;
+}
+window.rdLevel = rdLevel; window.rdIsMember = rdIsMember; window.rdCanView = rdCanView; window.rdCanEdit = rdCanEdit;
+window.rdCanCreate = rdCanCreate; window.rdCanRequest = rdCanRequest; window.rdCanAssign = rdCanAssign;
+window.capEditFinance = capEditFinance;
 
 window.cap = cap; window.myCap = myCap; window.roleLabel = roleLabel; window.canViewAll = canViewAll;
 window.splitAliases = splitAliases; window.nameSetOf = nameSetOf; window.isMine = isMine;

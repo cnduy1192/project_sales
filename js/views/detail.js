@@ -58,9 +58,12 @@ function openDetail(id, origin){
   document.getElementById('d-kg2').value=curRec.kgNext;
   const editable=canEdit(curRec)&&curRec.status==='IN PROGRESS';
   ['d-stage','d-prob','d-closing','d-kg1','d-kg2'].forEach(x=>document.getElementById(x).disabled=!editable);
+  /* Phase 4: R&D chỉ xem Xác suất / KG của dự án Sales (roles.js → capEditFinance) */
+  const finEdit=editable&&(typeof capEditFinance!=='function'||capEditFinance(curRec));
+  ['d-prob','d-kg1','d-kg2'].forEach(x=>{const el=document.getElementById(x); el.disabled=!finEdit; el.title=(editable&&!finEdit)?T('rds.financeRO'):'';});
   document.getElementById('d-save').style.display=editable?'inline-flex':'none';
   document.getElementById('d-close-proj').style.display=canClose(curRec)?'inline-flex':'none';
-  dRenderRel(editable); dRenderComments(); dRenderActs();
+  dRenderRel(editable); dRenderComments(); dRenderActs(); dRenderRnd();
   document.getElementById('dov').classList.add('open');
 }
 function dRenderActs(){
@@ -71,6 +74,18 @@ function dRenderActs(){
       <div><b>${new Date(a.date).toLocaleDateString(I18N.locale())}</b> · ${a.pic}<div>${a.note}</div></div></div>`).join('')
     :'<div style="color:var(--ink-3);font-size:12px">'+T('dt.noActs')+'</div>')
     +`<button class="act-link" style="margin-top:8px" onclick="attachAct()">+ ${T('dt.logForOpp')}</button>`;
+}
+/* Phase 3 — tiến độ R&D của dự án, hoặc nút "Yêu cầu R&D hỗ trợ" (js/lib/rnd-core.js) */
+function dRenderRnd(){
+  const box=document.getElementById('d-rnd'); if(!box||!curRec) return;
+  box.innerHTML = window.RND ? RND.widgetHTML(curRec) : '';
+  /* Gửi đề bài xong, chuyên viên R&D đã vào curRec.related → đồng bộ danh sách đang sửa
+     để nút "Lưu thay đổi" của drawer không ghi đè mất người vừa thêm */
+  const add=(curRec.related||[]).filter(x=>!dRelated.includes(x));
+  if(add.length){
+    dRelated=dRelated.concat(add);
+    dRenderRel(canEdit(curRec)&&curRec.status==='IN PROGRESS');
+  }
 }
 function attachAct(){
   const pr=curRec;

@@ -181,7 +181,7 @@
     lockWrites();
     banner();
 
-    ["acts", "users"].forEach(v => {
+    ["acts", "users", "rnd"].forEach(v => {
       const n = document.querySelector('.nav-item[data-view="' + v + '"]');
       if (n) n.style.display = "none";
     });

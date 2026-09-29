@@ -117,7 +117,11 @@ const ACT_TYPE_UI = {
   Visit:      { icon:'🚗', label:'Visit' },
   Email:      { icon:'✉️', label:'Email' },
   Exhibition: { icon:'🏛️', label:'Trade Show' },
-  Note:       { icon:'📝', label:'Note' }
+  Note:       { icon:'📝', label:'Note' },
+  /* Phase 3 — hoạt động kỹ thuật Sales & R&D (giá trị lưu: mã tiếng Anh) */
+  LAB_TRIAL:    { icon:'🧪', label:'Lab Trial' },
+  JOINT_VISIT:  { icon:'🤝', label:'Joint Visit' },
+  SENSORY_TEST: { icon:'🥄', label:'Sensory Test' }
 };
 function actTypeLabel(raw){ const t = actType(raw); return (ACT_TYPE_UI[t] || {}).label || String(t); }
 function actTypeIcon(raw){ const t = actType(raw); return (ACT_TYPE_UI[t] || {}).icon || '•'; }
@@ -202,6 +206,11 @@ function actOppCell(a){
   return '<span class="al-none">' + actEsc(T('act.noOppLinked')) + '</span>';
 }
 
+/* Phase 3: ô dự án + badge đề tài R&D (link tới cả hai nơi) */
+function actOppWithRd(a){
+  const rd = window.RND ? RND.actBadgeHTML(a) : '';
+  return rd ? '<div class="al-opp-stack">' + actOppCell(a) + rd + '</div>' : actOppCell(a);
+}
 function actOpenOpp(e, id){
   if(e) e.stopPropagation();
   if(me && me.role === 'guest'){
@@ -239,7 +248,7 @@ function actsOfProject(id){
 function actHaystack(a){
   const p = a.projectId ? RECORDS.find(r => r.id === a.projectId) : null;
   return actFold([a.customer, actNccList(a).join(' '), a.pic, actPicName(a.pic), a.note, a.next,
-    p ? (p.product + ' ' + (p.title || '')) : ''].join(' '));
+    p ? (p.product + ' ' + (p.title || '')) : '', a.rdProjectId || '', actTypeLabel(a.type)].join(' '));
 }
 
 function actSyncToolbar(base, afterSearch){
@@ -342,7 +351,7 @@ function actRowHtml(a){
       + (next ? '<span class="al-next"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' + actEsc(next) + '</span>' : '')
     + '</div>'
     + '<div class="al-c al-c-int" role="cell">' + actInterestBadge(a.potential) + '</div>'
-    + '<div class="al-c al-c-opp" role="cell">' + actOppCell(a) + '</div>'
+    + '<div class="al-c al-c-opp" role="cell">' + actOppWithRd(a) + '</div>'
   + '</div>';
 }
 
@@ -556,7 +565,8 @@ function amRenderDetail(a){
           : muted(T('act.dr.none'))) + '</dd>'
       + (hasAtt ? '' : '<dt>' + actEsc(T('act.am.files')) + '</dt><dd>' + muted(T('act.dr.none')) + '</dd>')
     + '</dl>' + (hasAtt ? '<div class="am-att" id="amAttach"></div>' : '') + '</section>'
-    + '<section class="am-sec"><h4>' + actEsc(T('act.dr.opp')) + '</h4>' + opp + '</section>';
+    + '<section class="am-sec"><h4>' + actEsc(T('act.dr.opp')) + '</h4>' + opp + '</section>'
+    + (window.RND && RND.actBadgeHTML(a) ? '<section class="am-sec"><h4>' + actEsc(T('act.rd')) + '</h4>' + RND.actBadgeHTML(a, true) + '</section>' : '');
 
   if(hasAtt) FISG_ATTACH.mount('amAttach', { type: 'activity', id: a.spId,
     ctx: { pic: a.pic, date: a.date, customer: a.customer }, canUpload: false });
@@ -666,7 +676,7 @@ function openActEdit(id){
     nccs: (a.nccs && a.nccs.length) ? a.nccs : (a.ncc ? [a.ncc] : []),
     related: a.related || [], type: a.type, date: a.date,
     potential: a.potential, note: actClean(a.note),
-    next: actClean(a.next), projectId: a.projectId || '' });
+    next: actClean(a.next), projectId: a.projectId || '', rdProjectId: a.rdProjectId || '' });
 }
 window.openActEdit = openActEdit;
 
@@ -803,10 +813,12 @@ function openActForm(prefill, origin){
   document.getElementById('a-proj').innerHTML='<option value="">— '+T('act.noOppLinked')+' —</option>'
     +list.slice(0,200).map(r=>`<option value="${r.id}"${r.id===p.projectId?' selected':''}>${r.customer} · ${r.product}</option>`).join('');
 
+  aRenderRd(p.rdProjectId || '', p.projectId || '');
+
   aRelated = (p.related && p.related.length) ? p.related.slice() : [];
   aRenderRel(editable);
 
-  ['a-cust','a-type','a-date','a-pot','a-note','a-next','a-proj'].forEach(function(id){
+  ['a-cust','a-type','a-date','a-pot','a-note','a-next','a-proj','a-rd'].forEach(function(id){
     const el=document.getElementById(id); if(el) el.disabled = !editable;
   });
   const saveBtn=document.getElementById('a-save');
@@ -831,6 +843,26 @@ function openActForm(prefill, origin){
   document.getElementById('aov').classList.add('open');
   document.getElementById(editable ? (p.customer?'a-note':'a-cust') : 'a-cust').focus();
 }
+/* Phase 3 — ô "Đề tài R&D": đề tài xem được; chọn dự án Sales → tự chọn đề tài đang chạy của dự án đó */
+function aRenderRd(sel, projId){
+  const box=document.getElementById('a-rd'), wrap=document.getElementById('a-rd-wrap');
+  if(!box) return;
+  const all = window.RND ? RND.visible() : [];
+  if(wrap) wrap.style.display = all.length ? '' : 'none';
+  if(!sel && projId && window.RND){ const p=RND.primaryOf(projId); if(p && p.status==='IN_PROGRESS') sel=p.code; }
+  const rows = all.filter(r=>r.status==='IN_PROGRESS' || r.code===sel)
+    .sort((x,y)=>(projId && x.originProjectId===projId ? -1 : 0) - (projId && y.originProjectId===projId ? -1 : 0) || String(y.code).localeCompare(String(x.code)));
+  box.innerHTML='<option value="">— '+T('act.rdNone')+' —</option>'
+    + rows.map(r=>`<option value="${esc4(r.code)}"${r.code===sel?' selected':''}>${esc4(r.code)} · ${esc4(r.title)}${r.customer?' ('+esc4(r.customer)+')':''}</option>`).join('');
+}
+function onActProj(){ const p=document.getElementById('a-proj'); aRenderRd('', p?p.value:''); }
+/* Chọn đề tài theo dự án Sales → điền luôn dự án gốc nếu đang trống */
+function onActRd(){
+  const v=document.getElementById('a-rd').value, rd=v&&window.RND?RND.byCode(v):null;
+  const pj=document.getElementById('a-proj');
+  if(rd && rd.originProjectId && pj && !pj.value && [].some.call(pj.options,o=>o.value===rd.originProjectId)) pj.value=rd.originProjectId;
+}
+window.onActProj=onActProj; window.onActRd=onActRd;
 function esc4(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function closeActForm(){
   aEditId = null;
@@ -883,7 +915,7 @@ function saveAct(){
     a.customer=g('a-cust'); a.ncc=ncc; a.nccs=nccList; a.related=relList;
     a.type=g('a-type'); a.date=g('a-date');
     a.note=g('a-note')||'(không có nội dung)'; a.next=g('a-next')||'—';
-    a.potential=g('a-pot'); a.projectId=g('a-proj')||null;
+    a.potential=g('a-pot'); a.projectId=g('a-proj')||null; a.rdProjectId=g('a-rd')||null;
     if(window.LS && LS.updateAct) LS.updateAct(a);
     if(relAdded.length && typeof notifyPlain==='function')
       notifyPlain(T('act.notif.added',{c:esc4(a.customer),t:actType(a.type),d:new Date(a.date).toLocaleDateString(I18N.locale())}), relAdded);
@@ -892,7 +924,7 @@ function saveAct(){
 
       FISG_STORE.updateActivity(a.spId, { ActivityType:a.type, ActivityDate:a.date,
         Content:a.note, NextStep:a.next, PotentialLevel:a.potential,
-        RelatedPeople:(a.related||[]).join('; '), SupplierList:(a.nccs||[]).join('; ') })
+        RelatedPeople:(a.related||[]).join('; '), SupplierList:(a.nccs||[]).join('; '), RnDProject:a.rdProjectId||'' })
         .catch(function(e){ console.warn('[activities] chưa cập nhật được lên SharePoint', e&&(e.message||e)); });
     }
     aEditId=null;
@@ -904,7 +936,7 @@ function saveAct(){
 
   const a={id:LS.nextActId(),customer:g('a-cust'),pic:me.pic||me.name,
     ncc:ncc,nccs:nccList,related:relList,product:'',type:g('a-type'),date:g('a-date'),note:g('a-note')||'(không có nội dung)',
-    next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null};
+    next:g('a-next')||'—',potential:g('a-pot'),projectId:g('a-proj')||null,rdProjectId:g('a-rd')||null};
   ACTIVITIES.unshift(a);
   LS.addAct(a);
 
