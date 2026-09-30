@@ -46,6 +46,9 @@
   }
   function whoAmI() { return (typeof me !== "undefined" && me) ? (me.pic || me.name || "") : ""; }
   function catOf(a) { return CATS.indexOf(a && a.category) >= 0 ? a.category : "OTHER"; }
+  /* Mỗi vùng tài liệu có thể giới hạn danh sách loại (mount({cats:[…]})); loại ngoài danh sách hiển thị như "Khác" */
+  function catsOf(r) { return r && r.cats ? r.cats : CATS; }
+  function catIn(a, r) { var c = catOf(a); return catsOf(r).indexOf(c) >= 0 ? c : "OTHER"; }
   function catLabel(c) { return tr("att.cat." + (CATS.indexOf(c) >= 0 ? c : "OTHER")); }
 
   function localValidate(file) {
@@ -139,7 +142,7 @@
     if (r.categories && !opts.readOnly) {
       cat = writable
         ? '<select class="att-chip att-chip-sel" aria-label="' + esc(tr("att.catLabel")) + '" onchange="FISG_ATTACH.recat(' + jsq(host) + ',' + jsq(a.spId) + ',this)">' +
-            CATS.map(function (c) { return '<option value="' + c + '"' + (c === catOf(a) ? " selected" : "") + ">" + esc(catLabel(c)) + "</option>"; }).join("") +
+            catsOf(r).map(function (c) { return '<option value="' + c + '"' + (c === catIn(a, r) ? " selected" : "") + ">" + esc(catLabel(c)) + "</option>"; }).join("") +
           "</select>"
         : "";
     }
@@ -172,8 +175,8 @@
 
     var savedHtml;
     if (r.categories && saved.length) {
-      savedHtml = CATS.map(function (c) {
-        var its = saved.filter(function (a) { return catOf(a) === c; });
+      savedHtml = catsOf(r).map(function (c) {
+        var its = saved.filter(function (a) { return catIn(a, r) === c; });
         if (!its.length) return "";
         return '<div class="att-grp"><div class="att-grp-h">' + esc(catLabel(c)) + " <span>" + its.length + "</span></div>" +
           its.map(function (a) { return itemHTML(host, r, a, {}); }).join("") + "</div>";
@@ -195,7 +198,7 @@
     if (r.canUpload) {
       var catSel = r.categories
         ? '<label class="att-catpick"><span>' + tr("att.catLabel") + '</span><select onchange="FISG_ATTACH.setCat(' + jsq(host) + ',this.value)">' +
-            CATS.map(function (c) { return '<option value="' + c + '"' + (c === r.cat ? " selected" : "") + ">" + esc(catLabel(c)) + "</option>"; }).join("") +
+            catsOf(r).map(function (c) { return '<option value="' + c + '"' + (c === r.cat ? " selected" : "") + ">" + esc(catLabel(c)) + "</option>"; }).join("") +
           "</select></label>"
         : "";
       uploader = catSel +
@@ -246,7 +249,7 @@
       type: opts.type, id: opts.id || "", ctx: opts.ctx || {},
       canUpload: !!opts.canUpload && (opts.id ? available() : true),
       onChange: opts.onChange, onUploaded: opts.onUploaded, onDeleted: opts.onDeleted, onPending: opts.onPending,
-      categories: !!opts.categories, extra: opts.extra, title: opts.title, showFolder: !!opts.showFolder,
+      categories: !!opts.categories, cats: (opts.cats && opts.cats.length) ? opts.cats : null, extra: opts.extra, title: opts.title, showFolder: !!opts.showFolder,
       cat: (prev && prev.cat && opts.categories) ? prev.cat : "OTHER",
       pending: [], busy: false, lastSay: prev && prev.lastSay
     };
@@ -263,7 +266,7 @@
     if (st) { st.className = "att-status" + (cls ? " " + cls : ""); st.textContent = msg; }
   }
 
-  function setCat(host, v) { var r = REG[host]; if (r) r.cat = CATS.indexOf(v) >= 0 ? v : "OTHER"; }
+  function setCat(host, v) { var r = REG[host]; if (r) r.cat = catsOf(r).indexOf(v) >= 0 ? v : "OTHER"; }
 
   function pick(input, host) {
     var files = input.files ? [].slice.call(input.files) : [];

@@ -167,7 +167,7 @@
         pic: "Khoa", collaborators: ["Hùng"], stage: "BRIEF", status: "IN_PROGRESS",
         created: "2026-09-18", targetDate: "2027-01-10", completedDate: null,
         benchmarkCriteria: "Giữ độ dai sợi sau chiên và sau nấu 3 phút tương đương mẫu hiện hành; bổ sung ≥ 3 g xơ/khẩu phần.",
-        desc: "Sales (Hùng) vừa chuyển đề bài; chờ khách gửi mẫu mì đối chứng và thông số line." },
+        desc: "Sales (Hùng) vừa chuyển yêu cầu; chờ khách gửi mẫu mì đối chứng và thông số line." },
       { id: "RD-2026-005", code: "RD-2026-005", spId: "demo-rd-5", type: "INTERNAL", originProjectId: null,
         title: "Chả chay plant-based từ đạm đậu nành",
         customer: "", ncc: "IFF", product: "SUPRO Soy Protein", application: "Chả chay (plant-based meat analogue)", segment: "VEGAN",

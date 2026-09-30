@@ -25,6 +25,8 @@
     drafts: {},           // code → { field: value } chưa lưu
     mergedFor: null,      // email đã nạp overlay localStorage
     bound: false,
+    mxOpen: {},
+    peek: "",             // mã dự án đang xem nhanh trong drawer (Ma trận)           // ô ma trận đang bung "+ Xem thêm"
     limit: 25,            // phân trang danh sách: số dự án đang hiển thị
     sig: ""               // chữ ký bộ lọc → đổi bộ lọc thì về trang đầu
   };
@@ -197,6 +199,9 @@
 
   /* ───────────── UI nhỏ dùng chung ───────────── */
   var I = {
+    chev: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    panel: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>',
+    x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     plus: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
     split: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16"/></svg>',
     grid: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
@@ -223,12 +228,14 @@
     var cls = st === "DONE" ? "p-won" : st === "CANCELLED" ? "p-lost" : "p-prog";
     return '<span class="pill ' + cls + '"><span class="dot"></span>' + esc(tr("rd.status." + st)) + "</span>";
   }
+  function initialsOf(p) { return String(pl(p)).trim().split(/\s+/).map(function (w) { return w[0]; }).slice(-2).join("").toUpperCase(); }
   function picTag(p) {
     if (!p) return '<span class="rdw-pic is-none">—</span>';
-    var u = (typeof USERS !== "undefined") ? USERS.filter(function (x) { return x.pic === p || x.name === p; })[0] : null;
-    var col = (u && u.color) || "var(--marine-2)";
-    var ini = String(pl(p)).trim().split(/\s+/).map(function (w) { return w[0]; }).slice(-2).join("").toUpperCase();
-    return '<span class="rdw-pic"><i style="background:' + esc(col) + '">' + esc(ini) + "</i>" + esc(pl(p)) + "</span>";
+    return '<span class="rdw-pic"><i aria-hidden="true">' + esc(initialsOf(p)) + "</i>" + esc(pl(p)) + "</span>";
+  }
+  function avatar(p) {   /* 20×20, màu trung tính — dùng trong danh sách */
+    if (!p) return "";
+    return '<span class="rdw-av" title="' + esc(tr("rdw.fld.pic") + ": " + pl(p)) + '" aria-label="' + esc(tr("rdw.fld.pic") + ": " + pl(p)) + '">' + esc(initialsOf(p)) + "</span>";
   }
 
   /* ═══════════════ RENDER ═══════════════ */
@@ -241,7 +248,7 @@
     ensureMerged();
     bind(el);
     /* Trang riêng: badge đồng bộ + nút tạo nằm ở header 48px (#rdwHeadSlot); nơi khác vẫn dựng topbar trong view */
-    if (slot) slot.innerHTML = syncHTML() + createBtnHTML();
+    if (slot) { slot.innerHTML = createBtnHTML(); syncRing(); }   // trạng thái đồng bộ = viền avatar (không còn badge)
     el.innerHTML =
       '<div class="rdw">' +
         (slot ? "" : topbarHTML()) +
@@ -260,6 +267,21 @@
       ? '<span class="rdw-sync is-sp">' + I.check + esc(tr("rdw.sync.sp")) + "</span>"
       : '<span class="rdw-sync" title="' + esc(tr("rdw.sync.localHint")) + '">' + I.cloudOff + esc(tr("rdw.sync.local")) + "</span>";
   }
+  /* Trạng thái đồng bộ → viền mảnh quanh avatar (data-sync) + dòng trạng thái trong popover hồ sơ:
+     sharepoint (xanh lá) · local = mất kết nối / chưa có list (cam) · demo (xám) · error = có dự án chưa lưu được (đỏ) */
+  function syncInfo() {
+    var mode = window.RND ? RND.mode() : "local";
+    if (mode !== "demo" && list().some(function (r) { return r._syncErr; })) return { key: "error", text: tr("rdw.sync.err") };
+    return { key: mode, text: tr(mode === "sharepoint" ? "rdw.sync.sp" : mode === "demo" ? "rdw.sync.demo" : "rdw.sync.local") };
+  }
+  function syncRing() {
+    var u = document.getElementById("sfUser"); if (!u) return;
+    var i = syncInfo();
+    u.setAttribute("data-sync", i.key);
+    u.title = (u.getAttribute("data-base") || "") + (i.text ? " · " + i.text : "");
+    var st = document.getElementById("rdwPfSync");
+    if (st) st.innerHTML = '<i class="rdw-pf-dot" data-sync="' + i.key + '"></i><span>' + esc(i.text) + "</span>";
+  }
   function createBtnHTML() {
     return canCreate() ? '<button type="button" class="btn-primary rdw-create" data-act="create">' + I.plus + "<span>" + esc(tr("rdw.create")) + "</span></button>" : "";
   }
@@ -268,9 +290,7 @@
   }
 
   function subbarHTML() {
-    var base = filtered({ ignoreType: true });
-    var cnt = { ALL: base.length, ON_DEMAND: 0, INTERNAL: 0 };
-    base.forEach(function (r) { if (cnt[r.type] != null) cnt[r.type]++; });
+    var cnt = typeCounts();
     var modes = [["split", I.split, tr("rdw.view.split")], ["matrix", I.grid, tr("rdw.view.matrix")]];
     var types = [["ALL", tr("common.all")], ["ON_DEMAND", tr("rdw.f.onDemand")], ["INTERNAL", tr("rdw.f.internal")]];
     var cols = nccCols().concat([OTHER]);
@@ -283,29 +303,52 @@
           var on = ST.mode === m[0];
           return '<button type="button" role="tab" aria-selected="' + on + '" class="' + (on ? "on" : "") + '" data-act="mode" data-v="' + m[0] + '">' + m[1] + "<span>" + esc(m[2]) + "</span></button>";
         }).join("") +
-      "</div></div>" +
-      '<div class="rdw-tb-r"><div class="rdw-fgroup">' +
-        '<label class="rdw-search">' + I.search +
-          '<input type="search" id="rdwQ" autocomplete="off" value="' + esc(ST.q) + '" placeholder="' + esc(tr("rdw.searchPh")) + '" aria-label="' + esc(tr("rdw.searchPh")) + '" data-act="q"></label>' +
-        '<label class="rdw-select"><span class="rdw-sr">' + esc(tr("rdw.fld.ncc")) + "</span>" +
-          '<select data-act="ncc" aria-label="' + esc(tr("rdw.fld.ncc")) + '">' + nccOpts + "</select></label>" +
-        '<div class="rdw-tabs" role="tablist" aria-label="' + esc(tr("rdw.typeAria")) + '">' +
-          types.map(function (t) {
-            var on = ST.type === t[0];
-            return '<button type="button" role="tab" aria-selected="' + on + '" class="rdw-tab' + (on ? " on" : "") + '" data-act="type" data-v="' + t[0] + '">' +
-              esc(t[1]) + ' <span class="rdw-tab-n">' + cnt[t[0]] + "</span></button>";
-          }).join("") +
+      "</div>" + (ST.mode === "matrix" ? '<span class="rdw-tb-hint">' + esc(tr("rdw.mx.legend")) + "</span>" : "") + "</div>" +
+      '<div class="rdw-tb-r">' +
+        /* Ma trận không có cột danh sách → bộ lọc loại dự án nằm trên toolbar, ảnh hưởng cả ma trận */
+        '<div class="rdw-fgroup">' +
+          '<label class="rdw-search">' + I.search +
+            '<input type="search" id="rdwQ" autocomplete="off" value="' + esc(ST.q) + '" placeholder="' + esc(tr("rdw.searchPh")) + '" aria-label="' + esc(tr("rdw.searchPh")) + '" data-act="q"></label>' +
+          '<label class="rdw-select"><span class="rdw-sr">' + esc(tr("rdw.fld.ncc")) + "</span>" +
+            '<select data-act="ncc" aria-label="' + esc(tr("rdw.fld.ncc")) + '">' + nccOpts + "</select></label>" +
+          /* Ma trận không có cột danh sách → lọc loại dự án bằng dropdown gọn trong cùng cụm */
+          (ST.mode === "matrix" ? typeSelectHTML(cnt) : "") +
         "</div>" +
-      "</div></div>"
+      "</div>"
     );
+  }
+  function typeCounts() {
+    var base = filtered({ ignoreType: true }), cnt = { ALL: base.length, ON_DEMAND: 0, INTERNAL: 0 };
+    base.forEach(function (r) { if (cnt[r.type] != null) cnt[r.type]++; });
+    return cnt;
+  }
+  function typeSelectHTML(cnt) {
+    var opts = [["ALL", tr("common.all")], ["ON_DEMAND", tr("rdw.f.onDemand")], ["INTERNAL", tr("rdw.f.internal")]];
+    return '<label class="rdw-select rdw-typesel"><span class="rdw-typesel-l">' + esc(tr("rdw.mx.typeLbl")) + ":</span>" +
+      '<select data-act="typeSel" aria-label="' + esc(tr("rdw.mx.typeLbl")) + '">' +
+      opts.map(function (o) { return '<option value="' + o[0] + '"' + (ST.type === o[0] ? " selected" : "") + ">" + esc(o[1]) + " (" + cnt[o[0]] + ")</option>"; }).join("") +
+      "</select></label>";
+  }
+  /* Pill lọc loại dự án. short = nhãn gọn cho đầu cột danh sách (340px) */
+  function typeTabsHTML(cnt, short) {
+    var types = [["ALL", tr("common.all"), tr("common.all")],
+      ["ON_DEMAND", tr(short ? "rdw.f.onDemandShort" : "rdw.f.onDemand"), tr("rdw.f.onDemand")],
+      ["INTERNAL", tr(short ? "rdw.f.internalShort" : "rdw.f.internal"), tr("rdw.f.internal")]];
+    return '<div class="rdw-tabs' + (short ? " is-sm" : "") + '" role="tablist" aria-label="' + esc(tr("rdw.typeAria")) + '">' +
+      types.map(function (t) {
+        var on = ST.type === t[0];
+        return '<button type="button" role="tab" aria-selected="' + on + '" class="rdw-tab' + (on ? " on" : "") + '" data-act="type" data-v="' + t[0] + '" title="' + esc(t[2]) + '">' +
+          esc(t[1]) + ' <span class="rdw-tab-n">' + cnt[t[0]] + "</span></button>";
+      }).join("") + "</div>";
   }
 
   function renderSub() { var s = document.getElementById("rdwSub"); if (!s) return; var foc = document.activeElement && document.activeElement.id === "rdwQ"; s.innerHTML = subbarHTML(); if (foc) { var q = document.getElementById("rdwQ"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } } }
 
   function masterHead(recs, shown) {
-    var filt = ST.q || ST.ncc || ST.type !== "ALL";
-    return "<span>" + esc(recs.length > shown ? tr("rdw.shown", { a: shown, b: recs.length }) : tr("rdw.count", { n: recs.length })) + "</span>" +
-      (filt ? '<button type="button" class="rdw-link" data-act="clear">' + esc(tr("act.clearFilters")) + "</button>" : "");
+    var sub = ST.q || ST.ncc || recs.length > shown;
+    return typeTabsHTML(typeCounts(), true) +
+      (sub ? '<div class="rdw-mmeta"><span>' + esc(recs.length > shown ? tr("rdw.shown", { a: shown, b: recs.length }) : tr("rdw.count", { n: recs.length })) + "</span>" +
+        (ST.q || ST.ncc ? '<button type="button" class="rdw-link" data-act="clear">' + esc(tr("act.clearFilters")) + "</button>" : "") + "</div>" : "");
   }
   function masterList(recs, shown) {
     if (!recs.length) return emptyListHTML();
@@ -355,6 +398,10 @@
     return '<div class="rdw-empty-s">' + esc(tr(none ? "rdw.emptyList" : "rdw.noMatch")) + "</div>";
   }
 
+  function stageBadge(v) {
+    return '<span class="rdw-stg rdw-t-' + stageTone(v.stage) + '">' + esc(stageLabel(v.stage)) +
+      (v.stage === "SUSPENDED" ? "" : " · " + prob(v.stage) + "%") + "</span>";
+  }
   function itemHTML(r) {
     var v = view(r.code) || r;
     var on = r.code === ST.sel;
@@ -363,10 +410,10 @@
       '<div class="rdw-i-top"><span class="rdw-code">' + esc(r.code) + "</span>" + typeBadge(v.type) +
         (isDirty(r.code) ? '<span class="rdw-dirty" title="' + esc(tr("rdw.unsaved")) + '" aria-label="' + esc(tr("rdw.unsaved")) + '"></span>' : "") +
         (r._syncErr ? '<span class="rdw-dirty is-err" title="' + esc(tr("rds.notSynced")) + '" aria-label="' + esc(tr("rds.notSynced")) + '"></span>' : "") +
-        '<span class="rdw-i-pic">' + picTag(v.pic) + "</span></div>" +
+      "</div>" +
       '<div class="rdw-i-title">' + esc(v.title || "—") + "</div>" +
       '<div class="rdw-i-who">' + who2 + "</div>" +
-      progress(v) +
+      '<div class="rdw-i-foot">' + stageBadge(v) + avatar(v.pic) + "</div>" +
     "</div>";
   }
   function refreshItem(code) {
@@ -394,7 +441,7 @@
     d.innerHTML =
       '<header class="rdw-dh">' + headHTML(r, ed) + syncErrHTML(recOf(r.code)) + "</header>" +
       '<div class="rdw-dbody">' +
-        '<section class="rdw-card" aria-labelledby="rdwB1">' + block1HTML(r, ed) + "</section>" +
+        block1HTML(r, ed) +
         '<section class="rdw-card" aria-labelledby="rdwB2" id="rdwB2wrap">' + block2HTML(r, ed) + "</section>" +
         '<div class="rdw-grid2">' +
           '<section class="rdw-card rdw-att-card"><div id="' + ATT_HOST + '"></div>' + attNoteHTML(r) + "</section>" +
@@ -404,19 +451,27 @@
       "</div>";
     mountAttachments(r, ed);
     autosize(d.querySelector(".rdw-title-in"));
+    d.querySelectorAll(".rdw-ta").forEach(growTa);
   }
   function autosize(t) { if (!t) return; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
+  /* textarea tự giãn theo nội dung (min-height 72px trong CSS; +2 = viền 1px trên/dưới) */
+  function growTa(t) { if (!t) return; t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
 
   function headHTML(r, ed) {
     var dirty = isDirty(r.code);
     var n = dirty ? Object.keys(ST.drafts[r.code]).length : 0;
+    var susp = r.stage === "SUSPENDED";
     var title = ed
       ? '<textarea class="rdw-title-in" rows="1" data-act="field" data-f="title" aria-label="' + esc(tr("rdw.titlePh")) + '" placeholder="' + esc(tr("rdw.titlePh")) + '" maxlength="160">' + esc(r.title) + "</textarea>"
       : '<h3 class="rdw-title-ro">' + esc(r.title) + "</h3>";
-    return '<div class="rdw-dh-top">' +
-        '<div class="rdw-dh-main"><div class="rdw-dh-meta"><span class="rdw-code is-lg">' + esc(r.code) + "</span>" + typeBadge(r.type) + statusPill(r.status) +
-          (ed ? "" : '<span class="rdw-ro">' + esc(tr("rdw.readOnly")) + "</span>") + "</div>" + title + "</div>" +
-        (ed ? '<div class="rdw-dh-act" id="rdwSaveBar">' + saveBarHTML(dirty, n) + "</div>" : "") +
+    var sBtn = ed
+      ? '<button type="button" class="rdw-susp' + (susp ? " on" : "") + '" data-act="suspend" aria-pressed="' + susp + '">' + I.pause +
+        "<span>" + esc(susp ? tr("rdw.resume") : tr("rdw.suspend")) + "</span></button>"
+      : "";
+    return '<div class="rdw-dh-meta"><span class="rdw-code is-lg">' + esc(r.code) + "</span>" + typeBadge(r.type) + statusPill(r.status) +
+        (ed ? "" : '<span class="rdw-ro">' + esc(tr("rdw.readOnly")) + "</span>") + "</div>" +
+      '<div class="rdw-dh-top"><div class="rdw-dh-main">' + title + "</div>" +
+        (ed ? '<div class="rdw-dh-act">' + sBtn + '<span class="rdw-savebar" id="rdwSaveBar">' + saveBarHTML(dirty, n) + "</span></div>" : "") +
       "</div>" +
       stepperHTML(r, ed);
   }
@@ -428,24 +483,26 @@
   function refreshSaveBar() {
     var r = view(ST.sel); var bar = document.getElementById("rdwSaveBar"); if (!r || !bar) return;
     var dirty = isDirty(r.code), html = saveBarHTML(dirty, dirty ? Object.keys(ST.drafts[r.code]).length : 0);
-    if (bar.innerHTML !== html) bar.innerHTML = html;
+    if (bar.innerHTML !== html) { bar.innerHTML = html; autosize(document.querySelector("#rdwDetail .rdw-title-in")); }   // cụm nút đổi bề rộng → tiêu đề xuống dòng
   }
 
+  /* Thanh giai đoạn dạng chevron phẳng, cao 32px: đã qua (check) · hiện tại (màu chủ đạo, kèm %) · chưa tới (xám) */
   function stepperHTML(r, ed) {
     var lin = linearStages(), susp = r.stage === "SUSPENDED", idx = lin.indexOf(r.stage);
     var steps = lin.map(function (s, i) {
-      var st = susp ? "" : i < idx ? "is-past" : i === idx ? "is-cur" : "";
-      return '<li class="rdw-step ' + st + (s === "COMPLETED" ? " is-final" : "") + '">' +
+      var st = susp ? "is-next" : i < idx ? "is-past" : i === idx ? "is-cur" : "is-next";
+      var label = esc(stageLabel(s));
+      return '<li class="rdw-stage ' + st + (s === "COMPLETED" ? " is-final" : "") + '">' +
         '<button type="button" data-act="stage" data-v="' + s + '"' + (ed ? "" : " disabled") + (i === idx && !susp ? ' aria-current="step"' : "") +
           ' title="' + esc(stageLabel(s) + " · " + prob(s) + "%") + '">' +
-          '<span class="rdw-step-dot">' + (i < idx && !susp ? I.check : (i + 1)) + "</span>" +
-          '<span class="rdw-step-l">' + esc(stageLabel(s)) + "</span></button></li>";
+          (i < idx && !susp ? I.check : "") + '<span class="rdw-stage-l">' + label + "</span>" +
+          (i === idx && !susp ? '<b class="rdw-stage-p">' + prob(s) + "%</b>" : "") +
+        "</button></li>";
     }).join("");
-    var sBtn = ed
-      ? '<button type="button" class="rdw-susp' + (susp ? " on" : "") + '" data-act="suspend" aria-pressed="' + susp + '">' + I.pause +
-        "<span>" + esc(susp ? tr("rdw.resume") : tr("rdw.suspend")) + "</span></button>"
-      : (susp ? '<span class="rdw-susp on">' + I.pause + "<span>" + esc(tr("rd.pipeline.SUSPENDED")) + "</span></span>" : "");
-    return '<div class="rdw-stepper' + (susp ? " is-susp" : "") + '"><ol aria-label="' + esc(tr("rdw.stageAria")) + '">' + steps + "</ol>" + sBtn + "</div>";
+    return '<div class="rdw-pipe' + (susp ? " is-susp" : "") + '">' +
+      '<ol aria-label="' + esc(tr("rdw.stageAria")) + '">' + steps + "</ol>" +
+      (susp ? '<span class="rdw-pipe-susp">' + I.pause + esc(tr("rd.pipeline.SUSPENDED")) + "</span>" : "") +
+    "</div>";
   }
 
   function field(label, body, cls) {
@@ -487,32 +544,64 @@
       esc([o.customer, o.product].filter(Boolean).join(" · ")) + " " + I.ext + "</a>" + stg;
   }
 
+  /* Chi tiết = 2 khối tách bạch:
+     1) Thông tin chỉ đọc (kế thừa từ dự án Sales với ON-DEMAND) — nền xám, cặp nhãn/giá trị
+     2) Thiết lập & thực thi R&D — các trường sửa được (R&D phụ trách, hạn, benchmark, ghi chú;
+        với INTERNAL thêm ứng dụng / nguyên liệu / NCC / segment) */
+  function roF(label, body, cls) {
+    return '<div class="rdw-kv' + (cls ? " " + cls : "") + '"><dt>' + esc(label) + "</dt><dd>" + body + "</dd></div>";
+  }
+  function edF(label, body, id, cls) {
+    return '<div class="rdw-ef' + (cls ? " " + cls : "") + '"><label' + (id ? ' for="' + id + '"' : "") + ">" + esc(label) + "</label>" + body + "</div>";
+  }
+  function peopleText(list) {
+    if (!list || !list.length) return "—";
+    return list.map(function (p) {
+      var u = (typeof USERS !== "undefined") ? USERS.filter(function (x) { return x.pic === p || x.name === p; })[0] : null;
+      return esc(pl(p)) + (u && typeof roleLabel === "function" ? ' <span class="rdw-mute">(' + esc(roleLabel(u.role)) + ")</span>" : "");
+    }).join(", ");
+  }
+  function segText(r) { return esc(r.segment ? r.segment + (groupOf(r.segment) !== OTHER ? " · " + groupOf(r.segment) : "") : "—"); }
+  function taHTML(id, key, val, ph) {
+    return '<textarea id="' + id + '" class="rdw-ta" rows="2" data-act="field" data-f="' + key + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : "") + ">" + esc(val || "") + "</textarea>";
+  }
   function block1HTML(r, ed) {
-    var inh = r.type === "ON_DEMAND";        // ON_DEMAND: kế thừa từ dự án Sales → chỉ đọc
-    var edSpec = ed && !inh;
-    return '<div class="rdw-card-h"><h4 id="rdwB1">' + esc(tr("rdw.b1")) + "</h4>" +
-        (inh ? '<span class="rdw-hint">' + esc(tr("rdw.inherited")) + "</span>" : "") + "</div>" +
-      '<dl class="rdw-fields">' +
-        field(tr("rdw.fld.application"), inputF(r, edSpec, "application")) +
-        field(tr("rdw.fld.product"), inputF(r, edSpec, "product")) +
-        field(tr("rdw.fld.ncc"), edSpec ? nccSelectField(r) : esc(r.ncc || "—")) +
-        field(tr("rdw.fld.segment"), edSpec ? segSelect(r) : esc(r.segment ? r.segment + (groupOf(r.segment) !== OTHER ? " · " + groupOf(r.segment) : "") : "—")) +
-        field(tr("rdw.fld.customer"), esc(r.customer || "—")) +
-        field(tr("rdw.fld.origin"), originHTML(r), "is-wide") +
-        field(tr("rdw.fld.pic"), picSelect(r, ed)) +
-        field(tr("rdw.fld.collab"), (r.collaborators || []).length ? (r.collaborators || []).map(picTag).join(" ") : "—") +
-        field(tr("rdw.fld.created"), esc(dmy(r.created) || "—")) +
-        field(tr("rdw.fld.target"), inputF(r, ed, "targetDate", "date")) +
-        (r.completedDate ? field(tr("rdw.fld.completed"), esc(dmy(r.completedDate))) : "") +
-      "</dl>" +
-      '<div class="rdw-bench"><label for="rdwBench">' + esc(tr("rd.benchmark")) + "</label>" +
-        (ed ? '<textarea id="rdwBench" class="rdw-ta" rows="3" data-act="field" data-f="benchmarkCriteria" placeholder="' + esc(tr("rdw.benchPh")) + '">' + esc(r.benchmarkCriteria || "") + "</textarea>"
-            : '<div class="rdw-ro-text">' + esc(r.benchmarkCriteria || "—") + "</div>") +
-      "</div>" +
-      '<div class="rdw-bench"><label for="rdwDesc">' + esc(tr("rdw.fld.desc")) + "</label>" +
-        (ed ? '<textarea id="rdwDesc" class="rdw-ta" rows="2" data-act="field" data-f="desc">' + esc(r.desc || "") + "</textarea>"
-            : '<div class="rdw-ro-text">' + esc(r.desc || "—") + "</div>") +
-      "</div>";
+    var inh = r.type === "ON_DEMAND";
+    var edSpec = ed && !inh;          // INTERNAL + có quyền sửa → thông số kỹ thuật chuyển sang khối sửa được
+    var ro = "";
+    if (!edSpec) ro +=
+      roF(tr("rdw.fld.application"), esc(r.application || "—")) +
+      roF(tr("rdw.fld.product"), esc(r.product || "—")) +
+      roF(tr("rdw.fld.ncc"), esc(r.ncc || "—"));
+    ro +=
+      (inh ? roF(tr("rdw.fld.customer"), esc(r.customer || "—")) : "") +
+      (edSpec ? "" : roF(tr("rdw.fld.segment"), segText(r))) +
+      roF(tr("rdw.fld.created"), esc(dmy(r.created) || "—")) +
+      (inh ? roF(tr("rdw.fld.origin"), originHTML(r), "is-wide") : "") +
+      roF(tr("rdw.fld.collab"), peopleText(r.collaborators)) +
+      (r.completedDate ? roF(tr("rdw.fld.completed"), esc(dmy(r.completedDate))) : "");
+
+    var form =
+      (edSpec
+        ? edF(tr("rdw.fld.application"), inputF(r, true, "application")) +
+          edF(tr("rdw.fld.product"), inputF(r, true, "product")) +
+          edF(tr("rdw.fld.ncc"), nccSelectField(r)) +
+          edF(tr("rdw.fld.segment"), segSelect(r))
+        : "") +
+      edF(tr("rdw.fld.pic"), ed && canAssign() ? picSelect(r, ed) : '<div class="rdw-ro-v">' + picTag(r.pic) + "</div>") +
+      edF(tr("rdw.fld.target"), ed ? inputF(r, true, "targetDate", "date") : '<div class="rdw-ro-v">' + esc(dmy(r.targetDate) || "—") + "</div>") +
+      edF(tr("rd.benchmark"), ed ? taHTML("rdwBench", "benchmarkCriteria", r.benchmarkCriteria, tr("rdw.benchPh")) : '<div class="rdw-ro-text">' + esc(r.benchmarkCriteria || "—") + "</div>", "rdwBench", "is-wide") +
+      edF(tr("rdw.fld.desc"), ed ? taHTML("rdwDesc", "desc", r.desc) : '<div class="rdw-ro-text">' + esc(r.desc || "—") + "</div>", "rdwDesc", "is-wide");
+
+    return '<section class="rdw-card" aria-labelledby="rdwB1">' +
+        '<div class="rdw-card-h"><h4 id="rdwB1">' + esc(tr(inh ? "rdw.sec.inherited" : "rdw.sec.info")) + "</h4>" +
+          '<span class="rdw-hint">' + esc(tr("rdw.readOnly")) + "</span></div>" +
+        '<dl class="rdw-meta">' + ro + "</dl>" +
+      "</section>" +
+      '<section class="rdw-card" aria-labelledby="rdwB1b">' +
+        '<div class="rdw-card-h"><h4 id="rdwB1b">' + esc(tr("rdw.sec.work")) + "</h4></div>" +
+        '<div class="rdw-form">' + form + "</div>" +
+      "</section>";
   }
   function nccSelectField(r) {
     var opts = typeof supplierOptions === "function" ? supplierOptions() : nccCols();
@@ -578,6 +667,7 @@
       ctx: { ncc: r.ncc || "", customer: r.customer || "", code: r.code, pic: r.pic || "" },
       canUpload: ed && uploadAllowed(r),
       categories: true, showFolder: true,
+      cats: ["TEST", "FORMULA", "SENSORY", "OTHER"],   // Kết quả thử mẫu · Công thức · Đánh giá cảm quan · Khác
       title: tr("rdw.b3att"),
       extra: function () {
         if (!oKey) return [];
@@ -631,6 +721,13 @@
   }
 
   /* ───────────── MATRIX ───────────── */
+  /* Ma trận ứng dụng: dòng = nhóm ứng dụng (cột trái cố định), cột = nhà cung cấp.
+     Cột không có dự án thu hẹp (chỉ hiện badge 0). Mỗi ô là danh sách dòng gọn 30px, tối đa 3 dòng + "Xem thêm". */
+  /* Ma trận ứng dụng — công cụ tra cứu cho Sales / R&D / BOD:
+     dòng = nhóm ứng dụng (cột trái cố định), cột = nhà cung cấp; cột có dữ liệu tối đa 480px, cột rỗng thu gọn 96px.
+     Nền ô theo mật độ: 0 → xám nhạt · 1–2 → trắng · ≥3 → xanh nhạt nếu có công thức chuẩn (vùng tập trung giải pháp).
+     Mỗi dự án là 1 dòng 32px; bấm → drawer xem nhanh. Rê vào ô → nút "+" tạo dự án điền sẵn ô đó. */
+  var MX_MAX = 3;
   function matrixHTML() {
     var recs = filtered({ ignoreNcc: false });
     var t = segTree(), rows = Object.keys(t);
@@ -645,42 +742,171 @@
     if (hasUnmapped) rows = rows.concat([OTHER]);
     if (!recs.length) return '<div class="rdw-mx-card"><div class="rdw-empty-s">' + esc(tr(visibleAll().length ? "rdw.noMatch" : "rdw.empty.title")) + "</div></div>";
 
-    var runN = recs.filter(function (r) { return r.status === "IN_PROGRESS"; }).length;
-    var doneN = recs.filter(function (r) { return r.status === "DONE"; }).length;
-    var head = '<div class="rdw-mx-head"><p>' + esc(tr("rdw.mx.legend")) + '</p><div class="rdw-mx-kpi">' +
-      '<span class="k-run">' + esc(tr("rdw.mx.running", { n: runN })) + "</span>" +
-      '<span class="k-done">' + I.check + esc(tr("rdw.mx.done", { n: doneN })) + "</span></div></div>";
-
+    var full = cols.filter(function (c) { return colTot[c]; }).length, empty = cols.length - full;
+    var colg = '<colgroup><col class="mx-c-row">' + cols.map(function (c) { return '<col class="' + (colTot[c] ? "mx-c-data" : "mx-c-empty") + '">'; }).join("") + '<col class="mx-c-tot"></colgroup>';
     var thead = '<thead><tr><th scope="col" class="mx-corner">' + esc(tr("rdw.mx.corner")) + "</th>" +
-      cols.map(function (c) { return '<th scope="col">' + esc(c === OTHER ? tr("rdw.other") : c) + '<span class="mx-n">' + (colTot[c] || 0) + "</span></th>"; }).join("") +
+      cols.map(function (c) {
+        return '<th scope="col"' + (colTot[c] ? "" : ' class="is-empty"') + '><span class="mx-th">' + esc(c === OTHER ? tr("rdw.other") : c) + "</span>" +
+          '<span class="mx-n">' + (colTot[c] || 0) + "</span></th>";
+      }).join("") +
       '<th scope="col" class="mx-tot">' + esc(tr("rdw.mx.total")) + "</th></tr></thead>";
 
+    var add = canCreate();
     var tbody = "<tbody>" + rows.map(function (g) {
       var subs = g === OTHER ? "" : (t[g] || []).join(" · ");
       return '<tr><th scope="row"><b>' + esc(g === OTHER ? tr("rdw.mx.unmapped") : g) + "</b>" + (subs ? "<small>" + esc(subs) + "</small>" : "") + "</th>" +
-        cols.map(function (c) { return cellHTML(cell[g + "|" + c] || []); }).join("") +
+        cols.map(function (c) { return cellHTML(cell[g + "|" + c] || [], g, c, !colTot[c], add); }).join("") +
         '<td class="mx-tot">' + (rowTot[g] || 0) + "</td></tr>";
     }).join("") + "</tbody>";
 
-    return '<div class="rdw-mx-card">' + head + '<div class="rdw-mx-scroll"><table class="rdw-mx" style="min-width:' + (170 + cols.length * 200 + 72) + 'px" aria-label="' + esc(tr("rdw.view.matrix")) + '">' + thead + tbody + "</table></div></div>";
+    var minW = 190 + full * 260 + empty * 96 + 64, maxW = 190 + full * 480 + empty * 96 + 64;
+    return '<div class="rdw-mx-card"><div class="rdw-mx-scroll"><table class="rdw-mx" style="min-width:' + minW + "px;width:min(100%," + maxW + 'px)" aria-label="' + esc(tr("rdw.view.matrix")) + '">' +
+      colg + thead + tbody + "</table></div></div>";
   }
-  function cellHTML(items) {
-    if (!items.length) return '<td class="mx-empty"><span aria-hidden="true">—</span></td>';
-    var run = items.filter(function (r) { return r.status === "IN_PROGRESS"; }).length;
-    var done = items.filter(function (r) { return r.status === "DONE"; }).length;
-    var susp = items.length - run - done;
-    var cnt = '<div class="mx-cnt">' +
-      (run ? '<span class="c-run">' + esc(tr("rdw.mx.running", { n: run })) + "</span>" : "") +
-      (done ? '<span class="c-done">' + I.check + esc(tr("rdw.mx.done", { n: done })) + "</span>" : "") +
-      (susp ? '<span class="c-susp">' + esc(tr("rdw.mx.susp", { n: susp })) + "</span>" : "") + "</div>";
-    var chips = items.slice().sort(sortRecs).map(function (r) {
-      var v = view(r.code) || r;
-      return '<li><button type="button" class="mx-chip rdw-t-' + stageTone(v.stage) + '" data-act="focus" data-code="' + esc(r.code) + '" title="' +
-        esc(v.title + " — " + stageLabel(v.stage)) + '"><span class="mx-chip-top"><b>' + esc(r.code) + "</b>" + typeBadge(v.type) + "</span>" +
-        '<span class="mx-chip-t">' + esc(v.title) + "</span>" +
-        '<span class="mx-chip-s"><i></i>' + esc(stageLabel(v.stage)) + " · " + prob(v.stage) + "%</span></button></li>";
+  function mxTone(v) { return v.status === "DONE" ? "done" : v.status === "IN_PROGRESS" ? "run" : "susp"; }
+  function mxRowHTML(r) {
+    var v = view(r.code) || r, tone = mxTone(v);
+    var tag = tone === "done" ? tr("rd.status.DONE") : tone === "susp" ? tr("rdw.suspend") : prob(v.stage) + "%";
+    var tip = r.code + " · " + stageLabel(v.stage) + (tone === "run" ? " · " + prob(v.stage) + "%" : "") + " — " + tr("rdw.mx.tipOpen");
+    return '<li><button type="button" class="mx-row" data-act="peek" data-code="' + esc(r.code) + '" aria-haspopup="dialog" data-tip="' + esc(tip) + '">' +
+      '<i class="mx-dot is-' + tone + '" aria-hidden="true"></i>' +
+      '<span class="mx-code">' + esc(r.code.replace(/^RD-\d{4}-/, "")) + "</span>" +
+      '<span class="mx-t">' + esc(v.title) + "</span>" +
+      '<span class="mx-stg is-' + tone + '">' + esc(tag) + "</span>" +
+      '<span class="mx-go" aria-hidden="true">' + I.panel + "</span></button></li>";
+  }
+  function cellHTML(items, g, c, emptyCol, add) {
+    /* Nút "+ Dự án" thuộc về Ô (header góc phải, chỉ hiện khi rê vào ô) — không gắn vào dòng dự án */
+    var aria = tr("rdw.mx.addAria", { g: g === OTHER ? tr("rdw.mx.unmapped") : g, n: c === OTHER ? tr("rdw.other") : c });
+    var addBtn = add ? '<div class="mx-cell-h"><button type="button" class="mx-add" data-act="mxAdd" data-g="' + esc(g) + '" data-c="' + esc(c) + '" aria-label="' + esc(aria) + '" data-tip="' + esc(aria) + '">' +
+      I.plus + (emptyCol ? "" : "<span>" + esc(tr("rdw.mx.addShort")) + "</span>") + "</button></div>" : "";
+    if (!items.length) return '<td class="mx-cell mx-empty' + (emptyCol ? " is-col" : "") + (add ? " has-h" : "") + '"><span class="mx-dash" aria-hidden="true">—</span>' + addBtn + "</td>";
+    var list = items.slice().sort(sortRecs), open = !!ST.mxOpen[g + "|" + c];
+    var shown = open ? list : list.slice(0, MX_MAX), rest = list.length - MX_MAX;
+    var dense = list.length >= 3 ? (list.some(function (r) { return r.status === "DONE"; }) ? " is-hot" : " is-dense") : "";
+    return '<td class="mx-cell' + dense + (add ? " has-h" : "") + '">' + addBtn + '<ul class="mx-list">' + shown.map(mxRowHTML).join("") + "</ul>" +
+      (rest > 0 ? '<button type="button" class="mx-more" data-act="mxMore" data-k="' + esc(g + "|" + c) + '" aria-expanded="' + open + '">' +
+        esc(open ? tr("rdw.mx.less") : tr("rdw.mx.more", { n: rest })) + "</button>" : "") +
+    "</td>";
+  }
+
+  /* Tooltip nhẹ cho [data-tip]: hiện sau 300ms, đặt phía trên phần tử, không chặn chuột (thay title gốc của trình duyệt) */
+  var TIP = { el: null, t: 0, cur: null };
+  function tipEl() {
+    if (!TIP.el) { TIP.el = document.createElement("div"); TIP.el.className = "rdw-tip"; TIP.el.setAttribute("role", "tooltip"); TIP.el.hidden = true; document.body.appendChild(TIP.el); }
+    return TIP.el;
+  }
+  function tipHide() { clearTimeout(TIP.t); TIP.cur = null; if (TIP.el) { TIP.el.classList.remove("on"); TIP.el.hidden = true; } }
+  function tipShow(target) {
+    var el = tipEl(), r = target.getBoundingClientRect();
+    el.textContent = target.getAttribute("data-tip"); el.hidden = false;
+    var w = el.offsetWidth, x = Math.min(Math.max(8, r.left + 8), window.innerWidth - w - 8), y = r.top - el.offsetHeight - 6;
+    if (y < 4) y = r.bottom + 6;
+    el.style.left = x + "px"; el.style.top = y + "px";
+    el.classList.add("on");
+  }
+  function bindTips(host) {
+    host.addEventListener("mouseover", function (e) {
+      var t = e.target.closest && e.target.closest("[data-tip]");
+      if (t === TIP.cur) return;
+      tipHide(); if (!t) return;
+      TIP.cur = t; TIP.t = setTimeout(function () { if (TIP.cur === t && document.contains(t)) tipShow(t); }, 300);
+    });
+    host.addEventListener("mouseleave", tipHide);
+    host.addEventListener("mousedown", tipHide);
+    host.addEventListener("scroll", tipHide, true);
+    host.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest("[data-tip]"); if (t && t.matches(":focus-visible")) { tipHide(); TIP.cur = t; tipShow(t); } });
+    host.addEventListener("focusout", tipHide);
+  }
+
+  /* ═══════════════ QUICK PREVIEW DRAWER (Ma trận) ═══════════════ */
+  var PK = { ret: null };
+  function ensurePeek() {
+    var ov = document.getElementById("rdwPeekOv"); if (ov) return ov;
+    ov = document.createElement("div");
+    ov.id = "rdwPeekOv"; ov.className = "rdw-pk-ov"; ov.hidden = true;
+    ov.innerHTML = '<aside class="rdw-pk" id="rdwPeek" role="dialog" aria-modal="true" aria-labelledby="rdwPkTitle" tabindex="-1"></aside>';
+    document.body.appendChild(ov);
+    ov.addEventListener("mousedown", function (e) { if (e.target === ov) closePeek(); });
+    ov.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-pk]"); if (!b) return;
+      var a = b.getAttribute("data-pk");
+      if (a === "close") closePeek();
+      else if (a === "open") { var c = ST.peek; closePeek(true); focus(c); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !ov.hidden) { e.stopPropagation(); closePeek(); }
+      if (e.key === "Tab" && !ov.hidden) {   /* giữ focus trong drawer */
+        var f = ov.querySelectorAll("button,select,textarea,a[href],input"); if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    return ov;
+  }
+  function openPeek(code) {
+    if (!recOf(code)) return;
+    var ov = ensurePeek();
+    ST.peek = code; tipHide();
+    if (ov.hidden) PK.ret = document.activeElement;
+    drawPeek();
+    ov.hidden = false;
+    requestAnimationFrame(function () { ov.classList.add("open"); var x = ov.querySelector('[data-pk="close"]'); if (x) x.focus(); });
+  }
+  function closePeek(noRestore) {
+    var ov = document.getElementById("rdwPeekOv"); if (!ov || ov.hidden) return;
+    ov.classList.remove("open"); ST.peek = "";
+    setTimeout(function () { ov.hidden = true; }, 200);
+    if (!noRestore && PK.ret && PK.ret.focus && document.contains(PK.ret)) try { PK.ret.focus(); } catch (e) {}
+  }
+  function bestBatch(r) {
+    var bs = (r.batches || []).slice().sort(function (a, b) { return (b.no || 0) - (a.no || 0); });
+    return bs.filter(function (b) { return b.result === "PASS"; })[0] || null;
+  }
+  /* Tình trạng mẫu suy từ dữ liệu có thật (giai đoạn + mẻ thử đạt), không phải số liệu tồn kho mẫu */
+  function sampleState(r) {
+    var pass = bestBatch(r), lin = linearStages();
+    if (r.stage === "COMPLETED") return { tone: "ok", text: tr("rdw.pk.sDone") };
+    if (pass) return { tone: "ok", text: tr("rdw.pk.sPass", { n: pass.no, d: dmy(pass.date) }) };
+    if (lin.indexOf(r.stage) >= lin.indexOf("SAMPLE_SENT") && r.stage !== "SUSPENDED") return { tone: "mid", text: tr("rdw.pk.sSent") };
+    return { tone: "warn", text: tr("rdw.pk.sNone") };
+  }
+  function drawPeek() {
+    var box = document.getElementById("rdwPeek"), r = view(ST.peek); if (!box || !r) return;
+    var rec = recOf(r.code), tone = mxTone(r);
+    var bs = (rec.batches || []).slice().sort(function (a, b) { return (b.no || 0) - (a.no || 0); });
+    var pass = bestBatch(rec), rb = pass || bs[0];
+    var ratio = rb && rb.ratio ? esc(rb.ratio) + ' <span class="rdw-mute">' + esc(tr("rdw.pk.ratioFrom", { n: rb.no })) + "</span>" : '<span class="rdw-mute">' + esc(tr("rdw.pk.noRatio")) + "</span>";
+    var smp = sampleState(rec);
+    var kv = function (l, v, cls) { return '<div class="rdw-kv' + (cls ? " " + cls : "") + '"><dt>' + esc(l) + "</dt><dd>" + v + "</dd></div>"; };
+    var batches = bs.slice(0, 3).map(function (b) {
+      var res = RES.indexOf(b.result) >= 0 ? b.result : "PENDING";
+      return "<li><b>#" + esc(b.no) + "</b><span>" + esc([b.ratio, b.temp, b.time].filter(Boolean).join(" · ") || "—") + "</span>" +
+        '<span class="rdw-res is-' + res.toLowerCase() + '">' + esc(tr("rdw.res." + res)) + "</span></li>";
     }).join("");
-    return "<td>" + cnt + '<ul class="mx-list">' + chips + "</ul></td>";
+    box.innerHTML =
+      '<header class="rdw-pk-h"><div class="rdw-dh-meta"><span class="rdw-code is-lg">' + esc(r.code) + "</span>" + typeBadge(r.type) + statusPill(r.status) + "</div>" +
+        '<button type="button" class="rdw-pk-x" data-pk="close" aria-label="' + esc(tr("common.close")) + '">' + I.x + "</button></header>" +
+      '<div class="rdw-pk-b">' +
+        '<h2 id="rdwPkTitle" class="rdw-pk-t">' + esc(r.title || "—") + "</h2>" +
+        '<p class="rdw-pk-stage"><i class="mx-dot is-' + tone + '"></i>' + esc(tr("rdw.pk.stage")) + ": <b>" + esc(stageLabel(r.stage)) + "</b>" + (tone === "run" ? " · " + prob(r.stage) + "%" : "") + "</p>" +
+        '<section class="rdw-pk-sec"><h3>' + esc(tr("rdw.pk.snapshot")) + '</h3><dl class="rdw-pk-kv">' +
+          kv(tr("rdw.pk.target"), esc(r.customer || tr("rd.type.INTERNAL"))) +
+          kv(tr("rdw.fld.ncc"), esc(r.ncc || "—")) +
+          kv(tr("rdw.pk.ingredient"), esc(r.product || "—")) +
+          kv(tr("rdw.pk.ratio"), ratio) +
+          kv(tr("rdw.fld.application"), esc(r.application || "—") + (r.segment ? ' <span class="rdw-mute">· ' + esc(r.segment) + "</span>" : "")) +
+          kv(tr("rdw.fld.pic"), picTag(r.pic)) +
+          kv(tr("rdw.pk.sample"), '<span class="rdw-pk-smp is-' + smp.tone + '">' + esc(smp.text) + "</span>", "is-wide") +
+          (r.type === "ON_DEMAND" && r.originProjectId ? kv(tr("rdw.fld.origin"), originHTML(r), "is-wide") : "") +
+        "</dl></section>" +
+        '<section class="rdw-pk-sec"><h3>' + esc(tr("rd.benchmark")) + '</h3><p class="rdw-pk-bench">' + esc(r.benchmarkCriteria || "—") + "</p></section>" +
+        (batches ? '<section class="rdw-pk-sec"><h3>' + esc(tr("rdw.pk.batches")) + '</h3><ul class="rdw-pk-bt">' + batches + "</ul></section>" : "") +
+      "</div>" +
+      '<footer class="rdw-pk-f">' +
+        '<button type="button" class="btn-primary" data-pk="open">' + esc(tr("rdw.pk.open")) + " " + I.ext + "</button>" +
+      "</footer>";
   }
 
   /* ═══════════════ ACTIONS ═══════════════ */
@@ -712,8 +938,15 @@
     var r = recOf(ST.sel); if (!r || !canEdit(r)) return;
     setDraft(r.code, "stage", s);
     var v = view(r.code);
-    var d = document.querySelector("#rdwDetail .rdw-stepper");
+    var d = document.querySelector("#rdwDetail .rdw-pipe");
     if (d) { var tmp = document.createElement("div"); tmp.innerHTML = stepperHTML(v, true); d.replaceWith(tmp.firstChild); }
+    var b = document.querySelector('#rdwDetail [data-act="suspend"]');
+    if (b) {
+      var susp = v.stage === "SUSPENDED";
+      b.classList.toggle("on", susp); b.setAttribute("aria-pressed", String(susp));
+      b.innerHTML = I.pause + "<span>" + esc(susp ? tr("rdw.resume") : tr("rdw.suspend")) + "</span>";
+    }
+    autosize(document.querySelector("#rdwDetail .rdw-title-in"));
   }
 
   /* Mở lại đề tài tạm hoãn → quay về stage ngay trước khi hoãn (theo nhật ký), mặc định BRIEF */
@@ -797,6 +1030,7 @@
   function bind(el) {
     if (el.__rdwBound) return;
     el.__rdwBound = true;
+    bindTips(el);
     var slot = headSlot();
     if (slot && !slot.__rdwBound) {
       slot.__rdwBound = true;
@@ -813,6 +1047,9 @@
       else if (a === "type") { ST.type = v; renderSub(); renderBody(); }
       else if (a === "clear") { ST.type = "ALL"; ST.ncc = ""; ST.q = ""; renderSub(); renderBody(); }
       else if (a === "more") loadMore();
+      else if (a === "peek") openPeek(t.getAttribute("data-code"));
+      else if (a === "mxAdd") openCreate({ group: t.getAttribute("data-g"), col: t.getAttribute("data-c") });
+      else if (a === "mxMore") { var k = t.getAttribute("data-k"); ST.mxOpen[k] = !ST.mxOpen[k]; renderBody(); }
       else if (a === "select") select(t.getAttribute("data-code"));
       else if (a === "focus") focus(t.getAttribute("data-code"));
       else if (a === "stage") setStage(v);
@@ -832,12 +1069,14 @@
       if (t.getAttribute("data-act") === "q") { ST.q = t.value; renderSubCounts(); renderBody(); return; }
       if (t.getAttribute("data-act") === "field" && t.tagName !== "SELECT") {
         if (t.classList.contains("rdw-title-in")) { t.value = t.value.replace(/\n+/g, " "); autosize(t); }
+        else if (t.classList.contains("rdw-ta")) growTa(t);
         setDraft(ST.sel, t.getAttribute("data-f"), t.value);
       }
     });
     el.addEventListener("change", function (e) {
       var t = e.target;
       if (t.getAttribute("data-act") === "ncc") { ST.ncc = t.value; renderSub(); renderBody(); return; }
+      if (t.getAttribute("data-act") === "typeSel") { ST.type = t.value; renderSub(); renderBody(); return; }
       /* Ô nhập đã cập nhật nháp qua sự kiện "input"; "change" (bắn khi rời ô, tức lúc nhấn chuột vào nút Lưu)
          chỉ xử lý <select> — tránh dựng lại thanh Lưu giữa mousedown/mouseup làm mất cú bấm. */
       if (t.getAttribute("data-act") === "field" && t.tagName === "SELECT") setDraft(ST.sel, t.getAttribute("data-f"), t.value);
@@ -858,7 +1097,7 @@
     /* Gõ tìm kiếm: chỉ cập nhật số đếm trên tab, không dựng lại ô input */
     var base = filtered({ ignoreType: true }), cnt = { ALL: base.length, ON_DEMAND: 0, INTERNAL: 0 };
     base.forEach(function (r) { if (cnt[r.type] != null) cnt[r.type]++; });
-    document.querySelectorAll("#rdwSub .rdw-tab").forEach(function (b) { var n = b.querySelector(".rdw-tab-n"); if (n) n.textContent = cnt[b.getAttribute("data-v")]; });
+    document.querySelectorAll(".rdw .rdw-tab").forEach(function (b) { var n = b.querySelector(".rdw-tab-n"); if (n) n.textContent = cnt[b.getAttribute("data-v")]; });
   }
 
   /* Hoạt động nằm ở app chính (index.html): deeplink ?open=acts&activity_id=… / &q=… (xem js/lib/deeplink.js) */
@@ -916,14 +1155,21 @@
     });
     return ov;
   }
-  function openCreate() {
+  /* pre = { group, col } khi tạo từ nút "+" của một ô Ma trận → tự điền nhóm ứng dụng + nhà cung cấp */
+  function openCreate(pre) {
     if (!canCreate()) return;
     var ov = ensureModal();
-    M = { type: "ON_DEMAND", origin: "", ret: document.activeElement };
+    M = { type: "ON_DEMAND", origin: "", ret: document.activeElement, pre: pre && pre.group ? pre : null };
+    if (M.pre && !preRecords().length && canCreateInternal()) M.type = "INTERNAL";
     drawModal();
     ov.classList.add("open"); ov.setAttribute("aria-hidden", "false");
     setTimeout(function () { var f = ov.querySelector("select,input"); if (f) f.focus(); }, 20);
   }
+  function preMatch(r) {
+    var p = M.pre; if (!p) return true;
+    return (p.group === OTHER || groupOf(r.segment) === p.group) && colOf(r) === p.col;
+  }
+  function preRecords() { return openRecords().filter(preMatch); }
   function closeCreate() {
     var ov = document.getElementById("rdwModalOv"); if (!ov) return;
     ov.classList.remove("open"); ov.setAttribute("aria-hidden", "true");
@@ -939,7 +1185,8 @@
     var od = M.type === "ON_DEMAND";
     var body = "";
     if (od) {
-      var recs = openRecords();
+      var all = openRecords(), recs = M.pre ? all.filter(preMatch) : all;
+      if (M.pre && !recs.length) { body += '<p class="rdw-mute is-wide rdw-pre-note">' + esc(tr("rdw.m.preNone")) + "</p>"; recs = all; }
       var o = recs.filter(function (r) { return r.id === M.origin; })[0];
       var dup = o ? list().filter(function (x) { return x.originProjectId === o.id && x.status === "IN_PROGRESS"; })[0] : null;
       body += '<div class="rdw-mf is-wide"><label for="rdwMOrigin">' + esc(tr("rdw.m.origin")) + ' <i class="req">*</i></label>' +
@@ -957,10 +1204,12 @@
     } else {
       var nccs = typeof supplierOptions === "function" ? supplierOptions() : nccCols();
       var t = segTree();
+      var pN = M.pre && M.pre.col !== OTHER ? M.pre.col : "", pG = M.pre && M.pre.group !== OTHER ? M.pre.group : "";
+      var groups = pG ? [pG] : Object.keys(t), one = pG && (t[pG] || []).length === 1 ? t[pG][0] : "";
       body += '<div class="rdw-mf"><label for="rdwMNcc">' + esc(tr("rdw.fld.ncc")) + ' <i class="req">*</i></label><select id="rdwMNcc" class="rdw-in"><option value="">' + esc(tr("rdw.m.nccPh")) + "</option>" +
-          nccs.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("") + "</select></div>" +
+          nccs.map(function (n) { return '<option value="' + esc(n) + '"' + (pN && nccMatch(n, pN) ? " selected" : "") + ">" + esc(n) + "</option>"; }).join("") + "</select></div>" +
         '<div class="rdw-mf"><label for="rdwMSeg">' + esc(tr("rdw.fld.segment")) + ' <i class="req">*</i></label><select id="rdwMSeg" class="rdw-in"><option value="">' + esc(tr("rdw.m.segPh")) + "</option>" +
-          Object.keys(t).map(function (g) { return '<optgroup label="' + esc(g) + '">' + (t[g] || []).map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + "</option>"; }).join("") + "</optgroup>"; }).join("") + "</select></div>" +
+          groups.map(function (g) { return '<optgroup label="' + esc(g) + '">' + (t[g] || []).map(function (s) { return '<option value="' + esc(s) + '"' + (s === one ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + "</optgroup>"; }).join("") + "</select></div>" +
         '<div class="rdw-mf"><label for="rdwMProd">' + esc(tr("rdw.fld.product")) + '</label><input id="rdwMProd" class="rdw-in" list="rdwMProdList" placeholder="' + esc(tr("rdw.m.productPh")) + '">' +
           '<datalist id="rdwMProdList">' + ((typeof LISTS !== "undefined" && LISTS.products) || []).slice(0, 400).map(function (p) { return '<option value="' + esc(p) + '">'; }).join("") + "</datalist></div>" +
         '<div class="rdw-mf"><label for="rdwMApp">' + esc(tr("rdw.fld.application")) + ' <i class="req">*</i></label><input id="rdwMApp" class="rdw-in" placeholder="' + esc(tr("rdw.m.appPh")) + '"></div>';
@@ -976,7 +1225,8 @@
       '<div class="rdw-mf is-wide"><label for="rdwMBench">' + esc(tr("rd.benchmark")) + '</label><textarea id="rdwMBench" class="rdw-ta" rows="3" placeholder="' + esc(tr("rdw.benchPh")) + '">' + esc(saved.bench || "") + "</textarea></div>";
 
     box.innerHTML =
-      '<div class="modal-head"><div><h3 id="rdwMTitle">' + esc(tr("rdw.m.title")) + '</h3><div class="mh-sub"><span class="rdw-mute">' + esc(tr("rdw.m.sub", { c: nextCode() })) + "</span></div></div>" +
+      '<div class="modal-head"><div><h3 id="rdwMTitle">' + esc(tr("rdw.m.title")) + '</h3><div class="mh-sub"><span class="rdw-mute">' + esc(tr("rdw.m.sub", { c: nextCode() })) +
+          (M.pre ? " · " + esc(tr("rdw.m.preCell", { g: M.pre.group === OTHER ? tr("rdw.mx.unmapped") : M.pre.group, n: M.pre.col === OTHER ? tr("rdw.other") : M.pre.col })) : "") + "</span></div></div>" +
         '<button type="button" class="rdw-icon" data-m="close" aria-label="' + esc(tr("common.close")) + '">✕</button></div>' +
       '<div class="rdw-mbody">' +
         '<div class="rdw-mf is-wide"><span class="rdw-mlabel">' + esc(tr("rdw.m.type")) + '</span><div class="rdw-seg rdw-seg-m" role="radiogroup" aria-label="' + esc(tr("rdw.m.type")) + '">' +
@@ -1088,7 +1338,7 @@
   }
 
   window.RND_WORKSPACE = {
-    render: render, focus: focus, openCreate: openCreate, fit: fit, applyDeepLink: applyDeepLink, syncUrl: syncUrl,
+    render: render, focus: focus, openPeek: openPeek, closePeek: closePeek, openCreate: openCreate, fit: fit, applyDeepLink: applyDeepLink, syncUrl: syncUrl, syncRing: syncRing,
     state: ST,
     hasDrafts: function () { return Object.keys(ST.drafts).length > 0; },
     /* dùng cho test / phase sau */

@@ -4364,7 +4364,7 @@
 "The project was not saved to SharePoint, so {n} attachment(s) were not uploaded. Reopen the project to attach them."
 ],
 "att.cat.FORMULA": [
-"Công thức (Recipe)",
+"Công thức",
 "Formulation / Recipe"
 ],
 "att.cat.SENSORY": [
@@ -4380,7 +4380,7 @@
 "R&D Projects"
 ],
 "rd.pipeline.BRIEF": [
-"Tiếp nhận đề bài",
+"Tiếp nhận",
 "Brief"
 ],
 "rd.pipeline.FORMULATION": [
@@ -4472,7 +4472,7 @@
 "Internal R&D"
 ],
 "rdw.nccAll": [
-"Mọi nhà cung cấp",
+"Tất cả nhà cung cấp",
 "All suppliers"
 ],
 "rdw.other": [
@@ -4688,7 +4688,7 @@
 "Sensory and texture notes…"
 ],
 "rdw.bt.add": [
-"Ghi mẻ",
+"Ghi mẫu",
 "Log Batch"
 ],
 "rdw.bt.added": [
@@ -4708,7 +4708,7 @@
 "Enter a ratio, process parameters or notes for the batch."
 ],
 "rdw.bt.empty": [
-"Chưa có mẻ thử nào. Ghi mẻ đầu tiên ở form bên dưới.",
+"Chưa có mẻ thử nào. Ghi mẫu đầu tiên ở form bên dưới.",
 "No batches yet. Log the first one with the form below."
 ],
 "rdw.bt.none": [
@@ -4768,12 +4768,12 @@
 "{p} created the topic"
 ],
 "rdw.mx.legend": [
-"Dòng: nhóm ứng dụng · Cột: nhà cung cấp. Bấm một dự án để mở trong Workspace.",
-"Rows: application group · Columns: supplier. Click a topic to open it in the Workspace."
+"Dòng: nhóm ứng dụng · Cột: nhà cung cấp · Bấm dự án để xem nhanh",
+"Rows: application group · Columns: supplier · Click a topic to preview"
 ],
 "rdw.mx.corner": [
-"Ứng dụng \\ NCC",
-"Application \\ Supplier"
+"Ứng dụng / NCC",
+"Application / Supplier"
 ],
 "rdw.mx.total": [
 "Tổng",
@@ -4800,7 +4800,7 @@
 "New R&D Topic"
 ],
 "rdw.m.sub": [
-"Mã sẽ cấp: {c} · Giai đoạn đầu: Tiếp nhận đề bài",
+"Mã sẽ cấp: {c} · Giai đoạn đầu: Tiếp nhận",
 "Code to be assigned: {c} · First stage: Brief"
 ],
 "rdw.m.type": [
@@ -4896,7 +4896,7 @@
 "R&D Technical Support"
 ],
 "rnd.w.none": [
-"Dự án chưa có dự án R&D. Gửi đề bài để chuyên viên R&D nhận việc và theo dõi cùng.",
+"Dự án chưa có dự án R&D. Gửi yêu cầu để chuyên viên R&D nhận việc và theo dõi cùng.",
 "No R&D topic yet. Send a brief so an R&D specialist picks it up and follows the opportunity."
 ],
 "rnd.w.badge": [
@@ -4912,7 +4912,7 @@
 "View R&D Topic"
 ],
 "rnd.w.again": [
-"Gửi đề bài R&D mới",
+"Gửi yêu cầu R&D mới",
 "Send a New R&D Brief"
 ],
 "rnd.req.sub": [
@@ -4928,7 +4928,7 @@
 "No users have the R&D role yet. The topic will wait for assignment."
 ],
 "rnd.req.brief": [
-"Đề bài tóm tắt",
+"Tóm tắt yêu cầu",
 "Brief Summary"
 ],
 "rnd.req.desc": [
@@ -4940,15 +4940,15 @@
 "What the customer uses today, what to improve, expected volume…"
 ],
 "rnd.req.share": [
-"Khi gửi: chuyên viên R&D được thêm vào Người liên quan của dự án để cùng theo dõi, và nhận thông báo đề bài mới.",
+"Khi gửi: chuyên viên R&D được thêm vào Người liên quan của dự án để cùng theo dõi, và nhận thông báo yêu cầu mới.",
 "On send: the R&D specialist is added to the opportunity's Related People to follow it, and is notified of the new brief."
 ],
 "rnd.req.send": [
-"Gửi đề bài cho R&D",
+"Gửi yêu cầu cho R&D",
 "Send Brief to R&D"
 ],
 "rnd.msg.requested": [
-"Đã gửi đề bài {c} cho {p}.",
+"Đã gửi yêu cầu {c} cho {p}.",
 "Brief {c} sent to {p}."
 ],
 "rnd.msg.noPerm": [
@@ -4964,7 +4964,7 @@
 "Moved {n} locally saved topic(s) to SharePoint."
 ],
 "rnd.notif.assigned": [
-"gửi bạn đề bài R&D {c}: {t}",
+"gửi bạn yêu cầu R&D {c}: {t}",
 "sent you R&D brief {c}: {t}"
 ],
 "rnd.notif.stage": [
@@ -4976,7 +4976,7 @@
 "completed topic {c}: {t}"
 ],
 "rnd.log.requested": [
-"Sales gửi đề bài cho {p}: {t}",
+"Sales gửi yêu cầu cho {p}: {t}",
 "Sales sent the brief to {p}: {t}"
 ],
 "rnd.log.stage": [
@@ -5088,7 +5088,7 @@
 "Scenario {n} · acting as {u}"
 ],
 "rdd.sc.1.title": [
-"Sales gửi đề bài cho R&D",
+"Sales gửi yêu cầu cho R&D",
 "Sales sends a brief to R&D"
 ],
 "rdd.sc.1.goal": [
@@ -5096,7 +5096,7 @@
 "Request technical support from an open Sales opportunity."
 ],
 "rdd.sc.1.steps": [
-"Drawer dự án FI-0011 (Tân Hiệp Phát) đã mở sẵn.\nỞ khối \"Hỗ trợ kỹ thuật R&D\", bấm \"Yêu cầu hỗ trợ R&D\".\nChọn chuyên viên Khoa, sửa đề bài tóm tắt, nhập tiêu chí benchmark → \"Gửi đề bài cho R&D\".\nKiểm tra: khối R&D hiện \"Tiếp nhận đề bài\", Khoa có trong Người tham gia, khung trao đổi có dòng [R&D].",
+"Drawer dự án FI-0011 (Tân Hiệp Phát) đã mở sẵn.\nỞ khối \"Hỗ trợ kỹ thuật R&D\", bấm \"Yêu cầu hỗ trợ R&D\".\nChọn chuyên viên Khoa, sửa tóm tắt yêu cầu, nhập tiêu chí benchmark → \"Gửi yêu cầu cho R&D\".\nKiểm tra: khối R&D hiện \"Tiếp nhận\", Khoa có trong Người tham gia, khung trao đổi có dòng [R&D].",
 "The FI-0011 (Tân Hiệp Phát) drawer is already open.\nIn the \"R&D Technical Support\" block, click \"Request R&D Support\".\nPick specialist Khoa, edit the brief, enter benchmark criteria → \"Send Brief to R&D\".\nCheck: the R&D block shows \"Brief\", Khoa is a participant, and the discussion has an [R&D] line."
 ],
 "rdd.sc.2.title": [
@@ -5104,11 +5104,11 @@
 "R&D picks up the brief and reports progress"
 ],
 "rdd.sc.2.goal": [
-"Chuyên viên R&D xử lý đề bài: đổi giai đoạn, ghi mẻ thử, ghi hoạt động kỹ thuật.",
+"Chuyên viên R&D xử lý yêu cầu: đổi giai đoạn, ghi mẻ thử, ghi hoạt động kỹ thuật.",
 "The R&D specialist works the brief: change stage, log a batch, log a technical activity."
 ],
 "rdd.sc.2.steps": [
-"Bấm chuông thông báo: có đề bài mới (RD-2026-004, và đề bài vừa gửi ở kịch bản 1 nếu đã làm).\nChọn dự án → trên thanh giai đoạn bấm \"Lên công thức\" → \"Lưu thay đổi\".\nỞ \"Nhật ký mẻ thử Lab\" ghi 1 mẻ (tỷ lệ, nhiệt độ, kết quả cảm quan) → \"Ghi mẻ\".\nBấm \"Ghi hoạt động\" → loại Lab Trial → lưu; mở \"Hoạt động khách hàng\" để thấy badge R&D.",
+"Bấm chuông thông báo: có yêu cầu mới (RD-2026-004, và yêu cầu vừa gửi ở kịch bản 1 nếu đã làm).\nChọn dự án → trên thanh giai đoạn bấm \"Lên công thức\" → \"Lưu thay đổi\".\nỞ \"Nhật ký mẻ thử Lab\" ghi 1 mẻ (tỷ lệ, nhiệt độ, kết quả cảm quan) → \"Ghi mẫu\".\nBấm \"Ghi hoạt động\" → loại Lab Trial → lưu; mở \"Hoạt động khách hàng\" để thấy badge R&D.",
 "Click the notification bell: there is a new brief (RD-2026-004, plus the one from scenario 1 if done).\nOpen the topic → click \"Formulation\" on the stage bar → \"Save Changes\".\nIn \"Lab Batch Trials\" log a batch (ratio, temperature, sensory result) → \"Log Batch\".\nClick \"Log Activity\" → type Lab Trial → save; open \"Account Activities\" to see the R&D badge."
 ],
 "rdd.sc.3.title": [
@@ -5346,5 +5346,129 @@
 "rdw.empty.link": [
 "Mở Sales Funnel",
 "Open Sales Funnel"
+],
+"rdw.sync.err": [
+"Có dự án chưa lưu được lên SharePoint",
+"Some topics could not be saved to SharePoint"
+],
+"rdw.sec.inherited": [
+"Thông tin kế thừa từ Sales",
+"Inherited from Sales"
+],
+"rdw.sec.info": [
+"Thông tin dự án",
+"Topic information"
+],
+"rdw.sec.work": [
+"Thiết lập & thực thi R&D",
+"R&D setup & execution"
+],
+"rdw.f.onDemandShort": [
+"Sales",
+"Sales"
+],
+"rdw.f.internalShort": [
+"Nội bộ",
+"Internal"
+],
+"rdw.mx.typeLbl": [
+"Loại dự án",
+"Topic type"
+],
+"rdw.mx.cellN": [
+"{n} dự án",
+"{n} topics"
+],
+"rdw.mx.more": [
+"+ Xem thêm {n} dự án",
+"+ Show {n} more"
+],
+"rdw.mx.less": [
+"Thu gọn",
+"Show less"
+],
+"rdw.mx.add": [
+"Thêm dự án",
+"Add topic"
+],
+"rdw.mx.addAria": [
+"Thêm dự án cho {g} × {n}",
+"Add a topic for {g} × {n}"
+],
+"rdw.m.preCell": [
+"Ô: {g} × {n}",
+"Cell: {g} × {n}"
+],
+"rdw.m.preNone": [
+"Chưa có dự án Sales đang chạy khớp ô này — đang hiển thị tất cả dự án Sales.",
+"No open Sales opportunity matches this cell — showing all opportunities."
+],
+"rdw.pk.aria": [
+"Xem nhanh dự án R&D",
+"R&D topic preview"
+],
+"rdw.pk.snapshot": [
+"Tóm tắt thương mại & kỹ thuật",
+"Commercial & technical snapshot"
+],
+"rdw.pk.target": [
+"Khách hàng mục tiêu",
+"Target account"
+],
+"rdw.pk.ingredient": [
+"Nguyên liệu chính",
+"Key ingredient"
+],
+"rdw.pk.ratio": [
+"Tỷ lệ đề xuất",
+"Suggested ratio"
+],
+"rdw.pk.ratioFrom": [
+"theo mẻ #{n}",
+"from batch #{n}"
+],
+"rdw.pk.noRatio": [
+"Chưa có mẻ thử",
+"No batches yet"
+],
+"rdw.pk.sample": [
+"Tình trạng mẫu thử",
+"Sample availability"
+],
+"rdw.pk.sDone": [
+"Công thức chuẩn — có thể làm mẫu",
+"Standard formula — samples can be made"
+],
+"rdw.pk.sPass": [
+"Có mẫu đạt (mẻ #{n}, {d})",
+"Passing sample available (batch #{n}, {d})"
+],
+"rdw.pk.sSent": [
+"Đã gửi mẫu đối chứng, chờ phản hồi",
+"Benchmark sample sent, awaiting feedback"
+],
+"rdw.pk.sNone": [
+"Chưa có mẫu đạt — cần R&D chuẩn bị",
+"No passing sample yet — R&D needs to prepare one"
+],
+"rdw.pk.stage": [
+"Giai đoạn",
+"Stage"
+],
+"rdw.pk.batches": [
+"Mẻ thử gần nhất",
+"Latest batches"
+],
+"rdw.pk.open": [
+"Mở trong Workspace",
+"Open in Workspace"
+],
+"rdw.mx.addShort": [
+"Dự án",
+"Topic"
+],
+"rdw.mx.tipOpen": [
+"bấm để xem nhanh",
+"click to preview"
 ]
 }

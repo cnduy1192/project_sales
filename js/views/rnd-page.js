@@ -31,13 +31,16 @@
     var role = roleLabel(me.role);
     el.textContent = initials(me.name);
     el.style.background = me.color || "#01426A";
+    el.setAttribute("data-base", me.name + " · " + role);
     el.title = me.name + " · " + role;
     el.setAttribute("aria-label", me.name + " · " + role);
     if (pf) pf.innerHTML =
       '<div class="rdw-pf-h"><b>' + esc(me.name) + "</b>" + (me.email && !demo ? "<small>" + esc(me.email) + "</small>" : "") +
         '<span class="rdw-pf-role">' + esc(role) + "</span></div>" +
+      '<div class="rdw-pf-sync" id="rdwPfSync"></div>' +
       '<a class="rdw-pf-a" href="' + (demo ? "salesfunnel-demo.html" : "index.html") + '">' + esc(T("sf.backToApp")) + "</a>" +
       '<a class="rdw-pf-a" href="' + funnelUrl() + '">' + esc(T("nav.openFunnel")) + "</a>";
+    if (window.RND_WORKSPACE) RND_WORKSPACE.syncRing();
   }
   function setProfile(open) {
     var el = document.getElementById("sfUser"), pf = document.getElementById("rdwProfile"); if (!el || !pf) return;
