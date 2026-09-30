@@ -1,0 +1,83 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   rnd-workspace-demo.html — thanh demo training, ngăn Kịch bản / Góp ý.
+   Chỉ dùng token của styles.css. Tag "Demo training" giống salesfunnel-demo (slate + chấm cam).
+   ═══════════════════════════════════════════════════════════════════════ */
+body.rnd-demo #login{display:none!important}
+
+.rdd-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;padding:8px 10px 8px 12px;
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid #D97706;border-radius:10px;font-size:12.5px}
+.rdd-tag{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:6px;background:#F1F5F9;border:1px solid #E2E8F0;
+  color:#475569;font-weight:700;font-size:11.5px;letter-spacing:.02em;white-space:nowrap}
+.rdd-tag::before{content:"";width:6px;height:6px;border-radius:50%;background:#D97706;flex:none}
+.rdd-note{color:var(--ink-3);min-width:0;flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help}
+.rdd-role{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--ink-2)}
+.rdd-role select{height:32px;min-width:180px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink)}
+.rdd-role select:focus{outline:0;border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
+.rdd-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12.5px;white-space:nowrap;transition:border-color .12s,color .12s,background .12s}
+.rdd-btn:hover{border-color:var(--marine);color:var(--marine)}
+.rdd-btn.is-primary{background:var(--marine);border-color:var(--marine);color:#fff}
+.rdd-btn.is-primary:hover{background:var(--marine-deep,#012A46);color:#fff}
+.rdd-btn.is-ghost{border-color:transparent;background:none}
+.rdd-btn.is-ghost:hover{border-color:var(--line)}
+.rdd-btn:focus-visible,.rdd-x:focus-visible,.rdd-seg button:focus-visible{outline:2px solid var(--marine);outline-offset:2px}
+.rdd-n{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#D97706;color:#fff;font-size:10.5px;line-height:18px;text-align:center}
+
+/* Ngăn trượt phải */
+.rdd-ov{position:fixed;inset:0;z-index:950;display:none;background:rgba(16,24,40,.32)}
+.rdd-ov.open{display:block}
+.rdd-panel{position:absolute;top:0;right:0;bottom:0;width:min(480px,100vw);display:flex;flex-direction:column;background:var(--surface);
+  border-left:1px solid var(--line);box-shadow:var(--shadow-lg);animation:rddIn .18s ease-out;outline:0}
+@keyframes rddIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.rdd-panel{animation:none}}
+.rdd-ph{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.rdd-ph h3{font:700 16px/1.3 var(--font-display);color:var(--ink)}
+.rdd-x{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;color:var(--ink-3);flex:none}
+.rdd-x:hover{background:var(--line-2);color:var(--ink)}
+.rdd-pb{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 24px;overscroll-behavior:contain}
+.rdd-lead{font-size:12.5px;line-height:1.55;color:var(--ink-2);margin-bottom:14px}
+
+/* Kịch bản */
+.rdd-sc{border:1px solid var(--line);border-radius:10px;padding:12px 14px 14px}
+.rdd-sc+.rdd-sc{margin-top:10px}
+.rdd-sc-h{display:flex;gap:10px;align-items:flex-start}
+.rdd-sc-n{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;flex:none;
+  background:var(--marine-soft);color:var(--marine);font-weight:700;font-size:12px}
+.rdd-sc h4{font:700 13.5px/1.35 var(--font-display);color:var(--ink)}
+.rdd-sc-role{font-size:11.5px;font-weight:600;color:var(--ink-3)}
+.rdd-sc-goal{margin:8px 0 6px;font-size:12.5px;color:var(--ink-2)}
+.rdd-sc ol{margin:0 0 10px 18px;font-size:12.5px;line-height:1.55;color:var(--ink)}
+.rdd-sc li+li{margin-top:3px}
+
+/* Góp ý */
+.rdd-ctx{padding:8px 10px;border-radius:8px;background:var(--pearl-2,#FAFCFE);border:1px dashed var(--marine-line);font-size:12px;color:var(--ink-2);margin-bottom:12px}
+.rdd-f{margin-bottom:12px}
+.rdd-l{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px}
+.rdd-l .req{color:var(--lost);font-style:normal}
+.rdd-f textarea,.rdd-f input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;line-height:1.5}
+.rdd-f textarea{resize:vertical;min-height:84px}
+.rdd-f textarea:focus,.rdd-f input:focus{outline:0;border-color:var(--marine);box-shadow:0 0 0 3px var(--marine-soft)}
+.rdd-seg{display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px;background:var(--line-2);border-radius:8px}
+.rdd-seg button{height:28px;padding:0 11px;border-radius:6px;font-size:12px;font-weight:600;color:var(--ink-2)}
+.rdd-seg button.on{background:var(--surface);color:var(--marine);box-shadow:0 0 0 1px var(--line),var(--shadow)}
+.rdd-f-act{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:16px}
+.rdd-err{margin-right:auto;color:var(--lost);font-size:12px;font-weight:600}
+.rdd-fb-list{border-top:1px solid var(--line);padding-top:12px}
+.rdd-fb-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:12.5px}
+.rdd-fb-h span{display:inline-flex;gap:6px}
+.rdd-fb-list ul{list-style:none}
+.rdd-fb-list li{padding:9px 0;border-top:1px solid var(--line-2)}
+.rdd-fb-list li:first-child{border-top:0}
+.rdd-fb-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rdd-fb-meta small{color:var(--ink-3);font-size:11px;flex:1;min-width:0}
+.rdd-fb-meta .rdd-x{width:26px;height:26px}
+.rdd-fb-meta .rdd-x:hover{background:var(--lost-bg);color:var(--lost)}
+.rdd-fb-list p{margin-top:4px;font-size:12.5px;line-height:1.5;color:var(--ink);white-space:pre-wrap}
+.rdd-chip{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;font-size:11px;font-weight:700;border:1px solid var(--line);background:var(--line-2);color:var(--ink-2)}
+.rdd-chip.t-bug{color:var(--lost);background:var(--lost-bg);border-color:var(--lost-bd)}
+.rdd-chip.t-ux{color:var(--prog);background:var(--prog-bg);border-color:var(--prog-bd)}
+.rdd-chip.t-idea{color:var(--marine);background:var(--marine-soft);border-color:var(--marine-line)}
+.rdd-chip.p-high{color:#fff;background:var(--lost);border-color:var(--lost)}
+.rdd-empty{font-size:12.5px;color:var(--ink-3)}
+
+@media (max-width:900px){ .rdd-note{display:none} .rdd-role select{min-width:0} }

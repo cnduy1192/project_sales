@@ -31,25 +31,23 @@ function rebuildNccTabs(){
 }
 window.rebuildNccTabs=rebuildNccTabs;
 
-const VIEWS=['cockpit','funnel','rnd','customers','acts','reports','users'];   // menu Dashboard đã bỏ khỏi tracker
+const VIEWS=['cockpit','funnel','customers','acts','reports','users'];   // menu Dashboard đã bỏ; R&D Workspace nay là trang riêng rnd-workspace.html
 function go(v){
+  if(v==='rnd'){ if(window.openRndWorkspace) openRndWorkspace(); return; }   // R&D Workspace = trang riêng
   if(VIEWS.indexOf(v)<0) v='funnel';   // link/bookmark cũ tới view đã bỏ (vd. 'dash')
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
   VIEWS.forEach(x=>document.getElementById('view-'+x).style.display = x===v?'block':'none');
 
   const tabs=document.getElementById('nccTabs');
-  // R&D Workspace có bộ lọc NCC + ô tìm kiếm riêng → ẩn tab NCC của header
-  if(tabs) tabs.style.display = (v==='cockpit'||v==='customers'||v==='rnd') ? 'none' : '';
+  if(tabs) tabs.style.display = (v==='cockpit'||v==='customers') ? 'none' : '';
   // Hoạt động khách hàng có ô tìm kiếm riêng trong bảng → ẩn ô "Lọc nhanh funnel" của header để không trùng
   const gs=document.querySelector('.gheader .gsearch');
-  if(gs) gs.style.display = (v==='acts'||v==='rnd') ? 'none' : '';
-  const mainEl=document.querySelector('.main'); if(mainEl) mainEl.classList.toggle('rdw-on', v==='rnd');
+  if(gs) gs.style.display = (v==='acts') ? 'none' : '';
   if(v!=='acts' && typeof closeActivityModal==='function') closeActivityModal(true);
   if(v==='cockpit')renderCockpit();
   if(v==='reports')renderReports();
   if(v==='customers'&&window.renderCustomers)renderCustomers();
   if(v==='funnel')render(); if(v==='acts')renderActs();
-  if(v==='rnd'&&window.RND_WORKSPACE)RND_WORKSPACE.render();
 }
 
 function toggleSidebar(force){

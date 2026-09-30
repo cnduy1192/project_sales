@@ -5,6 +5,10 @@
    2) openSalesFunnel(event, extra) — menu "Sales Funnel" ở index
       → salesfunnel.html?ncc=…&status=…&q=…&open=<mã dự án>&from=index
       (mang theo bộ lọc hiện tại; salesfunnel.html dùng lại phiên M365 → không qua màn hình đăng nhập)
+   3) openRndWorkspace(event, extra) — menu "R&D Workspace" ở index
+      → rnd-workspace.html?open=<RD-…|FI-…>&mode=&type=&ncc=&q=&from=index
+      (trang R&D tự ghi lại trạng thái vào URL nên có thể sao chép / gửi link; xem RND_WORKSPACE.applyDeepLink)
+      Link cũ index.html?open=rnd&rd=RD-… được chuyển tiếp sang trang mới.
    ============================================================ */
 (function () {
   "use strict";
@@ -47,6 +51,30 @@
   window.salesFunnelUrl = salesFunnelUrl;
   window.openSalesFunnel = openSalesFunnel;
 
+  /* ---------- (3) Deeplink sang rnd-workspace.html ---------- */
+  function rndWorkspaceUrl(extra) {
+    extra = extra || {};
+    var p = new URLSearchParams();
+    if (extra.open) p.set("open", extra.open);            // mã đề tài RD-… hoặc mã dự án Sales FI-…
+    if (extra.mode === "matrix") p.set("mode", "matrix");
+    if (extra.type === "ON_DEMAND" || extra.type === "INTERNAL") p.set("type", extra.type);
+    if (extra.ncc) p.set("ncc", extra.ncc);
+    if (extra.q) p.set("q", extra.q);
+    p.set("from", "index");
+    return "rnd-workspace.html?" + p.toString();
+  }
+  function openRndWorkspace(e, extra) {
+    var url = rndWorkspaceUrl(extra);
+    var a = e && e.currentTarget && e.currentTarget.tagName === "A" ? e.currentTarget : null;
+    if (a) a.href = url;
+    if (e && (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1)) return true;   // tab mới
+    if (e && e.preventDefault) e.preventDefault();
+    location.href = url;
+    return false;
+  }
+  window.rndWorkspaceUrl = rndWorkspaceUrl;
+  window.openRndWorkspace = openRndWorkspace;
+
   // cập nhật href khi rê chuột / focus để "Mở trong tab mới" (chuột phải) cũng đúng deeplink
   function refreshHref(ev) {
     var a = ev.target && ev.target.closest && ev.target.closest('a[href^="salesfunnel.html"]');
@@ -61,6 +89,8 @@
   try { params = new URLSearchParams(location.search); } catch (e) { return; }
   var open = params.get("open");
   if (!open) return;
+  // Link cũ tới view R&D trong index → trang R&D Workspace riêng
+  if (open === "rnd") { location.replace(rndWorkspaceUrl({ open: params.get("rd") || "" })); return; }
   // client_id do trang Báo cáo gửi sang; giữ tương thích tham số q cũ (từ salesfunnel.html).
   var q = params.get("client_id") || params.get("q") || "";
   var actId = params.get("activity_id") || "";

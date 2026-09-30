@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════
    R&D WORKSPACE — Phase 2 (js/views/rnd-workspace.js)
-   Hai chế độ trong cùng view #view-rnd (index.html):
+   Chạy trong trang riêng rnd-workspace.html (host #view-rnd), có deeplink — xem mục "Vòng đời & deeplink".
+   Hai chế độ trong cùng view #view-rnd:
      1. Workspace (Split View): Master 380px · Detail canvas (stepper stage, benchmark,
         nhật ký mẻ thử Lab, tài liệu R&D, hoạt động liên quan).
      2. Ma trận ứng dụng: nhóm ứng dụng (CATALOG.segTree) × Nhà cung cấp.
@@ -23,8 +24,11 @@
     sel: "",              // code đang chọn
     drafts: {},           // code → { field: value } chưa lưu
     mergedFor: null,      // email đã nạp overlay localStorage
-    bound: false
+    bound: false,
+    limit: 25,            // phân trang danh sách: số dự án đang hiển thị
+    sig: ""               // chữ ký bộ lọc → đổi bộ lọc thì về trang đầu
   };
+  var PAGE = 25;
 
   /* ───────────── helpers ───────────── */
   function tr(k, p) { return typeof T === "function" ? T(k, p) : k; }
@@ -230,14 +234,17 @@
   /* ═══════════════ RENDER ═══════════════ */
   function root() { return document.getElementById(HOST); }
 
+  function headSlot() { return document.getElementById("rdwHeadSlot"); }
   function render() {
-    var el = root(); if (!el) return;
-    if (!meNow()) { el.innerHTML = ""; return; }
+    var el = root(), slot = headSlot(); if (!el) return;
+    if (!meNow()) { el.innerHTML = ""; if (slot) slot.innerHTML = ""; return; }
     ensureMerged();
     bind(el);
+    /* Trang riêng: badge đồng bộ + nút tạo nằm ở header 48px (#rdwHeadSlot); nơi khác vẫn dựng topbar trong view */
+    if (slot) slot.innerHTML = syncHTML() + createBtnHTML();
     el.innerHTML =
       '<div class="rdw">' +
-        topbarHTML() +
+        (slot ? "" : topbarHTML()) +
         '<div class="rdw-sub" id="rdwSub">' + subbarHTML() + "</div>" +
         '<div class="rdw-body" id="rdwBody"></div>' +
       "</div>";
@@ -245,16 +252,19 @@
     fit();
   }
 
-  function topbarHTML() {
+  function syncHTML() {
     var mode = window.RND ? RND.mode() : "local";
-    var sync = mode === "demo"
+    return mode === "demo"
       ? '<span class="rdw-sync is-demo">' + esc(tr("rdw.sync.demo")) + "</span>"
       : mode === "sharepoint"
       ? '<span class="rdw-sync is-sp">' + I.check + esc(tr("rdw.sync.sp")) + "</span>"
       : '<span class="rdw-sync" title="' + esc(tr("rdw.sync.localHint")) + '">' + I.cloudOff + esc(tr("rdw.sync.local")) + "</span>";
-    return '<div class="topbar rdw-top"><div class="rdw-top-l"><h2>' + esc(tr("nav.rnd")) + "</h2>" + sync + "</div>" +
-      (canCreate() ? '<button type="button" class="btn-primary" data-act="create">' + I.plus + "<span>" + esc(tr("rdw.create")) + "</span></button>" : "") +
-      "</div>";
+  }
+  function createBtnHTML() {
+    return canCreate() ? '<button type="button" class="btn-primary rdw-create" data-act="create">' + I.plus + "<span>" + esc(tr("rdw.create")) + "</span></button>" : "";
+  }
+  function topbarHTML() {
+    return '<div class="topbar rdw-top"><div class="rdw-top-l"><h2>' + esc(tr("nav.rnd")) + "</h2>" + syncHTML() + "</div>" + createBtnHTML() + "</div>";
   }
 
   function subbarHTML() {
@@ -268,52 +278,81 @@
       return '<option value="' + esc(c) + '"' + (ST.ncc === c ? " selected" : "") + ">" + esc(c === OTHER ? tr("rdw.other") : c) + "</option>";
     }).join("");
     return (
-      '<div class="rdw-seg" role="tablist" aria-label="' + esc(tr("rdw.viewAria")) + '">' +
+      '<div class="rdw-tb-l"><div class="rdw-seg" role="tablist" aria-label="' + esc(tr("rdw.viewAria")) + '">' +
         modes.map(function (m) {
           var on = ST.mode === m[0];
           return '<button type="button" role="tab" aria-selected="' + on + '" class="' + (on ? "on" : "") + '" data-act="mode" data-v="' + m[0] + '">' + m[1] + "<span>" + esc(m[2]) + "</span></button>";
         }).join("") +
-      "</div>" +
-      '<div class="rdw-tabs" role="tablist" aria-label="' + esc(tr("rdw.typeAria")) + '">' +
-        types.map(function (t) {
-          var on = ST.type === t[0];
-          return '<button type="button" role="tab" aria-selected="' + on + '" class="rdw-tab' + (on ? " on" : "") + '" data-act="type" data-v="' + t[0] + '">' +
-            esc(t[1]) + ' <span class="rdw-tab-n">' + cnt[t[0]] + "</span></button>";
-        }).join("") +
-      "</div>" +
-      '<label class="rdw-select"><span class="rdw-sr">' + esc(tr("rdw.fld.ncc")) + "</span>" +
-        '<select data-act="ncc" aria-label="' + esc(tr("rdw.fld.ncc")) + '">' + nccOpts + "</select></label>" +
-      '<label class="rdw-search">' + I.search +
-        '<input type="search" id="rdwQ" autocomplete="off" value="' + esc(ST.q) + '" placeholder="' + esc(tr("rdw.searchPh")) + '" aria-label="' + esc(tr("rdw.searchPh")) + '" data-act="q"></label>'
+      "</div></div>" +
+      '<div class="rdw-tb-r"><div class="rdw-fgroup">' +
+        '<label class="rdw-search">' + I.search +
+          '<input type="search" id="rdwQ" autocomplete="off" value="' + esc(ST.q) + '" placeholder="' + esc(tr("rdw.searchPh")) + '" aria-label="' + esc(tr("rdw.searchPh")) + '" data-act="q"></label>' +
+        '<label class="rdw-select"><span class="rdw-sr">' + esc(tr("rdw.fld.ncc")) + "</span>" +
+          '<select data-act="ncc" aria-label="' + esc(tr("rdw.fld.ncc")) + '">' + nccOpts + "</select></label>" +
+        '<div class="rdw-tabs" role="tablist" aria-label="' + esc(tr("rdw.typeAria")) + '">' +
+          types.map(function (t) {
+            var on = ST.type === t[0];
+            return '<button type="button" role="tab" aria-selected="' + on + '" class="rdw-tab' + (on ? " on" : "") + '" data-act="type" data-v="' + t[0] + '">' +
+              esc(t[1]) + ' <span class="rdw-tab-n">' + cnt[t[0]] + "</span></button>";
+          }).join("") +
+        "</div>" +
+      "</div></div>"
     );
   }
 
   function renderSub() { var s = document.getElementById("rdwSub"); if (!s) return; var foc = document.activeElement && document.activeElement.id === "rdwQ"; s.innerHTML = subbarHTML(); if (foc) { var q = document.getElementById("rdwQ"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } } }
 
+  function masterHead(recs, shown) {
+    var filt = ST.q || ST.ncc || ST.type !== "ALL";
+    return "<span>" + esc(recs.length > shown ? tr("rdw.shown", { a: shown, b: recs.length }) : tr("rdw.count", { n: recs.length })) + "</span>" +
+      (filt ? '<button type="button" class="rdw-link" data-act="clear">' + esc(tr("act.clearFilters")) + "</button>" : "");
+  }
+  function masterList(recs, shown) {
+    if (!recs.length) return emptyListHTML();
+    var rest = recs.length - shown;
+    return recs.slice(0, shown).map(itemHTML).join("") +
+      (rest > 0 ? '<button type="button" class="rdw-more" data-act="more">' + esc(tr("rdw.more", { n: Math.min(PAGE, rest) })) + "</button>" : "");
+  }
+  /* Phân trang: hiển thị PAGE dự án, cuộn tới cuối hoặc bấm "Xem thêm" để nạp tiếp */
+  function shownCount(recs) {
+    var sig = ST.type + "|" + ST.ncc + "|" + ST.q;
+    if (sig !== ST.sig) { ST.sig = sig; ST.limit = PAGE; }
+    var i = -1; for (var k = 0; k < recs.length; k++) if (recs[k].code === ST.sel) { i = k; break; }
+    if (i >= ST.limit) ST.limit = Math.ceil((i + 1) / PAGE) * PAGE;
+    return Math.min(ST.limit, recs.length);
+  }
+  function renderMaster() {
+    var l = document.getElementById("rdwList"), h = document.getElementById("rdwMHead"); if (!l || !h) return;
+    var recs = filtered(), top = l.scrollTop, n = shownCount(recs);
+    h.innerHTML = masterHead(recs, n); l.innerHTML = masterList(recs, n); l.scrollTop = top;
+  }
+  function loadMore() {
+    var recs = filtered(); if (ST.limit >= recs.length) return;
+    ST.limit += PAGE; renderMaster();
+  }
+
   function renderBody() {
     var b = document.getElementById("rdwBody"); if (!b) return;
     b.className = "rdw-body is-" + ST.mode;
-    if (ST.mode === "matrix") { b.innerHTML = matrixHTML(); return; }
+    if (ST.mode === "matrix") { b.innerHTML = matrixHTML(); syncUrl(); return; }
     var recs = filtered();
     if (!recs.some(function (r) { return r.code === ST.sel; })) ST.sel = recs.length ? recs[0].code : "";
+    var n = shownCount(recs);
     b.innerHTML =
       '<div class="rdw-split">' +
         '<aside class="rdw-master" aria-label="' + esc(tr("rdw.listAria")) + '">' +
-          '<div class="rdw-mhead"><span>' + esc(tr("rdw.count", { n: recs.length })) + "</span>" +
-            (ST.q || ST.ncc || ST.type !== "ALL" ? '<button type="button" class="rdw-link" data-act="clear">' + esc(tr("act.clearFilters")) + "</button>" : "") +
-          "</div>" +
-          '<div class="rdw-mlist" id="rdwList" role="listbox" tabindex="0" aria-label="' + esc(tr("rdw.listAria")) + '">' +
-            (recs.length ? recs.map(itemHTML).join("") : emptyListHTML()) +
-          "</div>" +
+          '<div class="rdw-mhead" id="rdwMHead">' + masterHead(recs, n) + "</div>" +
+          '<div class="rdw-mlist" id="rdwList" role="listbox" tabindex="0" aria-label="' + esc(tr("rdw.listAria")) + '">' + masterList(recs, n) + "</div>" +
         "</aside>" +
         '<section class="rdw-detail" id="rdwDetail" aria-live="polite"></section>' +
       "</div>";
     renderDetail();
+    syncUrl();
   }
 
   function emptyListHTML() {
     var none = !visibleAll().length;
-    return '<div class="rdw-empty-s">' + esc(tr(none ? "rdw.empty.title" : "rdw.noMatch")) + "</div>";
+    return '<div class="rdw-empty-s">' + esc(tr(none ? "rdw.emptyList" : "rdw.noMatch")) + "</div>";
   }
 
   function itemHTML(r) {
@@ -342,10 +381,12 @@
     var d = document.getElementById("rdwDetail"); if (!d) return;
     var r = view(ST.sel);
     if (!r) {
+      var any = visibleAll().length, fUrl = window.rndFunnelUrl ? rndFunnelUrl() : "salesfunnel.html";
       d.innerHTML = '<div class="rdw-empty">' + I.flask +
-        "<h3>" + esc(tr(visibleAll().length ? "rdw.pickOne" : "rdw.empty.title")) + "</h3>" +
-        (visibleAll().length ? "" : "<p>" + esc(tr("rdw.empty.body")) + "</p>" +
-          (canCreate() ? '<button type="button" class="btn-primary" data-act="create">' + I.plus + "<span>" + esc(tr("rdw.create")) + "</span></button>" : "")) +
+        "<h3>" + esc(tr(any ? "rdw.noMatch" : "rdw.empty.title")) + "</h3>" +
+        "<p>" + esc(tr(any ? "rdw.noMatchHint" : "rdw.empty.body")) + "</p>" +
+        (any ? '<button type="button" class="rdw-link" data-act="clear">' + esc(tr("act.clearFilters")) + "</button>"
+             : '<a class="rdw-link" href="' + esc(fUrl) + '">' + esc(tr("rdw.empty.link")) + " →</a>") +
         "</div>";
       return;
     }
@@ -646,9 +687,11 @@
   function select(code, focusList) {
     if (!code || code === ST.sel) return;
     var prev = ST.sel; ST.sel = code;
+    if (!document.getElementById("rdwI-" + code)) renderMaster();   // mục nằm ngoài trang đang hiển thị (điều hướng bàn phím)
     if (prev) refreshItem(prev);
     refreshItem(code);
     renderDetail();
+    syncUrl();
     var d = document.getElementById("rdwDetail"); if (d) d.scrollTop = 0;
     var it = document.getElementById("rdwI-" + code);
     if (it && it.scrollIntoView) it.scrollIntoView({ block: "nearest" });
@@ -754,12 +797,22 @@
   function bind(el) {
     if (el.__rdwBound) return;
     el.__rdwBound = true;
+    var slot = headSlot();
+    if (slot && !slot.__rdwBound) {
+      slot.__rdwBound = true;
+      slot.addEventListener("click", function (e) { if (e.target.closest && e.target.closest('[data-act="create"]')) openCreate(); });
+    }
+    el.addEventListener("scroll", function (e) {
+      var l = e.target; if (!l || l.id !== "rdwList") return;
+      if (l.scrollHeight - l.scrollTop - l.clientHeight < 160) loadMore();
+    }, true);
     el.addEventListener("click", function (e) {
       var t = e.target.closest("[data-act]"); if (!t || !el.contains(t)) return;
       var a = t.getAttribute("data-act"), v = t.getAttribute("data-v");
       if (a === "mode") { ST.mode = v; renderSub(); renderBody(); fit(); }
       else if (a === "type") { ST.type = v; renderSub(); renderBody(); }
       else if (a === "clear") { ST.type = "ALL"; ST.ncc = ""; ST.q = ""; renderSub(); renderBody(); }
+      else if (a === "more") loadMore();
       else if (a === "select") select(t.getAttribute("data-code"));
       else if (a === "focus") focus(t.getAttribute("data-code"));
       else if (a === "stage") setStage(v);
@@ -808,14 +861,14 @@
     document.querySelectorAll("#rdwSub .rdw-tab").forEach(function (b) { var n = b.querySelector(".rdw-tab-n"); if (n) n.textContent = cnt[b.getAttribute("data-v")]; });
   }
 
+  /* Hoạt động nằm ở app chính (index.html): deeplink ?open=acts&activity_id=… / &q=… (xem js/lib/deeplink.js) */
   function openAct(id) {
-    if (typeof go === "function") go("acts");
-    setTimeout(function () { if (typeof openActivityModal === "function") openActivityModal(id); }, 30);
+    if (isDemo()) { toastMsg(tr("rdw.msg.actsOnMain")); return; }
+    location.href = "index.html?open=acts&activity_id=" + encodeURIComponent(id) + "&from=rnd";
   }
   function openAllActs(q) {
-    if (typeof go === "function") go("acts");
-    var inp = document.getElementById("actSearch");
-    if (inp && q) { inp.value = q; if (typeof setActSearch === "function") setActSearch(q); }
+    if (isDemo()) { toastMsg(tr("rdw.msg.actsOnMain")); return; }
+    location.href = "index.html?open=acts" + (q ? "&q=" + encodeURIComponent(q) : "") + "&from=rnd";
   }
 
   /* Split view chiếm đúng phần còn lại của màn hình → từng panel cuộn riêng */
@@ -823,7 +876,7 @@
     var el = root(); if (!el || el.style.display === "none") return;
     var body = document.getElementById("rdwBody"); if (!body) return;
     var top = body.getBoundingClientRect().top + window.scrollY;
-    var h = Math.max(480, window.innerHeight - top - 16);
+    var h = Math.max(360, window.innerHeight - top);
     body.style.setProperty("--rdw-h", h + "px");
   }
   window.addEventListener("resize", function () { fit(); });
@@ -979,28 +1032,63 @@
     if (Object.keys(ST.drafts).length) { e.preventDefault(); e.returnValue = tr("rdw.leave"); return e.returnValue; }
   });
 
-  /* index.html?open=rnd&rd=RD-2026-001 → mở R&D Workspace và chọn đề tài */
-  (function deeplink() {
-    var p; try { p = new URLSearchParams(location.search); } catch (e) { return; }
-    if (p.get("open") !== "rnd") return;
-    var code = p.get("rd") || "", tries = 0;
-    var iv = setInterval(function () {
+  /* ── Deeplink: rnd-workspace.html?open=…&mode=…&type=…&ncc=…&q=…&from=… ──
+       open  = mã đề tài (RD-2026-001) hoặc mã dự án Sales (FI-0011 → đề tài liên kết dự án đó)
+       mode  = split (mặc định) | matrix     type = ON_DEMAND | INTERNAL (mặc định: tất cả)
+       ncc   = tên nhà cung cấp | other      q    = từ khoá tìm kiếm
+       Trạng thái đang xem được ghi ngược vào URL (history.replaceState) → sao chép thanh địa chỉ là có link chia sẻ.
+       Link cũ ?open=rnd&rd=RD-… vẫn đọc được. */
+  var DL = { pending: false, applied: false };
+  function readDL() {
+    var p; try { p = new URLSearchParams(location.search); } catch (e) { return null; }
+    var open = p.get("open") || "";
+    if (open === "rnd") open = p.get("rd") || "";
+    return { open: open.trim(), mode: p.get("mode") || "", type: p.get("type") || "", ncc: (p.get("ncc") || "").trim(), q: p.get("q") || "" };
+  }
+  function topicFor(id) {
+    if (!id) return null;
+    if (recOf(id)) return id;
+    var a = list(), key = nKey(id);
+    for (var i = 0; i < a.length; i++) if (nKey(a[i].originProjectId) === key && canSee(a[i])) return a[i].code;
+    return null;
+  }
+  function applyDeepLink() {
+    if (DL.applied) return;
+    DL.applied = true;
+    var d = readDL(); if (!d) return;
+    if (d.mode === "matrix" || d.mode === "split") ST.mode = d.mode;
+    if (d.type === "ON_DEMAND" || d.type === "INTERNAL") ST.type = d.type;
+    if (d.ncc) {
+      var k = d.ncc.toLowerCase();
+      ST.ncc = k === "other" ? OTHER : (nccCols().filter(function (c) { return String(c).toLowerCase() === k; })[0] || "");
+    }
+    if (d.q) ST.q = d.q;
+    if (!d.open) return;
+    DL.pending = true;                       // chưa ghi URL cho tới khi tìm được đề tài (tránh ghi đè ?open=)
+    var tries = 0, iv = setInterval(function () {   // chờ dữ liệu SharePoint về rồi mới chọn đề tài
       tries++;
-      if (meNow() && typeof window.go === "function") {
-        clearInterval(iv);
-        go("rnd");
-        if (code) {
-          var n = 0, iv2 = setInterval(function () {
-            n++;
-            if (recOf(code)) { clearInterval(iv2); focus(code); } else if (n > 60) clearInterval(iv2);
-          }, 250);
-        }
-      } else if (tries > 150) clearInterval(iv);
-    }, 200);
-  })();
+      var code = topicFor(d.open);
+      if (code && canSee(recOf(code))) { clearInterval(iv); DL.pending = false; focus(code); }
+      else if (tries > 60) { clearInterval(iv); DL.pending = false; toastMsg(tr("rdw.msg.dlNotFound", { id: d.open })); syncUrl(); }
+    }, 250);
+  }
+  function syncUrl() {
+    if (DL.pending || !window.history || !history.replaceState || location.protocol === "file:") return;
+    try {
+      var from = new URLSearchParams(location.search).get("from"), n = new URLSearchParams();
+      if (ST.mode === "split" && ST.sel) n.set("open", ST.sel);
+      if (ST.mode === "matrix") n.set("mode", "matrix");
+      if (ST.type !== "ALL") n.set("type", ST.type);
+      if (ST.ncc) n.set("ncc", ST.ncc === OTHER ? "other" : ST.ncc);
+      if (ST.q) n.set("q", ST.q);
+      if (from) n.set("from", from);
+      var qs = n.toString(), next = location.pathname + (qs ? "?" + qs : "") + location.hash;
+      if (next !== location.pathname + location.search + location.hash) history.replaceState(null, "", next);
+    } catch (e) {}
+  }
 
   window.RND_WORKSPACE = {
-    render: render, focus: focus, openCreate: openCreate, fit: fit,
+    render: render, focus: focus, openCreate: openCreate, fit: fit, applyDeepLink: applyDeepLink, syncUrl: syncUrl,
     state: ST,
     hasDrafts: function () { return Object.keys(ST.drafts).length > 0; },
     /* dùng cho test / phase sau */

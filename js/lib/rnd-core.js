@@ -196,7 +196,7 @@
     var rd = a.rdProjectId ? byCode(a.rdProjectId) : (a.projectId ? primaryOf(a.projectId) : null);
     if (!rd || !canSee(rd)) return "";
     var tip = rd.code + " · " + rd.title + " — " + stageText(rd);
-    return '<a class="al-rd rnd-t-' + tone(rd.stage) + '" href="index.html?open=rnd&amp;rd=' + encodeURIComponent(rd.code) + '"' +
+    return '<a class="al-rd rnd-t-' + tone(rd.stage) + '" href="' + esc(topicUrl(rd.code)) + '"' +
       ' onclick="event.stopPropagation();return RND.openTopic(' + jsq(rd.code) + ')" title="' + esc(tip) + '">' + FLASK +
       "<span>" + esc(rd.code) + " · " + esc(full ? stageLabel(rd.stage) : (rd.stage === "COMPLETED" ? "✓" : prob(rd.stage) + "%")) + "</span></a>";
   }
@@ -262,16 +262,14 @@
       "</div>";
   }
 
-  /* Mở đề tài: index.html → view R&D; trang khác → deeplink sang index.html */
+  /* Trang R&D Workspace riêng: bản demo training (salesfunnel-demo.html) → rnd-workspace-demo.html */
+  function topicUrl(code) {
+    return (isDemo() ? "rnd-workspace-demo.html" : "rnd-workspace.html") + "?open=" + encodeURIComponent(code) + "&from=sales";
+  }
+  /* Mở đề tài: đang ở trang R&D → chọn ngay; trang khác → deeplink sang rnd-workspace.html */
   function openTopic(code) {
-    var dov = document.getElementById("dov");
-    if (window.RND_WORKSPACE && document.getElementById("view-rnd") && typeof go === "function") {
-      if (dov && dov.classList.contains("open")) { dov.classList.remove("open"); if (window.NAV && NAV.popRaw) NAV.popRaw(); }
-      if (typeof closeActivityModal === "function") try { closeActivityModal(true); } catch (e) {}
-      go("rnd"); RND_WORKSPACE.focus(code);
-      return false;
-    }
-    location.href = "index.html?open=rnd&rd=" + encodeURIComponent(code);
+    if (window.RND_WORKSPACE && document.getElementById("view-rnd")) { RND_WORKSPACE.focus(code); return false; }
+    location.href = topicUrl(code);
     return false;
   }
 

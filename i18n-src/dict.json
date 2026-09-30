@@ -4460,7 +4460,7 @@
 "Filter by type"
 ],
 "rdw.listAria": [
-"Danh sách đề tài R&D",
+"Danh sách dự án R&D",
 "R&D topic list"
 ],
 "rdw.f.onDemand": [
@@ -4480,11 +4480,11 @@
 "Other"
 ],
 "rdw.searchPh": [
-"Tìm mã, đề tài, khách hàng, nguyên liệu…",
+"Tìm mã, dự án, khách hàng, nguyên liệu…",
 "Search code, topic, account, ingredient…"
 ],
 "rdw.create": [
-"Tạo đề tài R&D",
+"Tạo dự án R&D",
 "New R&D Topic"
 ],
 "rdw.sync.local": [
@@ -4492,7 +4492,7 @@
 "Saved locally · not synced to SharePoint"
 ],
 "rdw.sync.localHint": [
-"Đề tài R&D hiện chỉ lưu trên trình duyệt này (chưa có list R&D trên SharePoint). Đồng nghiệp chưa thấy được và dữ liệu mất nếu xoá dữ liệu trình duyệt.",
+"Dự án R&D hiện chỉ lưu trên trình duyệt này (chưa có list R&D trên SharePoint). Đồng nghiệp chưa thấy được và dữ liệu mất nếu xoá dữ liệu trình duyệt.",
 "R&D topics are currently stored only in this browser (no R&D list on SharePoint yet). Colleagues cannot see them, and they are lost if browser data is cleared."
 ],
 "rdw.sync.demo": [
@@ -4500,23 +4500,23 @@
 "Demo data"
 ],
 "rdw.count": [
-"{n} đề tài",
+"{n} dự án",
 "{n} topics"
 ],
 "rdw.empty.title": [
-"Chưa có đề tài R&D",
+"Chưa có dự án R&D",
 "No R&D topics yet"
 ],
 "rdw.empty.body": [
-"Tạo đề tài từ một dự án Sales đang chạy, hoặc một đề tài nội bộ R&D tự nghiên cứu.",
-"Create a topic from an open Sales opportunity, or an internal R&D topic."
+"Tạo dự án mới bằng nút “Tạo dự án R&D” ở góc trên bên phải, hoặc mở một dự án trong Sales Funnel và chọn “Yêu cầu R&D hỗ trợ” để liên kết.",
+"Create a topic with “New R&D Topic” (top right), or open an opportunity in Sales Funnel and choose “Request R&D support” to link one."
 ],
 "rdw.noMatch": [
-"Không có đề tài khớp bộ lọc.",
+"Không có dự án khớp bộ lọc.",
 "No topics match the filters."
 ],
 "rdw.pickOne": [
-"Chọn một đề tài ở cột trái để xem chi tiết",
+"Chọn một dự án ở cột trái để xem chi tiết",
 "Select a topic on the left to see its details"
 ],
 "rdw.unsaved": [
@@ -4536,7 +4536,7 @@
 "Discard"
 ],
 "rdw.saved": [
-"Đã lưu đề tài {c}.",
+"Đã lưu dự án {c}.",
 "Saved {c}."
 ],
 "rdw.err.persist": [
@@ -4544,11 +4544,11 @@
 "Could not save to this browser (storage full or blocked). Changes last only until the page is reloaded."
 ],
 "rdw.err.title": [
-"Tên đề tài không được để trống.",
+"Tên dự án không được để trống.",
 "Topic name is required."
 ],
 "rdw.titlePh": [
-"Tên đề tài",
+"Tên dự án",
 "Topic name"
 ],
 "rdw.readOnly": [
@@ -4624,7 +4624,7 @@
 "Sample evaluation criteria: crispness, viscosity, sweetness, color, shelf life…"
 ],
 "rdw.noOrigin": [
-"Đề tài nội bộ — không gắn dự án Sales",
+"Dự án nội bộ — không gắn dự án Sales",
 "Internal topic — no linked opportunity"
 ],
 "rdw.originMissing": [
@@ -4732,7 +4732,7 @@
 "R&D Documents"
 ],
 "rdw.attLocked": [
-"Tải tệp lên sẽ mở khi đề tài được lưu trên SharePoint. Hiện chỉ xem được tệp của dự án Sales liên kết.",
+"Tải tệp lên sẽ mở khi dự án được lưu trên SharePoint. Hiện chỉ xem được tệp của dự án Sales liên kết.",
 "Uploading opens once the topic is stored on SharePoint. For now you can only view files from the linked Sales opportunity."
 ],
 "rdw.b3acts": [
@@ -4740,7 +4740,7 @@
 "Related Activities"
 ],
 "rdw.acts.internal": [
-"Đề tài nội bộ không gắn khách hàng nên không có hoạt động liên quan.",
+"Dự án nội bộ không gắn khách hàng nên không có hoạt động liên quan.",
 "Internal topics have no account, so there are no related activities."
 ],
 "rdw.acts.none": [
@@ -4764,11 +4764,11 @@
 "{p} moved stage {a} → {b}"
 ],
 "rdw.log.created": [
-"{p} tạo đề tài",
+"{p} tạo dự án",
 "{p} created the topic"
 ],
 "rdw.mx.legend": [
-"Dòng: nhóm ứng dụng · Cột: nhà cung cấp. Bấm một đề tài để mở trong Workspace.",
+"Dòng: nhóm ứng dụng · Cột: nhà cung cấp. Bấm một dự án để mở trong Workspace.",
 "Rows: application group · Columns: supplier. Click a topic to open it in the Workspace."
 ],
 "rdw.mx.corner": [
@@ -4796,7 +4796,7 @@
 "Unclassified"
 ],
 "rdw.m.title": [
-"Tạo đề tài R&D",
+"Tạo dự án R&D",
 "New R&D Topic"
 ],
 "rdw.m.sub": [
@@ -4820,7 +4820,7 @@
 "There are no open Sales opportunities in your scope."
 ],
 "rdw.m.dup": [
-"Dự án này đã có đề tài {c} đang chạy.",
+"Dự án này đã có dự án {c} đang chạy.",
 "This opportunity already has an active topic, {c}."
 ],
 "rdw.m.nccPh": [
@@ -4848,15 +4848,15 @@
 "Fill in all required fields (*)."
 ],
 "rdw.m.create": [
-"Tạo đề tài",
+"Tạo dự án",
 "Create Topic"
 ],
 "rdw.m.created": [
-"Đã tạo đề tài {c}.",
+"Đã tạo dự án {c}.",
 "Created {c}."
 ],
 "rdw.leave": [
-"Có đề tài R&D chưa lưu thay đổi.",
+"Có dự án R&D chưa lưu thay đổi.",
 "Some R&D topics have unsaved changes."
 ],
 "rdw.suspend": [
@@ -4864,15 +4864,15 @@
 "Suspend"
 ],
 "act.rd": [
-"Đề tài R&D",
+"Dự án R&D",
 "R&D Topic"
 ],
 "act.rdTopic": [
-"Đề tài R&D",
+"Dự án R&D",
 "R&D Topic"
 ],
 "act.rdNone": [
-"Không gắn đề tài R&D",
+"Không gắn dự án R&D",
 "No R&D topic"
 ],
 "rdw.acts.log": [
@@ -4880,7 +4880,7 @@
 "Log Activity"
 ],
 "rdw.acts.logTitle": [
-"Ghi hoạt động cho đề tài R&D",
+"Ghi hoạt động cho dự án R&D",
 "Log Activity for R&D Topic"
 ],
 "rdw.sync.sp": [
@@ -4896,7 +4896,7 @@
 "R&D Technical Support"
 ],
 "rnd.w.none": [
-"Dự án chưa có đề tài R&D. Gửi đề bài để chuyên viên R&D nhận việc và theo dõi cùng.",
+"Dự án chưa có dự án R&D. Gửi đề bài để chuyên viên R&D nhận việc và theo dõi cùng.",
 "No R&D topic yet. Send a brief so an R&D specialist picks it up and follows the opportunity."
 ],
 "rnd.w.badge": [
@@ -4908,7 +4908,7 @@
 "R&D owner"
 ],
 "rnd.w.open": [
-"Xem đề tài R&D",
+"Xem dự án R&D",
 "View R&D Topic"
 ],
 "rnd.w.again": [
@@ -4916,7 +4916,7 @@
 "Send a New R&D Brief"
 ],
 "rnd.req.sub": [
-"Dự án {id} · mã đề tài dự kiến {c}",
+"Dự án {id} · mã dự án dự kiến {c}",
 "Opportunity {id} · expected topic code {c}"
 ],
 "rnd.req.pic": [
@@ -4924,7 +4924,7 @@
 "R&D Specialist"
 ],
 "rnd.req.noRnd": [
-"Chưa có người dùng nào có vai trò R&D. Đề tài sẽ chờ phân công.",
+"Chưa có người dùng nào có vai trò R&D. Dự án sẽ chờ phân công.",
 "No users have the R&D role yet. The topic will wait for assignment."
 ],
 "rnd.req.brief": [
@@ -4956,11 +4956,11 @@
 "You cannot request R&D support for this opportunity."
 ],
 "rnd.msg.saveFailed": [
-"Chưa lưu được đề tài R&D:",
+"Chưa lưu được dự án R&D:",
 "Could not save the R&D topic:"
 ],
 "rnd.msg.migrated": [
-"Đã chuyển {n} đề tài lưu cục bộ lên SharePoint.",
+"Đã chuyển {n} dự án lưu cục bộ lên SharePoint.",
 "Moved {n} locally saved topic(s) to SharePoint."
 ],
 "rnd.notif.assigned": [
@@ -4968,11 +4968,11 @@
 "sent you R&D brief {c}: {t}"
 ],
 "rnd.notif.stage": [
-"chuyển đề tài {c} sang \"{s}\"",
+"chuyển dự án {c} sang \"{s}\"",
 "moved topic {c} to \"{s}\""
 ],
 "rnd.notif.done": [
-"đã hoàn tất đề tài {c}: {t}",
+"đã hoàn tất dự án {c}: {t}",
 "completed topic {c}: {t}"
 ],
 "rnd.log.requested": [
@@ -5000,11 +5000,11 @@
 "Your account cannot write to the R&D list on SharePoint. Contact the site admin."
 ],
 "rds.err.missing": [
-"Không tìm thấy list RD_Projects (hoặc đề tài đã bị xoá) trên SharePoint.",
+"Không tìm thấy list RD_Projects (hoặc dự án đã bị xoá) trên SharePoint.",
 "The RD_Projects list (or this topic) was not found on SharePoint."
 ],
 "rds.err.conflict": [
-"Đề tài vừa được người khác cập nhật. Tải lại trang rồi thử lại.",
+"Dự án vừa được người khác cập nhật. Tải lại trang rồi thử lại.",
 "Someone else just updated this topic. Reload the page and try again."
 ],
 "rds.err.invalid": [
@@ -5034,5 +5034,317 @@
 "rds.financeRO": [
 "R&D chỉ xem thông tin tài chính / sản lượng của dự án Sales.",
 "R&D can only view the opportunity's financials and volumes."
+],
+"rdd.pageTitle": [
+"FI SAIGON — R&D Workspace · Demo training",
+"FI SAIGON — R&D Workspace · Training demo"
+],
+"rdd.tag": [
+"Demo training",
+"Training demo"
+],
+"rdd.note": [
+"Dữ liệu mô phỏng · không kết nối SharePoint · tải lại trang là về dữ liệu gốc",
+"Simulated data · not connected to SharePoint · reload to restore the original data"
+],
+"rdd.roleLabel": [
+"Vai trò",
+"Role"
+],
+"rdd.guide": [
+"Kịch bản training",
+"Training scenarios"
+],
+"rdd.fb": [
+"Góp ý",
+"Feedback"
+],
+"rdd.reset": [
+"Làm lại dữ liệu demo",
+"Reset demo data"
+],
+"rdd.resetHint": [
+"Bỏ mọi thao tác thử, nạp lại dữ liệu demo gốc (góp ý vẫn được giữ)",
+"Discard all trial actions and reload the original demo data (feedback is kept)"
+],
+"rdd.resetConfirm": [
+"Bỏ mọi thao tác thử và nạp lại dữ liệu demo gốc? Góp ý đã ghi vẫn được giữ.",
+"Discard all trial actions and reload the original demo data? Saved feedback is kept."
+],
+"rdd.toast": [
+"Bản demo training R&D Workspace — dữ liệu mô phỏng. Đổi vai ở thanh phía trên, mở \"Kịch bản training\" để bắt đầu.",
+"R&D Workspace training demo — simulated data. Switch roles in the bar above and open \"Training scenarios\" to start."
+],
+"rdd.guideLead": [
+"Mỗi kịch bản tự chuyển sang đúng vai và mở sẵn màn hình. Nên làm theo thứ tự 1 → 6: dữ liệu thao tác ở kịch bản trước được giữ cho kịch bản sau (đến khi tải lại trang).",
+"Each scenario switches to the right role and opens the right screen. Follow 1 → 6 in order: data from earlier scenarios carries over to later ones (until the page is reloaded)."
+],
+"rdd.sc.start": [
+"Vào vai {u} & bắt đầu",
+"Act as {u} & start"
+],
+"rdd.sc.started": [
+"Kịch bản {n} · đang ở vai {u}",
+"Scenario {n} · acting as {u}"
+],
+"rdd.sc.1.title": [
+"Sales gửi đề bài cho R&D",
+"Sales sends a brief to R&D"
+],
+"rdd.sc.1.goal": [
+"Tạo yêu cầu hỗ trợ kỹ thuật từ một dự án Sales đang chạy.",
+"Request technical support from an open Sales opportunity."
+],
+"rdd.sc.1.steps": [
+"Drawer dự án FI-0011 (Tân Hiệp Phát) đã mở sẵn.\nỞ khối \"Hỗ trợ kỹ thuật R&D\", bấm \"Yêu cầu hỗ trợ R&D\".\nChọn chuyên viên Khoa, sửa đề bài tóm tắt, nhập tiêu chí benchmark → \"Gửi đề bài cho R&D\".\nKiểm tra: khối R&D hiện \"Tiếp nhận đề bài\", Khoa có trong Người tham gia, khung trao đổi có dòng [R&D].",
+"The FI-0011 (Tân Hiệp Phát) drawer is already open.\nIn the \"R&D Technical Support\" block, click \"Request R&D Support\".\nPick specialist Khoa, edit the brief, enter benchmark criteria → \"Send Brief to R&D\".\nCheck: the R&D block shows \"Brief\", Khoa is a participant, and the discussion has an [R&D] line."
+],
+"rdd.sc.2.title": [
+"R&D nhận việc và cập nhật tiến độ",
+"R&D picks up the brief and reports progress"
+],
+"rdd.sc.2.goal": [
+"Chuyên viên R&D xử lý đề bài: đổi giai đoạn, ghi mẻ thử, ghi hoạt động kỹ thuật.",
+"The R&D specialist works the brief: change stage, log a batch, log a technical activity."
+],
+"rdd.sc.2.steps": [
+"Bấm chuông thông báo: có đề bài mới (RD-2026-004, và đề bài vừa gửi ở kịch bản 1 nếu đã làm).\nChọn dự án → trên thanh giai đoạn bấm \"Lên công thức\" → \"Lưu thay đổi\".\nỞ \"Nhật ký mẻ thử Lab\" ghi 1 mẻ (tỷ lệ, nhiệt độ, kết quả cảm quan) → \"Ghi mẻ\".\nBấm \"Ghi hoạt động\" → loại Lab Trial → lưu; mở \"Hoạt động khách hàng\" để thấy badge R&D.",
+"Click the notification bell: there is a new brief (RD-2026-004, plus the one from scenario 1 if done).\nOpen the topic → click \"Formulation\" on the stage bar → \"Save Changes\".\nIn \"Lab Batch Trials\" log a batch (ratio, temperature, sensory result) → \"Log Batch\".\nClick \"Log Activity\" → type Lab Trial → save; open \"Account Activities\" to see the R&D badge."
+],
+"rdd.sc.3.title": [
+"Sales theo dõi tiến độ kỹ thuật",
+"Sales follows technical progress"
+],
+"rdd.sc.3.goal": [
+"Sales nắm tình hình R&D ngay trong dự án, không phải hỏi lại.",
+"Sales sees R&D status inside the opportunity without chasing."
+],
+"rdd.sc.3.steps": [
+"Drawer dự án FI-0008 (Acecook) mở sẵn: khối R&D cho biết giai đoạn, % và số mẻ đạt.\nBấm \"Xem dự án R&D ↗\" để xem chi tiết (chỉ xem, không đổi được giai đoạn).\nChuông thông báo báo khi R&D đổi giai đoạn (làm kịch bản 2 trước để thấy).\nMenu \"Hoạt động khách hàng\": hoạt động Lab Trial / Joint Visit có badge dẫn tới dự án.",
+"The FI-0008 (Acecook) drawer is open: the R&D block shows stage, % and passed batches.\nClick \"View R&D Topic ↗\" for details (view only, stage cannot be changed).\nThe bell notifies you when R&D changes stage (do scenario 2 first to see it).\n\"Account Activities\": Lab Trial / Joint Visit activities carry a badge linking to the topic."
+],
+"rdd.sc.4.title": [
+"Phân quyền giữa các chuyên viên R&D",
+"Permissions between R&D specialists"
+],
+"rdd.sc.4.goal": [
+"R&D chỉ sửa dự án mình phụ trách hoặc phối hợp.",
+"R&D can only edit topics they own or collaborate on."
+],
+"rdd.sc.4.steps": [
+"Dự án RD-2026-003 (Khoa phụ trách) hiện nhãn \"Chỉ xem\" — Minh không sửa được.\nChọn RD-2026-005 (Minh phụ trách): sửa được giai đoạn, benchmark, ghi mẻ thử.\nThử \"Tạo dự án R&D\" → có lựa chọn \"R&D tự nghiên cứu\" (chỉ R&D và quản lý có).",
+"Topic RD-2026-003 (owned by Khoa) shows \"View only\" — Minh cannot edit it.\nOpen RD-2026-005 (owned by Minh): stage, benchmark and batches are editable.\nTry \"New R&D Topic\" → the \"Internal R&D\" option is available (R&D and managers only)."
+],
+"rdd.sc.5.title": [
+"Quản lý điều phối R&D",
+"Managers coordinate R&D"
+],
+"rdd.sc.5.goal": [
+"Nhìn tổng thể năng lực R&D và phân công chuyên viên.",
+"See R&D coverage at a glance and assign specialists."
+],
+"rdd.sc.5.steps": [
+"Ma trận ứng dụng mở sẵn: số dự án đang thử / công thức chuẩn theo nhóm ứng dụng × NCC.\nBấm một thẻ dự án để chuyển sang Workspace.\nÔ \"R&D phụ trách\" là danh sách chọn — chỉ Manager / Super Admin đổi được PIC.\nChuyển một dự án sang \"Hoàn tất – chuyển giao\" → mở dự án Sales gốc để thấy dòng \"R&D đã hoàn thành thử nghiệm và bàn giao kết quả.\"",
+"The Application Matrix is open: topics in trial / standard formulas by application group × supplier.\nClick a topic card to jump to the Workspace.\nThe \"R&D Owner\" field is a dropdown — only Managers / Super Admins can reassign.\nMove a topic to \"Completed\" → open the linked opportunity to see \"R&D completed testing and handed over the results.\""
+],
+"rdd.sc.6.title": [
+"Ban giám đốc xem tổng quan",
+"Directors review"
+],
+"rdd.sc.6.goal": [
+"Director xem toàn bộ nhưng không chỉnh sửa.",
+"Directors see everything but cannot edit."
+],
+"rdd.sc.6.steps": [
+"Xem được toàn bộ dự án và Ma trận; mọi ô ở chế độ chỉ xem.\nKhông có nút \"Tạo dự án R&D\".",
+"All topics and the Matrix are visible; every field is read-only.\nThere is no \"New R&D Topic\" button."
+],
+"rdd.fbLead": [
+"Ghi lại lỗi, chỗ khó dùng hay đề xuất ngay khi gặp. Góp ý lưu trên máy này; cuối buổi bấm \"Tải file góp ý\" và gửi file cho người phụ trách triển khai.",
+"Note bugs, pain points or ideas as you go. Feedback is stored on this computer; at the end of the session click \"Download feedback\" and send the file to the rollout owner."
+],
+"rdd.ctx.detail": [
+"Drawer dự án Sales",
+"Opportunity drawer"
+],
+"rdd.fb.ctx": [
+"Ngữ cảnh:",
+"Context:"
+],
+"rdd.fb.asRole": [
+"vai {u} ({r})",
+"as {u} ({r})"
+],
+"rdd.fb.typeL": [
+"Loại góp ý",
+"Type"
+],
+"rdd.fb.prioL": [
+"Mức ưu tiên",
+"Priority"
+],
+"rdd.fb.textL": [
+"Nội dung",
+"Details"
+],
+"rdd.fb.textPh": [
+"Đang làm gì, gặp gì, mong muốn thế nào…",
+"What you were doing, what happened, what you expected…"
+],
+"rdd.fb.nameL": [
+"Tên người góp ý",
+"Your name"
+],
+"rdd.fb.namePh": [
+"Ghi 1 lần, lần sau tự điền",
+"Entered once, remembered next time"
+],
+"rdd.fb.save": [
+"Lưu góp ý",
+"Save Feedback"
+],
+"rdd.fb.saved": [
+"Đã ghi {n} góp ý",
+"{n} feedback item(s) saved"
+],
+"rdd.fb.copy": [
+"Sao chép",
+"Copy"
+],
+"rdd.fb.csv": [
+"Tải file góp ý (.csv)",
+"Download feedback (.csv)"
+],
+"rdd.fb.del": [
+"Xoá góp ý",
+"Delete feedback"
+],
+"rdd.fb.delConfirm": [
+"Xoá góp ý này?",
+"Delete this feedback item?"
+],
+"rdd.fb.none": [
+"Chưa có góp ý nào.",
+"No feedback yet."
+],
+"rdd.fb.need": [
+"Nhập nội dung góp ý.",
+"Please enter the feedback details."
+],
+"rdd.fb.storeFail": [
+"Không lưu được (trình duyệt chặn bộ nhớ). Hãy sao chép nội dung gửi trực tiếp.",
+"Could not save (browser storage blocked). Copy the text and send it directly."
+],
+"rdd.fb.thanks": [
+"Đã lưu góp ý. Cảm ơn bạn!",
+"Feedback saved. Thank you!"
+],
+"rdd.fb.copied": [
+"Đã sao chép toàn bộ góp ý.",
+"All feedback copied."
+],
+"rdd.fb.type.BUG": [
+"Lỗi",
+"Bug"
+],
+"rdd.fb.type.UX": [
+"Khó dùng",
+"Hard to use"
+],
+"rdd.fb.type.IDEA": [
+"Đề xuất",
+"Suggestion"
+],
+"rdd.fb.type.QUESTION": [
+"Câu hỏi",
+"Question"
+],
+"rdd.fb.prio.HIGH": [
+"Cao",
+"High"
+],
+"rdd.fb.prio.MED": [
+"Trung bình",
+"Medium"
+],
+"rdd.fb.prio.LOW": [
+"Thấp",
+"Low"
+],
+"rdd.col.at": [
+"Thời gian",
+"Time"
+],
+"rdd.col.reviewer": [
+"Người góp ý",
+"Reviewer"
+],
+"rdd.col.asUser": [
+"Vai demo",
+"Demo user"
+],
+"rdd.col.asRole": [
+"Vai trò",
+"Role"
+],
+"rdd.col.screen": [
+"Màn hình",
+"Screen"
+],
+"rdd.col.ref": [
+"Mã",
+"Reference"
+],
+"rdd.col.type": [
+"Loại",
+"Type"
+],
+"rdd.col.prio": [
+"Ưu tiên",
+"Priority"
+],
+"rdd.col.text": [
+"Nội dung",
+"Details"
+],
+"rdd.noteShort": [
+"Dữ liệu mô phỏng · không kết nối SharePoint",
+"Simulated data · no SharePoint"
+],
+"rdw.pageTitle": [
+"FI SAIGON — R&D Workspace",
+"FI SAIGON — R&D Workspace"
+],
+"nav.openRnd": [
+"Mở trang R&D Workspace",
+"Open R&D Workspace"
+],
+"rdw.msg.dlNotFound": [
+"Không tìm thấy dự án {id} (hoặc bạn không có quyền xem).",
+"R&D topic {id} not found (or you do not have access)."
+],
+"rdw.msg.actsOnMain": [
+"Hoạt động chi tiết xem ở app chính (không có trong bản demo).",
+"Activity details are in the main app (not available in the demo)."
+],
+"rdw.shown": [
+"Hiển thị {a}/{b} dự án",
+"Showing {a} of {b} topics"
+],
+"rdw.more": [
+"Xem thêm {n} dự án",
+"Show {n} more"
+],
+"rdw.emptyList": [
+"Chưa có dự án",
+"No topics"
+],
+"rdw.noMatchHint": [
+"Thử đổi từ khoá, nhà cung cấp hoặc bộ lọc loại dự án.",
+"Try a different keyword, supplier or topic-type filter."
+],
+"rdw.empty.link": [
+"Mở Sales Funnel",
+"Open Sales Funnel"
 ]
 }

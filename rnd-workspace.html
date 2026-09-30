@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#01426A">
+<script src="js/lib/resume.js?v=1"></script>
+<title data-i18n="rdw.pageTitle">FI SAIGON — R&amp;D Workspace</title>
+<script src="js/i18n-dict.js?v=16"></script>
+<script src="js/i18n.js?v=2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3/lib/msal-browser.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/@azure/msal-browser@3/lib/msal-browser.min.js';document.head.appendChild(s);"></script>
+<link rel="stylesheet" href="styles.css?v=23">
+<link rel="stylesheet" href="ui-kit.css?v=21">
+<link rel="stylesheet" href="funnel.css?v=21">
+<link rel="stylesheet" href="funnel-sf.css?v=25">
+<link rel="stylesheet" href="attachments.css?v=1">
+<link rel="stylesheet" href="rnd-core.css?v=1">
+<link rel="stylesheet" href="rnd-workspace.css?v=5">
+</head>
+<body class="sf-body rdw-page">
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="sfLogin">
+  <div class="login-card glass">
+    <div data-lang-switch style="position:absolute;top:14px;right:14px"></div>
+    <div class="logo"><div class="logo-mark">FI</div>FI SAIGON <span style="color:var(--text-3);font-weight:600">JSC</span></div>
+    <h1>R&amp;D Workspace</h1>
+    <p data-i18n="auth.signInFisgEmail">Đăng nhập bằng tài khoản Email FISG</p>
+    <button class="ms-btn">
+      <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/><rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/></svg>
+      <span data-i18n="auth.signInM365">Đăng nhập bằng Microsoft 365</span>
+    </button>
+    <a class="sf-login-back" href="index.html" data-i18n="auth.backHome">← Quay lại trang chủ</a>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="sfApp">
+  <header class="sf-top rdw-hd">
+    <a class="sf-home" href="index.html" title="Về app chính" data-i18n-title="sf.backToApp">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <nav class="rdw-crumb" aria-label="Breadcrumb">
+      <span class="logo-mark">FI</span><span class="rdw-crumb-p">FI SAIGON</span><span class="rdw-crumb-s">/</span>
+      <h1 class="rdw-crumb-t" data-i18n="nav.rnd">R&amp;D Workspace</h1>
+    </nav>
+    <div class="rdw-hd-r">
+      <div data-lang-switch></div>
+      <div class="rdw-head-slot" id="rdwHeadSlot"></div>
+      <div class="rdw-pfw">
+        <button type="button" class="sf-user" id="sfUser" aria-haspopup="dialog" aria-expanded="false" aria-controls="rdwProfile"></button>
+        <div class="rdw-profile" id="rdwProfile" role="dialog" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="sf-main rdw-main" id="rdwMain">
+    <section id="view-rnd" class="app-view"></section>
+  </main>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script src="js/sp-config.js?v=22"></script>
+<script src="js/data/catalog.js?v=24"></script>
+<script src="js/config.js?v=24"></script>
+<script src="js/lib/insights.js?v=21"></script>
+<script src="js/lib/cleanname.js?v=21"></script>
+<script src="js/lib/roles.js?v=23"></script>
+<script src="js/lib/localstore.js?v=21"></script>
+<script src="js/graph.js?v=21"></script>
+<script src="js/store.js?v=34"></script>
+<script src="js/views/attachments.js?v=7"></script>
+<script src="js/lib/rnd-core.js?v=4"></script>
+<script src="js/views/rnd-workspace.js?v=5"></script>
+<script src="js/views/rnd-page.js?v=2"></script>
+<script src="js/i18n-legacy.js?v=1"></script>
+<script src="js/auth.js?v=23"></script>
+</body>
+</html>
