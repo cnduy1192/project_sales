@@ -109,11 +109,22 @@
   window.buildForm = function () {};
   window.buildUsers = function () {};
 
+  /* Avatar + popover hồ sơ + viền đồng bộ: header dùng chung (js/lib/app-header.js) */
   function renderUser() {
-    var el = document.getElementById("sfUser");
-    el.textContent = initials(me.name);
-    el.style.background = me.color || "#01426A";
-    el.title = me.name + " · " + roleLabel(me.role);
+    var demo = !!window.FISG_DEMO_AUTO;
+    if (!window.APP_HEADER) {
+      var el = document.getElementById("sfUser");
+      el.textContent = initials(me.name); el.style.background = me.color || "#01426A"; el.title = me.name + " · " + roleLabel(me.role);
+      return;
+    }
+    APP_HEADER.setUser(me, {
+      email: demo ? "" : me.email,
+      links: [{ href: "index.html", label: T("sf.backToApp") },
+              { href: demo ? "rnd-workspace-demo.html" : "rnd-workspace.html", label: T("nav.openRnd") }]
+    });
+    var live = !demo && window.FISG_STORE && typeof FISG_STORE.canWrite === "function" && FISG_STORE.canWrite();
+    var key = demo ? "demo" : live ? "sharepoint" : "local";
+    APP_HEADER.setSync(key, T(key === "demo" ? "rdw.sync.demo" : key === "sharepoint" ? "rdw.sync.sp" : "rdw.sync.local"));
   }
 
   /* ============================================================

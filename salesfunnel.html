@@ -19,11 +19,12 @@
 <link rel="stylesheet" href="styles.css?v=23">
 <link rel="stylesheet" href="ui-kit.css?v=21">
 <link rel="stylesheet" href="funnel.css?v=21">
-<link rel="stylesheet" href="funnel-sf.css?v=25">
+<link rel="stylesheet" href="funnel-sf.css?v=26">
 <link rel="stylesheet" href="funnel-dash.css?v=9">
 <link rel="stylesheet" href="project-form.css?v=3">
 <link rel="stylesheet" href="attachments.css?v=1">
 <link rel="stylesheet" href="rnd-core.css?v=1">
+<link rel="stylesheet" href="app-header.css?v=1">
 <!-- Dashboard analytics: ECharts (biểu đồ) + CountUp (số KPI) — có CDN dự phòng -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js';document.head.appendChild(s);"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.7/countUp.umd.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js';document.head.appendChild(s);"></script>
@@ -47,16 +48,23 @@
 
 <!-- ══════════ APP ══════════ -->
 <div id="sfApp">
-  <header class="sf-top">
+  <header class="sf-top app-hd">
     <a class="sf-home" href="index.html" title="Về app chính" data-i18n-title="sf.backToApp">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
     </a>
-    <div class="sf-brand"><span class="logo-mark">FI</span><span class="sf-brand-t">Sales Funnel</span><span class="sf-brand-tag" data-i18n="sf.brandTag">Project workspace</span></div>
-    <div class="sf-ncc" id="sfNcc"></div>
-    <button class="sf-addproj-top" type="button" onclick="openCreateProjectModal()" data-i18n-title="fn.addOpp" title="Thêm dự án">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="fn.addOpp">Thêm dự án</span></button>
-    <div data-lang-switch></div>
-    <span class="sf-user" id="sfUser"></span>
+    <nav class="app-crumb" aria-label="Breadcrumb">
+      <span class="logo-mark">FI</span><span class="app-crumb-p">FI SAIGON</span><span class="app-crumb-s">/</span>
+      <h1 class="app-crumb-t">Sales Funnel</h1>
+    </nav>
+    <div class="app-hd-r">
+      <div data-lang-switch></div>
+      <button class="sf-addproj-top" type="button" onclick="openCreateProjectModal()" data-i18n-title="fn.addOpp" title="Thêm dự án">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="fn.addOpp">Thêm dự án</span></button>
+      <div class="app-pfw">
+        <button type="button" class="sf-user" id="sfUser" aria-haspopup="dialog" aria-expanded="false" aria-controls="appProfile"></button>
+        <div class="app-profile" id="appProfile" role="dialog" hidden></div>
+      </div>
+    </div>
   </header>
 
   <div class="sf-subbar">
@@ -69,6 +77,7 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="sfQ" placeholder="Tìm khách hàng, sản phẩm, ứng dụng, PIC…" data-i18n-placeholder="sf.searchPh" oninput="SF.render()" aria-label="Tìm nhanh" data-i18n-aria-label="common.quickSearch">
     </div>
+    <div class="sf-ncc" id="sfNcc"></div>
     <button class="sf-expand" id="sfExpandAll" type="button" onclick="SF.toggleAll()" data-i18n="sf.expandAll">Mở rộng tất cả</button>
   </div>
 
@@ -177,7 +186,8 @@ window.pushProject = function (rec) {
 </script>
 <script src="js/views/attachments.js?v=8"></script>
 <script src="js/lib/rnd-core.js?v=6"></script>
-<script src="js/views/funnel-sf.js?v=32"></script>
+<script src="js/lib/app-header.js?v=1"></script>
+<script src="js/views/funnel-sf.js?v=33"></script>
 <script src="js/i18n-legacy.js?v=1"></script>
 <script src="js/views/funnel-dash.js?v=12"></script>
 <script src="js/views/project-form.js?v=4"></script>

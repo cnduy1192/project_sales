@@ -19,10 +19,11 @@
 <link rel="stylesheet" href="styles.css?v=23">
 <link rel="stylesheet" href="ui-kit.css?v=21">
 <link rel="stylesheet" href="funnel.css?v=21">
-<link rel="stylesheet" href="funnel-sf.css?v=25">
+<link rel="stylesheet" href="funnel-sf.css?v=26">
 <link rel="stylesheet" href="attachments.css?v=1">
 <link rel="stylesheet" href="rnd-core.css?v=1">
-<link rel="stylesheet" href="rnd-workspace.css?v=11">
+<link rel="stylesheet" href="app-header.css?v=1">
+<link rel="stylesheet" href="rnd-workspace.css?v=12">
 </head>
 <body class="sf-body rdw-page">
 
@@ -43,20 +44,20 @@
 
 <!-- ══════════ APP ══════════ -->
 <div id="sfApp">
-  <header class="sf-top rdw-hd">
+  <header class="sf-top app-hd">
     <a class="sf-home" href="index.html" title="Về app chính" data-i18n-title="sf.backToApp">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
     </a>
-    <nav class="rdw-crumb" aria-label="Breadcrumb">
-      <span class="logo-mark">FI</span><span class="rdw-crumb-p">FI SAIGON</span><span class="rdw-crumb-s">/</span>
-      <h1 class="rdw-crumb-t" data-i18n="nav.rnd">R&amp;D Workspace</h1>
+    <nav class="app-crumb" aria-label="Breadcrumb">
+      <span class="logo-mark">FI</span><span class="app-crumb-p">FI SAIGON</span><span class="app-crumb-s">/</span>
+      <h1 class="app-crumb-t" data-i18n="nav.rnd">R&amp;D Workspace</h1>
     </nav>
-    <div class="rdw-hd-r">
+    <div class="app-hd-r">
       <div data-lang-switch></div>
-      <div class="rdw-head-slot" id="rdwHeadSlot"></div>
-      <div class="rdw-pfw">
-        <button type="button" class="sf-user" id="sfUser" aria-haspopup="dialog" aria-expanded="false" aria-controls="rdwProfile"></button>
-        <div class="rdw-profile" id="rdwProfile" role="dialog" hidden></div>
+      <div class="app-head-slot" id="rdwHeadSlot"></div>
+      <div class="app-pfw">
+        <button type="button" class="sf-user" id="sfUser" aria-haspopup="dialog" aria-expanded="false" aria-controls="appProfile"></button>
+        <div class="app-profile" id="appProfile" role="dialog" hidden></div>
       </div>
     </div>
   </header>
@@ -79,8 +80,9 @@
 <script src="js/store.js?v=34"></script>
 <script src="js/views/attachments.js?v=8"></script>
 <script src="js/lib/rnd-core.js?v=6"></script>
-<script src="js/views/rnd-workspace.js?v=12"></script>
-<script src="js/views/rnd-page.js?v=3"></script>
+<script src="js/lib/app-header.js?v=1"></script>
+<script src="js/views/rnd-workspace.js?v=13"></script>
+<script src="js/views/rnd-page.js?v=4"></script>
 <script src="js/i18n-legacy.js?v=1"></script>
 <script src="js/auth.js?v=23"></script>
 </body>

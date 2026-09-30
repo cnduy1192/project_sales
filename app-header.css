@@ -1,0 +1,60 @@
+/* ═════════════════════════════════════════════════════════════════
+   HEADER DÙNG CHUNG (app-header.css) — Sales Funnel + R&D Workspace
+   48px · [‹] FI SAIGON / Tên trang ........ [EN|VI] [slot] [CTA] (avatar)
+   Avatar có viền trạng thái đồng bộ (data-sync) + popover hồ sơ.
+   Chỉnh ở đây là cả hai trang cùng đổi. JS: js/lib/app-header.js
+   ═════════════════════════════════════════════════════════════════ */
+.app-hd{--ah-brand:#01426A;--ah-brand-deep:#01324F;--ah-border:#E2E8F0;--ah-r:6px;--ah-r-tag:4px;--ah-ctl:32px;
+  --accent:#01426A;--accent-hover:#01324F;--accent-soft:rgba(1,66,106,.08);--accent-border:rgba(1,66,106,.25);
+  --marine:#01426A;--marine-2:#0E6BA8}   /* cùng màu thương hiệu ở mọi trang, kể cả nút chuyển EN|VI */
+/* EN|VI cao 32px như các điều khiển khác */
+.app-hd .lang-switch{height:var(--ah-ctl);padding:2px 3px 2px 9px}
+.app-hd .lang-switch .ls-thumb{top:2px}
+.app-hd.sf-top{height:48px;padding:0 16px;gap:10px;box-sizing:border-box;background:#fff;border-bottom:1px solid var(--ah-border);box-shadow:none}
+.app-hd .sf-home{width:28px;height:28px;border-radius:var(--ah-r)}
+.app-crumb{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px}
+.app-crumb .logo-mark{width:22px;height:22px;flex:none;border-radius:var(--ah-r-tag);background:var(--ah-brand);color:#fff;box-shadow:none;
+  font:700 10.5px/22px var(--font-display);text-align:center}
+.app-crumb-p{color:#64748B;font-weight:500;white-space:nowrap}
+.app-crumb-s{color:#CBD5E1}
+.app-crumb-t{font:600 14px/1 var(--font-display);color:#0F172A;letter-spacing:-.005em;white-space:nowrap}
+.app-crumb .sf-brand-demo{margin-left:4px}
+.app-hd-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.app-hd-r [data-lang-switch],.app-hd .sf-user,.app-hd .sf-addproj-top,.app-hd .sf-demo-reset{order:0;margin-left:0}
+.app-head-slot{display:flex;align-items:center;gap:10px}
+/* Nút trong header: 32px, bo 6px */
+.app-hd .btn-primary,.app-hd .btn-ghost,.app-hd .sf-addproj-top,.app-hd .sf-demo-reset{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:var(--ah-ctl);padding:0 12px;border-radius:var(--ah-r);font-size:13px;font-weight:600;line-height:1;white-space:nowrap}
+.app-hd .btn-primary,.app-hd .sf-addproj-top{background:var(--ah-brand);color:#fff;border:0;box-shadow:none}
+.app-hd .btn-primary:hover,.app-hd .sf-addproj-top:hover{background:var(--ah-brand-deep);box-shadow:none}
+.app-hd .btn-primary svg,.app-hd .sf-addproj-top svg,.app-hd .sf-demo-reset svg{width:14px;height:14px}
+.app-hd .sf-demo-reset{background:#fff;border:1px solid var(--ah-border);color:#475569}
+.app-hd .sf-demo-reset:hover{border-color:#CBD5E1;color:#0F172A}
+/* Avatar 28px + viền trạng thái đồng bộ: khe trắng 2px + vòng mảnh 1.5px */
+.app-hd .sf-user{width:28px;height:28px;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+  font-size:11px;font-weight:700;color:#fff;cursor:pointer;transition:box-shadow .2s;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--ring,#CBD5E1)}
+.app-hd .sf-user:focus-visible{outline:2px solid var(--ah-brand);outline-offset:3px}
+.app-hd .sf-user[data-sync],.app-pf-dot{--ring:#94A3B8;--dot:#94A3B8}
+[data-sync="sharepoint"]{--ring:#16A34A;--dot:#16A34A}
+[data-sync="local"]{--ring:#D97706;--dot:#D97706}
+[data-sync="error"]{--ring:#DC2626;--dot:#DC2626}
+[data-sync="demo"]{--ring:#64748B;--dot:#64748B}
+/* Popover hồ sơ */
+.app-pfw{position:relative}
+.app-profile{position:absolute;right:0;top:36px;z-index:60;width:240px;background:#fff;border:1px solid var(--ah-border);border-radius:var(--ah-r);
+  box-shadow:0 6px 20px rgba(15,23,42,.10);padding:4px}
+.app-profile[hidden]{display:none}
+.app-pf-h{padding:10px;border-bottom:1px solid var(--ah-border);margin-bottom:4px}
+.app-pf-h b{display:block;font-size:13px;color:#0F172A;font-weight:600}
+.app-pf-h small{display:block;margin-top:1px;font-size:12px;color:#64748B;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.app-pf-role{display:inline-flex;align-items:center;height:20px;margin-top:8px;padding:0 6px;border-radius:var(--ah-r-tag);background:#F1F5F9;color:#475569;font-size:11px;font-weight:600}
+.app-pf-sync{display:flex;align-items:center;gap:8px;padding:6px 10px 8px;font-size:12px;color:#475569;border-bottom:1px solid var(--ah-border);margin-bottom:4px;line-height:1.35}
+.app-pf-sync:empty{display:none}
+.app-pf-dot{width:8px;height:8px;border-radius:50%;background:var(--dot);flex:none}
+.app-pf-a{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border-radius:var(--ah-r);font-size:13px;color:#475569;text-decoration:none}
+.app-pf-a:hover{background:#F8FAFC;color:#0F172A}
+@media (max-width:860px){
+  .app-hd.sf-top{flex-wrap:nowrap}
+  .app-crumb-p,.app-crumb-s,.app-crumb .sf-brand-demo{display:none}
+  .app-hd .sf-addproj-top span,.app-hd .sf-demo-reset span,.app-hd .rdw-create span{display:none}
+}

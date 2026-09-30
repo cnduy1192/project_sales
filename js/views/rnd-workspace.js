@@ -275,12 +275,8 @@
     return { key: mode, text: tr(mode === "sharepoint" ? "rdw.sync.sp" : mode === "demo" ? "rdw.sync.demo" : "rdw.sync.local") };
   }
   function syncRing() {
-    var u = document.getElementById("sfUser"); if (!u) return;
-    var i = syncInfo();
-    u.setAttribute("data-sync", i.key);
-    u.title = (u.getAttribute("data-base") || "") + (i.text ? " · " + i.text : "");
-    var st = document.getElementById("rdwPfSync");
-    if (st) st.innerHTML = '<i class="rdw-pf-dot" data-sync="' + i.key + '"></i><span>' + esc(i.text) + "</span>";
+    if (!window.APP_HEADER) return;
+    var i = syncInfo(); APP_HEADER.setSync(i.key, i.text);
   }
   function createBtnHTML() {
     return canCreate() ? '<button type="button" class="btn-primary rdw-create" data-act="create">' + I.plus + "<span>" + esc(tr("rdw.create")) + "</span></button>" : "";

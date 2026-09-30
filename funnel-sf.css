@@ -658,3 +658,34 @@ select.sf-prob-badge:focus{outline:2px solid var(--pri-2);outline-offset:1px;}
 .sf-quicklog .sf-ql-type{height:var(--ctl-h-sm);padding-top:0;padding-bottom:0;}
 .sf-ql-btn{height:var(--ctl-h-sm);padding:0 14px;line-height:1;font-family:inherit;
   display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;}
+
+/* ============================================================
+   THỐNG NHẤT VỚI R&D WORKSPACE — header dùng chung (app-header.css)
+   + sub-bar phẳng, mọi điều khiển cao 32px, bo 6px (pill 4px)
+   ============================================================ */
+.sf-body .sf-subbar{gap:8px;padding:8px 16px;background:#fff;border-bottom:1px solid #E2E8F0}
+/* Chuyển view Dashboard | Danh sách: tab phẳng như R&D */
+.sf-body .sf-view-seg{height:32px;padding:0;gap:4px;background:none;border:0;border-radius:0}
+.sf-body .sf-view-b{height:32px;padding:0 10px;border-radius:6px;font-size:13px;font-weight:500;color:#64748B;box-shadow:none}
+.sf-body .sf-view-b:hover{background:#F1F5F9;color:#0F172A}
+.sf-body .sf-view-b.on{background:#F1F5F9;color:#0F172A;font-weight:600;box-shadow:none}
+/* Trạng thái Đang chạy / Thắng / Thua: nhóm pill gọn */
+.sf-body .sf-seg{height:32px;box-sizing:border-box;align-items:stretch;padding:2px;gap:2px;background:#EEF2F6;border:0;border-radius:6px}
+.sf-body .sf-seg-b{height:28px;padding:0 10px;border-radius:4px;font-size:12.5px;font-weight:500;color:#64748B}
+.sf-body .sf-seg-b:hover{background:rgba(255,255,255,.6);color:#0F172A}
+.sf-body .sf-seg-b.on{background:#fff;color:#0F172A;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.sf-body .sf-seg-n{border-radius:4px;background:#fff;font-size:11px;font-weight:600}
+.sf-body .sf-seg-b.on .sf-seg-n{background:#EEF2F6}
+/* Tìm kiếm + nhà cung cấp (đã chuyển từ header xuống) */
+.sf-body .sf-search{height:32px;border-radius:6px;border-color:#E2E8F0;padding:0 10px}
+.sf-body .sf-search input{font-size:13px}
+.sf-body .sf-search-sub{max-width:360px}
+.sf-body .sf-search:focus-within{border-color:#01426A;box-shadow:0 0 0 1px #01426A}
+.sf-body .sf-subbar .sf-ncc{margin-left:0}
+.sf-body .sf-subbar .sf-ncc-btn{height:32px;min-width:180px;border-radius:6px;border-color:#E2E8F0;font-size:13px;font-weight:500}
+.sf-body .sf-ncc-pop{border-radius:6px}
+.sf-body .sf-ncc-opt{border-radius:4px}
+.sf-body .sf-expand{height:32px;padding:0 12px;border-radius:6px;border-color:#E2E8F0;font-size:13px;font-weight:500;color:#475569}
+.sf-body .sf-expand:hover{border-color:#CBD5E1;color:#0F172A}
+
+body.sf-view-dash .sf-subbar .sf-ncc{margin-left:auto}
