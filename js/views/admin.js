@@ -2,7 +2,7 @@ const ROLES = ROLE_ORDER.map(function(id){
   return { id:id, label:ROLE_DEF[id].label, hint:ROLE_DEF[id].hint };
 });
 const ROLE_COLOR = { sales:'#0D9488', rnd:'#B45309', manager:'#0E7490',
-                     director:'#6D28D9', superadmin:'#1E3A8A', salesupport:'#0E9F6E' };
+                     director:'#6D28D9', superadmin:'#1E3A8A', salesupport:'#0E9F6E', 'sales+rnd':'#4D7C0F' };
 
 let admBusy = false;
 function admEsc(s){ return ckEsc(s); }
@@ -71,8 +71,6 @@ function buildUsers(){
     </div>`;
   }).join('');
 
-  if(window.FISG_CUSTOMER_IMPORT) try { FISG_CUSTOMER_IMPORT.render(); } catch(e){}
-  if(window.FISG_SUPPLIER_IMPORT) try { FISG_SUPPLIER_IMPORT.render(); } catch(e){}
 }
 window.buildUsers = buildUsers;
 
@@ -173,7 +171,7 @@ function openUserForm(idx){
 function admBuildSupports(picked){
   const box = document.getElementById('u-supports'); if(!box) return;
   const set = {}; const names = [];
-  USERS.filter(x => x.role==='sales').forEach(x => { const n=x.pic||x.name; if(n){ set[picKey(n)]=1; names.push(n); } });
+  USERS.filter(x => x.role==='sales' || (typeof hasRole==='function' && hasRole(x,'sales'))).forEach(x => { const n=x.pic||x.name; if(n){ set[picKey(n)]=1; names.push(n); } });
   (typeof LISTS!=='undefined'?LISTS.pics:[]).forEach(n => { if(n && !set[picKey(n)]){ set[picKey(n)]=1; names.push(n); } });
   names.sort((a,b)=>a.localeCompare(b,'vi'));
   const on = {}; (picked||[]).forEach(p => on[picKey(p)] = 1);

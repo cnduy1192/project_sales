@@ -511,7 +511,7 @@
       (ph ? ' placeholder="' + esc(ph) + '"' : "") + ">";
   }
   function rndUsers() {
-    var u = (typeof USERS !== "undefined" ? USERS : []).filter(function (x) { return x.role === "rnd" && x.pic; });
+    var u = (typeof USERS !== "undefined" ? USERS : []).filter(function (x) { return x.pic && (typeof hasRole === "function" ? hasRole(x, "rnd") : x.role === "rnd"); });
     return u.map(function (x) { return x.pic; });
   }
   function picSelect(r, ed) {
@@ -1176,7 +1176,7 @@
   function drawModal(keep) {
     var box = document.getElementById("rdwModal"); if (!box) return;
     var saved = keep ? { title: mval("rdwMTitleIn"), pic: mval("rdwMPic"), target: mval("rdwMTarget"), bench: mval("rdwMBench") } : {};
-    var u = meNow(), picDef = saved.pic || (u && u.role === "rnd" ? u.pic : (rndUsers()[0] || ""));
+    var u = meNow(), picDef = saved.pic || (u && (typeof hasRole === "function" ? hasRole(u, "rnd") : u.role === "rnd") ? u.pic : (rndUsers()[0] || ""));
     var picOpts = rndUsers(); if (picDef && picOpts.indexOf(picDef) < 0) picOpts.unshift(picDef);
     var od = M.type === "ON_DEMAND";
     var body = "";

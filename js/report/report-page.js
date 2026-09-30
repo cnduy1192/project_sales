@@ -256,7 +256,7 @@
   function fieldTeam() {
     // Đội cần nộp báo cáo tuần: Sales + R&D (báo cáo lên Manager) và Manager
     // (báo cáo lên Director). Không tính Sale Support / Director / Super Admin.
-    const KIND = { sales: 1, rnd: 1, manager: 1 };
+    const KIND = { sales: 1, rnd: 1, "sales+rnd": 1, manager: 1 };
     const seen = {}, out = [];
     S.users.forEach(u => {
       if (!KIND[u.role] || !u.pic) return;

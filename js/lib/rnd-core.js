@@ -201,14 +201,14 @@
       "<span>" + esc(rd.code) + " · " + esc(full ? stageLabel(rd.stage) : (rd.stage === "COMPLETED" ? "✓" : prob(rd.stage) + "%")) + "</span></a>";
   }
   function rndUsers() {
-    return (typeof USERS !== "undefined" ? USERS : []).filter(function (x) { return x.role === "rnd" && x.pic; }).map(function (x) { return x.pic; });
+    return (typeof USERS !== "undefined" ? USERS : []).filter(function (x) { return x.pic && (typeof hasRole === "function" ? hasRole(x, "rnd") : x.role === "rnd"); }).map(function (x) { return x.pic; });
   }
   function canRequest(rec) {
     if (typeof rdCanRequest === "function") return rdCanRequest(rec, meNow());
     var u = meNow(); if (!u || u.role === "guest" || !rec) return false;
     var c = typeof cap === "function" ? cap(u.role) : { edit: false };
     if (!c.edit) return false;
-    if (c.scope === "all" || u.role === "rnd") return true;
+    if (c.scope === "all" || (typeof hasRole === "function" ? hasRole(u, "rnd") : u.role === "rnd")) return true;
     return typeof capEdit === "function" ? capEdit(rec, u) : true;
   }
   function nextCode() {

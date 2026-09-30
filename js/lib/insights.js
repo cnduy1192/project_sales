@@ -247,7 +247,7 @@ function cockpitAssert(){
   out.push(['tổng dự án đang chạy', open + ' / ' + expect, open === expect]);
 
   let scoped = true;
-  if(typeof me !== 'undefined' && me && cap(me.role).scope === 'own-pic'){
+  if(typeof me !== 'undefined' && me && cap(me.role).scope === 'own-pic' && !(typeof canViewAll === 'function' && canViewAll(me))){
     const mine = picKey(me.pic);
     const own = ACTIVITIES.filter(a => picKey(a.pic) === mine).map(a => custKey(a.customer));
     const viaAct = new Set(own);

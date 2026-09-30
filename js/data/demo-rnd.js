@@ -55,6 +55,7 @@
   /* ── 3. Người dùng demo + dữ liệu minh hoạ phân quyền ── */
   var EXTRA_USERS = [
     { name: "Trần Minh", pic: "Minh", role: "rnd", color: "#0F766E" },
+    { name: "Đỗ Thanh Tâm", pic: "Tâm", role: "sales+rnd", color: "#4D7C0F" },
     { name: "Đặng Quốc Bảo", pic: "Bảo", role: "director", color: "#334155" }
   ];
   function prepareData() {
@@ -119,7 +120,7 @@
       });
     }
     bar.setAttribute("aria-label", tr("rdd.tag"));
-    var order = ["superadmin", "manager", "director", "rnd", "teamlead", "sales", "salesupport"];
+    var order = ["superadmin", "manager", "director", "rnd", "sales+rnd", "teamlead", "sales", "salesupport"];
     var users = USERS.map(function (u, i) { return { u: u, i: i }; })
       .sort(function (a, b) { return order.indexOf(a.u.role) - order.indexOf(b.u.role); });
     var groups = {};

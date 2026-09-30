@@ -328,18 +328,7 @@
     "Tối đa 15MB · pdf, word, excel, ppt, ảnh, zip": "Up to 15MB · pdf, word, excel, ppt, images, zip",
     "Đăng nhập Microsoft 365 để đính kèm tệp.": "Sign in with Microsoft 365 to attach files.",
     "Đã xoá tệp.": "File deleted.",
-    "Nhập nhà cung cấp từ Excel": "Import suppliers from Excel",
-    "File một cột tên NCC. App tự đối chiếu list Suppliers: tên mới thì tạo, tên đã có thì bỏ qua. Chạy lại vẫn an toàn.":
-      "A one-column file of supplier names. The app matches against the Suppliers list: new names are created, existing ones skipped. Safe to re-run.",
-    "Cột nhận diện: Title / Supplier / Nhà cung cấp (hoặc cột đầu tiên).":
-      "Recognised column: Title / Supplier (or the first column).",
-    "Nhập / cập nhật khách hàng từ Excel": "Import / update customers from Excel",
-    "Chọn file Excel…": "Choose an Excel file…",
-    "Xem trước": "Preview", "Cập nhật lên SharePoint": "Update to SharePoint",
-    "File gồm cả khách cũ lẫn mới. App tự đối chiếu: khách đã có thì cập nhật Người phụ trách + Tên pháp nhân, khách mới thì tạo. Chạy lại vẫn an toàn.":
-      "The file may contain both existing and new customers. The app matches automatically: existing customers get their Owner + LegalName updated, new ones created. Safe to re-run.",
-    "Cột nhận diện: Title · Owner (Người phụ trách) · LegalName (Tên pháp nhân) · Segment · Region · CustomerStatus. Sheet phụ (Cần rà, Còn trống) tự bỏ qua.":
-      "Recognised columns: Title · Owner · LegalName · Segment · Region · CustomerStatus. Helper sheets are skipped.",
+    "Xem trước": "Preview",
     "Danh bạ khách hàng đang trống": "The customer directory is empty",
     "Không có khách hàng khớp bộ lọc": "No customers match the filter",
     "Thử bỏ bớt bộ lọc hoặc ô tìm kiếm.": "Try removing a filter or the search box.",

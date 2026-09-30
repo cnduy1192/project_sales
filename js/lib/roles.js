@@ -18,6 +18,19 @@ var ROLE_DEF = {
     rd:'member', finance:false,   // Phase 4: sửa đề tài mình là PIC/phối hợp · chỉ xem giá trị/KG/xác suất của dự án Sales
     get hint(){ return T('role.hint.rnd'); }
   },
+  /* Vai trò kết hợp: một người vừa làm Sales (PIC dự án) vừa làm R&D (PIC / phối hợp đề tài).
+     Ghép từ 'sales' + 'rnd' — `parts` liệt kê các vai thành phần (xem hasRole).
+       • Xem: toàn bộ dự án/khách/đề tài (viewAll, như R&D).
+       • Sửa dự án Sales: chỉ dự án mình là PIC / đồng phụ trách / khách mình phụ trách, hoặc mình là R&D PIC.
+       • Giá trị · KG · Xác suất: sửa được ở dự án mình sở hữu với tư cách Sales (finance:'own'), còn lại chỉ xem.
+       • R&D: rd:'member' — sửa đề tài mình là PIC/phối hợp, tạo INTERNAL + ON_DEMAND; có mặt trong danh sách R&D PIC.
+       • Không tự chặn việc tự nhận yêu cầu R&D do chính mình gửi (chủ đích). */
+  'sales+rnd': {
+    label:'Sales + R&D', scope:'own-pic', viewAll:true, parts:['sales','rnd'],
+    edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
+    rd:'member', finance:'own',
+    get hint(){ return T('role.hint.salesrnd'); }
+  },
   teamlead: {
     label:'Team Leader', scope:'team', lead:true,
     edit:true,  close:true,  del:true,  delCustomer:false, admin:false, cockpit:false, weekly:true, weeklyAuto:true, report:true,
@@ -51,7 +64,7 @@ var ROLE_FALLBACK = {
   get hint(){ return T('role.hint.none'); }
 };
 
-var ROLE_ORDER = ['sales','salesupport','rnd','teamlead','manager','director','superadmin'];
+var ROLE_ORDER = ['sales','salesupport','rnd','sales+rnd','teamlead','manager','director','superadmin'];
 
 function cap(role){ return ROLE_DEF[role] || ROLE_FALLBACK; }
 function myCap(){ return cap(typeof me !== 'undefined' && me ? me.role : null); }
@@ -63,6 +76,13 @@ function canViewAll(u){
   return c.scope === 'all' || !!c.viewAll;
 }
 function roleLabel(role){ return cap(role).label; }
+/* Người dùng có mang vai `r` không — kể cả khi là thành phần của vai kết hợp ('sales+rnd' → sales, rnd). */
+function hasRole(u, r){
+  if(!u) return false;
+  if(u.role === r) return true;
+  var p = cap(u.role).parts;
+  return !!(p && p.indexOf(r) >= 0);
+}
 function isKnownRole(role){ return Object.prototype.hasOwnProperty.call(ROLE_DEF, role); }
 
 function capReport(role){ return !!cap(role).report; }
@@ -75,6 +95,9 @@ function roleFromText(s){
     'sale':'sales', 'nhân viên':'sales', 'nhan vien':'sales', 'nhân viên kinh doanh':'sales',
     'sale support':'salesupport', 'sales support':'salesupport', 'hỗ trợ':'salesupport',
     'ho tro':'salesupport', 'hỗ trợ sales':'salesupport', 'trợ lý sales':'salesupport',
+    'sales+rnd':'sales+rnd', 'sales + r&d':'sales+rnd', 'sales+r&d':'sales+rnd', 'sale+r&d':'sales+rnd',
+    'sale + r&d':'sales+rnd', 'sale+rd':'sales+rnd', 'sales & r&d':'sales+rnd', 'sales r&d':'sales+rnd',
+    'kiêm nhiệm':'sales+rnd', 'kiem nhiem':'sales+rnd',
     'r&d':'rnd', 'rd':'rnd', 'nghiên cứu':'rnd', 'nghien cuu':'rnd',
     'team leader':'teamlead', 'teamlead':'teamlead', 'team lead':'teamlead', 'leader':'teamlead',
     'trưởng nhóm':'teamlead', 'truong nhom':'teamlead', 'nhóm trưởng':'teamlead', 'nhom truong':'teamlead',
@@ -129,14 +152,20 @@ function ownsCustomer(customer, u){
   return coversPic(customerOwnerOf(customer), u);
 }
 
+/* Sở hữu dự án với tư cách Sales: PIC, đồng phụ trách, hoặc khách mình phụ trách */
+function ownsRecordAsSales(r, u){
+  if(!r || !u) return false;
+  return coversPic(r.pic, u)
+      || (r.related || []).some(function(x){ return coversPic(x, u); })
+      || ownsCustomer(r.customer, u);
+}
 function ownsRecord(r, u){
   if(!r || !u) return false;
   var c = cap(u.role);
   if(c.scope === 'all') return true;
   if(c.scope === 'own-rnd') return isMine(r.rnd, u) || ownsCustomer(r.customer, u);
-  return coversPic(r.pic, u)
-      || (r.related || []).some(function(x){ return coversPic(x, u); })
-      || ownsCustomer(r.customer, u);
+  /* vai kết hợp Sales + R&D: hợp của hai phạm vi */
+  return ownsRecordAsSales(r, u) || (hasRole(u, 'rnd') && isMine(r.rnd, u));
 }
 function ownsActivity(a, u, projectIds){
   if(!a || !u) return false;
@@ -239,7 +268,8 @@ function capClose(r, u){
                   'request' Sales / Sale Support / Team Leader — gửi yêu cầu R&D (ON_DEMAND) cho dự án mình sửa được;
                             xem tiến độ; KHÔNG đổi stage / thông số nội bộ của R&D
                   'view'    Director — chỉ xem
-   cap(role).finance === false (R&D): chỉ xem Giá trị ước tính, KG, Xác suất của dự án Sales. */
+   cap(role).finance === false (R&D): chỉ xem Giá trị ước tính, KG, Xác suất của dự án Sales.
+   cap(role).finance === 'own' (Sales + R&D): sửa được ở dự án mình sở hữu với tư cách Sales, còn lại chỉ xem. */
 function rdLevel(u){
   u = u || (typeof me !== 'undefined' ? me : null);
   if(!u || u.role === 'guest') return 'none';
@@ -281,11 +311,16 @@ function rdCanRequest(rec, u){
 function rdCanAssign(u){ u = u || (typeof me !== 'undefined' ? me : null); return rdLevel(u) === 'manage' && !!cap(u.role).edit; }
 function capEditFinance(r, u){
   u = u || (typeof me !== 'undefined' ? me : null);
-  return !!u && capEdit(r, u) && cap(u.role).finance !== false;
+  if(!u || !capEdit(r, u)) return false;
+  var f = cap(u.role).finance;
+  if(f === false) return false;
+  if(f === 'own') return ownsRecordAsSales(r, u);   // vai kết hợp: chỉ dự án mình sở hữu với tư cách Sales
+  return true;
 }
 window.rdLevel = rdLevel; window.rdIsMember = rdIsMember; window.rdCanView = rdCanView; window.rdCanEdit = rdCanEdit;
 window.rdCanCreate = rdCanCreate; window.rdCanRequest = rdCanRequest; window.rdCanAssign = rdCanAssign;
 window.capEditFinance = capEditFinance;
+window.hasRole = hasRole; window.ownsRecordAsSales = ownsRecordAsSales;
 
 window.cap = cap; window.myCap = myCap; window.roleLabel = roleLabel; window.canViewAll = canViewAll;
 window.splitAliases = splitAliases; window.nameSetOf = nameSetOf; window.isMine = isMine;

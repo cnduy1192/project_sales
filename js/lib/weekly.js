@@ -39,7 +39,9 @@ function userByName(pic){
 }
 function scopeKindFor(pic){
   var u = userByName(pic);
-  var k = (u && typeof cap === 'function') ? cap(u.role).scope : 'own-pic';
+  var c = (u && typeof cap === 'function') ? cap(u.role) : null;
+  var k = c ? c.scope : 'own-pic';
+  if(c && c.parts && c.parts.indexOf('rnd') >= 0 && c.parts.indexOf('sales') >= 0) return 'both';   // Sales + R&D
   return k === 'own-rnd' ? 'own-rnd' : 'own-pic';
 }
 function myScope(pic, kind){
@@ -54,6 +56,7 @@ function myScope(pic, kind){
   };
   var records = RECORDS.filter(function(r){
     if(kind === 'own-rnd') return mine(r.rnd);
+    if(kind === 'both') return mine(r.pic) || (r.related||[]).some(mine) || mine(r.rnd);
     return mine(r.pic) || (r.related||[]).some(mine);
   });
   var ids = {}; records.forEach(function(r){ ids[r.id] = 1; });
